@@ -57,7 +57,7 @@ apps/worker     Job runner. Registers handlers from core.
 packages/core   Domain modules. All business logic. No Next.js imports.
 packages/db     Drizzle schema, SQL migrations, RLS helpers, seeds.
 packages/ui     Shared shadcn components and design tokens.
-packages/config Env parsing (Zod) and the shared tsconfig.
+packages/config Env parsing (Zod), the logger and the shared tsconfig.
 docs/           See PRD section 13.
 infra/          Compose files, Caddyfile, Postgres bootstrap, scripts.
 ```
@@ -151,6 +151,8 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `docs/adr/` | Decisions and why |
 | `packages/db/src/context.ts` | `withTenant`, `withSystem` |
 | `packages/db/migrations/` | Reviewed SQL migrations |
-| `packages/config/src/` | Env schemas per process |
+| `packages/config/src/env.ts` | Env schemas per process |
+| `packages/config/src/logger.ts` | Allow-listed logger |
+| `packages/core/src/kernel/` | Actor context, `DomainError`, `Clock` |
 | `packages/core/src/jobs/` | Queue registry and schedules |
 | `tests/integration/rls-catalog.test.ts` | NFR-SEC-5 catalog test |

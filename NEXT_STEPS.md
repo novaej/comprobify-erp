@@ -7,7 +7,7 @@ Open work only. Tick steps as they land. When a milestone's gate passes, remove 
 **Gate:** the empty app deploys locally with Docker, and the RLS catalog test passes.
 
 - [x] **Step 1: repo and tooling.** Workspace, Turborepo, strict TypeScript, ESLint boundary rules, Prettier, `CLAUDE.md`, stack ADRs.
-- [ ] **Step 2: config and core basics.** Env validation, `.env.example`, logger, actor context, `DomainError`, `Clock`.
+- [x] **Step 2: config and core basics.** Env validation, `.env.example`, logger, actor context, `DomainError`, `Clock`.
 - [ ] **Step 3: database.** `postgres18` setup in `GETTING_STARTED.md`, roles and databases, first migration, `withTenant` and `withSystem`, boot guard, RLS isolation and catalog tests.
 - [ ] **Step 4: jobs.** pg-boss schema and queue registry, worker, `system.heartbeat`, transactional enqueue test, worker running without DDL rights.
 - [ ] **Step 5: web.** `packages/ui`, theme shim, next-intl, localized page, error pages, `/health`, Sentry.

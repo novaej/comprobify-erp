@@ -16,10 +16,19 @@ corepack enable
 pnpm install
 ```
 
-## 3. Check the setup
+## 3. Configure the environment
+
+```bash
+cp .env.example .env
+```
+
+The defaults work locally. An empty value counts as unset, and a process refuses to start if a value is invalid, listing every problem.
+
+## 4. Check the setup
 
 ```bash
 pnpm lint
 pnpm format:check
 pnpm typecheck
+pnpm test
 ```

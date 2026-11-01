@@ -27,14 +27,21 @@ export default tseslint.config(
     },
   },
   {
+    // ADR-008: packages/config is the only reader of process.env
+    files: ['apps/**/*.{ts,tsx}', 'packages/**/*.{ts,tsx}'],
+    ignores: ['packages/config/src/**'],
+    rules: {
+      'no-restricted-properties': [
+        'error',
+        { object: 'process', property: 'env', message: 'Read env in packages/config (ADR-008).' },
+      ],
+    },
+  },
+  {
     // NFR-ARCH-1, NFR-ARCH-5
     files: ['packages/core/src/**/*.ts'],
     rules: {
       'no-restricted-imports': ['error', { patterns: [FORBIDDEN_IN_CORE] }],
-      'no-restricted-properties': [
-        'error',
-        { object: 'process', property: 'env', message: 'Inject config (NFR-ARCH-5).' },
-      ],
     },
   },
   {

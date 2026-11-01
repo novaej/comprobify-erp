@@ -18,7 +18,7 @@ Two old incidents shape this: an empty env var parsed as `NaN` (Appendix B lesso
 
 **`.env.example` is the env reference**, and a test fails if a schema variable is missing from it.
 
-**pino** writes JSON to stdout, with `pino-pretty` only in local development. There is one `createLogger` factory. Its fields are an allow-list (request id, tenant id, user id, job id, access key), so a header or query string can't be logged by spreading an object. Redaction is a second layer, not the main control.
+**pino** writes JSON to stdout, with `pino-pretty` only in local development. There is one `createLogger` factory in `packages/config`, because `packages/db` needs it and can't depend on core. Its fields are an allow-list (request id, tenant id, user id, job id, access key, and a few operational fields), so a header or query string can't be logged by spreading an object. Errors keep only their type, message, stack and code.
 
 **Betterstack** ships through `@logtail/pino` when `BETTERSTACK_SOURCE_TOKEN` is set. **Sentry** (`@sentry/nextjs`, `@sentry/node`) is on only when a DSN is set, tagged with the request id. Org and project come from env, not from committed config as in the old app. Local development works with neither.
 
