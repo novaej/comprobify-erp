@@ -1,0 +1,18 @@
+{
+  "name": "@comprobify/core",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc"
+  },
+  "devDependencies": {
+    "@comprobify/config": "workspace:*",
+    "@types/node": "24.19.2",
+    "typescript": "6.0.3"
+  }
+}

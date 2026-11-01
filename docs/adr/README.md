@@ -1,0 +1,47 @@
+# Architecture Decision Records
+
+An ADR records a decision that is hard to reverse or not obvious from the code: its context, the choice, and the consequences. Write one when choosing between viable approaches, setting a pattern, or deciding not to do something that looks useful. Skip it for easily reversed details and routine fixes.
+
+Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accepted ADRs are not rewritten; a new ADR supersedes them. Numbers are independent of the old repositories, so write old ones as `API ADR-038`.
+
+## Template
+
+```markdown
+# ADR-XXX: Title
+
+## Status
+## Date
+## Context
+## Decision
+## Consequences
+## Alternatives considered
+```
+
+## Index
+
+| ADR | Title | Status |
+|---|---|---|
+| [001](001-one-app-monorepo.md) | One app, one worker, one image, pnpm monorepo | Accepted |
+| [002](002-language-runtime-versions.md) | TypeScript, Node 24, exact version pinning | Accepted |
+| [003](003-database-access-and-migrations.md) | PostgreSQL 18, Drizzle, SQL migrations, two roles | Accepted |
+| [004](004-fail-loud-rls.md) | Fail-loud Row-Level Security | Accepted |
+| [005](005-jobs-pg-boss.md) | Jobs and schedules on pg-boss | Accepted |
+| [006](006-web-design-system-i18n.md) | Next.js, ported design system, next-intl | Accepted |
+| [007](007-testing-and-code-quality.md) | Testing and code quality tooling | Accepted |
+| [008](008-config-and-observability.md) | Config validation, logging, Sentry | Accepted |
+
+The auth library is decided in Milestone 1 (PRD open question 7).
+
+## Old ADRs to read before each milestone
+
+Port the ones still valid as "carried over" ADRs here, linking the original in `../comprobify/docs/adr/`.
+
+| Milestone | API ADRs |
+|---|---|
+| 0 | 012, 020, 036, 037, 038, 039 |
+| 1 | 018, 035 (what to leave behind) |
+| 2 | 029, 031, 034 |
+| 3 | 003, 004, 006, 008, 009 |
+| 8 | 017, 022, 023, 025, 027, 028, 032, 033 |
+| 9 | 024 |
+| When Redis is added | 026 |

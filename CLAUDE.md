@@ -1,0 +1,156 @@
+# CLAUDE.md
+
+Primary guide for AI assistants and developers. Every rule here takes precedence over defaults. `docs/PRD.md` is the source of truth for what to build; this file is how to build it. Keep it current: it changes with every milestone.
+
+**Status:** Milestone 0 (Foundations) in progress. Commands and paths below describe the planned Milestone 0 layout until that work lands. Decisions are in [docs/adr/](docs/adr/README.md).
+
+---
+
+## Working agreements
+
+1. **Show the diff and wait for a go-ahead before committing.** No commit without explicit approval, every time.
+2. **Keep code comments short.** Say why, not what. One line is the norm.
+3. **Every change updates its docs in the same piece of work.** A change isn't done until its docs are (`docs/guides/documentation-checklist.md`).
+4. **Read the surrounding code and tests before changing anything.**
+5. **Commit and PR titles are `type: description`** (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`). Reference requirement ids in the body (`FR-…`, `NFR-…`).
+
+---
+
+## Project
+
+Comprobify is a cloud ERP for Ecuadorian SMBs built around SRI electronic invoicing: one Next.js app plus one worker, sharing one TypeScript core and one Postgres database. It replaces the `comprobify` API + `comprobify-web` pair.
+
+- Build in the order of PRD section 15. Each milestone is code + tests + docs, and its gate must pass before the next starts.
+- `../comprobify` and `../comprobify-web` are **read-only** references. Port what PRD Appendix A lists, adapted to TypeScript and this architecture. Never edit them, and never copy their `.env` files.
+- PRD vs old code: the PRD wins. PRD silent: prefer old behaviour and record the decision in an ADR.
+- Reference requirement ids in commits, tests and ADRs.
+- Track progress in `NEXT_STEPS.md`: tick a step in the same change that finishes it, and remove a milestone's section when its gate passes.
+- SRI spec: Ficha Técnica v2.32, in `docs/reference/`. That folder is git-ignored and local only: never commit it, and ask the owner for the PDF if it's missing.
+
+---
+
+## Commands
+
+```bash
+pnpm install
+pnpm dev                 # web + worker in watch mode
+pnpm db:setup            # roles and databases on the local postgres18 container (see GETTING_STARTED.md)
+pnpm db:migrate          # as the owner role: SQL migrations, then pg-boss schema and queues
+pnpm db:generate         # new migration from the Drizzle schema
+pnpm lint                # also enforces the core module boundaries
+pnpm format              # Prettier; format:check in CI
+pnpm typecheck
+pnpm test                # unit, no database
+pnpm test:integration    # real Postgres, RLS on, app role, database name must end in _test
+pnpm test:e2e            # Playwright
+pnpm build
+pnpm stack:up            # Docker stack: caddy, migrate, web, worker, using the postgres18 container
+```
+
+---
+
+## Architecture
+
+```
+apps/web        Next.js: UI, server actions, route handlers. Thin adapters only.
+apps/worker     Job runner. Registers handlers from core.
+packages/core   Domain modules. All business logic. No Next.js imports.
+packages/db     Drizzle schema, SQL migrations, RLS helpers, seeds.
+packages/ui     Shared shadcn components and design tokens.
+packages/config Env parsing (Zod) and the shared tsconfig.
+docs/           See PRD section 13.
+infra/          Compose files, Caddyfile, Postgres bootstrap, scripts.
+```
+
+Both processes run from one Docker image. Postgres holds data, sessions and the job queue. There is no Redis or RabbitMQ.
+
+---
+
+## Critical rules
+
+1. **Business logic lives in `packages/core`** (NFR-ARCH-1). Never in a React component, server action or route handler.
+2. **Core functions take the actor context first** and a transaction handle optionally (NFR-ARCH-5). They never read `process.env` and never touch `Request`/`Response`.
+3. **Modules call each other's public `index.ts`**, never each other's tables (NFR-ARCH-4). A cross-module workflow is one service function that owns the transaction.
+4. **Core inputs and outputs are Zod schemas** (NFR-ARCH-2).
+5. **Errors are `DomainError` with a stable `code`** (NFR-ARCH-6).
+6. **Permissions are enforced in core.** Page and action checks are extra layers, never the only one (FR-ROLE-3).
+7. **All data access goes through `withTenant` or `withSystem(reason, …)`** (NFR-SEC-2). System context needs a real reason string and is logged.
+8. **Every tenant-owned table has `tenant_id` and forced RLS with the fail-loud policy** (NFR-SEC-1). Use `app_enable_tenant_rls()` in the migration; the catalog test fails otherwise.
+9. **The app role is never a superuser or `BYPASSRLS`** (NFR-SEC-4). Migrations run as the owner role, and the app refuses to boot on a role that bypasses RLS.
+10. **Enqueue jobs in the same transaction as the business write**, through the transaction handle. Never send from the pooled connection after commit.
+11. **Job handlers are idempotent** (NFR-JOB-1): re-fetch by id, check state, then act. Schedules are declared in code with an explicit time zone (NFR-JOB-2).
+12. **No hard deletes.** Use status or `active`. The app role has no `DELETE` grant on application tables. Twin reset is the one exception (PRD glossary).
+13. **Never interpolate SQL.** Use Drizzle or `sql` parameters.
+14. **Never use floats for money or quantities.** `numeric` in the database, a decimal library in the domain.
+15. **All date decisions use Ecuador time** (UTC-5, no DST) through one helper module. Servers run UTC.
+16. **Migrations are forward-only**, set `lock_timeout`, and never get edited once merged.
+17. **Status CHECKs and triggers are generated from the TypeScript definition** (FR-DOC-3). Never keep two hand-written copies.
+18. **Every UI string is in the message files.** Spanish is the default, English secondary.
+19. **English for identifiers, tables and columns.** Spanish only where SRI mandates it (XML element names).
+20. **Log fields are an explicit allow-list.** Never log headers, query strings, tokens or P12 data.
+
+---
+
+## Tenancy in one paragraph
+
+Deployment environment (`APP_ENV`: local, staging, production) and tenant mode (`TEST`, `PRODUCTION`) are separate. A test twin is another `tenants` row linked by `twin_of`, isolated by normal RLS; there is no sandbox schema and no environment column. `twin_of` is used only by the switcher, certificate copy, plan inheritance, membership mirroring and master-data copy. Ambiente is `2` only for a `PRODUCTION` tenant on the production deployment, computed in one function (FR-ONB-6).
+
+---
+
+## Common mistakes
+
+From the old systems (PRD Appendix B). Each came from a real incident.
+
+1. Deriving billing period dates from "now" except for the first period and promotion. Anchor to the previous period end and clamp month-end arithmetic.
+2. Wrong daily billing order. It is seat changes, then tier changes, then renewals.
+3. Pricing a deferred period at today's price. Use the price and seat count in effect on the date it starts.
+4. Signing before XSD validation, or ignoring element order.
+5. Single-use tokens consumed on `GET`. Link scanners prefetch: `GET` checks, `POST` consumes.
+6. Logging auth headers or query strings.
+7. `parseInt` on a UUID. Parse UUIDs as UUIDs.
+8. Letting `NaN` reach the database, where it is a valid numeric. Check that source fields exist.
+9. Treating an empty env var as unset. `parseFloat('')` is `NaN`. Validate config at startup.
+10. Excluding files read at runtime from the Docker image through `.dockerignore`.
+11. Leaving Cloudflare email obfuscation on for app hosts. It breaks proxied HTML containing emails.
+12. Leaving a SQL client open during a deploy. It blocks migrations. Set `lock_timeout` and wait for health.
+13. Restoring a production copy with email, webhooks and payments still live.
+14. Changing a state transition in code but not in the DB trigger. Generate both from one source.
+15. Sharing one rate limiter across abuse vectors, or using an in-process store with several instances.
+16. Counting background polling as user activity for session idle timeout.
+17. Payphone: confirm within 5 minutes, persist the vendor id even if saving the outcome fails, never apply a duplicate charge, minimum charge $1.00.
+18. Displaying a payment from the subscription's current tier. Use `total_amount` and the payment's target tier and interval.
+
+Found while setting up this repo:
+
+19. Calling pg-boss `createQueue` from the web or worker process. It runs DDL, so queues are created by the migrate step as the owner role.
+20. Treating `FORCE ROW LEVEL SECURITY` as owner-exempt. A data migration run as the owner needs `app.rls_system`, and it gets logged in the migration.
+21. Reusing role names from other projects. Postgres roles are cluster-wide and the local `postgres18` container is shared, so this repo uses `comprobify_erp_owner` and `comprobify_erp_app`, never `comprobify_app`.
+
+**Left behind on purpose** (never port): reserved API keys and pool, `requireInternalService` and the BFF secret, P12-based recovery and `alreadyLinked`, promotion key mirroring, tenant = API key identity, duplicated rows across databases, the notification-sync webhook receiver, the `sandbox` schema and `tenants.sandbox`, RabbitMQ with `pending_effects` and its sweep, droplet cron jobs, two migration tools.
+
+---
+
+## SRI
+
+Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expands them from Milestone 3. The rules most often broken:
+
+- Reception codes 43 and 70 mean SRI holds the document: `RECEIVED`, never `RETURNED`.
+- Only transport errors are retried. A clean SRI answer never is.
+- A rejected document is corrected and resent as the same row and sequential. Never a new number.
+- Issue date is the transmission day, in Ecuador time.
+- The RIDE is built from the authorized XML, never from live data.
+
+---
+
+## Key files
+
+| Path | What |
+|---|---|
+| `docs/PRD.md` | Requirements and delivery plan |
+| `NEXT_STEPS.md` | Current progress and open work |
+| `docs/adr/` | Decisions and why |
+| `packages/db/src/context.ts` | `withTenant`, `withSystem` |
+| `packages/db/migrations/` | Reviewed SQL migrations |
+| `packages/config/src/` | Env schemas per process |
+| `packages/core/src/jobs/` | Queue registry and schedules |
+| `tests/integration/rls-catalog.test.ts` | NFR-SEC-5 catalog test |
