@@ -1,5 +1,9 @@
 packages:
   - apps/*
   - packages/*
+  - tests/*
 
 saveExact: true
+
+allowBuilds:
+  esbuild: false

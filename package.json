@@ -10,11 +10,15 @@
   },
   "scripts": {
     "build": "turbo run build",
+    "db:generate": "pnpm --filter @comprobify/db db:generate",
+    "db:migrate": "pnpm --filter @comprobify/db db:migrate",
+    "db:setup": "bash infra/scripts/db-setup.sh",
     "dev": "turbo run dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "test": "turbo run test",
+    "test:integration": "pnpm --filter @comprobify/integration-tests test:integration",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {

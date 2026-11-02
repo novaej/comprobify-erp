@@ -58,6 +58,7 @@ packages/core   Domain modules. All business logic. No Next.js imports.
 packages/db     Drizzle schema, SQL migrations, RLS helpers, seeds.
 packages/ui     Shared shadcn components and design tokens.
 packages/config Env parsing (Zod), the logger and the shared tsconfig.
+tests/          Integration tests, in their own workspace package.
 docs/           See PRD section 13.
 infra/          Compose files, Caddyfile, Postgres bootstrap, scripts.
 ```
@@ -149,7 +150,9 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `docs/PRD.md` | Requirements and delivery plan |
 | `NEXT_STEPS.md` | Current progress and open work |
 | `docs/adr/` | Decisions and why |
-| `packages/db/src/context.ts` | `withTenant`, `withSystem` |
+| `packages/db/src/context.ts` | `createDatabase`, which gives `withTenant` and `withSystem` |
+| `packages/db/src/boot-guard.ts` | Boot guard and the catalog check it shares with the test |
+| `infra/postgres/bootstrap.sql` | Local roles and databases |
 | `packages/db/migrations/` | Reviewed SQL migrations |
 | `packages/config/src/env.ts` | Env schemas per process |
 | `packages/config/src/logger.ts` | Allow-listed logger |

@@ -42,9 +42,20 @@ export const migrateEnvSchema = z.object({
   MIGRATION_DATABASE_URL: postgresUrl,
 });
 
+// Tests truncate and probe freely, so they can only run on a *_test database.
+const testDatabaseUrl = postgresUrl.refine((url) => new URL(url).pathname.endsWith('_test'), {
+  message: 'database name must end in _test',
+});
+
+export const testEnvSchema = z.object({
+  TEST_DATABASE_URL: testDatabaseUrl,
+  TEST_MIGRATION_DATABASE_URL: testDatabaseUrl,
+});
+
 export type WebEnv = z.output<typeof webEnvSchema>;
 export type WorkerEnv = z.output<typeof workerEnvSchema>;
 export type MigrateEnv = z.output<typeof migrateEnvSchema>;
+export type TestEnv = z.output<typeof testEnvSchema>;
 
 type Source = Record<string, string | undefined>;
 
@@ -77,3 +88,6 @@ export const loadWorkerEnv = (source: Source = process.env): WorkerEnv =>
 
 export const loadMigrateEnv = (source: Source = process.env): MigrateEnv =>
   parseEnv(migrateEnvSchema, source);
+
+export const loadTestEnv = (source: Source = process.env): TestEnv =>
+  parseEnv(testEnvSchema, source);

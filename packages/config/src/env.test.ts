@@ -3,9 +3,11 @@ import { describe, expect, it } from 'vitest';
 import {
   InvalidEnvError,
   loadMigrateEnv,
+  loadTestEnv,
   loadWebEnv,
   loadWorkerEnv,
   migrateEnvSchema,
+  testEnvSchema,
   webEnvSchema,
   workerEnvSchema,
 } from './env';
@@ -76,6 +78,27 @@ describe('env loading', () => {
   });
 });
 
+describe('test env', () => {
+  const app = 'postgres://app:x@localhost:5432/comprobify_erp_test';
+  const owner = 'postgres://owner:x@localhost:5432/comprobify_erp_test';
+
+  it('accepts databases named *_test', () => {
+    expect(loadTestEnv({ TEST_DATABASE_URL: app, TEST_MIGRATION_DATABASE_URL: owner })).toEqual({
+      TEST_DATABASE_URL: app,
+      TEST_MIGRATION_DATABASE_URL: owner,
+    });
+  });
+
+  it('refuses any other database', () => {
+    const load = () =>
+      loadTestEnv({
+        TEST_DATABASE_URL: app.replace('_test', '_local'),
+        TEST_MIGRATION_DATABASE_URL: owner,
+      });
+    expect(load).toThrow(/TEST_DATABASE_URL: database name must end in _test/);
+  });
+});
+
 describe('.env.example', () => {
   const example = readFileSync(new URL('../../../.env.example', import.meta.url), 'utf8');
   const documented = new Set(
@@ -83,8 +106,8 @@ describe('.env.example', () => {
   );
 
   it('documents every schema variable', () => {
-    const keys = [webEnvSchema, workerEnvSchema, migrateEnvSchema].flatMap((schema) =>
-      Object.keys(schema.shape),
+    const keys = [webEnvSchema, workerEnvSchema, migrateEnvSchema, testEnvSchema].flatMap(
+      (schema) => Object.keys(schema.shape),
     );
     expect(keys.filter((key) => !documented.has(key))).toEqual([]);
   });

@@ -1,0 +1,20 @@
+{
+  "name": "@comprobify/integration-tests",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "test:integration": "vitest run",
+    "typecheck": "tsc"
+  },
+  "devDependencies": {
+    "@comprobify/config": "workspace:*",
+    "@comprobify/db": "workspace:*",
+    "@types/node": "24.19.2",
+    "@types/pg": "8.23.1",
+    "pg": "8.23.1",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  }
+}
