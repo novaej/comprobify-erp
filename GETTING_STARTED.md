@@ -56,3 +56,11 @@ pnpm test:integration
 ```
 
 `pnpm test:integration` migrates `comprobify_erp_test` itself, and refuses any database whose name doesn't end in `_test`.
+
+## 6. Run the worker
+
+```bash
+pnpm --filter @comprobify/worker dev
+```
+
+It logs `Worker started`, then a `Heartbeat` every 5 minutes.

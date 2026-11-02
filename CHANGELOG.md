@@ -16,3 +16,5 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - Fail-loud RLS functions and `app_enable_tenant_rls()` in the first migration (NFR-SEC-1).
 - `createDatabase`, with `withTenant`, `withSystem` and a boot guard (NFR-SEC-2, NFR-SEC-4).
 - RLS isolation and catalog integration tests on probe tables (NFR-SEC-5).
+- pg-boss in its own schema, with a queue registry, transactional `enqueue` and schedules in Ecuador time (NFR-JOB-1, NFR-JOB-2, NFR-JOB-3).
+- Worker app with the boot guard and a `system.heartbeat` job.

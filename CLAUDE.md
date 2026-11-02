@@ -123,7 +123,7 @@ From the old systems (PRD Appendix B). Each came from a real incident.
 
 Found while setting up this repo:
 
-19. Calling pg-boss `createQueue` from the web or worker process. It runs DDL, so queues are created by the migrate step as the owner role.
+19. Creating queues from the web or worker process. `createQueue` runs DDL for partitioned queues, so queues come from the registry in the migrate step, as the owner role.
 20. Treating `FORCE ROW LEVEL SECURITY` as owner-exempt. A data migration run as the owner needs `app.rls_system`, and it gets logged in the migration.
 21. Reusing role names from other projects. Postgres roles are cluster-wide and the local `postgres18` container is shared, so this repo uses `comprobify_erp_owner` and `comprobify_erp_app`, never `comprobify_app`.
 

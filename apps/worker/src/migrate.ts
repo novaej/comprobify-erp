@@ -1,6 +1,7 @@
 import { loadMigrateEnv } from '@comprobify/config/env';
 import { createLogger } from '@comprobify/config/logger';
-import { runMigrations } from './migrator';
+import { installJobs } from '@comprobify/core';
+import { runMigrations } from '@comprobify/db/migrator';
 
 const env = loadMigrateEnv();
 const logger = createLogger({
@@ -11,4 +12,5 @@ const logger = createLogger({
 });
 
 await runMigrations(env.MIGRATION_DATABASE_URL);
+await installJobs(env.MIGRATION_DATABASE_URL);
 logger.info('Migrations applied', { event: 'db.migrated' });

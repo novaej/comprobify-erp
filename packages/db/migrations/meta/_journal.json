@@ -8,6 +8,13 @@
       "when": 1793576049540,
       "tag": "0000_rls_foundations",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793577815468,
+      "tag": "0001_pgboss_schema",
+      "breakpoints": true
     }
   ]
 }

@@ -11,7 +11,7 @@
   "scripts": {
     "build": "turbo run build",
     "db:generate": "pnpm --filter @comprobify/db db:generate",
-    "db:migrate": "pnpm --filter @comprobify/db db:migrate",
+    "db:migrate": "pnpm --filter @comprobify/worker db:migrate",
     "db:setup": "bash infra/scripts/db-setup.sh",
     "dev": "turbo run dev",
     "format": "prettier --write .",
