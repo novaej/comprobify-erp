@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "description": "Facturación electrónica SRI — Ecuador"
+  },
+  "common": {
+    "retry": "Reintentar"
+  },
+  "theme": {
+    "toLight": "Cambiar a modo claro",
+    "toDark": "Cambiar a modo oscuro"
+  },
+  "home": {
+    "title": "Comprobify ERP",
+    "description": "La base está lista. Los módulos llegan en los próximos hitos.",
+    "status": "En construcción"
+  },
+  "apiError": {
+    "UNKNOWN": "Ha ocurrido un error inesperado."
+  },
+  "errorBoundary": {
+    "title": "Algo salió mal",
+    "backToDashboard": "Volver al panel"
+  },
+  "notFoundPage": {
+    "title": "Página no encontrada",
+    "description": "La página que buscas no existe o fue movida.",
+    "backToDashboard": "Volver al panel"
+  }
+}

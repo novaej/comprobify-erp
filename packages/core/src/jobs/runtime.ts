@@ -28,6 +28,8 @@ export type JobsOptions = {
   // Web only sends; the worker owns handlers, cron and maintenance (ADR-005).
   role: 'web' | 'worker';
   logger: Logger;
+  // Sentry, injected so core stays vendor-free.
+  reportError?: (err: unknown) => void;
 };
 
 function bossOptions({ connectionString, role }: JobsOptions): ConstructorOptions {
@@ -45,9 +47,12 @@ function bossOptions({ connectionString, role }: JobsOptions): ConstructorOption
 }
 
 export function createJobs(options: JobsOptions): Jobs {
-  const { logger } = options;
+  const { logger, reportError } = options;
   const boss = new PgBoss(bossOptions(options));
-  boss.on('error', (err) => logger.error('Job queue error', { event: 'jobs.error', err }));
+  boss.on('error', (err) => {
+    logger.error('Job queue error', { event: 'jobs.error', err });
+    reportError?.(err);
+  });
 
   return {
     boss,
@@ -68,6 +73,7 @@ export function createJobs(options: JobsOptions): Jobs {
           } catch (err) {
             // pg-boss only stores this on the job; rethrown so it retries or fails.
             logger.error('Job failed', { event: 'jobs.failed', jobId: job.id, err });
+            reportError?.(err);
             throw err;
           }
         }

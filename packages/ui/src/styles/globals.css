@@ -1,0 +1,269 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --font-display: var(--font-display);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-border: var(--success-border);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-border: var(--warning-border);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-border: var(--info-border);
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-3xs: 0.625rem;
+  --text-3xs--line-height: 0.875rem;
+  --color-field-border: var(--field-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-foreground: var(--sidebar-active-foreground);
+  --color-panel: var(--panel);
+  --color-panel-foreground: var(--panel-foreground);
+  --color-panel-muted: var(--panel-muted);
+  --color-panel-accent: var(--panel-accent);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  /* Soft palette for all-day use: warm off-white page, no pure white or black,
+     text contrast about 10-13:1, and one teal accent. Sidebar and auth panel
+     share a pale teal-gray ("teal mist"). */
+  --background: oklch(0.958 0.007 89);
+  --foreground: oklch(0.286 0.023 256);
+  --card: oklch(0.985 0.004 91);
+  --card-foreground: oklch(0.286 0.023 256);
+  --popover: oklch(0.985 0.004 91);
+  --popover-foreground: oklch(0.286 0.023 256);
+  --primary: oklch(0.511 0.086 186);
+  --primary-foreground: oklch(0.985 0.004 91);
+  --secondary: oklch(0.922 0.011 90);
+  --secondary-foreground: oklch(0.286 0.023 256);
+  --muted: oklch(0.922 0.011 90);
+  --muted-foreground: oklch(0.513 0.021 253);
+  --accent: oklch(0.922 0.011 90);
+  --accent-foreground: oklch(0.286 0.023 256);
+  --destructive: oklch(0.529 0.147 33);
+  --border: oklch(0.886 0.014 89);
+  --input: oklch(0.886 0.014 89);
+  --ring: oklch(0.511 0.086 186);
+  --chart-1: oklch(0.511 0.086 186);
+  --chart-2: oklch(0.606 0.093 184);
+  --chart-3: oklch(0.729 0.079 184);
+  --chart-4: oklch(0.837 0.051 185);
+  --chart-5: oklch(0.914 0.023 183);
+  --radius: 0.5rem;
+  /* Form-field borders need 3:1 against the card (WCAG 1.4.11); --border/--input stay soft. */
+  --field-border: oklch(0.637 0.017 90);
+  /* Status colors. Each has a text/icon color, a soft background and a border,
+     so banners, badges and alerts share one definition instead of raw
+     amber/green/blue utilities. Destructive keeps shadcn's token. */
+  --success: oklch(0.471 0.096 157);
+  --success-soft: oklch(0.944 0.021 161);
+  --success-border: oklch(0.874 0.043 160);
+  --warning: oklch(0.508 0.105 72);
+  --warning-soft: oklch(0.957 0.037 88);
+  --warning-border: oklch(0.868 0.075 90);
+  --info: oklch(0.484 0.114 256);
+  --info-soft: oklch(0.938 0.018 258);
+  --info-border: oklch(0.855 0.04 257);
+  --sidebar: oklch(0.936 0.009 180);
+  --sidebar-foreground: oklch(0.303 0.026 184);
+  --sidebar-muted: oklch(0.502 0.032 185);
+  --sidebar-primary: oklch(0.511 0.086 186);
+  --sidebar-primary-foreground: oklch(0.985 0.004 91);
+  --sidebar-accent: oklch(0.904 0.016 182);
+  --sidebar-accent-foreground: oklch(0.303 0.026 184);
+  --sidebar-active: oklch(0.985 0.004 91);
+  --sidebar-active-foreground: oklch(0.511 0.086 186);
+  --sidebar-border: oklch(0.887 0.015 181);
+  --sidebar-ring: oklch(0.511 0.086 186);
+  /* Auth brand panel. Components read it through the sidebar tokens (see auth-shell). */
+  --panel: oklch(0.901 0.017 183);
+  --panel-foreground: oklch(0.286 0.035 183);
+  --panel-muted: oklch(0.477 0.049 184);
+  --panel-accent: oklch(0.48 0.081 186);
+}
+
+.dark {
+  /* Lifted slate, desaturated teal accent and off-white text: dark without glow. */
+  --background: oklch(0.246 0.023 259);
+  --foreground: oklch(0.889 0.013 256);
+  --card: oklch(0.286 0.027 258);
+  --card-foreground: oklch(0.889 0.013 256);
+  --popover: oklch(0.286 0.027 258);
+  --popover-foreground: oklch(0.889 0.013 256);
+  --primary: oklch(0.725 0.086 184);
+  --primary-foreground: oklch(0.238 0.026 179);
+  --secondary: oklch(0.322 0.03 258);
+  --secondary-foreground: oklch(0.889 0.013 256);
+  --muted: oklch(0.322 0.03 258);
+  --muted-foreground: oklch(0.711 0.024 254);
+  --accent: oklch(0.322 0.03 258);
+  --accent-foreground: oklch(0.889 0.013 256);
+  --destructive: oklch(0.76 0.089 31);
+  --border: oklch(0.345 0.03 256);
+  --input: oklch(0.345 0.03 256);
+  --ring: oklch(0.725 0.086 184);
+  --chart-1: oklch(0.725 0.086 184);
+  --chart-2: oklch(0.635 0.077 184);
+  --chart-3: oklch(0.542 0.067 185);
+  --chart-4: oklch(0.452 0.056 185);
+  --chart-5: oklch(0.365 0.044 184);
+  --field-border: oklch(0.579 0.033 258);
+  --success: oklch(0.798 0.078 159);
+  --success-soft: oklch(0.751 0.085 158 / 14%);
+  --success-border: oklch(0.751 0.085 158 / 30%);
+  --warning: oklch(0.826 0.086 84);
+  --warning-soft: oklch(0.773 0.096 86 / 14%);
+  --warning-border: oklch(0.773 0.096 86 / 30%);
+  --info: oklch(0.779 0.066 258);
+  --info-soft: oklch(0.728 0.074 258 / 14%);
+  --info-border: oklch(0.728 0.074 258 / 30%);
+  --sidebar: oklch(0.221 0.022 261);
+  --sidebar-foreground: oklch(0.839 0.018 256);
+  --sidebar-muted: oklch(0.623 0.027 258);
+  --sidebar-primary: oklch(0.725 0.086 184);
+  --sidebar-primary-foreground: oklch(0.238 0.026 179);
+  --sidebar-accent: oklch(0.272 0.029 261);
+  --sidebar-accent-foreground: oklch(0.889 0.013 256);
+  --sidebar-active: oklch(0.329 0.033 256);
+  --sidebar-active-foreground: oklch(0.81 0.068 184);
+  --sidebar-border: oklch(1 0 0 / 6%);
+  --sidebar-ring: oklch(0.725 0.086 184);
+  --panel: oklch(0.273 0.021 211);
+  --panel-foreground: oklch(0.889 0.013 256);
+  --panel-muted: oklch(0.765 0.029 183);
+  --panel-accent: oklch(0.725 0.086 184);
+}
+
+/* Unlayered so it beats the components' `border-input`; focus and invalid
+   states keep their own border colors. */
+input[data-slot='input']:not(:focus-visible):not([aria-invalid='true']),
+textarea[data-slot='textarea']:not(:focus-visible):not([aria-invalid='true']),
+[data-slot='select-trigger']:not(:focus-visible):not([aria-invalid='true']) {
+  border-color: var(--field-border);
+}
+
+/* Switch tracks: the shadcn off-state uses --input, which is ~1.3:1 against a card. */
+[data-slot='switch'][data-unchecked] {
+  background-color: var(--field-border);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+/* Stacked tables: below `md`, each row becomes a small card and each cell shows
+   its column name (data-label). Used with the StackTable components, which keep
+   the table roles for assistive tech. Unlayered on purpose so it wins over the
+   padding and alignment utilities on the cells. */
+@media (max-width: 47.99rem) {
+  .table-stack,
+  .table-stack tbody {
+    display: block;
+  }
+  .table-stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .table-stack tr {
+    display: block;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .table-stack tr:last-child {
+    border-bottom: 0;
+  }
+  .table-stack td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.3rem 0;
+    text-align: right;
+    white-space: normal;
+  }
+  .table-stack td[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    text-align: left;
+  }
+  .table-stack td:not([data-label]) {
+    justify-content: flex-end;
+  }
+  /* The cell that names the row (person, document number): a card heading. */
+  .table-stack td.stack-title {
+    display: block;
+    text-align: left;
+    padding-bottom: 0.5rem;
+  }
+  /* Empty and error rows span the whole table and keep their own layout. */
+  .table-stack td.stack-full {
+    display: block;
+    text-align: center;
+    padding: 0;
+  }
+  .table-stack tr:has(> td.stack-full) {
+    padding: 0;
+  }
+}

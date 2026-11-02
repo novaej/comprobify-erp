@@ -14,3 +14,4 @@ test-results/
 
 # Local reference only, never committed
 docs/reference/
+next-env.d.ts

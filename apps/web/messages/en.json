@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "description": "SRI electronic invoicing — Ecuador"
+  },
+  "common": {
+    "retry": "Retry"
+  },
+  "theme": {
+    "toLight": "Switch to light mode",
+    "toDark": "Switch to dark mode"
+  },
+  "home": {
+    "title": "Comprobify ERP",
+    "description": "The foundations are ready. Modules arrive in the next milestones.",
+    "status": "In progress"
+  },
+  "apiError": {
+    "UNKNOWN": "An unexpected error occurred."
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "backToDashboard": "Back to dashboard"
+  },
+  "notFoundPage": {
+    "title": "Page not found",
+    "description": "The page you're looking for doesn't exist or was moved.",
+    "backToDashboard": "Back to dashboard"
+  }
+}

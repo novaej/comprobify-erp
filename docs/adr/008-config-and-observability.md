@@ -22,7 +22,9 @@ Two old incidents shape this: an empty env var parsed as `NaN` (Appendix B lesso
 
 **Betterstack** ships through `@logtail/pino` when `BETTERSTACK_SOURCE_TOKEN` is set. **Sentry** (`@sentry/nextjs`, `@sentry/node`) is on only when a DSN is set, tagged with the request id. Org and project come from env, not from committed config as in the old app. Local development works with neither.
 
-**Health.** `GET /health` checks a database query and the queue, and returns 503 on failure. It runs in system context with a fixed reason and reveals no details. Deploys wait for it (PRD 9.4).
+**Health.** `GET /health` checks a database query and the queue, and returns 503 on failure. It reveals no details. Deploys wait for it (PRD 9.4). It was planned to run in system context with a fixed reason, but its query touches no table, so it uses `db.ping()` with no context. That also keeps a system-context log line out of every probe.
+
+**Sentry in Milestone 0 is server-side only:** the web server, through `onRequestError` with the request id as a tag, and the worker, through job failures. Browser Sentry needs its DSN at build time, which conflicts with one image for every environment. It's deferred until there are screens worth monitoring, and will take the DSN from the server at runtime.
 
 ## Consequences
 
@@ -33,7 +35,7 @@ Two old incidents shape this: an empty env var parsed as `NaN` (Appendix B lesso
 
 ### Negative
 - Adding a log field means changing the allow-list.
-- pino needs `serverExternalPackages` in Next.js, and transports need testing in the standalone output.
+- pino needs `serverExternalPackages` in Next.js, and transports need testing in the standalone output. Checked in Milestone 0: inside a Next build, pino resolves transports from `apps/web`, so `pino-pretty` and `@logtail/pino` are listed there as well as in `packages/config`.
 - Each new variable touches the schema, `.env.example` and `docs/deployment.md`.
 
 ## Alternatives considered

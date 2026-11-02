@@ -126,6 +126,8 @@ Found while setting up this repo:
 19. Creating queues from the web or worker process. `createQueue` runs DDL for partitioned queues, so queues come from the registry in the migrate step, as the owner role.
 20. Treating `FORCE ROW LEVEL SECURITY` as owner-exempt. A data migration run as the owner needs `app.rls_system`, and it gets logged in the migration.
 21. Reusing role names from other projects. Postgres roles are cluster-wide and the local `postgres18` container is shared, so this repo uses `comprobify_erp_owner` and `comprobify_erp_app`, never `comprobify_app`.
+22. Keeping a server singleton in a module variable in `apps/web`. Next bundles `instrumentation.ts` and routes separately, so each gets its own copy. Keep it on `globalThis`.
+23. Leaving a pino transport out of `apps/web`'s dependencies. Inside a Next build, pino resolves transports from the app, so `pino-pretty` and `@logtail/pino` must be listed there too.
 
 **Left behind on purpose** (never port): reserved API keys and pool, `requireInternalService` and the BFF secret, P12-based recovery and `alreadyLinked`, promotion key mirroring, tenant = API key identity, duplicated rows across databases, the notification-sync webhook receiver, the `sandbox` schema and `tenants.sandbox`, RabbitMQ with `pending_effects` and its sweep, droplet cron jobs, two migration tools.
 
@@ -158,4 +160,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/config/src/logger.ts` | Allow-listed logger |
 | `packages/core/src/kernel/` | Actor context, `DomainError`, `Clock` |
 | `packages/core/src/jobs/` | Queue registry and schedules |
+| `packages/ui/` | Design system: tokens, components, theme |
+| `apps/web/messages/` | UI strings, `es` and `en` |
+| `apps/web/src/server/runtime.ts` | The web process's env, logger, database and jobs |
 | `tests/integration/rls-catalog.test.ts` | NFR-SEC-5 catalog test |

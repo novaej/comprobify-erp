@@ -1,7 +1,16 @@
 import js from '@eslint/js';
+import nextVitals from 'eslint-config-next/core-web-vitals';
 import prettier from 'eslint-config-prettier';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+
+const REACT_FILES = ['apps/web/**/*.{ts,tsx,js,mjs}', 'packages/ui/**/*.{ts,tsx}'];
+
+// Next and React rules (ADR-007), scoped to the React code. Our own TypeScript setup
+// below replaces next/typescript, which would register the plugin a second time.
+const nextConfigs = nextVitals
+  .filter((config) => config.name !== 'next/typescript')
+  .map((config) => (config.ignores && !config.name ? config : { ...config, files: REACT_FILES }));
 
 const FORBIDDEN_IN_CORE = {
   group: ['next', 'next/*', 'react', 'react-dom', 'apps/*', '**/apps/*'],
@@ -9,8 +18,19 @@ const FORBIDDEN_IN_CORE = {
 };
 
 export default tseslint.config(
-  { ignores: ['**/node_modules/', '**/dist/', '**/.next/', '**/.turbo/', '**/coverage/'] },
+  {
+    ignores: [
+      '**/node_modules/',
+      '**/dist/',
+      '**/.next/',
+      '**/.turbo/',
+      '**/coverage/',
+      '**/next-env.d.ts',
+    ],
+  },
   js.configs.recommended,
+  ...nextConfigs,
+  { settings: { next: { rootDir: 'apps/web' } } },
   {
     files: ['**/*.{js,mjs,cjs}'],
     languageOptions: { globals: globals.node },

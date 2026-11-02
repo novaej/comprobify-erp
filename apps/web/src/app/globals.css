@@ -1,0 +1,4 @@
+@import '@comprobify/ui/globals.css';
+
+/* Tailwind only scans this app by default. */
+@source '../../../../packages/ui/src';

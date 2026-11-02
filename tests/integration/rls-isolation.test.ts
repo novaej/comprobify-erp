@@ -164,6 +164,10 @@ describe('tenant isolation', () => {
       ).rejects.toMatchObject({ code: '42501' });
     });
 
+    it('answers a health ping without a context', async () => {
+      await expect(db.ping()).resolves.toBeUndefined();
+    });
+
     it('passes the boot guard', async () => {
       await expect(db.assertSafeConnection()).resolves.toBeUndefined();
     });

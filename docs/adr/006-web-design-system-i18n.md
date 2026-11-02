@@ -22,7 +22,7 @@ The ERP must keep the look and feel of `comprobify-web` (FR-UX-2), Spanish first
 
 **Fonts:** Geist and Geist Mono through `next/font`, as today. Bricolage Grotesque arrives with the marketing pages.
 
-**Theme switching: the shim from `comprobify-web`** (`providers/theme-shim.ts`), not `next-themes`. That library's injected script triggers a React 19 warning, so the old app replaced it. The shim keeps the same public API and prevents the flash of the wrong theme through a `beforeInteractive` script in the root layout.
+**Theme switching: the shim from `comprobify-web`** (`providers/theme-shim.ts`), not `next-themes`. That library's injected script triggers a React 19 warning, so the old app replaced it. The shim keeps the same public API and prevents the flash of the wrong theme through a `beforeInteractive` script in the root layout. Found while porting: the old app describes that script but never shipped it, so it is new here. The shim also reads its state through `useSyncExternalStore`, because React 19's hooks lint rejects copying it into state inside an effect.
 
 **i18n: next-intl,** `es` default, `en` secondary, `localePrefix: 'always'`, matching the old routing so URLs stay familiar. Message files live in `apps/web/messages/`. Milestone 0 ports only the namespaces it renders (`common`, `errorBoundary`, `notFoundPage`). Later milestones port keys alongside each screen, reusing the old keys where screens match.
 

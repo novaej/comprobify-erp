@@ -20,6 +20,8 @@ export type Database = {
   withTenant: <T>(ctx: TenantContext, fn: (tx: Tx) => Promise<T>) => Promise<T>;
   withSystem: <T>(reason: string, fn: (tx: Tx) => Promise<T>) => Promise<T>;
   assertSafeConnection: () => Promise<void>;
+  // Touches no tables, so it needs no context. For health checks.
+  ping: () => Promise<void>;
   close: () => Promise<void>;
 };
 
@@ -85,6 +87,9 @@ export function createDatabase(options: DatabaseOptions): Database {
     },
 
     assertSafeConnection: () => assertSafeConnection(pool),
+    ping: async () => {
+      await pool.query('SELECT 1');
+    },
     close: () => pool.end(),
   };
 }

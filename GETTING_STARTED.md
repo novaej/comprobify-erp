@@ -57,10 +57,12 @@ pnpm test:integration
 
 `pnpm test:integration` migrates `comprobify_erp_test` itself, and refuses any database whose name doesn't end in `_test`.
 
-## 6. Run the worker
+## 6. Run the app
 
 ```bash
-pnpm --filter @comprobify/worker dev
+pnpm dev
 ```
 
-It logs `Worker started`, then a `Heartbeat` every 5 minutes.
+This starts the web app on http://localhost:3000/es and the worker. The worker logs `Worker started`, then a `Heartbeat` every 5 minutes. http://localhost:3000/health answers `{"status":"ok"}` when the database and job queue are reachable.
+
+Both refuse to start if the env is invalid or the database role could bypass RLS.
