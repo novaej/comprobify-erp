@@ -127,7 +127,7 @@ From the old systems (PRD Appendix B). Each came from a real incident.
 Found while setting up this repo:
 
 19. Creating queues from the web or worker process. `createQueue` runs DDL for partitioned queues, so queues come from the registry in the migrate step, as the owner role.
-20. Treating `FORCE ROW LEVEL SECURITY` as owner-exempt. A data migration run as the owner needs `app.rls_system`, and it gets logged in the migration.
+20. Treating `FORCE ROW LEVEL SECURITY` as owner-exempt. A migration that reads rows of an RLS table needs `app.rls_system`, set and cleared in its SQL: a data migration, and also adding a foreign key to a table with RLS and rows, because Postgres validates it with a query.
 21. Reusing role names from other projects. Postgres roles are cluster-wide and the local `postgres18` container is shared, so this repo uses `comprobify_erp_owner` and `comprobify_erp_app`, never `comprobify_app`.
 22. Keeping a server singleton in a module variable in `apps/web`. Next bundles `instrumentation.ts` and routes separately, so each gets its own copy. Keep it on `globalThis`.
 23. Leaving a pino transport out of `apps/web`'s dependencies. Inside a Next build, pino resolves transports from the app, so `pino-pretty` and `@logtail/pino` must be listed there too.
@@ -168,6 +168,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/jobs/` | Queue registry and schedules |
 | `packages/core/src/identity/` | Better Auth setup, rate limits, sessions and idle timeout |
 | `packages/core/src/tenancy/` | Organizations and twins, roles and permissions, actor context, ambiente |
+| `packages/core/src/tenancy/members.ts` | Invitations, role changes, removal, issue-point restrictions, all mirrored in the twin |
 | `packages/core/src/certificates/` | P12 parsing, the RUC match, key encryption |
 | `packages/core/src/testing/` | Test helpers, such as generated P12 files (`@comprobify/core/testing`) |
 | `packages/core/src/email/` | Email templates, Mailgun and the local log provider |

@@ -1,4 +1,4 @@
-import { and, eq, schema, type Database } from '@comprobify/db';
+import { and, eq, schema, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
 import { setActiveTenant } from '../identity';
 import { DomainError, type ActorContext, type Clock } from '../kernel';
@@ -166,6 +166,16 @@ export async function listOrganizations(
   });
 }
 
+// FR-ROLE-2: null means every issue point; core filters queries by the list.
+async function restrictedIssuePoints(tx: Tx['db'], userId: string): Promise<string[] | null> {
+  const { issuePointAccess } = schema;
+  const rows = await tx
+    .select({ id: issuePointAccess.issuePointId })
+    .from(issuePointAccess)
+    .where(and(eq(issuePointAccess.userId, userId), eq(issuePointAccess.active, true)));
+  return rows.length > 0 ? rows.map((row) => row.id) : null;
+}
+
 // The actor context for one request, read in that tenant's own context.
 export async function resolveActor(
   db: Database,
@@ -184,8 +194,7 @@ export async function resolveActor(
       tenantMode: row.mode,
       userId: input.userId,
       permissions: permissionsFor(row.role),
-      // Issue-point restrictions arrive with user management (FR-ROLE-2).
-      issuePointIds: null,
+      issuePointIds: await restrictedIssuePoints(tx, input.userId),
       clock: input.clock,
     };
   });

@@ -9,6 +9,7 @@ import {
   LogOut,
   Menu,
   UserRound,
+  UsersRound,
   X,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -22,7 +23,7 @@ import { OrgSwitcher, type SwitcherOrganization } from './org-switcher';
 type NavItem = {
   href: string;
   icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
-  labelKey: 'dashboard';
+  labelKey: 'dashboard' | 'users';
   group: 'operate' | 'manage';
   // Core still enforces it; this only hides the link (FR-ROLE-3).
   permission: string | null;
@@ -36,6 +37,13 @@ const NAV_ITEMS: NavItem[] = [
     labelKey: 'dashboard',
     group: 'operate',
     permission: null,
+  },
+  {
+    href: '/users',
+    icon: UsersRound,
+    labelKey: 'users',
+    group: 'manage',
+    permission: 'users.read',
   },
 ];
 

@@ -12,6 +12,8 @@ export {
 } from './session-activity';
 export {
   createIdentity,
+  createVerifiedUser,
+  newUserInput,
   pruneIdentityTables,
   setActiveTenant,
   emailInput,

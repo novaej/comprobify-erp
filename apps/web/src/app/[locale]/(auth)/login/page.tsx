@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { AuthCard, AuthShell, Notice } from '@/components/auth-shell';
+import { safeNextPath } from '@/server/paths';
 import { BackLink, FooterLink } from '../back-link';
 import { SignInForm } from '../forms';
 
@@ -10,9 +11,9 @@ export default async function LoginPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ reason?: string }>;
+  searchParams: Promise<{ reason?: string; next?: string }>;
 }) {
-  const [{ locale }, { reason }] = await Promise.all([params, searchParams]);
+  const [{ locale }, { reason, next }] = await Promise.all([params, searchParams]);
   setRequestLocale(locale);
   const t = await getTranslations('auth');
   const notice = reason && reason in NOTICES ? NOTICES[reason as keyof typeof NOTICES] : null;
@@ -28,7 +29,7 @@ export default async function LoginPage({
         </Notice>
       )}
       <AuthCard>
-        <SignInForm />
+        <SignInForm next={safeNextPath(next) ?? undefined} />
       </AuthCard>
       <p className="mt-5 text-center text-sm text-muted-foreground">
         {t('login.noAccount')} <FooterLink href="/register">{t('login.register')}</FooterLink>

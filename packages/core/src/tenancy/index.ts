@@ -15,6 +15,25 @@ export {
 export type { CreatedOrganization, OrganizationEntry, StoredCertificate } from './organizations';
 export { LOGO_MAX_BYTES, sniffLogo } from './logo';
 export type { Logo } from './logo';
+export {
+  acceptInvitation,
+  changeRole,
+  getInvitation,
+  inviteInput,
+  inviteMember,
+  listIssuePoints,
+  listMembers,
+  removeMember,
+  revokeInvitation,
+  setIssuePointAccess,
+} from './members';
+export type {
+  InvitationRow,
+  InvitationView,
+  InviteDeps,
+  IssuePointOption,
+  MemberRow,
+} from './members';
 export { onboardOrganization, onboardOrganizationInput } from './onboarding';
 export { isValidRucStructure } from './ruc';
 export { PERMISSIONS, permissionsFor, ROLE_PERMISSIONS, ROLES } from './roles';

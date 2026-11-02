@@ -57,6 +57,20 @@
       "when": 1793644697801,
       "tag": "0007_certificates_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793651594106,
+      "tag": "0008_members",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793651594426,
+      "tag": "0009_members_rls",
+      "breakpoints": true
     }
   ]
 }

@@ -37,4 +37,5 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - Forms keep what was typed after an error.
 - The app shell: sidebar layout with the organization switcher and its Producción / Pruebas toggle (production only after go-live), the sandbox banner, the certificate banner at 30 days and on expiry, a skip link, and a mobile drawer (FR-USR-5, FR-UX-2).
 - A dashboard placeholder; signing in and onboarding land there.
+- Users page: invitations by email (the link's `GET` never uses it up), role changes, soft removal and issue-point restrictions, each applied to the organization and its twin. New users set their password on the invitation and start verified (FR-USR-1, FR-ROLE-1 to FR-ROLE-3).
 - `AUTH_SECRET`, `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, `MAILGUN_REGION` and `EMAIL_FROM`.

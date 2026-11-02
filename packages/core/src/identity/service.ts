@@ -209,6 +209,39 @@ export function createIdentity({ auth, db, rateLimiter, clock }: IdentityOptions
 
 export type Identity = ReturnType<typeof createIdentity>;
 
+export const newUserInput = z.object({
+  name: z.string().trim().min(1).max(120),
+  email,
+  password,
+  locale: emailLocale,
+});
+
+// For an accepted invitation (FR-USR-1): the emailed link proved the address, so the
+// account starts verified and no verification email is sent. Better Auth hashes the
+// password and writes the rows, as its own sign-up would.
+export async function createVerifiedUser(
+  auth: Auth,
+  raw: z.input<typeof newUserInput>,
+): Promise<{ id: string }> {
+  const input = newUserInput.parse(raw);
+  const context = await auth.$context;
+  if (await context.internalAdapter.findUserByEmail(input.email)) {
+    throw new DomainError('EMAIL_TAKEN', 'An account with this email already exists');
+  }
+  // The same provisioning method as Better Auth's own email-and-password sign-up.
+  const user = await context.internalAdapter.createUser(
+    { email: input.email, name: input.name, emailVerified: true, locale: input.locale },
+    { method: 'email-password' },
+  );
+  await context.internalAdapter.linkAccount({
+    userId: user.id,
+    providerId: 'credential',
+    accountId: user.id,
+    password: await context.password.hash(input.password),
+  });
+  return { id: user.id };
+}
+
 // Called by tenancy after it checked the membership; the session belongs to identity.
 export async function setActiveTenant(
   db: IdentityDb,

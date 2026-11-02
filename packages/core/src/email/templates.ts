@@ -4,7 +4,7 @@ import type { EmailMessage } from './provider';
 export const emailLocale = z.enum(['es', 'en']);
 export type EmailLocale = z.output<typeof emailLocale>;
 
-export const emailTemplate = z.enum(['verifyEmail', 'resetPassword']);
+export const emailTemplate = z.enum(['verifyEmail', 'resetPassword', 'invitation']);
 export type EmailTemplate = z.output<typeof emailTemplate>;
 
 type Copy = { subject: string; heading: string; body: string; button: string; footer: string };
@@ -18,6 +18,13 @@ const COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       body: 'Para terminar de crear tu cuenta, confirma que este correo es tuyo.',
       button: 'Confirmar mi correo',
       footer: 'Si no creaste una cuenta en Comprobify, ignora este mensaje.',
+    },
+    invitation: {
+      subject: 'Te invitaron a {organization} en Comprobify',
+      heading: 'Te invitaron a {organization}',
+      body: 'Acepta la invitación para trabajar con {organization} en Comprobify. El enlace vence en 7 días.',
+      button: 'Ver la invitación',
+      footer: 'Si no esperabas esta invitación, ignora este mensaje.',
     },
     resetPassword: {
       subject: 'Restablece tu contraseña de Comprobify',
@@ -34,6 +41,13 @@ const COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       body: 'To finish creating your account, confirm that this email is yours.',
       button: 'Confirm my email',
       footer: "If you didn't create a Comprobify account, ignore this message.",
+    },
+    invitation: {
+      subject: "You're invited to {organization} on Comprobify",
+      heading: "You're invited to {organization}",
+      body: 'Accept the invitation to work with {organization} on Comprobify. The link expires in 7 days.',
+      button: 'View the invitation',
+      footer: "If you weren't expecting this invitation, ignore this message.",
     },
     resetPassword: {
       subject: 'Reset your Comprobify password',
@@ -53,13 +67,24 @@ const escapeHtml = (value: string): string =>
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
 
+export type EmailParams = { url: string; organization?: string | undefined };
+
 export function renderEmail(
   template: EmailTemplate,
   locale: EmailLocale,
   to: string,
-  params: { url: string },
+  params: EmailParams,
 ): EmailMessage {
-  const copy = COPY[locale][template];
+  // Filled before escaping, so an organization name can't inject HTML.
+  const fill = (text: string) => text.replaceAll('{organization}', params.organization ?? '');
+  const base = COPY[locale][template];
+  const copy = {
+    subject: fill(base.subject),
+    heading: fill(base.heading),
+    body: fill(base.body),
+    button: fill(base.button),
+    footer: fill(base.footer),
+  };
   const url = escapeHtml(params.url);
   const text = `${copy.heading}\n\n${copy.body}\n\n${params.url}\n\n${copy.footer}`;
   const html = `<!doctype html><html lang="${locale}"><body style="font-family:system-ui,sans-serif;color:#232b36">

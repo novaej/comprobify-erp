@@ -181,7 +181,8 @@
     "mainNavigation": "Navegación principal",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
-    "skipToContent": "Saltar al contenido"
+    "skipToContent": "Saltar al contenido",
+    "users": "Usuarios"
   },
   "shell": {
     "sandboxTitle": "Estás en el ambiente de pruebas",
@@ -203,5 +204,66 @@
     "description": "Los módulos de ventas, compras e inventario aparecerán aquí a medida que se construyan.",
     "welcomeTitle": "Tu empresa está lista",
     "welcomeBody": "Estás en su copia de pruebas: emite comprobantes de prueba sin afectar a tu empresa real."
+  },
+  "users": {
+    "title": "Usuarios",
+    "description": "Quién trabaja con tu empresa y qué puede hacer. Los cambios aplican también a la copia de pruebas.",
+    "inviteTitle": "Invitar a alguien",
+    "inviteDescription": "Le enviaremos un enlace que vence en 7 días.",
+    "email": "Correo electrónico",
+    "role": "Rol",
+    "invite": "Enviar invitación",
+    "inviting": "Enviando...",
+    "membersTitle": "Miembros",
+    "pendingTitle": "Invitaciones pendientes",
+    "restricted": "Solo {points}",
+    "roleFor": "Rol de {name}",
+    "saveRole": "Guardar",
+    "remove": "Quitar",
+    "removeName": "Quitar a {name}",
+    "revoke": "Anular",
+    "revokeFor": "Anular la invitación a {email}",
+    "expires": "vence el {date}",
+    "issuePointsFor": "Puntos de emisión de {name}",
+    "issuePointsHint": "Si no marcas ninguno, puede usar todos.",
+    "saveIssuePoints": "Guardar puntos"
+  },
+  "usersError": {
+    "FORBIDDEN": "Tu rol no permite esta acción.",
+    "ALREADY_MEMBER": "Esa persona ya es miembro.",
+    "OWNER_PROTECTED": "El propietario solo cambia mediante una transferencia.",
+    "CANNOT_CHANGE_SELF": "No puedes cambiar tu propio rol ni quitarte.",
+    "NOT_A_MEMBER": "Esa persona ya no es miembro.",
+    "UNKNOWN_ISSUE_POINT": "Uno de los puntos de emisión no existe.",
+    "RATE_LIMITED": "Demasiadas invitaciones. Espera unos minutos.",
+    "INVALID_INPUT": "Revisa los datos ingresados.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+  },
+  "invite": {
+    "title": "Te invitaron a {organization}",
+    "description": "Con el rol {role}.",
+    "accept": "Aceptar la invitación",
+    "accepting": "Aceptando...",
+    "createAndAccept": "Crear mi cuenta y aceptar",
+    "newAccount": "Crea tu cuenta para {email}. Tu correo ya queda confirmado.",
+    "signInToAccept": "Ya tienes una cuenta con {email}. Inicia sesión para aceptar.",
+    "signIn": "Iniciar sesión",
+    "otherAccount": "Esta invitación es para {email}, pero iniciaste sesión como {current}.",
+    "signOut": "Cerrar sesión",
+    "invalidTitle": "Invitación no válida",
+    "invalidBody": "Esta invitación ya se usó, se anuló o venció. Pide a quien te invitó que te envíe otra."
+  },
+  "inviteError": {
+    "INVITATION_INVALID": "Esta invitación ya no es válida.",
+    "INVITATION_OTHER_EMAIL": "Esta invitación es para otro correo.",
+    "EMAIL_TAKEN": "Ya existe una cuenta con ese correo. Inicia sesión para aceptar.",
+    "PASSWORD_MISMATCH": "Las contraseñas no coinciden.",
+    "SIGN_IN_FIRST": "Inicia sesión para aceptar.",
+    "INVALID_INPUT": "Revisa los datos ingresados. La contraseña debe tener al menos 10 caracteres.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+  },
+  "noAccess": {
+    "title": "No tienes acceso",
+    "description": "Tu rol no incluye esta sección. Pide acceso al propietario o a un administrador."
   }
 }

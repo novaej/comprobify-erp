@@ -12,6 +12,8 @@ export const RATE_LIMITS = {
   'password-reset:ip': { limit: 10, windowSeconds: 60 * 60 },
   'verification:email': { limit: 5, windowSeconds: 60 * 60 },
   'verification:ip': { limit: 20, windowSeconds: 60 * 60 },
+  // Per organization: invitations send email to addresses the inviter chooses.
+  'invitation:tenant': { limit: 30, windowSeconds: 60 * 60 },
 } as const;
 
 export type RateLimitVector = keyof typeof RATE_LIMITS;

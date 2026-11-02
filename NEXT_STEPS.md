@@ -11,11 +11,13 @@ Open work only. Tick steps as they land. When a milestone's gate passes, remove 
 - [x] **Step 3: tenancy model.** Tenants (`mode`, `twin_of`), branches, issue points, warehouses created with each branch, memberships, roles and permissions in core, the actor context from the session, the ambiente function with every deployment × mode cell tested.
 - [x] **Step 4: onboarding.** The wizard creating the real organization and its twin with the same branches and issue points, RUC checks, P12 upload encrypted with AES-256-GCM and stored on both, logo.
 - [x] **Step 5: app shell.** Sidebar layout, organization switcher with the Producción / Pruebas toggle, sandbox banner, certificate banner.
-- [ ] **Step 6: users and roles.** Invites (`GET` checks, `POST` accepts), role changes, soft removal, issue-point restrictions, optional TOTP and the tenant setting that requires it.
+- [ ] **Step 6: users and roles.**
+  - [x] 6a: invites (`GET` checks, `POST` accepts), role changes, soft removal, issue-point restrictions.
+  - [ ] 6b: optional TOTP and the tenant setting that requires it.
 - [ ] **Step 7: go-live, agreements, audit.** Legal agreements with per-tenant snapshots and acceptance events, go-live (Owner, verified email, accepted agreements), twin reset, the tenant audit log.
 - [ ] **Step 8: gate.** Isolation tests for two tenants and a tenant/twin pair, the ambiente matrix, invite and role E2E, docs.
 
-Seat limits (FR-USR-1) need entitlements, so they arrive in Milestone 2. Contribuyente especial, agente de retención and RIMPE go in organization settings in Milestone 3, when the XML needs them; onboarding collects only the accounting flag, as the old form did. Certificate renewal (FR-ONB-3) arrives with organization settings. Go-live copies master data, which arrives in Milestones 5 and 6; Milestone 1 builds the go-live step that later milestones extend.
+Seat limits (FR-USR-1) need entitlements, so they arrive in Milestone 2. Contribuyente especial, agente de retención and RIMPE go in organization settings in Milestone 3, when the XML needs them; onboarding collects only the accounting flag, as the old form did. Certificate renewal (FR-ONB-3) arrives with organization settings. Ownership transfer (PRD section 3) isn't scheduled yet: today the owner can't be changed or removed by anyone. Go-live copies master data, which arrives in Milestones 5 and 6; Milestone 1 builds the go-live step that later milestones extend.
 
 ## Upcoming milestones
 

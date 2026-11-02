@@ -3,6 +3,7 @@
 import { isDomainError } from '@comprobify/core';
 import { redirect } from '@/i18n/navigation';
 import { toActionState, type ActionState } from '@/server/actions';
+import { safeNextPath } from '@/server/paths';
 import { requestMeta } from '@/server/request';
 import { getRuntime } from '@/server/runtime';
 
@@ -45,7 +46,8 @@ export async function signInAction(_: ActionState, form: FormData): Promise<Acti
       if (!isDomainError(error, 'RATE_LIMITED')) throw error;
     });
   }
-  if (state.done) redirect({ href: '/dashboard', locale: localeOf(form) });
+  if (state.done)
+    redirect({ href: safeNextPath(field(form, 'next')) ?? '/dashboard', locale: localeOf(form) });
   return state;
 }
 

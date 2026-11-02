@@ -110,6 +110,8 @@ export const issuePoints = pgTable(
       foreignColumns: [branches.tenantId, branches.id],
     }),
     unique('issue_points_branch_code_unique').on(table.branchId, table.code),
+    // Target for child foreign keys, so a child can't point into another tenant.
+    unique('issue_points_tenant_id_unique').on(table.tenantId, table.id),
     check('issue_points_code_check', sql`${table.code} ~ '^[0-9]{3}$'`),
   ],
 );
@@ -209,5 +211,64 @@ export const tenantLogos = pgTable(
       oneOf('content_type', ['image/png', 'image/jpeg', 'image/gif']),
     ),
     check('tenant_logos_size_check', sql`octet_length(${table.content}) <= 512000`),
+  ],
+);
+
+// Roles that can be given by invitation or role change; ownership is transferred, never granted.
+export const ASSIGNABLE_ROLES = MEMBERSHIP_ROLES.filter((role) => role !== 'OWNER');
+
+// FR-USR-1. Held by the real organization; accepting creates the membership in it and its
+// twin. Only a hash of the token is stored.
+export const invitations = pgTable(
+  'invitations',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    email: text('email').notNull(),
+    role: text('role', { enum: MEMBERSHIP_ROLES }).notNull(),
+    tokenHash: text('token_hash').notNull().unique(),
+    invitedBy: uuid('invited_by')
+      .notNull()
+      .references(() => users.id),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    acceptedAt: timestamp('accepted_at', { withTimezone: true }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    check('invitations_role_check', oneOf('role', ASSIGNABLE_ROLES)),
+    check('invitations_email_lowercase_check', sql`${table.email} = lower(${table.email})`),
+    // One open invitation per email and organization.
+    uniqueIndex('invitations_one_pending_idx')
+      .on(table.tenantId, table.email)
+      .where(sql`${table.acceptedAt} IS NULL AND ${table.revokedAt} IS NULL`),
+  ],
+);
+
+// FR-ROLE-2. No active rows for a user means no restriction. Rows are switched off,
+// never deleted (CLAUDE.md rule 12), and mirrored in the twin by branch and point code.
+export const issuePointAccess = pgTable(
+  'issue_point_access',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id').notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    issuePointId: uuid('issue_point_id').notNull(),
+    active: boolean('active').default(true).notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    foreignKey({
+      name: 'issue_point_access_point_fk',
+      columns: [table.tenantId, table.issuePointId],
+      foreignColumns: [issuePoints.tenantId, issuePoints.id],
+    }),
+    unique('issue_point_access_unique').on(table.tenantId, table.userId, table.issuePointId),
   ],
 );

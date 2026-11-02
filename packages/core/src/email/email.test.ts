@@ -4,7 +4,7 @@ import { createMailgunProvider, renderEmail, sendEmailHandler } from '.';
 describe('renderEmail', () => {
   it('renders each template in both languages, with the link', () => {
     for (const locale of ['es', 'en'] as const) {
-      for (const template of ['verifyEmail', 'resetPassword'] as const) {
+      for (const template of ['verifyEmail', 'resetPassword', 'invitation'] as const) {
         const message = renderEmail(template, locale, 'a@example.com', {
           url: 'https://app.test/x?token=t',
         });
@@ -20,6 +20,18 @@ describe('renderEmail', () => {
       url: 'https://app.test/"><script>',
     });
     expect(message.html).not.toContain('<script>');
+  });
+});
+
+describe('invitation', () => {
+  it('names the organization, escaped in HTML', () => {
+    const message = renderEmail('invitation', 'es', 'a@example.com', {
+      url: 'https://app.test/i',
+      organization: 'Alfa & <Beta>',
+    });
+    expect(message.subject).toBe('Te invitaron a Alfa & <Beta> en Comprobify');
+    expect(message.html).toContain('Alfa &amp; &lt;Beta&gt;');
+    expect(message.html).not.toContain('<Beta>');
   });
 });
 

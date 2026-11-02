@@ -119,10 +119,15 @@ export function SignUpForm() {
   );
 }
 
-export function SignInForm() {
+export function SignInForm({ next }: { next?: string | undefined }) {
   const t = useTranslations('auth');
   return (
-    <AuthForm action={signInAction} submit={t('login.submit')} submitting={t('login.submitting')}>
+    <AuthForm
+      action={signInAction}
+      hidden={next ? { next } : {}}
+      submit={t('login.submit')}
+      submitting={t('login.submitting')}
+    >
       <EmailField />
       <FormField
         label={t('fields.password')}

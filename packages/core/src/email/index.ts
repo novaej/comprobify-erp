@@ -5,14 +5,14 @@ import { emailLocale, emailTemplate, renderEmail } from './templates';
 export { createLogProvider, createMailgunProvider } from './provider';
 export type { EmailMessage, EmailProvider, MailgunOptions } from './provider';
 export { emailLocale, emailTemplate, renderEmail } from './templates';
-export type { EmailLocale, EmailTemplate } from './templates';
+export type { EmailLocale, EmailParams, EmailTemplate } from './templates';
 
 // The email.send job payload. The URL may hold a token; jobs are purged by pg-boss retention.
 export const sendEmailPayload = z.object({
   to: z.email(),
   locale: emailLocale,
   template: emailTemplate,
-  params: z.object({ url: z.url() }),
+  params: z.object({ url: z.url(), organization: z.string().max(300).optional() }),
 });
 export type SendEmailPayload = z.output<typeof sendEmailPayload>;
 

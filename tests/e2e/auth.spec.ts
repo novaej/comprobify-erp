@@ -4,7 +4,10 @@ import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { Client } from 'pg';
 
 // The worker isn't needed: the link is read from the queued email.send job.
-async function emailLink(to: string, template: 'verifyEmail' | 'resetPassword'): Promise<string> {
+async function emailLink(
+  to: string,
+  template: 'verifyEmail' | 'resetPassword' | 'invitation',
+): Promise<string> {
   const client = new Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
   try {
@@ -149,5 +152,60 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
 
     await nav.getByRole('link', { name: 'Mi cuenta' }).click();
     await expect(page.getByText('Pruebas, activa')).toBeVisible();
+  });
+
+  test('invites a read-only member who joins and sees only what the role allows (FR-USR-1, FR-ROLE-3)', async ({
+    page,
+    browser,
+  }) => {
+    const viewerEmail = `viewer.${randomUUID()}@example.com`;
+    await signIn(page, email, newPassword);
+    await page
+      .getByRole('navigation', { name: 'Navegación principal' })
+      .last()
+      .getByRole('link', { name: 'Usuarios' })
+      .click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Usuarios');
+    await page.getByLabel('Correo electrónico').fill(viewerEmail);
+    await page.getByLabel('Rol', { exact: true }).selectOption('VIEWER');
+    await page.getByRole('button', { name: 'Enviar invitación' }).click();
+    await expect(page.getByRole('list', { name: 'Invitaciones pendientes' })).toContainText(
+      viewerEmail,
+    );
+
+    // The invitee opens the link in their own, signed-out browser.
+    const guest = await browser.newContext({ locale: 'es-EC' });
+    const viewer = await guest.newPage();
+    const link = await emailLink(viewerEmail, 'invitation');
+    expect((await viewer.request.get(link)).status()).toBe(200);
+    await viewer.goto(link);
+    await expect(viewer.getByRole('heading', { level: 1 })).toHaveText(
+      'Te invitaron a Delta Comercial S.A.',
+    );
+    await viewer.getByLabel('Nombre').fill('Vera Lector');
+    await viewer.getByLabel('Contraseña', { exact: true }).fill('a viewer passphrase');
+    await viewer.getByLabel('Confirmar contraseña').fill('a viewer passphrase');
+    await viewer.getByRole('button', { name: 'Crear mi cuenta y aceptar' }).click();
+    await expect(viewer).toHaveURL(/\/es\/dashboard$/);
+    await expect(viewer.getByRole('heading', { level: 1 })).toHaveText('Delta Comercial S.A.');
+
+    // Read-only: no Users link, and the page itself refuses.
+    const viewerNav = viewer.getByRole('navigation', { name: 'Navegación principal' }).last();
+    await expect(viewerNav.getByText('Solo lectura')).toBeVisible();
+    await expect(viewerNav.getByRole('link', { name: 'Usuarios' })).toHaveCount(0);
+    await viewer.goto('/es/users');
+    await expect(viewer.getByRole('heading', { name: 'No tienes acceso' })).toBeVisible();
+
+    // The link works once.
+    await viewer.goto(link);
+    await expect(viewer.getByRole('heading', { level: 1 })).toHaveText('Invitación no válida');
+
+    // Removed: the next page sends them back to onboarding.
+    await page.reload();
+    await page.getByRole('button', { name: 'Quitar a Vera Lector' }).click();
+    await expect(page.getByRole('list', { name: 'Miembros' })).not.toContainText('Vera Lector');
+    await viewer.goto('/es/dashboard');
+    await expect(viewer).toHaveURL(/\/es\/onboarding$/);
+    await guest.close();
   });
 });

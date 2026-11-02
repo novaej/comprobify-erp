@@ -181,7 +181,8 @@
     "mainNavigation": "Main navigation",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "users": "Users"
   },
   "shell": {
     "sandboxTitle": "You're in the test environment",
@@ -203,5 +204,66 @@
     "description": "Sales, purchasing and inventory will appear here as they are built.",
     "welcomeTitle": "Your company is ready",
     "welcomeBody": "You're in its test copy: issue test documents without affecting your real company."
+  },
+  "users": {
+    "title": "Users",
+    "description": "Who works with your company and what they can do. Changes also apply to the test copy.",
+    "inviteTitle": "Invite someone",
+    "inviteDescription": "We'll send a link that expires in 7 days.",
+    "email": "Email address",
+    "role": "Role",
+    "invite": "Send invitation",
+    "inviting": "Sending...",
+    "membersTitle": "Members",
+    "pendingTitle": "Pending invitations",
+    "restricted": "Only {points}",
+    "roleFor": "{name}'s role",
+    "saveRole": "Save",
+    "remove": "Remove",
+    "removeName": "Remove {name}",
+    "revoke": "Revoke",
+    "revokeFor": "Revoke the invitation to {email}",
+    "expires": "expires {date}",
+    "issuePointsFor": "{name}'s issue points",
+    "issuePointsHint": "Check none to allow all of them.",
+    "saveIssuePoints": "Save points"
+  },
+  "usersError": {
+    "FORBIDDEN": "Your role doesn't allow this.",
+    "ALREADY_MEMBER": "That person is already a member.",
+    "OWNER_PROTECTED": "The owner only changes through a transfer.",
+    "CANNOT_CHANGE_SELF": "You can't change your own role or remove yourself.",
+    "NOT_A_MEMBER": "That person is no longer a member.",
+    "UNKNOWN_ISSUE_POINT": "One of the issue points doesn't exist.",
+    "RATE_LIMITED": "Too many invitations. Wait a few minutes.",
+    "INVALID_INPUT": "Check the details you entered.",
+    "UNKNOWN": "An unexpected error occurred. Please try again."
+  },
+  "invite": {
+    "title": "You're invited to {organization}",
+    "description": "With the {role} role.",
+    "accept": "Accept the invitation",
+    "accepting": "Accepting...",
+    "createAndAccept": "Create my account and accept",
+    "newAccount": "Create your account for {email}. Your email is already confirmed.",
+    "signInToAccept": "You already have an account with {email}. Sign in to accept.",
+    "signIn": "Sign in",
+    "otherAccount": "This invitation is for {email}, but you're signed in as {current}.",
+    "signOut": "Sign out",
+    "invalidTitle": "Invalid invitation",
+    "invalidBody": "This invitation was used, revoked or has expired. Ask the person who invited you to send another."
+  },
+  "inviteError": {
+    "INVITATION_INVALID": "This invitation is no longer valid.",
+    "INVITATION_OTHER_EMAIL": "This invitation is for another email.",
+    "EMAIL_TAKEN": "An account with that email already exists. Sign in to accept.",
+    "PASSWORD_MISMATCH": "Passwords do not match.",
+    "SIGN_IN_FIRST": "Sign in to accept.",
+    "INVALID_INPUT": "Check the details you entered. The password needs at least 10 characters.",
+    "UNKNOWN": "An unexpected error occurred. Please try again."
+  },
+  "noAccess": {
+    "title": "You don't have access",
+    "description": "Your role doesn't include this section. Ask the owner or an administrator for access."
   }
 }

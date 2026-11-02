@@ -8,6 +8,7 @@ import {
   createJobs,
   createRateLimiter,
   systemClock,
+  type Auth,
   type EmailLocale,
   type Identity,
   type Jobs,
@@ -22,6 +23,7 @@ export type Runtime = {
   db: Database;
   jobs: Jobs;
   identity: Identity;
+  auth: Auth;
   keyCipher: KeyCipher;
 };
 
@@ -76,7 +78,15 @@ async function start(): Promise<Runtime> {
   });
 
   logger.info('Web started', { event: 'web.started' });
-  return { env, logger, db, jobs, identity, keyCipher: createKeyCipher(env.CERT_ENCRYPTION_KEY) };
+  return {
+    env,
+    logger,
+    db,
+    jobs,
+    identity,
+    auth,
+    keyCipher: createKeyCipher(env.CERT_ENCRYPTION_KEY),
+  };
 }
 
 // One per server process, started by instrumentation.ts.
