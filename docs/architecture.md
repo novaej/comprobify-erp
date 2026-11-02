@@ -48,7 +48,13 @@ Better Auth handles credentials, database sessions and tokens (ADR-009); its tab
 
 ## Tenancy and RLS
 
-Every tenant-owned table has `tenant_id` and the standard policy from `app_enable_tenant_rls()`. A query without a tenant or system context raises `RLS: no tenant or system context` instead of returning nothing (ADR-004). Cross-tenant work uses `withSystem(reason, …)`, which logs the reason. The app role can't bypass RLS, delete rows or change the schema, and web and worker refuse to start if it could (NFR-SEC-4).
+Organizations live in `tenants`. Registration creates two rows: the real organization (`PRODUCTION`) and its test twin (`TEST`, `twin_of` set), each with the same branch, issue point and warehouse, and the owner's membership mirrored in both (ADR-010). Child tables carry `tenant_id` and reference their parent through `(tenant_id, id)`, so a row can't point into another tenant.
+
+Three contexts exist, each set per transaction: tenant (everyday work), user (only for the user's own memberships and organizations, before a tenant is chosen) and system (cross-tenant jobs and the super admin area, logged with a reason). The super admin works outside any tenant, through a `PlatformActor`.
+
+### Policies
+
+Every tenant-owned table has `tenant_id` and the standard policy from `app_enable_tenant_rls()`. A query without a tenant or system context raises `RLS: no tenant or system context` instead of returning nothing (ADR-004). Two tables differ, as ADR-010 records: `memberships` also admits the user context for the user's own rows, and `tenants`, keyed by `id`, admits the organizations the user belongs to; in user context both are read-only. The catalog test checks each table's exact policy. Cross-tenant work uses `withSystem(reason, …)`, which logs the reason. The app role can't bypass RLS, delete rows or change the schema, and web and worker refuse to start if it could (NFR-SEC-4).
 
 ## Jobs
 

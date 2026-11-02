@@ -73,6 +73,7 @@ export function createAuth(options: AuthOptions) {
       disableSessionRefresh: true,
       additionalFields: {
         lastActivityAt: { type: 'date', required: false, input: false },
+        activeTenantId: { type: 'string', required: false, input: false },
       },
     },
     databaseHooks: {

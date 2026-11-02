@@ -39,7 +39,14 @@ export type SessionUser = {
 };
 
 export type SessionState =
-  | { status: 'active'; user: SessionUser; sessionId: string; expiresAt: Date }
+  | {
+      status: 'active';
+      user: SessionUser;
+      sessionId: string;
+      expiresAt: Date;
+      // Set by the organization switcher; null until one is chosen (ADR-010).
+      activeTenantId: string | null;
+    }
   | { status: 'idle' }
   | { status: 'none' };
 
@@ -164,6 +171,8 @@ export function createIdentity({ auth, db, rateLimiter, clock }: IdentityOptions
         status: 'active',
         sessionId: found.session.id,
         expiresAt: new Date(found.session.expiresAt),
+        activeTenantId:
+          typeof found.session.activeTenantId === 'string' ? found.session.activeTenantId : null,
         user: {
           id,
           name,
@@ -199,6 +208,18 @@ export function createIdentity({ auth, db, rateLimiter, clock }: IdentityOptions
 }
 
 export type Identity = ReturnType<typeof createIdentity>;
+
+// Called by tenancy after it checked the membership; the session belongs to identity.
+export async function setActiveTenant(
+  db: IdentityDb,
+  input: { sessionId: string; userId: string; tenantId: string },
+): Promise<void> {
+  const { sessions } = schema;
+  await db
+    .update(sessions)
+    .set({ activeTenantId: input.tenantId })
+    .where(and(eq(sessions.id, input.sessionId), eq(sessions.userId, input.userId)));
+}
 
 // Daily, from the identity.prune job: expired sessions and tokens, old rate-limit hits.
 export async function pruneIdentityTables(

@@ -21,6 +21,8 @@ export type IdentityDb = NodePgDatabase<typeof schema>;
 export type Database = {
   withTenant: <T>(ctx: TenantContext, fn: (tx: Tx) => Promise<T>) => Promise<T>;
   withSystem: <T>(reason: string, fn: (tx: Tx) => Promise<T>) => Promise<T>;
+  // Identity lookups only: the user's own memberships and organizations (ADR-010).
+  withUser: <T>(userId: string, fn: (tx: Tx) => Promise<T>) => Promise<T>;
   // The one exception to NFR-SEC-2 (ADR-009): Better Auth and the rate limiter use
   // it for the global identity tables only. It sets no context, so a tenant table
   // reached through it raises.
@@ -37,7 +39,7 @@ export type DatabaseOptions = {
   maxConnections?: number;
 };
 
-const tenantId = z.uuid();
+const uuid = z.uuid();
 
 async function inTransaction<T>(
   pool: Pool,
@@ -74,10 +76,19 @@ export function createDatabase(options: DatabaseOptions): Database {
 
   return {
     async withTenant(ctx, fn) {
-      if (!tenantId.safeParse(ctx.tenantId).success) throw new Error('Invalid tenant id');
+      if (!uuid.safeParse(ctx.tenantId).success) throw new Error('Invalid tenant id');
       return inTransaction(
         pool,
         (client) => client.query(`SELECT set_config('app.tenant_id', $1, true)`, [ctx.tenantId]),
+        fn,
+      );
+    },
+
+    async withUser(userId, fn) {
+      if (!uuid.safeParse(userId).success) throw new Error('Invalid user id');
+      return inTransaction(
+        pool,
+        (client) => client.query(`SELECT set_config('app.user_id', $1, true)`, [userId]),
         fn,
       );
     },

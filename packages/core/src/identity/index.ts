@@ -13,6 +13,7 @@ export {
 export {
   createIdentity,
   pruneIdentityTables,
+  setActiveTenant,
   emailInput,
   resetPasswordInput,
   signInInput,

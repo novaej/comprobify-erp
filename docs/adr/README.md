@@ -30,6 +30,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [007](007-testing-and-code-quality.md) | Testing and code quality tooling | Accepted |
 | [008](008-config-and-observability.md) | Config validation, logging, Sentry | Accepted |
 | [009](009-authentication.md) | Authentication with Better Auth | Accepted |
+| [010](010-tenancy-and-user-context.md) | Tenancy model and the user context | Accepted |
 
 ## Old ADRs to read before each milestone
 

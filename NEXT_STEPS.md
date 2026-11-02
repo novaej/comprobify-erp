@@ -8,7 +8,7 @@ Open work only. Tick steps as they land. When a milestone's gate passes, remove 
 
 - [x] **Step 1: auth decision.** ADR-009 (PRD open question 7), after a spike.
 - [x] **Step 2: identity.** Better Auth with uuid identity tables, sign-up, email verification (`GET` checks, `POST` consumes), login, logout, password reset, idle timeout and absolute lifetime, sign out everywhere, rate limits per vector, an `email.send` job with a Mailgun adapter, which logs instead of sending when Mailgun isn't configured.
-- [ ] **Step 3: tenancy model.** Tenants (`mode`, `twin_of`), branches, issue points, warehouses created with each branch, memberships, roles and permissions in core, the actor context from the session, the ambiente function with every deployment × mode cell tested.
+- [x] **Step 3: tenancy model.** Tenants (`mode`, `twin_of`), branches, issue points, warehouses created with each branch, memberships, roles and permissions in core, the actor context from the session, the ambiente function with every deployment × mode cell tested.
 - [ ] **Step 4: onboarding.** The wizard creating the real organization and its twin with the same branches and issue points, RUC checks, P12 upload encrypted with AES-256-GCM and stored on both, logo.
 - [ ] **Step 5: app shell.** Sidebar layout, organization switcher with the Producción / Pruebas toggle, sandbox banner, certificate banner.
 - [ ] **Step 6: users and roles.** Invites (`GET` checks, `POST` accepts), role changes, soft removal, issue-point restrictions, optional TOTP and the tenant setting that requires it.

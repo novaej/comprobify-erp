@@ -77,7 +77,7 @@ Both processes run from one Docker image. Postgres holds data, sessions and the 
 4. **Core inputs and outputs are Zod schemas** (NFR-ARCH-2).
 5. **Errors are `DomainError` with a stable `code`** (NFR-ARCH-6).
 6. **Permissions are enforced in core.** Page and action checks are extra layers, never the only one (FR-ROLE-3).
-7. **All data access goes through `withTenant` or `withSystem(reason, …)`** (NFR-SEC-2). System context needs a real reason string and is logged. The one exception is `db.identity`, for the global identity tables only (ADR-009).
+7. **All data access goes through `withTenant`, `withUser` or `withSystem(reason, …)`** (NFR-SEC-2). `withUser` is for identity lookups only: the user's own memberships and organizations (ADR-010). System context needs a real reason string and is logged; the super admin area uses it for cross-tenant reads. The one exception is `db.identity`, for the global identity tables only (ADR-009).
 8. **Every tenant-owned table has `tenant_id` and forced RLS with the fail-loud policy** (NFR-SEC-1). Use `app_enable_tenant_rls()` in the migration; the catalog test fails otherwise.
 9. **The app role is never a superuser or `BYPASSRLS`** (NFR-SEC-4). Migrations run as the owner role, and the app refuses to boot on a role that bypasses RLS.
 10. **Enqueue jobs in the same transaction as the business write**, through the transaction handle. Never send from the pooled connection after commit. The one exception is Better Auth's emails, whose write isn't ours (ADR-009).
@@ -96,7 +96,7 @@ Both processes run from one Docker image. Postgres holds data, sessions and the 
 
 ## Tenancy in one paragraph
 
-Deployment environment (`APP_ENV`: local, staging, production) and tenant mode (`TEST`, `PRODUCTION`) are separate. A test twin is another `tenants` row linked by `twin_of`, isolated by normal RLS; there is no sandbox schema and no environment column. `twin_of` is used only by the switcher, certificate copy, plan inheritance, membership mirroring and master-data copy. Ambiente is `2` only for a `PRODUCTION` tenant on the production deployment, computed in one function (FR-ONB-6).
+Deployment environment (`APP_ENV`: local, staging, production) and tenant mode (`TEST`, `PRODUCTION`) are separate. A test twin is another `tenants` row linked by `twin_of`, isolated by normal RLS; there is no sandbox schema and no environment column. `twin_of` is used only by the switcher, certificate copy, plan inheritance, membership mirroring and master-data copy. Memberships are mirrored as rows in the twin, so its own RLS reads them. The session's `active_tenant_id` picks the tenant, and `resolveActor` builds the actor context from the membership. The super admin area is platform work, outside any tenant (ADR-010). Ambiente is `2` only for a `PRODUCTION` tenant on the production deployment, computed in one function (FR-ONB-6).
 
 ---
 
@@ -165,6 +165,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/kernel/` | Actor context, `DomainError`, `Clock` |
 | `packages/core/src/jobs/` | Queue registry and schedules |
 | `packages/core/src/identity/` | Better Auth setup, rate limits, sessions and idle timeout |
+| `packages/core/src/tenancy/` | Organizations and twins, roles and permissions, actor context, ambiente |
 | `packages/core/src/email/` | Email templates, Mailgun and the local log provider |
 | `apps/web/src/server/session.ts` | `getSession` and `requireSession` for pages |
 | `packages/ui/` | Design system: tokens, components, theme |

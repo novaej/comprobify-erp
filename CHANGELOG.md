@@ -28,4 +28,8 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - Database sessions with a 30-minute idle timeout that only real activity extends, and a 7-day absolute lifetime (FR-USR-2).
 - Rate limits per abuse vector, stored in Postgres (FR-USR-4).
 - `email.send` job with Mailgun, logged instead of sent locally; daily `identity.prune` job.
+- Tenancy model: organizations with their test twin, branches, issue points, warehouses and mirrored memberships, all under RLS (FR-ONB-4, FR-ONB-6a, NFR-SEC-1).
+- A user context for identity lookups, and the organization switcher's checks (FR-USR-5, ADR-010).
+- Roles and permissions in core, with the database CHECK generated from the same list (FR-ROLE-1).
+- The ambiente rule for every deployment × mode cell (FR-ONB-6).
 - `AUTH_SECRET`, `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, `MAILGUN_REGION` and `EMAIL_FROM`.

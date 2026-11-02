@@ -48,6 +48,10 @@ describe('context arguments (NFR-SEC-2)', () => {
     await expect(db.withSystem(reason, () => Promise.resolve())).rejects.toThrow(/reason/);
   });
 
+  it.each(['', '42', 'not-a-uuid'])('refuses a malformed user id: %j', async (userId) => {
+    await expect(db.withUser(userId, () => Promise.resolve())).rejects.toThrow(/user id/);
+  });
+
   it.each(['', '42', 'not-a-uuid'])('refuses a malformed tenant id: %j', async (tenantId) => {
     await expect(db.withTenant({ tenantId }, () => Promise.resolve())).rejects.toThrow(/tenant id/);
   });

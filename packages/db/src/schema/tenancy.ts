@@ -1,0 +1,157 @@
+import { sql } from 'drizzle-orm';
+import {
+  boolean,
+  check,
+  foreignKey,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+  uuid,
+  type AnyPgColumn,
+} from 'drizzle-orm/pg-core';
+import { oneOf } from './checks';
+import { users } from './identity';
+
+// The single source for these values: CHECKs below and core both use them.
+export const TENANT_MODES = ['TEST', 'PRODUCTION'] as const;
+export const TENANT_STATUSES = ['ACTIVE', 'SUSPENDED'] as const;
+export const MEMBERSHIP_ROLES = [
+  'OWNER',
+  'ADMIN',
+  'SALES',
+  'PURCHASING',
+  'ACCOUNTANT',
+  'VIEWER',
+] as const;
+
+const id = () =>
+  uuid('id')
+    .primaryKey()
+    .default(sql`uuidv7()`);
+const createdAt = () => timestamp('created_at', { withTimezone: true }).defaultNow().notNull();
+const updatedAt = () => timestamp('updated_at', { withTimezone: true }).defaultNow().notNull();
+const code = (name: string) => text(name).notNull();
+
+// PRD 7.4: a test twin is another row, linked by twin_of. RLS: ADR-010.
+export const tenants = pgTable(
+  'tenants',
+  {
+    id: id(),
+    ruc: text('ruc').notNull(),
+    legalName: text('legal_name').notNull(),
+    tradeName: text('trade_name'),
+    mainAddress: text('main_address').notNull(),
+    mode: text('mode', { enum: TENANT_MODES }).notNull(),
+    twinOf: uuid('twin_of').references((): AnyPgColumn => tenants.id),
+    status: text('status', { enum: TENANT_STATUSES }).default('ACTIVE').notNull(),
+    idleTimeoutMinutes: integer('idle_timeout_minutes').default(30).notNull(),
+    // Set by go-live; a real organization can't issue before it (FR-ONB-5).
+    liveAt: timestamp('live_at', { withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    unique('tenants_ruc_mode_unique').on(table.ruc, table.mode),
+    check('tenants_ruc_check', sql`${table.ruc} ~ '^[0-9]{13}$'`),
+    check('tenants_mode_check', oneOf('mode', TENANT_MODES)),
+    check('tenants_status_check', oneOf('status', TENANT_STATUSES)),
+    // Only a twin points at another tenant, and every twin does.
+    check('tenants_twin_check', sql`(${table.mode} = 'TEST') = (${table.twinOf} IS NOT NULL)`),
+    check('tenants_idle_timeout_check', sql`${table.idleTimeoutMinutes} BETWEEN 5 AND 480`),
+  ],
+);
+
+export const branches = pgTable(
+  'branches',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    code: code('code'),
+    name: text('name').notNull(),
+    address: text('address').notNull(),
+    active: boolean('active').default(true).notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    unique('branches_tenant_code_unique').on(table.tenantId, table.code),
+    // Target for child foreign keys, so a child can't point into another tenant.
+    unique('branches_tenant_id_unique').on(table.tenantId, table.id),
+    check('branches_code_check', sql`${table.code} ~ '^[0-9]{3}$'`),
+  ],
+);
+
+export const issuePoints = pgTable(
+  'issue_points',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id').notNull(),
+    branchId: uuid('branch_id').notNull(),
+    code: code('code'),
+    // The pause switch checked before issuing (FR-DOC-4).
+    canIssue: boolean('can_issue').default(true).notNull(),
+    active: boolean('active').default(true).notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    foreignKey({
+      name: 'issue_points_branch_fk',
+      columns: [table.tenantId, table.branchId],
+      foreignColumns: [branches.tenantId, branches.id],
+    }),
+    unique('issue_points_branch_code_unique').on(table.branchId, table.code),
+    check('issue_points_code_check', sql`${table.code} ~ '^[0-9]{3}$'`),
+  ],
+);
+
+// One warehouse per branch in the MVP (PRD glossary).
+export const warehouses = pgTable(
+  'warehouses',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id').notNull(),
+    branchId: uuid('branch_id').notNull(),
+    name: text('name').notNull(),
+    active: boolean('active').default(true).notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    foreignKey({
+      name: 'warehouses_branch_fk',
+      columns: [table.tenantId, table.branchId],
+      foreignColumns: [branches.tenantId, branches.id],
+    }),
+    unique('warehouses_branch_unique').on(table.branchId),
+  ],
+);
+
+// Twins hold mirrored rows (ADR-010). RLS also admits the user's own rows.
+export const memberships = pgTable(
+  'memberships',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    role: text('role', { enum: MEMBERSHIP_ROLES }).notNull(),
+    active: boolean('active').default(true).notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    unique('memberships_tenant_user_unique').on(table.tenantId, table.userId),
+    // The user-context lookup: which organizations does this user belong to?
+    index('memberships_user_id_idx').on(table.userId),
+    check('memberships_role_check', oneOf('role', MEMBERSHIP_ROLES)),
+  ],
+);

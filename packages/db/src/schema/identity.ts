@@ -35,6 +35,9 @@ export const sessions = pgTable(
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     // Moved only by real user activity, never by page loads or polling (FR-USR-2).
     lastActivityAt: timestamp('last_activity_at', { withTimezone: true }).defaultNow().notNull(),
+    // Chosen with the switcher after a membership check (ADR-010). No FK: tenants
+    // has RLS, and identity code reads sessions without a tenant context.
+    activeTenantId: uuid('active_tenant_id'),
     ipAddress: text('ip_address'),
     userAgent: text('user_agent'),
     createdAt: createdAt(),
