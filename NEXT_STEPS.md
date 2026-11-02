@@ -34,6 +34,13 @@ Hardening deferred by an earlier milestone. Add an item whenever a milestone put
 - [ ] pg-boss index rebuilds: automatic `REINDEX` is off, so bloat reports need a manual owner task (ADR-005).
 - [ ] Web shutdown: stop pg-boss and close the pool on `SIGTERM`, as the worker does.
 
+## Before the old repositories are deleted
+
+The owner will delete `comprobify` and `comprobify-web`, so this repo must not depend on them (`CLAUDE.md`).
+
+- [ ] Once porting is done, remove the porting map: PRD Appendix A, the old-ADR table in `docs/adr/README.md`, and the read-only references in `CLAUDE.md`.
+- [ ] Rewrite the remaining mentions of the old systems as self-contained history, and check that `git grep -E 'comprobify-web|\.\./comprobify|API ADR'` finds nothing that needs them.
+
 ## After the first Terraform deploy
 
 - [ ] Owner makes `novaej/comprobify-erp` private. It stays public until then, because GitHub's free plan limits the permissions private repositories give the Terraform plan and apply workflows.

@@ -7,7 +7,7 @@ test('health reports ok', async ({ request }) => {
   expect(await response.json()).toEqual({ status: 'ok' });
 });
 
-// next-intl picks the locale from Accept-Language, as comprobify-web does.
+// next-intl picks the locale from Accept-Language.
 test.describe('a Spanish browser', () => {
   test.use({ locale: 'es-EC' });
 

@@ -12,6 +12,7 @@ A change isn't done until its docs are. Update these in the same piece of work.
 | A decision between real alternatives, or a pattern others will copy | A new ADR, and the index in `docs/adr/README.md` |
 | Something that went wrong and could again | `CLAUDE.md` common mistakes |
 | Hardening put off to later | The hardening backlog in `NEXT_STEPS.md` |
+| Porting anything from the old repositories | Copy the content and its reasoning into this repo. No links or paths into the old repositories. |
 | New table | Drizzle schema, migration, `docs/architecture.md` if it adds a concept |
 | New job or schedule | The registry, `docs/architecture.md` if it adds a flow |
 | New UI string | Both message files |

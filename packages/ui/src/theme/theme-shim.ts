@@ -1,6 +1,6 @@
 'use client';
 
-// Ported from comprobify-web: next-themes' injected <script> triggers a React 19
+// Replaces next-themes, whose injected <script> triggers a React 19
 // warning, so the flash of the wrong theme is prevented by themeScript instead.
 // The API matches next-themes. State lives in localStorage and matchMedia, read
 // through useSyncExternalStore rather than copied into state by an effect.

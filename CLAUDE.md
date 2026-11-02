@@ -22,6 +22,7 @@ Comprobify is a cloud ERP for Ecuadorian SMBs built around SRI electronic invoic
 
 - Build in the order of PRD section 15. Each milestone is code + tests + docs, and its gate must pass before the next starts.
 - `../comprobify` and `../comprobify-web` are **read-only** references. Port what PRD Appendix A lists, adapted to TypeScript and this architecture. Never edit them, and never copy their `.env` files.
+- **This repo must stand alone: the old repositories will be deleted.** Never point code, comments or docs at them for content or reasoning (no "see API ADR-038", no paths into them). Copy what's needed into this repo and state the reason in place. A carried-over ADR holds the full reasoning itself.
 - PRD vs old code: the PRD wins. PRD silent: prefer old behaviour and record the decision in an ADR.
 - Reference requirement ids in commits, tests and ADRs.
 - Track progress in `NEXT_STEPS.md`: tick a step in the same change that finishes it, and remove a milestone's section when its gate passes.
