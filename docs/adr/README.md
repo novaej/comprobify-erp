@@ -29,8 +29,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [006](006-web-design-system-i18n.md) | Next.js, ported design system, next-intl | Accepted |
 | [007](007-testing-and-code-quality.md) | Testing and code quality tooling | Accepted |
 | [008](008-config-and-observability.md) | Config validation, logging, Sentry | Accepted |
-
-The auth library is decided in Milestone 1 (PRD open question 7).
+| [009](009-authentication.md) | Authentication with Better Auth | Accepted |
 
 ## Old ADRs to read before each milestone
 

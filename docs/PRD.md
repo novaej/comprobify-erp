@@ -587,7 +587,7 @@ Order rationale: the SRI engine (3) comes before ERP modules because every sales
 4. Verify resolutions NAC-DGERCGC25-00000014/17 texts.
 5. Is "RUC Proveedor" campo adicional still required?
 6. Costing method: weighted average (proposed) vs FIFO.
-7. Auth library: Better Auth vs Auth.js (spike in milestone 1).
+7. ~~Auth library~~: decided, Better Auth (ADR-009).
 8. Product name/branding for the ERP (keep "Comprobify"?).
 
 ---

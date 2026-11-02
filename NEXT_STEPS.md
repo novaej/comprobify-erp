@@ -6,7 +6,16 @@ Open work only. Tick steps as they land. When a milestone's gate passes, remove 
 
 **Gate:** two tenants and a tenant/twin pair fully isolated (integration); the ambiente rule covered for every deployment × mode cell; invite and role restrictions (E2E).
 
-Before starting: decide the auth library (PRD open question 7) in an ADR, and read API ADRs 018 and 035 ([docs/adr/README.md](docs/adr/README.md)). Break the scope into steps here.
+- [x] **Step 1: auth decision.** ADR-009 (PRD open question 7), after a spike.
+- [ ] **Step 2: identity.** Better Auth with uuid identity tables, sign-up, email verification (`GET` checks, `POST` consumes), login, logout, password reset, idle timeout and absolute lifetime, sign out everywhere, rate limits per vector, an `email.send` job with a Mailgun adapter, which logs instead of sending when Mailgun isn't configured.
+- [ ] **Step 3: tenancy model.** Tenants (`mode`, `twin_of`), branches, issue points, warehouses created with each branch, memberships, roles and permissions in core, the actor context from the session, the ambiente function with every deployment × mode cell tested.
+- [ ] **Step 4: onboarding.** The wizard creating the real organization and its twin with the same branches and issue points, RUC checks, P12 upload encrypted with AES-256-GCM and stored on both, logo.
+- [ ] **Step 5: app shell.** Sidebar layout, organization switcher with the Producción / Pruebas toggle, sandbox banner, certificate banner.
+- [ ] **Step 6: users and roles.** Invites (`GET` checks, `POST` accepts), role changes, soft removal, issue-point restrictions, optional TOTP and the tenant setting that requires it.
+- [ ] **Step 7: go-live, agreements, audit.** Legal agreements with per-tenant snapshots and acceptance events, go-live (Owner, verified email, accepted agreements), twin reset, the tenant audit log.
+- [ ] **Step 8: gate.** Isolation tests for two tenants and a tenant/twin pair, the ambiente matrix, invite and role E2E, docs.
+
+Seat limits (FR-USR-1) need entitlements, so they arrive in Milestone 2. Go-live copies master data, which arrives in Milestones 5 and 6; Milestone 1 builds the go-live step that later milestones extend.
 
 ## Upcoming milestones
 
