@@ -14,6 +14,8 @@
     "@comprobify/db": "workspace:*",
     "@types/node": "24.19.2",
     "@types/pg": "8.23.1",
+    "better-auth": "1.7.15",
+    "drizzle-orm": "0.45.4",
     "pg": "8.23.1",
     "typescript": "6.0.3",
     "vitest": "5.0.5"

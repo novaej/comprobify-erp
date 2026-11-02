@@ -25,5 +25,94 @@
     "title": "Page not found",
     "description": "The page you're looking for doesn't exist or was moved.",
     "backToDashboard": "Back to dashboard"
+  },
+  "auth": {
+    "backToHome": "Back to home",
+    "backToLogin": "Back to sign in",
+    "panel": {
+      "title": "Your invoicing and your operations, in one place",
+      "subtitle": "Sales, purchases, inventory and SRI-authorized documents, from your browser.",
+      "trust": {
+        "sri": "Online SRI authorization",
+        "signing": "Signed with your certificate",
+        "operations": "Inventory and sales connected"
+      }
+    },
+    "fields": {
+      "name": "Name",
+      "email": "Email address",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "passwordHint": "At least 10 characters."
+    },
+    "login": {
+      "subtitle": "Sign in to your account",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "register": "Register",
+      "forgotPassword": "Forgot your password?",
+      "idleTimeout": "Your session ended due to inactivity. Sign in again to continue.",
+      "passwordReset": "Your password changed. Sign in with the new one."
+    },
+    "register": {
+      "subtitle": "Create your account",
+      "submit": "Create account",
+      "submitting": "Creating account...",
+      "hasAccount": "Already have an account?",
+      "login": "Sign in"
+    }
+  },
+  "authError": {
+    "INVALID_CREDENTIALS": "Incorrect email or password.",
+    "EMAIL_TAKEN": "An account with that email already exists.",
+    "PASSWORD_MISMATCH": "Passwords do not match.",
+    "WEAK_PASSWORD": "The password must be 10 to 128 characters long.",
+    "EMAIL_NOT_VERIFIED": "Confirm your email first. We sent you a new link.",
+    "INVALID_TOKEN": "This link is invalid or has expired. Request a new one.",
+    "RATE_LIMITED": "Too many attempts. Wait a few minutes and try again.",
+    "INVALID_INPUT": "Check the details you entered.",
+    "UNKNOWN": "An unexpected error occurred. Please try again."
+  },
+  "checkEmail": {
+    "title": "Check your email",
+    "description": "We sent you a link to confirm your account. Open it on this device or another one.",
+    "notReceived": "Didn't get it? Check your spam folder or ask for another link."
+  },
+  "verifyEmail": {
+    "confirmTitle": "Confirm your email",
+    "confirmDescription": "Click the button below to complete your account verification.",
+    "confirmButton": "Confirm my email",
+    "confirming": "Confirming...",
+    "missingToken": "This link is missing its verification code. Ask for a new one.",
+    "resend": "Send a new link",
+    "resending": "Sending...",
+    "resent": "If that email has an account waiting for confirmation, we sent a new link."
+  },
+  "forgotPassword": {
+    "subtitle": "Recover access to your account",
+    "description": "Enter your email address. If it matches an account, we'll send you a link to reset your password.",
+    "submit": "Send link",
+    "submitting": "Sending...",
+    "genericMessage": "If that email matches an account, you'll receive a password reset link in a few minutes."
+  },
+  "resetPassword": {
+    "title": "Reset your password",
+    "subtitle": "Choose a new password for your account.",
+    "submit": "Reset password",
+    "submitting": "Resetting...",
+    "invalidLinkMessage": "This password reset link is invalid or missing its code.",
+    "requestNewLink": "Request a new link"
+  },
+  "account": {
+    "title": "Hello, {name}",
+    "comingSoon": "Your company is set up in the next build step.",
+    "signOut": "Sign out",
+    "signOutEverywhere": "Sign out on every device"
+  },
+  "homeLinks": {
+    "signIn": "Sign in",
+    "register": "Create account",
+    "account": "Go to my account"
   }
 }

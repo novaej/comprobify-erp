@@ -42,6 +42,10 @@ ESLint enforces the core rules: no Next.js or React in core, no `process.env` ou
 4. Core opens `withTenant(ctx, …)`. Every query in it runs in one transaction with `app.tenant_id` set, so RLS limits it to that tenant.
 5. If the work has follow-up, core enqueues a job on the same transaction. No commit, no job.
 
+## Identity
+
+Better Auth handles credentials, database sessions and tokens (ADR-009); its tables are global, with no `tenant_id`. Pages call server actions, which call `packages/core/src/identity`; no Better Auth HTTP route is mounted. Our code adds the rate limits, the verification page that consumes its token only on `POST`, and the idle timeout: `last_activity_at` moves only when the browser reports real input, and reading a session never extends it. Emails go through the `email.send` job.
+
 ## Tenancy and RLS
 
 Every tenant-owned table has `tenant_id` and the standard policy from `app_enable_tenant_rls()`. A query without a tenant or system context raises `RLS: no tenant or system context` instead of returning nothing (ADR-004). Cross-tenant work uses `withSystem(reason, …)`, which logs the reason. The app role can't bypass RLS, delete rows or change the schema, and web and worker refuse to start if it could (NFR-SEC-4).

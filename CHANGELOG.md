@@ -24,3 +24,8 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - CI: lint, types, unit and integration tests, image build, dependency audit, and an E2E smoke test on `main`.
 - `LOG_FORMAT` (`json` or `pretty`).
 - Architecture, coding, testing, documentation and deployment docs.
+- Accounts with Better Auth: sign-up, email verification (the link's `GET` never consumes it), sign-in, sign-out, sign out everywhere and password reset (FR-ONB-1, FR-ONB-7, FR-USR-2).
+- Database sessions with a 30-minute idle timeout that only real activity extends, and a 7-day absolute lifetime (FR-USR-2).
+- Rate limits per abuse vector, stored in Postgres (FR-USR-4).
+- `email.send` job with Mailgun, logged instead of sent locally; daily `identity.prune` job.
+- `AUTH_SECRET`, `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, `MAILGUN_REGION` and `EMAIL_FROM`.

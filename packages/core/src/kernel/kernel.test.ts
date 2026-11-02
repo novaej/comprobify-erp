@@ -19,6 +19,16 @@ describe('DomainError', () => {
     });
   });
 
+  // Next bundles the class more than once; another copy carries the same brand.
+  it('is recognized when thrown by another copy of the class', () => {
+    const fromOtherBundle = Object.assign(new Error('Out'), {
+      code: 'QUOTA_EXCEEDED',
+      [Symbol.for('comprobify.DomainError')]: true,
+    });
+    expect(isDomainError(fromOtherBundle, 'QUOTA_EXCEEDED')).toBe(true);
+    expect(isDomainError(Object.assign(new Error('x'), { code: 'QUOTA_EXCEEDED' }))).toBe(false);
+  });
+
   it('is recognized by code', () => {
     const error = new DomainError('QUOTA_EXCEEDED', 'Out');
     expect(isDomainError(error)).toBe(true);

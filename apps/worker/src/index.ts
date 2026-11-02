@@ -1,6 +1,12 @@
 import { loadWorkerEnv } from '@comprobify/config/env';
 import { createLogger } from '@comprobify/config/logger';
-import { createJobs, registerHandlers } from '@comprobify/core';
+import {
+  createJobs,
+  createLogProvider,
+  createMailgunProvider,
+  registerHandlers,
+  systemClock,
+} from '@comprobify/core';
 import { createDatabase } from '@comprobify/db';
 import * as Sentry from '@sentry/node';
 
@@ -19,6 +25,17 @@ if (env.SENTRY_DSN) {
 const db = createDatabase({ connectionString: env.DATABASE_URL, logger });
 await db.assertSafeConnection();
 
+// Env validation allows the log provider only when APP_ENV is local.
+const emailProvider =
+  env.MAILGUN_API_KEY && env.MAILGUN_DOMAIN
+    ? createMailgunProvider({
+        apiKey: env.MAILGUN_API_KEY,
+        domain: env.MAILGUN_DOMAIN,
+        region: env.MAILGUN_REGION,
+        from: env.EMAIL_FROM,
+      })
+    : createLogProvider(logger);
+
 const jobs = createJobs({
   connectionString: env.DATABASE_URL,
   role: 'worker',
@@ -28,7 +45,12 @@ const jobs = createJobs({
 await jobs.start();
 // Before handlers, so a stale schedule can't fire into them on this start.
 await jobs.applySchedules();
-await registerHandlers(jobs, logger);
+await registerHandlers(jobs, {
+  logger,
+  emailProvider,
+  identityDb: db.identity,
+  clock: systemClock,
+});
 logger.info('Worker started', { event: 'worker.started' });
 
 async function shutdown(): Promise<void> {

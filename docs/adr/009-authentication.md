@@ -36,11 +36,11 @@ A spike ran Better Auth 1.7.15 against PostgreSQL 18 as `comprobify_erp_app`:
 
 **Better Auth for credentials, sessions and TOTP.** Email and password, database sessions and the `twoFactor` plugin. Not its `organization` plugin: tenants, twins, memberships and roles are ours, because they need RLS, the `twin_of` link and mirrored memberships (PRD 7.4).
 
-**Its tables are global identity tables:** `users`, `sessions`, `accounts`, `verifications`, `two_factors`. They have no `tenant_id`, so RLS doesn't apply to them. Everything tenant-owned, including memberships and the audit log, lives in our own tables with RLS.
+**Its tables are global identity tables:** `users`, `sessions`, `accounts`, `verifications`, and `two_factors` when 2FA arrives. Our `rate_limit_hits` sits beside them. None has a `tenant_id`, so RLS doesn't apply to them. Everything tenant-owned, including memberships and the audit log, lives in our own tables with RLS.
 
-**Better Auth gets its own Drizzle instance on the app role's pool.** This is the one exception to "all data access goes through `withTenant` or `withSystem`" (NFR-SEC-2). It's limited to the tables above. Any tenant table it touched by mistake would raise, because it never sets a context.
+**Better Auth gets its own Drizzle instance on the app role's pool.** This is the one exception to "all data access goes through `withTenant` or `withSystem`" (NFR-SEC-2). It's limited to the tables above, and the rate limiter uses it too. Any tenant table it touched by mistake would raise, because it never sets a context.
 
-**`DELETE` on `sessions`, `verifications` and `two_factors` only.** These rows are credentials, not business records. Sign-out, revocation, expired tokens and turning 2FA off delete them. Application tables keep no `DELETE`.
+**`DELETE` on `sessions`, `verifications` and `rate_limit_hits` only, plus `two_factors` when 2FA arrives.** These rows are credentials and counters, not business records. Sign-out, revocation, used tokens, old rate-limit hits and turning 2FA off delete them. Application tables keep no `DELETE`, and an integration test checks the exact list.
 
 **Rules we implement around it:**
 
@@ -48,7 +48,9 @@ A spike ran Better Auth 1.7.15 against PostgreSQL 18 as `comprobify_erp_app`:
 - **Idle timeout:** session refresh is off. We keep `last_activity_at` on the session, updated only by an explicit activity call from real input, never by page loads or polling. The timeout is per tenant, with an absolute lifetime on top (FR-USR-2).
 - **Active tenant:** the session stores the active tenant. The switcher changes it after checking membership in core.
 - **2FA required by a tenant:** checked by us when the session enters that tenant.
-- **Rate limits:** our own, stored in Postgres, one per abuse vector: login, password reset, verification and invites (Appendix B, lesson 15). Better Auth's limiter only sees HTTP, and our forms call it from server actions.
+- **Rate limits:** our own, stored in Postgres, one per abuse vector: login, password reset, verification and invites (Appendix B, lesson 15). Better Auth's limiter only sees HTTP, and our forms call it from server actions, so no Better Auth route is mounted at all. Keys are hashed. Failed sign-ins count against the email and the address; a successful one doesn't. The address is the last `x-forwarded-for` entry, which Caddy adds. A loopback address means no proxy, as in local development, where only the per-email limits apply.
+- **Duplicate sign-up:** Better Auth answers it like a new sign-up and creates, sends and changes nothing, so the form can't reveal which emails have accounts. The old app showed "email taken"; this is deliberately stricter.
+- **Verification and reset emails:** Better Auth writes their tokens outside any transaction of ours, so they are enqueued after its write, the one exception to transactional enqueue. If one is lost, the user asks for another.
 - **Super admin:** a flag on `users`, set by an operator script, never by sign-up.
 
 **Where it lives:** `packages/core/src/identity` builds the Better Auth instance from injected config, so core stays framework-free. The web app adds the Next.js cookie plugin and the route handler.

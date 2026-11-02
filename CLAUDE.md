@@ -2,7 +2,7 @@
 
 Primary guide for AI assistants and developers. Every rule here takes precedence over defaults. `docs/PRD.md` is the source of truth for what to build; this file is how to build it. Keep it current: it changes with every milestone.
 
-**Status:** Milestone 0 (Foundations) done. Milestone 1 (Identity and tenancy) is next. Decisions are in [docs/adr/](docs/adr/README.md).
+**Status:** Milestone 1 (Identity and tenancy) in progress; see `NEXT_STEPS.md`. Decisions are in [docs/adr/](docs/adr/README.md).
 
 ---
 
@@ -77,10 +77,10 @@ Both processes run from one Docker image. Postgres holds data, sessions and the 
 4. **Core inputs and outputs are Zod schemas** (NFR-ARCH-2).
 5. **Errors are `DomainError` with a stable `code`** (NFR-ARCH-6).
 6. **Permissions are enforced in core.** Page and action checks are extra layers, never the only one (FR-ROLE-3).
-7. **All data access goes through `withTenant` or `withSystem(reason, …)`** (NFR-SEC-2). System context needs a real reason string and is logged.
+7. **All data access goes through `withTenant` or `withSystem(reason, …)`** (NFR-SEC-2). System context needs a real reason string and is logged. The one exception is `db.identity`, for the global identity tables only (ADR-009).
 8. **Every tenant-owned table has `tenant_id` and forced RLS with the fail-loud policy** (NFR-SEC-1). Use `app_enable_tenant_rls()` in the migration; the catalog test fails otherwise.
 9. **The app role is never a superuser or `BYPASSRLS`** (NFR-SEC-4). Migrations run as the owner role, and the app refuses to boot on a role that bypasses RLS.
-10. **Enqueue jobs in the same transaction as the business write**, through the transaction handle. Never send from the pooled connection after commit.
+10. **Enqueue jobs in the same transaction as the business write**, through the transaction handle. Never send from the pooled connection after commit. The one exception is Better Auth's emails, whose write isn't ours (ADR-009).
 11. **Job handlers are idempotent** (NFR-JOB-1): re-fetch by id, check state, then act. Schedules are declared in code with an explicit time zone (NFR-JOB-2).
 12. **No hard deletes.** Use status or `active`. The app role has no `DELETE` grant on application tables. Twin reset is the one exception (PRD glossary).
 13. **Never interpolate SQL.** Use Drizzle or `sql` parameters.
@@ -131,6 +131,7 @@ Found while setting up this repo:
 22. Keeping a server singleton in a module variable in `apps/web`. Next bundles `instrumentation.ts` and routes separately, so each gets its own copy. Keep it on `globalThis`.
 23. Leaving a pino transport out of `apps/web`'s dependencies. Inside a Next build, pino resolves transports from the app, so `pino-pretty` and `@logtail/pino` must be listed there too.
 24. Deciding the log format from `APP_ENV`. The image has no `pino-pretty`, so pretty logs crash it. `LOG_FORMAT` decides, and the stack forces `json`.
+25. Using `instanceof` on errors in `apps/web`. Next bundles core more than once, and the runtime on `globalThis` comes from another bundle than the action, so `instanceof DomainError` fails. Use `isDomainError`, which checks a `Symbol.for` brand.
 
 **Left behind on purpose** (never port): reserved API keys and pool, `requireInternalService` and the BFF secret, P12-based recovery and `alreadyLinked`, promotion key mirroring, tenant = API key identity, duplicated rows across databases, the notification-sync webhook receiver, the `sandbox` schema and `tenants.sandbox`, RabbitMQ with `pending_effects` and its sweep, droplet cron jobs, two migration tools.
 
@@ -163,6 +164,9 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/config/src/logger.ts` | Allow-listed logger |
 | `packages/core/src/kernel/` | Actor context, `DomainError`, `Clock` |
 | `packages/core/src/jobs/` | Queue registry and schedules |
+| `packages/core/src/identity/` | Better Auth setup, rate limits, sessions and idle timeout |
+| `packages/core/src/email/` | Email templates, Mailgun and the local log provider |
+| `apps/web/src/server/session.ts` | `getSession` and `requireSession` for pages |
 | `packages/ui/` | Design system: tokens, components, theme |
 | `apps/web/messages/` | UI strings, `es` and `en` |
 | `apps/web/src/server/runtime.ts` | The web process's env, logger, database and jobs |

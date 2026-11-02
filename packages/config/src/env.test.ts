@@ -13,7 +13,7 @@ import {
 } from './env';
 
 const worker = { APP_ENV: 'local', DATABASE_URL: 'postgres://app:secret-pw@localhost/db' };
-const web = { ...worker, APP_URL: 'http://localhost:3000' };
+const web = { ...worker, APP_URL: 'http://localhost:3000', AUTH_SECRET: 'x'.repeat(32) };
 
 const failure = (load: () => unknown): string => {
   try {
@@ -75,6 +75,22 @@ describe('env loading', () => {
       loadMigrateEnv({ APP_ENV: 'local', MIGRATION_DATABASE_URL: 'postgresql://o:p@h/d' }),
     ).toMatchObject({ MIGRATION_DATABASE_URL: 'postgresql://o:p@h/d' });
     expect(failure(() => loadMigrateEnv(worker))).toContain('MIGRATION_DATABASE_URL');
+  });
+});
+
+describe('auth and email', () => {
+  it('needs a long AUTH_SECRET for web', () => {
+    expect(failure(() => loadWebEnv({ ...web, AUTH_SECRET: 'short' }))).toMatch(/AUTH_SECRET/);
+  });
+
+  it('lets local run without Mailgun', () => {
+    expect(loadWorkerEnv(worker)).toMatchObject({ MAILGUN_REGION: 'us' });
+  });
+
+  it('requires Mailgun outside local', () => {
+    const message = failure(() => loadWorkerEnv({ ...worker, APP_ENV: 'staging' }));
+    expect(message).toMatch(/MAILGUN_API_KEY: is required outside local/);
+    expect(message).toMatch(/MAILGUN_DOMAIN: is required outside local/);
   });
 });
 

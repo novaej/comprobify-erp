@@ -1,4 +1,8 @@
+import { existsSync } from 'node:fs';
 import { defineConfig, devices } from '@playwright/test';
+
+// The auth tests read queued emails from the database. CI sets real variables.
+if (existsSync('../../.env')) process.loadEnvFile('../../.env');
 
 // E2E_BASE_URL points at a running app, such as the Docker stack on :8080.
 // Without it, Playwright starts the built web app itself.

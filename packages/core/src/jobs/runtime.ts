@@ -19,6 +19,12 @@ export type Jobs = {
     queue: Name,
     data: QueuePayload<Name>,
   ) => Promise<string | null>;
+  // Only where a library owns the write, so no transaction of ours exists: Better
+  // Auth's verification and reset emails (ADR-009). The user can ask again.
+  enqueueWithoutTransaction: <Name extends QueueName>(
+    queue: Name,
+    data: QueuePayload<Name>,
+  ) => Promise<string | null>;
   work: <Name extends QueueName>(queue: Name, handler: JobHandler<Name>) => Promise<void>;
   applySchedules: () => Promise<void>;
 };
@@ -63,6 +69,7 @@ export function createJobs(options: JobsOptions): Jobs {
 
     // The tx is the point: no commit, no job.
     enqueue: (tx, queue, data) => boss.send(queue, queues[queue].payload.parse(data), { db: tx }),
+    enqueueWithoutTransaction: (queue, data) => boss.send(queue, queues[queue].payload.parse(data)),
 
     work: async <Name extends QueueName>(queue: Name, handler: JobHandler<Name>) => {
       const { payload, concurrency } = queues[queue];

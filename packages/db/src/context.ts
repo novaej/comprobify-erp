@@ -16,9 +16,15 @@ export type Tx = {
   ) => Promise<{ rows: Row[] }>;
 };
 
+export type IdentityDb = NodePgDatabase<typeof schema>;
+
 export type Database = {
   withTenant: <T>(ctx: TenantContext, fn: (tx: Tx) => Promise<T>) => Promise<T>;
   withSystem: <T>(reason: string, fn: (tx: Tx) => Promise<T>) => Promise<T>;
+  // The one exception to NFR-SEC-2 (ADR-009): Better Auth and the rate limiter use
+  // it for the global identity tables only. It sets no context, so a tenant table
+  // reached through it raises.
+  identity: IdentityDb;
   assertSafeConnection: () => Promise<void>;
   // Touches no tables, so it needs no context. For health checks.
   ping: () => Promise<void>;
@@ -86,6 +92,7 @@ export function createDatabase(options: DatabaseOptions): Database {
       );
     },
 
+    identity: drizzle({ client: pool, schema }),
     assertSafeConnection: () => assertSafeConnection(pool),
     ping: async () => {
       await pool.query('SELECT 1');

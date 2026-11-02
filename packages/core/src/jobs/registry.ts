@@ -1,5 +1,6 @@
 import type { QueueOptions } from 'pg-boss';
 import { z } from 'zod';
+import { sendEmailPayload } from '../email';
 
 type QueueDefinition = {
   payload: z.ZodType;
@@ -15,6 +16,16 @@ export const queues = {
     options: { retryLimit: 0, expireInSeconds: 60 },
     concurrency: 1,
   },
+  'email.send': {
+    payload: sendEmailPayload,
+    options: { retryLimit: 5, retryDelay: 60, retryBackoff: true, expireInSeconds: 120 },
+    concurrency: 5,
+  },
+  'identity.prune': {
+    payload: z.object({}),
+    options: { retryLimit: 2, expireInSeconds: 300 },
+    concurrency: 1,
+  },
 } satisfies Record<string, QueueDefinition>;
 
 export type QueueName = keyof typeof queues;
@@ -28,4 +39,7 @@ export const schedules: readonly {
   cron: string;
   tz: string;
   data: QueuePayload<QueueName>;
-}[] = [{ queue: 'system.heartbeat', cron: '*/5 * * * *', tz: JOB_TIME_ZONE, data: {} }];
+}[] = [
+  { queue: 'system.heartbeat', cron: '*/5 * * * *', tz: JOB_TIME_ZONE, data: {} },
+  { queue: 'identity.prune', cron: '15 3 * * *', tz: JOB_TIME_ZONE, data: {} },
+];

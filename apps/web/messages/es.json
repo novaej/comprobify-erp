@@ -25,5 +25,94 @@
     "title": "Página no encontrada",
     "description": "La página que buscas no existe o fue movida.",
     "backToDashboard": "Volver al panel"
+  },
+  "auth": {
+    "backToHome": "Volver al inicio",
+    "backToLogin": "Volver a iniciar sesión",
+    "panel": {
+      "title": "Tu facturación y tu operación, en un solo lugar",
+      "subtitle": "Ventas, compras, inventario y comprobantes autorizados por el SRI, desde el navegador.",
+      "trust": {
+        "sri": "Autorización en línea con el SRI",
+        "signing": "Firma con tu certificado",
+        "operations": "Inventario y ventas conectados"
+      }
+    },
+    "fields": {
+      "name": "Nombre",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "passwordHint": "Al menos 10 caracteres."
+    },
+    "login": {
+      "subtitle": "Ingresa a tu cuenta",
+      "submit": "Ingresar",
+      "submitting": "Ingresando...",
+      "noAccount": "¿No tienes cuenta?",
+      "register": "Regístrate",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "idleTimeout": "Tu sesión se cerró por inactividad. Vuelve a iniciar sesión para continuar.",
+      "passwordReset": "Tu contraseña cambió. Inicia sesión con la nueva."
+    },
+    "register": {
+      "subtitle": "Crea tu cuenta",
+      "submit": "Crear cuenta",
+      "submitting": "Creando cuenta...",
+      "hasAccount": "¿Ya tienes cuenta?",
+      "login": "Inicia sesión"
+    }
+  },
+  "authError": {
+    "INVALID_CREDENTIALS": "Correo o contraseña incorrectos.",
+    "EMAIL_TAKEN": "Ya existe una cuenta con ese correo.",
+    "PASSWORD_MISMATCH": "Las contraseñas no coinciden.",
+    "WEAK_PASSWORD": "La contraseña debe tener entre 10 y 128 caracteres.",
+    "EMAIL_NOT_VERIFIED": "Primero confirma tu correo. Te enviamos un nuevo enlace.",
+    "INVALID_TOKEN": "Este enlace no es válido o ya expiró. Solicita uno nuevo.",
+    "RATE_LIMITED": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
+    "INVALID_INPUT": "Revisa los datos ingresados.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+  },
+  "checkEmail": {
+    "title": "Revisa tu correo",
+    "description": "Te enviamos un enlace para confirmar tu cuenta. Ábrelo desde este dispositivo o desde otro.",
+    "notReceived": "¿No te llegó? Revisa la carpeta de spam o pide otro enlace."
+  },
+  "verifyEmail": {
+    "confirmTitle": "Confirma tu correo electrónico",
+    "confirmDescription": "Haz clic en el botón para completar la verificación de tu cuenta.",
+    "confirmButton": "Confirmar mi correo",
+    "confirming": "Confirmando...",
+    "missingToken": "A este enlace le falta el código de verificación. Pide uno nuevo.",
+    "resend": "Enviar un nuevo enlace",
+    "resending": "Enviando...",
+    "resent": "Si ese correo tiene una cuenta pendiente de confirmar, te enviamos un nuevo enlace."
+  },
+  "forgotPassword": {
+    "subtitle": "Recupera el acceso a tu cuenta",
+    "description": "Ingresa tu correo electrónico. Si corresponde a una cuenta, te enviaremos un enlace para restablecer tu contraseña.",
+    "submit": "Enviar enlace",
+    "submitting": "Enviando...",
+    "genericMessage": "Si ese correo corresponde a una cuenta, recibirás un enlace para restablecer tu contraseña en unos minutos."
+  },
+  "resetPassword": {
+    "title": "Restablece tu contraseña",
+    "subtitle": "Elige una nueva contraseña para tu cuenta.",
+    "submit": "Restablecer contraseña",
+    "submitting": "Restableciendo...",
+    "invalidLinkMessage": "Este enlace para restablecer tu contraseña no es válido o le falta el código.",
+    "requestNewLink": "Solicitar un nuevo enlace"
+  },
+  "account": {
+    "title": "Hola, {name}",
+    "comingSoon": "Tu empresa se configura en el siguiente paso de la construcción.",
+    "signOut": "Cerrar sesión",
+    "signOutEverywhere": "Cerrar sesión en todos los dispositivos"
+  },
+  "homeLinks": {
+    "signIn": "Iniciar sesión",
+    "register": "Crear cuenta",
+    "account": "Ir a mi cuenta"
   }
 }

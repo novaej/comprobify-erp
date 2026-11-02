@@ -1,0 +1,25 @@
+import { z } from 'zod';
+import type { EmailProvider } from './provider';
+import { emailLocale, emailTemplate, renderEmail } from './templates';
+
+export { createLogProvider, createMailgunProvider } from './provider';
+export type { EmailMessage, EmailProvider, MailgunOptions } from './provider';
+export { emailLocale, emailTemplate, renderEmail } from './templates';
+export type { EmailLocale, EmailTemplate } from './templates';
+
+// The email.send job payload. The URL may hold a token; jobs are purged by pg-boss retention.
+export const sendEmailPayload = z.object({
+  to: z.email(),
+  locale: emailLocale,
+  template: emailTemplate,
+  params: z.object({ url: z.url() }),
+});
+export type SendEmailPayload = z.output<typeof sendEmailPayload>;
+
+// A retry may send twice; a duplicate link email is harmless (NFR-JOB-1).
+export function sendEmailHandler(provider: EmailProvider) {
+  return async (job: { data: SendEmailPayload }): Promise<void> => {
+    const { to, locale, template, params } = job.data;
+    await provider.send(renderEmail(template, locale, to, params));
+  };
+}

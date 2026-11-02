@@ -58,7 +58,11 @@ The migrations grant the app role its rights. Managed Postgres requires TLS: con
 | `SENTRY_DSN` | all | Optional. Server-side errors only (ADR-008). |
 | `DATABASE_URL` | web, worker | `comprobify_erp_app` |
 | `MIGRATION_DATABASE_URL` | migrate | `comprobify_erp_owner` |
-| `APP_URL` | web | Public URL |
+| `APP_URL` | web | Public URL. Email links point here. |
+| `AUTH_SECRET` | web | At least 32 characters. Signs session cookies and tokens; rotating it signs everyone out. |
+| `MAILGUN_API_KEY`, `MAILGUN_DOMAIN` | worker | Required outside `local`. Locally, emails are logged instead. |
+| `MAILGUN_REGION` | worker | `us` (default) or `eu` |
+| `EMAIL_FROM` | worker | Sender address |
 | `SRI_MOCK_MODE` | web, worker | Refused when `APP_ENV=production` |
 | `TEST_DATABASE_URL`, `TEST_MIGRATION_DATABASE_URL` | tests only | Database name must end in `_test` |
 

@@ -20,6 +20,14 @@ const runtimeShape = {
   SRI_MOCK_MODE: flag.default(false),
 };
 
+// Mailgun is optional only locally, where emails are logged instead (ADR-009).
+const mailShape = {
+  MAILGUN_API_KEY: z.string().optional(),
+  MAILGUN_DOMAIN: z.string().optional(),
+  MAILGUN_REGION: z.enum(['us', 'eu']).default('us'),
+  EMAIL_FROM: z.string().default('Comprobify <no-reply@comprobify.com>'),
+};
+
 function refuseMockInProduction(
   env: { APP_ENV: string; SRI_MOCK_MODE: boolean },
   ctx: z.RefinementCtx,
@@ -33,11 +41,36 @@ function refuseMockInProduction(
   }
 }
 
+function requireMailOutsideLocal(
+  env: {
+    APP_ENV: string;
+    MAILGUN_API_KEY?: string | undefined;
+    MAILGUN_DOMAIN?: string | undefined;
+  },
+  ctx: z.RefinementCtx,
+): void {
+  if (env.APP_ENV === 'local') return;
+  for (const name of ['MAILGUN_API_KEY', 'MAILGUN_DOMAIN'] as const) {
+    if (!env[name])
+      ctx.addIssue({ code: 'custom', path: [name], message: 'is required outside local' });
+  }
+}
+
 export const webEnvSchema = z
-  .object({ ...runtimeShape, APP_URL: z.url() })
+  .object({
+    ...runtimeShape,
+    APP_URL: z.url(),
+    // Signs session cookies and tokens. Rotating it signs everyone out.
+    AUTH_SECRET: z.string().min(32),
+  })
   .superRefine(refuseMockInProduction);
 
-export const workerEnvSchema = z.object(runtimeShape).superRefine(refuseMockInProduction);
+export const workerEnvSchema = z
+  .object({ ...runtimeShape, ...mailShape })
+  .superRefine((env, ctx) => {
+    refuseMockInProduction(env, ctx);
+    requireMailOutsideLocal(env, ctx);
+  });
 
 export const migrateEnvSchema = z.object({
   ...sharedShape,
