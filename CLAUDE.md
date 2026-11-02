@@ -47,6 +47,7 @@ pnpm test:e2e            # Playwright, against the built app or E2E_BASE_URL
 pnpm build
 pnpm stack:up            # Docker stack on :8080: caddy, migrate, web, worker, using the postgres18 container
 pnpm stack:down
+pnpm test-certificate <ruc>   # a test P12 (password: secret) to try onboarding locally
 ```
 
 ---
@@ -132,6 +133,7 @@ Found while setting up this repo:
 23. Leaving a pino transport out of `apps/web`'s dependencies. Inside a Next build, pino resolves transports from the app, so `pino-pretty` and `@logtail/pino` must be listed there too.
 24. Deciding the log format from `APP_ENV`. The image has no `pino-pretty`, so pretty logs crash it. `LOG_FORMAT` decides, and the stack forces `json`.
 25. Using `instanceof` on errors in `apps/web`. Next bundles core more than once, and the runtime on `globalThis` comes from another bundle than the action, so `instanceof DomainError` fails. Use `isDomainError`, which checks a `Symbol.for` brand.
+26. Giving a form an `action` prop. React 19 resets it after the action runs, so an error wipes what the user typed. Use `useFormAction`, which submits through `onSubmit`.
 
 **Left behind on purpose** (never port): reserved API keys and pool, `requireInternalService` and the BFF secret, P12-based recovery and `alreadyLinked`, promotion key mirroring, tenant = API key identity, duplicated rows across databases, the notification-sync webhook receiver, the `sandbox` schema and `tenants.sandbox`, RabbitMQ with `pending_effects` and its sweep, droplet cron jobs, two migration tools.
 
@@ -166,6 +168,8 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/jobs/` | Queue registry and schedules |
 | `packages/core/src/identity/` | Better Auth setup, rate limits, sessions and idle timeout |
 | `packages/core/src/tenancy/` | Organizations and twins, roles and permissions, actor context, ambiente |
+| `packages/core/src/certificates/` | P12 parsing, the RUC match, key encryption |
+| `packages/core/src/testing/` | Test helpers, such as generated P12 files (`@comprobify/core/testing`) |
 | `packages/core/src/email/` | Email templates, Mailgun and the local log provider |
 | `apps/web/src/server/session.ts` | `getSession` and `requireSession` for pages |
 | `packages/ui/` | Design system: tokens, components, theme |

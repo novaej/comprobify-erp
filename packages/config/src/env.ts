@@ -62,6 +62,8 @@ export const webEnvSchema = z
     APP_URL: z.url(),
     // Signs session cookies and tokens. Rotating it signs everyone out.
     AUTH_SECRET: z.string().min(32),
+    // AES-256-GCM key for certificate private keys (FR-ONB-3). Losing it loses every key.
+    CERT_ENCRYPTION_KEY: z.string().regex(/^[0-9a-fA-F]{64}$/, 'must be 64 hex characters'),
   })
   .superRefine(refuseMockInProduction);
 

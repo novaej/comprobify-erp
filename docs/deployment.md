@@ -59,6 +59,7 @@ The migrations grant the app role its rights. Managed Postgres requires TLS: con
 | `DATABASE_URL` | web, worker | `comprobify_erp_app` |
 | `MIGRATION_DATABASE_URL` | migrate | `comprobify_erp_owner` |
 | `APP_URL` | web | Public URL. Email links point here. |
+| `CERT_ENCRYPTION_KEY` | web | 64 hex characters (`openssl rand -hex 32`). Encrypts certificate private keys; losing it makes every stored key unusable, so back it up with the database credentials. |
 | `AUTH_SECRET` | web | At least 32 characters. Signs session cookies and tokens; rotating it signs everyone out. |
 | `MAILGUN_API_KEY`, `MAILGUN_DOMAIN` | worker | Required outside `local`. Locally, emails are logged instead. |
 | `MAILGUN_REGION` | worker | `us` (default) or `eu` |

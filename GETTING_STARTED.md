@@ -63,7 +63,7 @@ pnpm test:integration
 pnpm dev
 ```
 
-This starts the web app on http://localhost:3000/es and the worker. Create an account at http://localhost:3000/es/register: without Mailgun settings, the worker logs each email, including the verification link, instead of sending it. The worker logs `Worker started`, then a `Heartbeat` every 5 minutes. http://localhost:3000/health answers `{"status":"ok"}` when the database and job queue are reachable.
+This starts the web app on http://localhost:3000/es and the worker. Create an account at http://localhost:3000/es/register: without Mailgun settings, the worker logs each email, including the verification link, instead of sending it. To set up a company without your real signature, make a test one with `pnpm test-certificate 1712345678001` (any RUC with a valid structure; the password is `secret`) and upload it during onboarding. `.p12` files are git-ignored. The worker logs `Worker started`, then a `Heartbeat` every 5 minutes. http://localhost:3000/health answers `{"status":"ok"}` when the database and job queue are reachable.
 
 Both refuse to start if the env is invalid or the database role could bypass RLS.
 

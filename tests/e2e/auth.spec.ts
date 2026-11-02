@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { expect, test, type Page } from '@playwright/test';
+import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { Client } from 'pg';
 
 // The worker isn't needed: the link is read from the queued email.send job.
@@ -30,7 +31,7 @@ async function signIn(page: Page, email: string, password: string) {
 }
 
 // One account per run keeps a re-run inside the per-IP sign-up limit.
-test.describe.serial('account lifecycle (FR-ONB-1, FR-ONB-7, FR-USR-2)', () => {
+test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () => {
   test.use({ locale: 'es-EC' });
   const email = `e2e.${randomUUID()}@example.com`;
   const password = 'correct horse battery';
@@ -64,6 +65,8 @@ test.describe.serial('account lifecycle (FR-ONB-1, FR-ONB-7, FR-USR-2)', () => {
     await expect(page.locator('form').getByRole('alert')).toHaveText(
       'Correo o contraseña incorrectos.',
     );
+    // An error keeps what was typed.
+    await expect(page.getByLabel('Correo electrónico')).toHaveValue(email);
     await signIn(page, email, password);
     await expect(page).toHaveURL(/\/es\/account$/);
     await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click();
@@ -87,5 +90,40 @@ test.describe.serial('account lifecycle (FR-ONB-1, FR-ONB-7, FR-USR-2)', () => {
 
     await signIn(page, email, newPassword);
     await expect(page).toHaveURL(/\/es\/account$/);
+  });
+
+  test('sets up the company and lands in its test copy (FR-ONB-2 to FR-ONB-4)', async ({
+    page,
+  }) => {
+    const ruc = testRuc();
+    const p12 = (forRuc: string) => ({
+      name: 'firma.p12',
+      mimeType: 'application/x-pkcs12',
+      buffer: createTestP12({ ruc: forRuc, password: 'clave' }),
+    });
+    await signIn(page, email, newPassword);
+    await page.getByRole('link', { name: 'Configurar mi empresa' }).click();
+    await expect(page).toHaveURL(/\/es\/onboarding$/);
+
+    await page.getByLabel('RUC').fill(ruc);
+    await page.getByLabel('Razón social').fill('Delta Comercial S.A.');
+    await page.getByLabel('Dirección matriz').fill('Av. Amazonas N24, Quito');
+    await page.getByLabel('Contraseña de la firma').fill('clave');
+    // A signature that belongs to someone else is refused, and nothing is created.
+    await page.getByLabel('Archivo de firma (.p12)').setInputFiles(p12(testRuc()));
+    await page.getByRole('button', { name: 'Crear mi empresa' }).click();
+    await expect(page.locator('form').getByRole('alert')).toHaveText(
+      'La firma no pertenece a este RUC.',
+    );
+
+    // The form keeps every field after the error; only the file changes.
+    await expect(page.getByLabel('RUC')).toHaveValue(ruc);
+    await expect(page.getByLabel('Contraseña de la firma')).toHaveValue('clave');
+    await page.getByLabel('Archivo de firma (.p12)').setInputFiles(p12(ruc));
+    await page.getByRole('button', { name: 'Crear mi empresa' }).click();
+    await expect(page).toHaveURL(/\/es\/account\?welcome=1$/);
+    await expect(page.getByText('Tu empresa está lista')).toBeVisible();
+    await expect(page.getByText('Delta Comercial S.A.')).toBeVisible();
+    await expect(page.getByText('Pruebas, activa')).toBeVisible();
   });
 });

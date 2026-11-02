@@ -3,6 +3,7 @@ import { loadWebEnv, type WebEnv } from '@comprobify/config/env';
 import { createLogger, type Logger } from '@comprobify/config/logger';
 import {
   createAuth,
+  createKeyCipher,
   createIdentity,
   createJobs,
   createRateLimiter,
@@ -10,11 +11,19 @@ import {
   type EmailLocale,
   type Identity,
   type Jobs,
+  type KeyCipher,
 } from '@comprobify/core';
 import { createDatabase, type Database } from '@comprobify/db';
 import { nextCookies } from 'better-auth/next-js';
 
-export type Runtime = { env: WebEnv; logger: Logger; db: Database; jobs: Jobs; identity: Identity };
+export type Runtime = {
+  env: WebEnv;
+  logger: Logger;
+  db: Database;
+  jobs: Jobs;
+  identity: Identity;
+  keyCipher: KeyCipher;
+};
 
 // On globalThis: Next bundles instrumentation and routes separately, so a
 // module variable would give each its own pool and pg-boss.
@@ -67,7 +76,7 @@ async function start(): Promise<Runtime> {
   });
 
   logger.info('Web started', { event: 'web.started' });
-  return { env, logger, db, jobs, identity };
+  return { env, logger, db, jobs, identity, keyCipher: createKeyCipher(env.CERT_ENCRYPTION_KEY) };
 }
 
 // One per server process, started by instrumentation.ts.

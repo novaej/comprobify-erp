@@ -15,3 +15,7 @@ test-results/
 # Local reference only, never committed
 docs/reference/
 next-env.d.ts
+
+# Signatures, real or generated, never committed
+*.p12
+*.pfx

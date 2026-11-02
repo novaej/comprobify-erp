@@ -32,4 +32,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - A user context for identity lookups, and the organization switcher's checks (FR-USR-5, ADR-010).
 - Roles and permissions in core, with the database CHECK generated from the same list (FR-ROLE-1).
 - The ambiente rule for every deployment × mode cell (FR-ONB-6).
+- Onboarding: RUC structure check, any CA's P12, the certificate checked against the RUC, the private key encrypted with AES-256-GCM, certificate and logo stored on the organization and its twin, and the user starting in the twin (FR-ONB-2 to FR-ONB-4).
+- `CERT_ENCRYPTION_KEY`, and `pnpm test-certificate` for local testing.
+- Forms keep what was typed after an error.
 - `AUTH_SECRET`, `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, `MAILGUN_REGION` and `EMAIL_FROM`.

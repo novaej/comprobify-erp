@@ -2,6 +2,7 @@ import { and, eq, schema, type Database } from '@comprobify/db';
 import { z } from 'zod';
 import { setActiveTenant } from '../identity';
 import { DomainError, type ActorContext, type Clock } from '../kernel';
+import type { Logo } from './logo';
 import { permissionsFor, type Role } from './roles';
 
 const code = z.string().regex(/^[0-9]{3}$/);
@@ -19,7 +20,19 @@ export const createOrganizationInput = z.object({
     address: z.string().trim().min(1).max(300).nullable(),
   }),
   issuePointCode: code,
+  requiredAccounting: z.boolean().default(false),
 });
+
+// Prepared by onboardOrganization: already parsed, matched and encrypted.
+export type StoredCertificate = {
+  encryptedPrivateKey: string;
+  certificatePem: string;
+  fingerprint: string;
+  subjectName: string;
+  issuerName: string;
+  notBefore: Date;
+  notAfter: Date;
+};
 
 export type CreatedOrganization = { realTenantId: string; twinTenantId: string };
 
@@ -42,16 +55,19 @@ const isUniqueViolation = (error: unknown, constraint: string): boolean => {
 export async function createOrganization(
   db: Database,
   raw: z.input<typeof createOrganizationInput>,
+  extras: { certificate?: StoredCertificate; logo?: Logo } = {},
 ): Promise<CreatedOrganization> {
   const input = createOrganizationInput.parse(raw);
   try {
     return await db.withSystem('create organization and its test twin', async ({ db: tx }) => {
-      const { tenants, branches, issuePoints, warehouses, memberships } = schema;
+      const { tenants, branches, issuePoints, warehouses, memberships, certificates, tenantLogos } =
+        schema;
       const profile = {
         ruc: input.ruc,
         legalName: input.legalName,
         tradeName: input.tradeName,
         mainAddress: input.mainAddress,
+        requiredAccounting: input.requiredAccounting,
       };
       const [real] = await tx
         .insert(tenants)
@@ -81,6 +97,12 @@ export async function createOrganization(
         await tx
           .insert(memberships)
           .values({ tenantId: tenant.id, userId: input.ownerUserId, role: 'OWNER' });
+        // Stored on both: RLS forbids the twin reading the real organization's row (FR-ONB-3).
+        if (extras.certificate) {
+          await tx.insert(certificates).values({ tenantId: tenant.id, ...extras.certificate });
+        }
+        if (extras.logo)
+          await tx.insert(tenantLogos).values({ tenantId: tenant.id, ...extras.logo });
       }
       return { realTenantId: real!.id, twinTenantId: twin!.id };
     });

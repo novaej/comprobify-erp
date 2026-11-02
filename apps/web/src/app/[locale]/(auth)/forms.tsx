@@ -3,8 +3,9 @@
 import { Button } from '@comprobify/ui/components/button';
 import { Input } from '@comprobify/ui/components/input';
 import { useLocale, useTranslations } from 'next-intl';
-import { useActionState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { FormField } from '@/components/form-field';
+import { useFormAction } from '@/components/use-form-action';
 import { Link } from '@/i18n/navigation';
 import type { ActionState } from '@/server/actions';
 import {
@@ -35,13 +36,13 @@ function AuthForm({
 }) {
   const locale = useLocale();
   const tError = useTranslations('authError');
-  const [state, formAction, pending] = useActionState(action, {});
+  const { state, onSubmit, pending } = useFormAction(action);
   if (state.done && done) return <>{done}</>;
   const message =
     state.error && (tError.has(state.error) ? tError(state.error) : tError('UNKNOWN'));
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4">
       <input type="hidden" name="locale" value={locale} />
       {Object.entries(hidden).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />

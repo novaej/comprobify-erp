@@ -13,7 +13,12 @@ import {
 } from './env';
 
 const worker = { APP_ENV: 'local', DATABASE_URL: 'postgres://app:secret-pw@localhost/db' };
-const web = { ...worker, APP_URL: 'http://localhost:3000', AUTH_SECRET: 'x'.repeat(32) };
+const web = {
+  ...worker,
+  APP_URL: 'http://localhost:3000',
+  AUTH_SECRET: 'x'.repeat(32),
+  CERT_ENCRYPTION_KEY: 'a'.repeat(64),
+};
 
 const failure = (load: () => unknown): string => {
   try {

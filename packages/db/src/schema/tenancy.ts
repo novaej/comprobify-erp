@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   check,
+  customType,
   foreignKey,
   index,
   integer,
@@ -9,6 +10,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
@@ -48,6 +50,8 @@ export const tenants = pgTable(
     twinOf: uuid('twin_of').references((): AnyPgColumn => tenants.id),
     status: text('status', { enum: TENANT_STATUSES }).default('ACTIVE').notNull(),
     idleTimeoutMinutes: integer('idle_timeout_minutes').default(30).notNull(),
+    // obligadoContabilidad in the SRI XML.
+    requiredAccounting: boolean('required_accounting').default(false).notNull(),
     // Set by go-live; a real organization can't issue before it (FR-ONB-5).
     liveAt: timestamp('live_at', { withTimezone: true }),
     createdAt: createdAt(),
@@ -153,5 +157,57 @@ export const memberships = pgTable(
     // The user-context lookup: which organizations does this user belong to?
     index('memberships_user_id_idx').on(table.userId),
     check('memberships_role_check', oneOf('role', MEMBERSHIP_ROLES)),
+  ],
+);
+
+const bytea = customType<{ data: Buffer }>({ dataType: () => 'bytea' });
+
+// FR-ONB-3: one row per upload, so renewals keep their history. The private key
+// is AES-256-GCM encrypted; the certificate is public material.
+export const certificates = pgTable(
+  'certificates',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    encryptedPrivateKey: text('encrypted_private_key').notNull(),
+    certificatePem: text('certificate_pem').notNull(),
+    fingerprint: text('fingerprint').notNull(),
+    subjectName: text('subject_name').notNull(),
+    issuerName: text('issuer_name').notNull(),
+    notBefore: timestamp('not_before', { withTimezone: true }).notNull(),
+    notAfter: timestamp('not_after', { withTimezone: true }).notNull(),
+    active: boolean('active').default(true).notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    // At most one certificate signs for a tenant at a time.
+    uniqueIndex('certificates_one_active_idx')
+      .on(table.tenantId)
+      .where(sql`${table.active}`),
+    check('certificates_fingerprint_check', sql`${table.fingerprint} ~ '^[0-9a-f]{64}$'`),
+  ],
+);
+
+// Kept apart from tenants so the image isn't loaded with every tenant query.
+export const tenantLogos = pgTable(
+  'tenant_logos',
+  {
+    tenantId: uuid('tenant_id')
+      .primaryKey()
+      .references(() => tenants.id),
+    content: bytea('content').notNull(),
+    contentType: text('content_type').notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    check(
+      'tenant_logos_type_check',
+      oneOf('content_type', ['image/png', 'image/jpeg', 'image/gif']),
+    ),
+    check('tenant_logos_size_check', sql`octet_length(${table.content}) <= 512000`),
   ],
 );
