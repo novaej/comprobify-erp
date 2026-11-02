@@ -21,9 +21,22 @@ Before starting: decide the auth library (PRD open question 7) in an ADR, and re
 - [ ] 10. Production readiness and cutover
 - [ ] 11+. Post-MVP: public API, API keys, webhooks, MCP, OAuth, developer docs
 
-## Before the first push
+## Hardening backlog
 
-- [ ] Owner makes `novaej/comprobify-erp` private. It's currently public.
+Hardening deferred by an earlier milestone. Add an item whenever a milestone puts one off, with where it's recorded. Milestone 10 works through the list, and its gate needs it empty or each remaining item accepted by the owner.
+
+- [ ] TLS for managed Postgres connections, verified against DigitalOcean (`docs/deployment.md`).
+- [ ] Slimmer Docker image: 1.45 GB with the full `node_modules` (`Dockerfile`).
+- [ ] Browser-side Sentry, with the DSN from the server at runtime (ADR-008).
+- [ ] Moderate audit findings in Sentry's dependencies (`glob`, `minimatch`). Recheck on each Sentry upgrade.
+- [ ] Automated dependency updates (Renovate or Dependabot).
+- [ ] Revisit a separate role for system context: `app.rls_system` is a setting, not a privilege (ADR-004).
+- [ ] pg-boss index rebuilds: automatic `REINDEX` is off, so bloat reports need a manual owner task (ADR-005).
+- [ ] Web shutdown: stop pg-boss and close the pool on `SIGTERM`, as the worker does.
+
+## After the first Terraform deploy
+
+- [ ] Owner makes `novaej/comprobify-erp` private. It stays public until then, because GitHub's free plan limits the permissions private repositories give the Terraform plan and apply workflows.
 
 ## Open questions
 

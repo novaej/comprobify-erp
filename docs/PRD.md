@@ -559,7 +559,7 @@ Each milestone: code + tests + docs. Local first; staging only before production
 | 7 | Bulk invoicing | Batches, fair queuing, stack view | 1,000-item batch locally with quota cut; other tenant's invoice latency within NFR-PERF-3 |
 | 8 | Billing | Subscriptions, payments (SPI + Payphone), proofs, review, packs, renewals, past due, prices with notice, seats, operator invoicing queue | Full upgrade/renewal/expiry cycle with fake clock; Payphone test card |
 | 9 | Notifications, reports, admin | All notification types/emails, dashboard, reports and exports, super admin area | Reports match seeded data; templates editable |
-| 10 | Production readiness and cutover | Load test, security review, backups/restore drill, data migration from the current system, staging rehearsal, runbooks, user guide | Migrated copy reconciles (counts, sequentials, XML hashes); deploy checklist done |
+| 10 | Production readiness and cutover | Load test, security review, backups/restore drill, data migration from the current system, staging rehearsal, runbooks, user guide | Migrated copy reconciles (counts, sequentials, XML hashes); deploy checklist done; security review done with no open high or critical findings; restore drill passed; load test meets NFR-PERF-1 and NFR-PERF-3; hardening backlog in `NEXT_STEPS.md` empty or each remaining item accepted by the owner |
 | 11+ | Post-MVP | Public API, API keys, webhooks, batches API, MCP, OAuth, developer docs | — |
 
 Order rationale: the SRI engine (3) comes before ERP modules because every sales flow ends in it; billing (8) comes late because the owner is the only paying user until cutover, but its data model is created in milestone 2.
@@ -582,7 +582,7 @@ Order rationale: the SRI engine (3) comes before ERP modules because every sales
 ## 17. Open questions
 
 1. Document packs: sizes, prices, expiry vs rollover; which plans can buy them.
-2. New plan structure (pricing restructure) with entitlements.
+2. New plan structure (pricing restructure) with entitlements. Can a tenant buy single features as paid add-ons on top of a plan, or only whole plans? Decide before milestone 2: add-ons mean a subscription holds several priced items, which shapes the billing tables.
 3. Accountant: month-boundary re-issue and chronological order; consumidor-final cap; void deadline; retention period.
 4. Verify resolutions NAC-DGERCGC25-00000014/17 texts.
 5. Is "RUC Proveedor" campo adicional still required?
