@@ -66,3 +66,21 @@ pnpm dev
 This starts the web app on http://localhost:3000/es and the worker. The worker logs `Worker started`, then a `Heartbeat` every 5 minutes. http://localhost:3000/health answers `{"status":"ok"}` when the database and job queue are reachable.
 
 Both refuse to start if the env is invalid or the database role could bypass RLS.
+
+## 7. Run the Docker stack
+
+```bash
+pnpm stack:up
+```
+
+This builds the image and runs migrate, web, worker and Caddy on http://localhost:8080, against the same `postgres18` container. `pnpm stack:down` stops it. See [docs/deployment.md](docs/deployment.md).
+
+## 8. Run the E2E smoke test
+
+```bash
+pnpm --filter @comprobify/e2e-tests exec playwright install chromium   # once
+pnpm build
+pnpm test:e2e
+```
+
+To test the Docker stack instead: `E2E_BASE_URL=http://localhost:8080 pnpm test:e2e`. More in [docs/guides/testing.md](docs/guides/testing.md).

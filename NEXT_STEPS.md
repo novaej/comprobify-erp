@@ -2,20 +2,14 @@
 
 Open work only. Tick steps as they land. When a milestone's gate passes, remove its section: `CHANGELOG.md` and git keep the history. Requirements and gates are in [docs/PRD.md](docs/PRD.md), section 15.
 
-## Current: Milestone 0, Foundations
+## Current: Milestone 1, Identity and tenancy
 
-**Gate:** the empty app deploys locally with Docker, and the RLS catalog test passes.
+**Gate:** two tenants and a tenant/twin pair fully isolated (integration); the ambiente rule covered for every deployment × mode cell; invite and role restrictions (E2E).
 
-- [x] **Step 1: repo and tooling.** Workspace, Turborepo, strict TypeScript, ESLint boundary rules, Prettier, `CLAUDE.md`, stack ADRs.
-- [x] **Step 2: config and core basics.** Env validation, `.env.example`, logger, actor context, `DomainError`, `Clock`.
-- [x] **Step 3: database.** `postgres18` setup in `GETTING_STARTED.md`, roles and databases, first migration, `withTenant` and `withSystem`, boot guard, RLS isolation and catalog tests.
-- [x] **Step 4: jobs.** pg-boss schema and queue registry, worker, `system.heartbeat`, transactional enqueue test, worker running without DDL rights.
-- [x] **Step 5: web.** `packages/ui`, theme shim, next-intl, localized page, error pages, `/health`, Sentry.
-- [ ] **Step 6: packaging and gate.** Docker image, Compose stack with Caddy, CI, Playwright smoke test, remaining docs, gate run from a clean checkout.
+Before starting: decide the auth library (PRD open question 7) in an ADR, and read API ADRs 018 and 035 ([docs/adr/README.md](docs/adr/README.md)). Break the scope into steps here.
 
 ## Upcoming milestones
 
-- [ ] 1. Identity and tenancy
 - [ ] 2. Entitlements and plans
 - [ ] 3. SRI engine: factura
 - [ ] 4. Other SRI documents

@@ -1,0 +1,117 @@
+name: CI
+
+# PRD section 12: lint, type-check, unit, integration, image build and audit on
+# every PR and push to main; the E2E smoke test on main.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_ENV: local
+  LOG_FORMAT: json
+  APP_URL: http://localhost:3000
+  DATABASE_URL: postgres://comprobify_erp_app:changeme@localhost:5432/comprobify_erp_local
+  MIGRATION_DATABASE_URL: postgres://comprobify_erp_owner:changeme@localhost:5432/comprobify_erp_local
+  TEST_DATABASE_URL: postgres://comprobify_erp_app:changeme@localhost:5432/comprobify_erp_test
+  TEST_MIGRATION_DATABASE_URL: postgres://comprobify_erp_owner:changeme@localhost:5432/comprobify_erp_test
+  PGPASSWORD: postgres
+
+jobs:
+  checks:
+    name: Lint, types, unit tests, audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm test
+      # High and critical fail the build; lower findings are reviewed by hand.
+      - run: pnpm audit --prod --audit-level high
+
+  integration:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # Same major as production (ADR-003). Superuser only for the bootstrap.
+        image: postgres:18@sha256:3a4264520e121176619f54ff867d12774bc81e95e7b84db58d63bccdb6144b81
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - run: corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The same bootstrap as pnpm db:setup, without docker exec.
+      - run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f infra/postgres/bootstrap.sql
+      - run: pnpm test:integration
+
+  image:
+    name: Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build -t comprobify-erp:ci .
+
+  e2e:
+    name: E2E smoke test
+    if: github.event_name == 'push'
+    needs: [checks, integration]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18@sha256:3a4264520e121176619f54ff867d12774bc81e95e7b84db58d63bccdb6144b81
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - run: corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f infra/postgres/bootstrap.sql
+      - run: pnpm db:migrate
+      - run: pnpm build
+      - run: pnpm --filter @comprobify/e2e-tests exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-traces
+          path: tests/e2e/test-results/
+          retention-days: 7

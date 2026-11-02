@@ -8,7 +8,7 @@ const env = loadWorkerEnv();
 const logger = createLogger({
   service: 'worker',
   level: env.LOG_LEVEL,
-  pretty: env.APP_ENV === 'local',
+  pretty: env.LOG_FORMAT === 'pretty',
   betterstackSourceToken: env.BETTERSTACK_SOURCE_TOKEN,
 });
 

@@ -15,7 +15,7 @@ async function start(): Promise<Runtime> {
   const logger = createLogger({
     service: 'web',
     level: env.LOG_LEVEL,
-    pretty: env.APP_ENV === 'local',
+    pretty: env.LOG_FORMAT === 'pretty',
     betterstackSourceToken: env.BETTERSTACK_SOURCE_TOKEN,
   });
   const db = createDatabase({ connectionString: env.DATABASE_URL, logger });

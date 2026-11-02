@@ -1,0 +1,5 @@
+# Locally plain HTTP on :8080. A deployment sets SITE_ADDRESS to its domain,
+# and Caddy then gets the certificate itself.
+{$SITE_ADDRESS} {
+	reverse_proxy web:3000
+}

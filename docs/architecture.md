@@ -1,0 +1,55 @@
+# Architecture
+
+How the system fits together. Requirements are in [PRD.md](PRD.md); the reasons behind each choice are in [adr/](adr/README.md).
+
+## Processes
+
+```
+            ┌────────── one Docker image ──────────┐
+ browser ─▶ Caddy ─▶ web (Next.js)      worker      migrate (runs once)
+                       │                  │            │
+                       └──── packages/core ┘            │
+                                  │                     │
+                           packages/db ─────────────────┘
+                                  │
+                          PostgreSQL 18: data, sessions, job queue
+```
+
+- **web** serves pages, server actions and route handlers. It only sends jobs.
+- **worker** runs job handlers, cron schedules and queue maintenance.
+- **migrate** runs before each release as the owner role: SQL migrations, then the pg-boss schema and queues.
+
+There is no Redis or message broker. Postgres holds data, sessions and jobs (ADR-005).
+
+## Packages
+
+| Package | Holds | May import |
+|---|---|---|
+| `packages/config` | Env schemas, the logger, the shared tsconfig. The only reader of `process.env`. | — |
+| `packages/db` | Drizzle schema, SQL migrations, `createDatabase`, the boot guard | `config` |
+| `packages/core` | All business logic: kernel (actor context, `DomainError`, `Clock`), jobs, and the domain modules from Milestone 1 | `config`, `db` |
+| `packages/ui` | Design tokens, shadcn components, the theme shim | — |
+| `apps/web` | Next.js adapters: pages, actions, routes | all of the above |
+| `apps/worker` | Worker and migrate entry points | `config`, `core`, `db` |
+
+ESLint enforces the core rules: no Next.js or React in core, no `process.env` outside `packages/config`, and sibling modules only through their `index.ts` (NFR-ARCH-1, NFR-ARCH-4).
+
+## A request
+
+1. Caddy terminates TLS and forwards to web.
+2. `proxy.ts` assigns a request id and picks the locale (`/es`, `/en`).
+3. A page or action builds the actor context and calls a core function.
+4. Core opens `withTenant(ctx, …)`. Every query in it runs in one transaction with `app.tenant_id` set, so RLS limits it to that tenant.
+5. If the work has follow-up, core enqueues a job on the same transaction. No commit, no job.
+
+## Tenancy and RLS
+
+Every tenant-owned table has `tenant_id` and the standard policy from `app_enable_tenant_rls()`. A query without a tenant or system context raises `RLS: no tenant or system context` instead of returning nothing (ADR-004). Cross-tenant work uses `withSystem(reason, …)`, which logs the reason. The app role can't bypass RLS, delete rows or change the schema, and web and worker refuse to start if it could (NFR-SEC-4).
+
+## Jobs
+
+Queues are declared in `packages/core/src/jobs/registry.ts` with a Zod payload, options and concurrency. Schedules are declared there too, in `America/Guayaquil`. The migrate step creates the queues; the worker applies the schedules at start and removes ones no longer declared. Handlers must be idempotent (NFR-JOB-1).
+
+## Startup
+
+Web and worker load their env schema, then run the boot guard. Either failure stops the process with a list of problems. `/health` checks the database and queue, and deploys wait for it.

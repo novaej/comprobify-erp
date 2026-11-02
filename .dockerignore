@@ -1,0 +1,15 @@
+# Never exclude files read at runtime, such as migrations or messages (lesson 10).
+**/node_modules
+**/.next
+**/.turbo
+**/coverage
+**/*.tsbuildinfo
+**/next-env.d.ts
+.git
+.github
+.env
+.env.*
+!.env.example
+docs/reference
+playwright-report
+test-results

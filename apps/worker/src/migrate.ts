@@ -7,7 +7,7 @@ const env = loadMigrateEnv();
 const logger = createLogger({
   service: 'migrate',
   level: env.LOG_LEVEL,
-  pretty: env.APP_ENV === 'local',
+  pretty: env.LOG_FORMAT === 'pretty',
   betterstackSourceToken: env.BETTERSTACK_SOURCE_TOKEN,
 });
 

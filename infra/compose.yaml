@@ -1,0 +1,87 @@
+# Local stack: Caddy, migrate, web and worker on one image, using the shared
+# postgres18 container on the host (GETTING_STARTED.md). Production is documented
+# in docs/deployment.md.
+name: comprobify-erp
+
+x-app: &app
+  image: comprobify-erp:local
+  env_file:
+    - path: ../.env
+      required: false
+  extra_hosts:
+    - host.docker.internal:host-gateway
+
+services:
+  migrate:
+    <<: *app
+    build:
+      context: ..
+    working_dir: /app/apps/worker
+    command: ['node', '--import', 'tsx', 'src/migrate.ts']
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      LOG_FORMAT: json
+      MIGRATION_DATABASE_URL: ${STACK_MIGRATION_DATABASE_URL:-postgres://comprobify_erp_owner:changeme@host.docker.internal:5432/comprobify_erp_local}
+    restart: 'no'
+
+  web:
+    <<: *app
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      LOG_FORMAT: json
+      APP_URL: ${STACK_APP_URL:-http://localhost:8080}
+      DATABASE_URL: ${STACK_DATABASE_URL:-postgres://comprobify_erp_app:changeme@host.docker.internal:5432/comprobify_erp_local}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    mem_limit: 768m
+    # The image has no curl; node is the HTTP client. /health checks the database and queue.
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3000/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  worker:
+    <<: *app
+    working_dir: /app/apps/worker
+    command: ['node', '--import', 'tsx', 'src/index.ts']
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      LOG_FORMAT: json
+      DATABASE_URL: ${STACK_DATABASE_URL:-postgres://comprobify_erp_app:changeme@host.docker.internal:5432/comprobify_erp_local}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    mem_limit: 384m
+    cpus: 0.5
+
+  caddy:
+    # Bump with `docker buildx imagetools inspect caddy:2-alpine`.
+    image: caddy:2-alpine@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5
+    ports:
+      - ${STACK_HTTP_PORT:-8080}:8080
+    # A directory mount, so a replaced Caddyfile is seen on reload.
+    volumes:
+      - ./caddy:/etc/caddy:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:8080}
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

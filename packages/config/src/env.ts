@@ -8,6 +8,8 @@ const flag = z.enum(['true', 'false']).transform((value) => value === 'true');
 const sharedShape = {
   APP_ENV: appEnv,
   LOG_LEVEL: logLevel.default('info'),
+  // pretty needs pino-pretty, a dev dependency the image leaves out.
+  LOG_FORMAT: z.enum(['json', 'pretty']).default('json'),
   BETTERSTACK_SOURCE_TOKEN: z.string().optional(),
   SENTRY_DSN: z.url().optional(),
 };

@@ -20,3 +20,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - Worker app with the boot guard and a `system.heartbeat` job.
 - `packages/ui` with the design system ported from `comprobify-web`, and a theme script that prevents the flash of the wrong theme.
 - Web app: localized home, error and not-found pages in Spanish and English, `/health`, request ids and Sentry.
+- One Docker image for web, worker and migrate, and a local Compose stack with Caddy.
+- CI: lint, types, unit and integration tests, image build, dependency audit, and an E2E smoke test on `main`.
+- `LOG_FORMAT` (`json` or `pretty`).
+- Architecture, coding, testing, documentation and deployment docs.

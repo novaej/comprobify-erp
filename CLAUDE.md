@@ -2,7 +2,7 @@
 
 Primary guide for AI assistants and developers. Every rule here takes precedence over defaults. `docs/PRD.md` is the source of truth for what to build; this file is how to build it. Keep it current: it changes with every milestone.
 
-**Status:** Milestone 0 (Foundations) in progress. Commands and paths below describe the planned Milestone 0 layout until that work lands. Decisions are in [docs/adr/](docs/adr/README.md).
+**Status:** Milestone 0 (Foundations) done. Milestone 1 (Identity and tenancy) is next. Decisions are in [docs/adr/](docs/adr/README.md).
 
 ---
 
@@ -42,9 +42,10 @@ pnpm format              # Prettier; format:check in CI
 pnpm typecheck
 pnpm test                # unit, no database
 pnpm test:integration    # real Postgres, RLS on, app role, database name must end in _test
-pnpm test:e2e            # Playwright
+pnpm test:e2e            # Playwright, against the built app or E2E_BASE_URL
 pnpm build
-pnpm stack:up            # Docker stack: caddy, migrate, web, worker, using the postgres18 container
+pnpm stack:up            # Docker stack on :8080: caddy, migrate, web, worker, using the postgres18 container
+pnpm stack:down
 ```
 
 ---
@@ -58,7 +59,7 @@ packages/core   Domain modules. All business logic. No Next.js imports.
 packages/db     Drizzle schema, SQL migrations, RLS helpers, seeds.
 packages/ui     Shared shadcn components and design tokens.
 packages/config Env parsing (Zod), the logger and the shared tsconfig.
-tests/          Integration tests, in their own workspace package.
+tests/          Integration and E2E tests, each its own workspace package.
 docs/           See PRD section 13.
 infra/          Compose files, Caddyfile, Postgres bootstrap, scripts.
 ```
@@ -128,6 +129,7 @@ Found while setting up this repo:
 21. Reusing role names from other projects. Postgres roles are cluster-wide and the local `postgres18` container is shared, so this repo uses `comprobify_erp_owner` and `comprobify_erp_app`, never `comprobify_app`.
 22. Keeping a server singleton in a module variable in `apps/web`. Next bundles `instrumentation.ts` and routes separately, so each gets its own copy. Keep it on `globalThis`.
 23. Leaving a pino transport out of `apps/web`'s dependencies. Inside a Next build, pino resolves transports from the app, so `pino-pretty` and `@logtail/pino` must be listed there too.
+24. Deciding the log format from `APP_ENV`. The image has no `pino-pretty`, so pretty logs crash it. `LOG_FORMAT` decides, and the stack forces `json`.
 
 **Left behind on purpose** (never port): reserved API keys and pool, `requireInternalService` and the BFF secret, P12-based recovery and `alreadyLinked`, promotion key mirroring, tenant = API key identity, duplicated rows across databases, the notification-sync webhook receiver, the `sandbox` schema and `tenants.sandbox`, RabbitMQ with `pending_effects` and its sweep, droplet cron jobs, two migration tools.
 
@@ -164,3 +166,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `apps/web/messages/` | UI strings, `es` and `en` |
 | `apps/web/src/server/runtime.ts` | The web process's env, logger, database and jobs |
 | `tests/integration/rls-catalog.test.ts` | NFR-SEC-5 catalog test |
+| `tests/e2e/smoke.spec.ts` | Playwright smoke test |
+| `Dockerfile`, `infra/compose.yaml` | The image and the local stack |
+| `.github/workflows/ci.yml` | CI |
+| `docs/architecture.md`, `docs/guides/` | How the system fits together, and how to work in it |
