@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { expect, test, type Page } from '@playwright/test';
+import { base32 } from '@better-auth/utils/base32';
+import { createOTP } from '@better-auth/utils/otp';
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { Client } from 'pg';
 
@@ -207,5 +209,49 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await viewer.goto('/es/dashboard');
     await expect(viewer).toHaveURL(/\/es\/onboarding$/);
     await guest.close();
+  });
+
+  // Last: every sign-in after this one needs the code.
+  test('turns on two-step verification and needs the code to sign in (FR-USR-3)', async ({
+    page,
+  }) => {
+    await signIn(page, email, newPassword);
+    await expect(page).toHaveURL(/\/es\/dashboard$/);
+    await page.goto('/es/account');
+    await page.getByLabel('Tu contraseña, para activarla').fill(newPassword);
+    await page.getByRole('button', { name: 'Activar' }).click();
+    await expect(
+      page.getByRole('img', { name: 'Código QR para tu app de autenticación' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('list', { name: 'Códigos de respaldo' }).getByRole('listitem'),
+    ).toHaveCount(10);
+
+    // What an authenticator app does with the key.
+    const key = (await page.locator('code').innerText()).trim();
+    const totp = () => createOTP(new TextDecoder().decode(base32.decode(key))).totp();
+    await page.getByLabel('Código de 6 dígitos de tu app').fill(await totp());
+    await page.getByRole('button', { name: 'Confirmar y activar' }).click();
+    await expect(page.getByText('La verificación en dos pasos está activada.')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click();
+    await signIn(page, email, newPassword);
+    await expect(page).toHaveURL(/\/es\/login\/two-factor$/);
+    await page.getByLabel('Código', { exact: true }).fill('000000');
+    await page.getByRole('button', { name: 'Verificar' }).click();
+    await expect(page.locator('form').getByRole('alert')).toHaveText('Ese código no es válido.');
+    await page.getByLabel('Código', { exact: true }).fill(await totp());
+    await page.getByRole('button', { name: 'Verificar' }).click();
+    await expect(page).toHaveURL(/\/es\/dashboard$/);
+
+    // Requiring it of every member leaves this owner, who has it, at work.
+    await page.goto('/es/users');
+    await page.getByLabel('Exigir verificación en dos pasos a todos los miembros').check();
+    await page.getByRole('button', { name: 'Guardar', exact: true }).first().click();
+    await expect(
+      page.getByLabel('Exigir verificación en dos pasos a todos los miembros'),
+    ).toBeChecked();
+    await page.goto('/es/dashboard');
+    await expect(page).toHaveURL(/\/es\/dashboard$/);
   });
 });

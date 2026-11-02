@@ -71,6 +71,20 @@
       "when": 1793651594426,
       "tag": "0009_members_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793659051165,
+      "tag": "0010_two_factor",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793659051501,
+      "tag": "0011_two_factor_rules",
+      "breakpoints": true
     }
   ]
 }

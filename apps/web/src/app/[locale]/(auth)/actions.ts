@@ -37,17 +37,26 @@ export async function signInAction(_: ActionState, form: FormData): Promise<Acti
   const { identity } = await getRuntime();
   const meta = await requestMeta();
   const email = field(form, 'email');
-  const state = await toActionState(() =>
-    identity.signIn({ email, password: field(form, 'password') }, meta),
-  );
+  let twoFactorRequired = false;
+  const state = await toActionState(async () => {
+    ({ twoFactorRequired } = await identity.signIn(
+      { email, password: field(form, 'password') },
+      meta,
+    ));
+  });
   if (state.error === 'EMAIL_NOT_VERIFIED') {
     // Send a fresh link; a rate limit here just means one was sent recently.
     await identity.resendVerification({ email }, meta).catch((error: unknown) => {
       if (!isDomainError(error, 'RATE_LIMITED')) throw error;
     });
   }
-  if (state.done)
-    redirect({ href: safeNextPath(field(form, 'next')) ?? '/dashboard', locale: localeOf(form) });
+  const next = safeNextPath(field(form, 'next'));
+  // No session yet: the code page finishes the sign-in (FR-USR-3).
+  if (state.done && twoFactorRequired) {
+    const query = next ? `?next=${encodeURIComponent(next)}` : '';
+    redirect({ href: `/login/two-factor${query}`, locale: localeOf(form) });
+  }
+  if (state.done) redirect({ href: next ?? '/dashboard', locale: localeOf(form) });
   return state;
 }
 
@@ -92,5 +101,20 @@ export async function resetPasswordAction(_: ActionState, form: FormData): Promi
     ),
   );
   if (state.done) redirect({ href: '/login?reason=reset', locale: localeOf(form) });
+  return state;
+}
+
+// The second step of a sign-in (FR-USR-3): a code from the app, or a backup code.
+export async function verifyTwoFactorAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const { identity } = await getRuntime();
+  const meta = await requestMeta();
+  const state = await toActionState(() =>
+    identity.verifyTwoFactor(
+      { code: field(form, 'code'), backup: form.get('backup') === 'on' },
+      meta,
+    ),
+  );
+  if (state.done)
+    redirect({ href: safeNextPath(field(form, 'next')) ?? '/dashboard', locale: localeOf(form) });
   return state;
 }

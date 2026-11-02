@@ -11,13 +11,20 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { NoAccess } from '@/components/no-access';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
-import { AccessForm, InviteForm, RemoveForm, RevokeForm, RoleForm } from './forms';
+import {
+  AccessForm,
+  InviteForm,
+  RemoveForm,
+  RevokeForm,
+  RoleForm,
+  TwoFactorRequirementForm,
+} from './forms';
 
 // FR-USR-1, FR-ROLE-2. Core enforces every permission; the page only hides what it would refuse.
 export default async function UsersPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const { actor } = await loadShell(locale);
+  const { actor, active } = await loadShell(locale);
   if (!actor.permissions.includes('users.read')) return <NoAccess />;
 
   const { db } = await getRuntime();
@@ -43,6 +50,17 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
         <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">{t('description')}</p>
       </div>
+
+      {actor.permissions.includes('organization.manage') && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('securityTitle')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TwoFactorRequirementForm required={active.entry.requireTwoFactor} />
+          </CardContent>
+        </Card>
+      )}
 
       {manage && (
         <Card>

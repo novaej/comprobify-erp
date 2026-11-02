@@ -72,7 +72,10 @@
     "INVALID_TOKEN": "This link is invalid or has expired. Request a new one.",
     "RATE_LIMITED": "Too many attempts. Wait a few minutes and try again.",
     "INVALID_INPUT": "Check the details you entered.",
-    "UNKNOWN": "An unexpected error occurred. Please try again."
+    "UNKNOWN": "An unexpected error occurred. Please try again.",
+    "INVALID_CODE": "That code isn't valid.",
+    "TWO_FACTOR_LOCKED": "Too many wrong codes. Wait 15 minutes and sign in again.",
+    "TWO_FACTOR_EXPIRED": "The time to enter the code ran out. Sign in again."
   },
   "checkEmail": {
     "title": "Check your email",
@@ -226,7 +229,11 @@
     "expires": "expires {date}",
     "issuePointsFor": "{name}'s issue points",
     "issuePointsHint": "Check none to allow all of them.",
-    "saveIssuePoints": "Save points"
+    "saveIssuePoints": "Save points",
+    "securityTitle": "Company security",
+    "requireTwoFactor": "Require two-step verification of every member",
+    "requireTwoFactorHint": "Anyone who hasn't turned it on must do so before working here.",
+    "saveSecurity": "Save"
   },
   "usersError": {
     "FORBIDDEN": "Your role doesn't allow this.",
@@ -265,5 +272,38 @@
   "noAccess": {
     "title": "You don't have access",
     "description": "Your role doesn't include this section. Ask the owner or an administrator for access."
+  },
+  "twoFactor": {
+    "title": "Two-step verification",
+    "description": "Enter the code from your authenticator app.",
+    "code": "Code",
+    "codeHint": "The 6 digits from your app, or a backup code.",
+    "useBackup": "Use a backup code",
+    "submit": "Verify",
+    "submitting": "Verifying..."
+  },
+  "security": {
+    "title": "Security",
+    "description": "Two-step verification asks for a code from your authenticator app as well as your password.",
+    "enabled": "Two-step verification is on.",
+    "enable": "Turn on",
+    "passwordToEnable": "Your password, to turn it on",
+    "disable": "Turn off",
+    "passwordToDisable": "Your password, to turn it off",
+    "scan": "Scan this code with your authenticator app (Google Authenticator, Microsoft Authenticator, 1Password or another).",
+    "qrAlt": "QR code for your authenticator app",
+    "manualKey": "Can't scan? Enter this key:",
+    "backupTitle": "Backup codes",
+    "backupHint": "Keep them somewhere safe. Each works once if you lose your phone. You won't see them again.",
+    "confirmCode": "6-digit code from your app",
+    "confirm": "Confirm and turn on",
+    "requiredByOrganization": "Your company requires two-step verification. Turn it on to continue."
+  },
+  "securityError": {
+    "INVALID_CREDENTIALS": "The password is wrong.",
+    "INVALID_CODE": "That code isn't valid. Check your phone's clock and try again.",
+    "TWO_FACTOR_LOCKED": "Too many wrong codes. Wait 15 minutes.",
+    "INVALID_INPUT": "Check the details you entered.",
+    "UNKNOWN": "An unexpected error occurred. Please try again."
   }
 }

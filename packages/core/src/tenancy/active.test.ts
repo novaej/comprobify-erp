@@ -8,6 +8,7 @@ const entry = (id: string, live = false): OrganizationEntry => ({
   name: id,
   role: 'OWNER',
   live,
+  requireTwoFactor: false,
 });
 
 // FR-USR-5, FR-ONB-5.

@@ -401,3 +401,25 @@ export async function acceptInvitation(
     return { realTenantId: pair.realTenantId, twinTenantId: pair.twinTenantId };
   });
 }
+
+// FR-USR-3: the organization can require TOTP of every member, in it and its twin.
+export async function setTwoFactorRequirement(
+  ctx: ActorContext,
+  db: Database,
+  required: boolean,
+): Promise<void> {
+  requirePermission(ctx, 'organization.manage');
+  await db.withSystem(
+    'set the two-factor requirement of an organization and its twin',
+    async ({ db: tx }) => {
+      const pair = await pairOf(tx, ctx.tenantId);
+      for (const tenantId of [pair.realTenantId, pair.twinTenantId]) {
+        if (tenantId)
+          await tx
+            .update(schema.tenants)
+            .set({ requireTwoFactor: required })
+            .where(eq(schema.tenants.id, tenantId));
+      }
+    },
+  );
+}

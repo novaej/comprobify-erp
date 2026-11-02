@@ -1,6 +1,6 @@
 import 'server-only';
 import type { RequestMeta } from '@comprobify/core';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 
 const LOOPBACK = new Set(['::1', '127.0.0.1', '::ffff:127.0.0.1']);
 
@@ -13,7 +13,18 @@ export function clientIp(source: Headers): string | null {
   return last && !LOOPBACK.has(last) ? last : null;
 }
 
-export async function requestMeta(): Promise<RequestMeta> {
+// The request's headers with the cookies as they are now. headers() keeps the cookies
+// the request arrived with; cookies() also has those set earlier in this request, as
+// when Better Auth rotates the session, so a later read sees the new session.
+export async function currentHeaders(): Promise<Headers> {
   const source = new Headers(await headers());
+  const jar = (await cookies()).toString();
+  if (jar) source.set('cookie', jar);
+  else source.delete('cookie');
+  return source;
+}
+
+export async function requestMeta(): Promise<RequestMeta> {
+  const source = await currentHeaders();
   return { ip: clientIp(source), headers: source };
 }

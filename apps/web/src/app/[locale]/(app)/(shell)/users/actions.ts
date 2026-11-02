@@ -6,6 +6,7 @@ import {
   removeMember,
   revokeInvitation,
   setIssuePointAccess,
+  setTwoFactorRequirement,
 } from '@comprobify/core';
 import { createRateLimiter, systemClock } from '@comprobify/core';
 import { revalidatePath } from 'next/cache';
@@ -77,4 +78,13 @@ export async function setAccessAction(_: ActionState, form: FormData): Promise<A
       return { branchCode, pointCode };
     });
   return run(form, () => setIssuePointAccess(actor, db, { userId: text(form, 'userId'), points }));
+}
+
+export async function setTwoFactorRequirementAction(
+  _: ActionState,
+  form: FormData,
+): Promise<ActionState> {
+  const { actor } = await loadShell(localeOf(form));
+  const { db } = await getRuntime();
+  return run(form, () => setTwoFactorRequirement(actor, db, form.get('required') === 'on'));
 }

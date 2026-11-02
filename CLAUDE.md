@@ -134,6 +134,7 @@ Found while setting up this repo:
 24. Deciding the log format from `APP_ENV`. The image has no `pino-pretty`, so pretty logs crash it. `LOG_FORMAT` decides, and the stack forces `json`.
 25. Using `instanceof` on errors in `apps/web`. Next bundles core more than once, and the runtime on `globalThis` comes from another bundle than the action, so `instanceof DomainError` fails. Use `isDomainError`, which checks a `Symbol.for` brand.
 26. Giving a form an `action` prop. React 19 resets it after the action runs, so an error wipes what the user typed. Use `useFormAction`, which submits through `onSubmit`.
+27. Reading the session from `headers()` in a server action. It keeps the cookies the request arrived with, so after Better Auth rotates the session (2FA setup) the page sees no session. `currentHeaders()` builds the Cookie header from `cookies()`, which has the new one.
 
 **Left behind on purpose** (never port): reserved API keys and pool, `requireInternalService` and the BFF secret, P12-based recovery and `alreadyLinked`, promotion key mirroring, tenant = API key identity, duplicated rows across databases, the notification-sync webhook receiver, the `sandbox` schema and `tenants.sandbox`, RabbitMQ with `pending_effects` and its sweep, droplet cron jobs, two migration tools.
 
@@ -173,6 +174,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/testing/` | Test helpers, such as generated P12 files (`@comprobify/core/testing`) |
 | `packages/core/src/email/` | Email templates, Mailgun and the local log provider |
 | `apps/web/src/server/session.ts` | `getSession` and `requireSession` for pages |
+| `apps/web/src/server/request.ts` | `currentHeaders()` and `requestMeta()`: the cookies as they are now, and the client address |
 | `apps/web/src/server/shell.ts` | `loadShell`: session, organizations, active organization, actor, certificate status |
 | `apps/web/src/components/shell/` | Sidebar, organization switcher, top bar |
 | `packages/ui/` | Design system: tokens, components, theme |

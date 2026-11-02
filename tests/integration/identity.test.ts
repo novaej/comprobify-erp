@@ -95,7 +95,9 @@ describe('identity', () => {
       code: 'EMAIL_NOT_VERIFIED',
     });
     await identity.verifyEmail({ token: sent[`verify:${email.toLowerCase()}`]! }, meta());
-    await expect(identity.signIn({ email, password }, meta())).resolves.toBeUndefined();
+    await expect(identity.signIn({ email, password }, meta())).resolves.toEqual({
+      twoFactorRequired: false,
+    });
   });
 
   // Better Auth answers a duplicate like a new sign-up, so the form can't reveal
@@ -116,7 +118,9 @@ describe('identity', () => {
     expect(users).toHaveLength(1);
     expect(users[0]).toMatchObject({ name: 'Ana', locale: 'es', emailVerified: true });
     expect(sent[`verify:${email}`]).toBeUndefined();
-    await expect(identity.signIn({ email, password }, meta())).resolves.toBeUndefined();
+    await expect(identity.signIn({ email, password }, meta())).resolves.toEqual({
+      twoFactorRequired: false,
+    });
   });
 
   it('refuses a short password before reaching Better Auth', async () => {
@@ -259,7 +263,7 @@ describe('identity', () => {
     expect(sessions).toHaveLength(0);
     await expect(
       identity.signIn({ email, password: 'a brand new passphrase' }, meta()),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual({ twoFactorRequired: false });
   });
 
   it('answers a reset request for an unknown email the same way', async () => {
@@ -287,6 +291,6 @@ describe('identity', () => {
       );
       return rows.map((row) => row.table_name);
     });
-    expect(rows).toEqual(['rate_limit_hits', 'sessions', 'verifications']);
+    expect(rows).toEqual(['rate_limit_hits', 'sessions', 'two_factors', 'verifications']);
   });
 });

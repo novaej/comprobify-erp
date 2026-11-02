@@ -121,6 +121,8 @@ export type OrganizationEntry = {
   name: string;
   role: Role;
   live: boolean;
+  // Members must use TOTP to work here (FR-USR-3).
+  requireTwoFactor: boolean;
 };
 
 // FR-USR-5: one entry per real organization and its twin. User context (ADR-010).
@@ -139,6 +141,7 @@ export async function listOrganizations(
         mode: tenants.mode,
         twinOf: tenants.twinOf,
         liveAt: tenants.liveAt,
+        requireTwoFactor: tenants.requireTwoFactor,
         role: memberships.role,
       })
       .from(tenants)
@@ -161,6 +164,7 @@ export async function listOrganizations(
         name: row.tradeName ?? row.legalName,
         role: row.role,
         live: row.liveAt !== null,
+        requireTwoFactor: row.requireTwoFactor,
       }))
       .sort((a, b) => a.name.localeCompare(b.name, 'es'));
   });

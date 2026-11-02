@@ -3,12 +3,13 @@
 import { startTransition, useActionState, type FormEvent } from 'react';
 import type { ActionState } from '@/server/actions';
 
-type Action = (state: ActionState, form: FormData) => Promise<ActionState>;
-
 // React 19 resets a form after its `action` runs, so an error would wipe what the
 // user typed. Submitting through onSubmit keeps the fields, files included.
-export function useFormAction(action: Action) {
-  const [state, dispatch, pending] = useActionState(action, {});
+export function useFormAction<State extends ActionState = ActionState>(
+  action: (state: Awaited<State>, form: FormData) => State | Promise<State>,
+  initial = {} as Awaited<State>,
+) {
+  const [state, dispatch, pending] = useActionState<State, FormData>(action, initial);
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);

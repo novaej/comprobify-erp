@@ -72,7 +72,10 @@
     "INVALID_TOKEN": "Este enlace no es válido o ya expiró. Solicita uno nuevo.",
     "RATE_LIMITED": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
     "INVALID_INPUT": "Revisa los datos ingresados.",
-    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "INVALID_CODE": "Ese código no es válido.",
+    "TWO_FACTOR_LOCKED": "Demasiados códigos incorrectos. Espera 15 minutos y vuelve a iniciar sesión.",
+    "TWO_FACTOR_EXPIRED": "El tiempo para ingresar el código terminó. Vuelve a iniciar sesión."
   },
   "checkEmail": {
     "title": "Revisa tu correo",
@@ -226,7 +229,11 @@
     "expires": "vence el {date}",
     "issuePointsFor": "Puntos de emisión de {name}",
     "issuePointsHint": "Si no marcas ninguno, puede usar todos.",
-    "saveIssuePoints": "Guardar puntos"
+    "saveIssuePoints": "Guardar puntos",
+    "securityTitle": "Seguridad de la empresa",
+    "requireTwoFactor": "Exigir verificación en dos pasos a todos los miembros",
+    "requireTwoFactorHint": "Quien no la tenga activada deberá activarla antes de seguir trabajando.",
+    "saveSecurity": "Guardar"
   },
   "usersError": {
     "FORBIDDEN": "Tu rol no permite esta acción.",
@@ -265,5 +272,38 @@
   "noAccess": {
     "title": "No tienes acceso",
     "description": "Tu rol no incluye esta sección. Pide acceso al propietario o a un administrador."
+  },
+  "twoFactor": {
+    "title": "Verificación en dos pasos",
+    "description": "Ingresa el código de tu app de autenticación.",
+    "code": "Código",
+    "codeHint": "Los 6 dígitos de tu app, o un código de respaldo.",
+    "useBackup": "Usar un código de respaldo",
+    "submit": "Verificar",
+    "submitting": "Verificando..."
+  },
+  "security": {
+    "title": "Seguridad",
+    "description": "La verificación en dos pasos pide un código de tu app de autenticación además de tu contraseña.",
+    "enabled": "La verificación en dos pasos está activada.",
+    "enable": "Activar",
+    "passwordToEnable": "Tu contraseña, para activarla",
+    "disable": "Desactivar",
+    "passwordToDisable": "Tu contraseña, para desactivarla",
+    "scan": "Escanea este código con tu app de autenticación (Google Authenticator, Microsoft Authenticator, 1Password u otra).",
+    "qrAlt": "Código QR para tu app de autenticación",
+    "manualKey": "¿No puedes escanear? Ingresa esta clave:",
+    "backupTitle": "Códigos de respaldo",
+    "backupHint": "Guárdalos en un lugar seguro. Cada uno sirve una sola vez si pierdes tu teléfono. No los volverás a ver.",
+    "confirmCode": "Código de 6 dígitos de tu app",
+    "confirm": "Confirmar y activar",
+    "requiredByOrganization": "Tu empresa exige la verificación en dos pasos. Actívala para continuar."
+  },
+  "securityError": {
+    "INVALID_CREDENTIALS": "La contraseña no es correcta.",
+    "INVALID_CODE": "Ese código no es válido. Revisa la hora de tu teléfono y vuelve a intentarlo.",
+    "TWO_FACTOR_LOCKED": "Demasiados códigos incorrectos. Espera 15 minutos.",
+    "INVALID_INPUT": "Revisa los datos ingresados.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
   }
 }

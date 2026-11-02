@@ -15,6 +15,7 @@ import {
   signInAction,
   signUpAction,
   verifyEmailAction,
+  verifyTwoFactorAction,
 } from './actions';
 
 type Action = (state: ActionState, form: FormData) => Promise<ActionState>;
@@ -204,6 +205,36 @@ export function ResetPasswordForm({ token }: { token: string }) {
       submitting={t('submitting')}
     >
       <NewPasswordFields />
+    </AuthForm>
+  );
+}
+
+export function TwoFactorForm({ next }: { next?: string | undefined }) {
+  const t = useTranslations('twoFactor');
+  return (
+    <AuthForm
+      action={verifyTwoFactorAction}
+      hidden={next ? { next } : {}}
+      submit={t('submit')}
+      submitting={t('submitting')}
+    >
+      <FormField label={t('code')} hint={t('codeHint')}>
+        {(props) => (
+          <Input
+            {...props}
+            name="code"
+            autoComplete="one-time-code"
+            inputMode="text"
+            maxLength={64}
+            required
+            autoFocus
+          />
+        )}
+      </FormField>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="backup" className="h-4 w-4 accent-primary" />
+        {t('useBackup')}
+      </label>
     </AuthForm>
   );
 }

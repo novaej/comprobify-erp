@@ -36,6 +36,7 @@ export type SessionUser = {
   email: string;
   locale: 'es' | 'en';
   isSuperAdmin: boolean;
+  twoFactorEnabled: boolean;
 };
 
 export type SessionState =
@@ -60,6 +61,12 @@ const CODES: Record<string, string> = {
   PASSWORD_TOO_LONG: 'WEAK_PASSWORD',
   INVALID_TOKEN: 'INVALID_TOKEN',
   TOKEN_EXPIRED: 'INVALID_TOKEN',
+  INVALID_PASSWORD: 'INVALID_CREDENTIALS',
+  INVALID_CODE: 'INVALID_CODE',
+  INVALID_BACKUP_CODE: 'INVALID_CODE',
+  INVALID_TWO_FACTOR_COOKIE: 'TWO_FACTOR_EXPIRED',
+  ACCOUNT_TEMPORARILY_LOCKED: 'TWO_FACTOR_LOCKED',
+  TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE: 'TWO_FACTOR_LOCKED',
 };
 
 async function mapAuthErrors<T>(fn: () => Promise<T>): Promise<T> {
@@ -92,13 +99,22 @@ export function createIdentity({ auth, db, rateLimiter, clock }: IdentityOptions
       await mapAuthErrors(() => auth.api.signUpEmail({ body: input, headers: meta.headers }));
     },
 
-    // Only failures count, so a user signing in often is never locked out.
-    async signIn(raw: z.input<typeof signInInput>, meta: RequestMeta): Promise<void> {
+    // Only failures count, so a user signing in often is never locked out. With 2FA on,
+    // no session exists yet: the code page finishes the sign-in (FR-USR-3).
+    async signIn(
+      raw: z.input<typeof signInInput>,
+      meta: RequestMeta,
+    ): Promise<{ twoFactorRequired: boolean }> {
       const input = signInInput.parse(raw);
       await rateLimiter.check('sign-in:email', input.email);
       if (meta.ip) await rateLimiter.check('sign-in:ip', meta.ip);
       try {
-        await mapAuthErrors(() => auth.api.signInEmail({ body: input, headers: meta.headers }));
+        const result = await mapAuthErrors(() =>
+          auth.api.signInEmail({ body: input, headers: meta.headers }),
+        );
+        return {
+          twoFactorRequired: 'twoFactorRedirect' in result && result.twoFactorRedirect === true,
+        };
       } catch (error) {
         await rateLimiter.hit('sign-in:email', input.email);
         if (meta.ip) await rateLimiter.hit('sign-in:ip', meta.ip);
@@ -153,6 +169,46 @@ export function createIdentity({ auth, db, rateLimiter, clock }: IdentityOptions
       );
     },
 
+    // The second step of a sign-in: a TOTP code or one of the backup codes.
+    async verifyTwoFactor(
+      raw: { code: string; backup: boolean },
+      meta: RequestMeta,
+    ): Promise<void> {
+      const code = z.string().trim().min(6).max(64).parse(raw.code);
+      await mapAuthErrors(() =>
+        raw.backup
+          ? auth.api.verifyBackupCode({ body: { code }, headers: meta.headers })
+          : auth.api.verifyTOTP({ body: { code }, headers: meta.headers }),
+      );
+    },
+
+    // Step one of setup: the password confirms it is the user; nothing is on until
+    // a code from the app is confirmed (FR-USR-3).
+    async startTwoFactorSetup(
+      raw: { password: string },
+      meta: RequestMeta,
+    ): Promise<{ totpUri: string; backupCodes: string[] }> {
+      const password = z.string().min(1).max(128).parse(raw.password);
+      const result = await mapAuthErrors(() =>
+        auth.api.enableTwoFactor({ body: { password }, headers: meta.headers }),
+      );
+      // TOTP is the only method we configure; OTP by email is never enabled.
+      if (result.method !== 'totp') throw new Error('Unexpected two-factor method');
+      return { totpUri: result.totpURI, backupCodes: result.backupCodes };
+    },
+
+    async confirmTwoFactorSetup(raw: { code: string }, meta: RequestMeta): Promise<void> {
+      const code = z.string().trim().length(6).parse(raw.code);
+      await mapAuthErrors(() => auth.api.verifyTOTP({ body: { code }, headers: meta.headers }));
+    },
+
+    async disableTwoFactor(raw: { password: string }, meta: RequestMeta): Promise<void> {
+      const password = z.string().min(1).max(128).parse(raw.password);
+      await mapAuthErrors(() =>
+        auth.api.disableTwoFactor({ body: { password }, headers: meta.headers }),
+      );
+    },
+
     // Reading the session never extends it. An idle session is deleted here, so
     // it can't come back; the stale cookie then matches nothing.
     async currentSession(
@@ -166,7 +222,7 @@ export function createIdentity({ auth, db, rateLimiter, clock }: IdentityOptions
         await db.delete(sessions).where(eq(sessions.id, found.session.id));
         return { status: 'idle' };
       }
-      const { id, name, email, locale, isSuperAdmin } = found.user;
+      const { id, name, email, locale, isSuperAdmin, twoFactorEnabled } = found.user;
       return {
         status: 'active',
         sessionId: found.session.id,
@@ -179,6 +235,7 @@ export function createIdentity({ auth, db, rateLimiter, clock }: IdentityOptions
           email,
           locale: locale === 'en' ? 'en' : 'es',
           isSuperAdmin: isSuperAdmin === true,
+          twoFactorEnabled: twoFactorEnabled === true,
         },
       };
     },

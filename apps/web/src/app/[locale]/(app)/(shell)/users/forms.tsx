@@ -11,6 +11,7 @@ import {
   removeMemberAction,
   revokeInvitationAction,
   setAccessAction,
+  setTwoFactorRequirementAction,
 } from './actions';
 
 const ASSIGNABLE = ['ADMIN', 'SALES', 'PURCHASING', 'ACCOUNTANT', 'VIEWER'] as const;
@@ -166,5 +167,39 @@ export function AccessForm({
         )}
       </ActionForm>
     </details>
+  );
+}
+
+// FR-USR-3: members without TOTP are sent to set it up before working here.
+export function TwoFactorRequirementForm({ required }: { required: boolean }) {
+  const t = useTranslations('users');
+  return (
+    <ActionForm
+      action={setTwoFactorRequirementAction}
+      errors="usersError"
+      className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+    >
+      {(pending) => (
+        <>
+          <label className="flex items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              name="required"
+              defaultChecked={required}
+              className="mt-0.5 h-4 w-4 accent-primary"
+            />
+            <span>
+              {t('requireTwoFactor')}
+              <span className="block text-xs text-muted-foreground">
+                {t('requireTwoFactorHint')}
+              </span>
+            </span>
+          </label>
+          <Button type="submit" size="sm" variant="outline" disabled={pending}>
+            {t('saveSecurity')}
+          </Button>
+        </>
+      )}
+    </ActionForm>
   );
 }

@@ -52,6 +52,8 @@ export const tenants = pgTable(
     idleTimeoutMinutes: integer('idle_timeout_minutes').default(30).notNull(),
     // obligadoContabilidad in the SRI XML.
     requiredAccounting: boolean('required_accounting').default(false).notNull(),
+    // Members must use TOTP to work here (FR-USR-3); mirrored in the twin.
+    requireTwoFactor: boolean('require_two_factor').default(false).notNull(),
     // Set by go-live; a real organization can't issue before it (FR-ONB-5).
     liveAt: timestamp('live_at', { withTimezone: true }),
     createdAt: createdAt(),

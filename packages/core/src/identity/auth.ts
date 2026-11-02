@@ -1,6 +1,7 @@
 import { schema, type IdentityDb } from '@comprobify/db';
 import { betterAuth, type BetterAuthPlugin } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { twoFactor } from 'better-auth/plugins';
 import type { EmailLocale } from '../email';
 import { SESSION_LIFETIME_SECONDS } from './session-activity';
 
@@ -36,6 +37,7 @@ export function createAuth(options: AuthOptions) {
         sessions: schema.sessions,
         accounts: schema.accounts,
         verifications: schema.verifications,
+        twoFactors: schema.twoFactors,
       },
     }),
     // uuidv7() in the database (PRD section 8). No HTTP routes are mounted,
@@ -84,7 +86,9 @@ export function createAuth(options: AuthOptions) {
         },
       },
     },
-    plugins,
+    // TOTP only (FR-USR-3). Its lockout, 10 wrong codes then 15 minutes, applies to
+    // server calls too. No trusted devices: every sign-in asks for the code.
+    plugins: [twoFactor({ issuer: 'Comprobify' }), ...plugins],
   });
 }
 

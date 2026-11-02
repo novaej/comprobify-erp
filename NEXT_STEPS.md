@@ -11,9 +11,9 @@ Open work only. Tick steps as they land. When a milestone's gate passes, remove 
 - [x] **Step 3: tenancy model.** Tenants (`mode`, `twin_of`), branches, issue points, warehouses created with each branch, memberships, roles and permissions in core, the actor context from the session, the ambiente function with every deployment × mode cell tested.
 - [x] **Step 4: onboarding.** The wizard creating the real organization and its twin with the same branches and issue points, RUC checks, P12 upload encrypted with AES-256-GCM and stored on both, logo.
 - [x] **Step 5: app shell.** Sidebar layout, organization switcher with the Producción / Pruebas toggle, sandbox banner, certificate banner.
-- [ ] **Step 6: users and roles.**
+- [x] **Step 6: users and roles.**
   - [x] 6a: invites (`GET` checks, `POST` accepts), role changes, soft removal, issue-point restrictions.
-  - [ ] 6b: optional TOTP and the tenant setting that requires it.
+  - [x] 6b: optional TOTP and the tenant setting that requires it.
 - [ ] **Step 7: go-live, agreements, audit.** Legal agreements with per-tenant snapshots and acceptance events, go-live (Owner, verified email, accepted agreements), twin reset, the tenant audit log.
 - [ ] **Step 8: gate.** Isolation tests for two tenants and a tenant/twin pair, the ambiente matrix, invite and role E2E, docs.
 
@@ -44,6 +44,7 @@ Hardening deferred by an earlier milestone. Add an item whenever a milestone put
 - [ ] Revisit a separate role for system context: `app.rls_system` is a setting, not a privilege (ADR-004).
 - [ ] pg-boss index rebuilds: automatic `REINDEX` is off, so bloat reports need a manual owner task (ADR-005).
 - [ ] Web shutdown: stop pg-boss and close the pool on `SIGTERM`, as the worker does.
+- [ ] Refuse a TOTP code that was already used in its 30-second window. Better Auth accepts it twice; the integration tests show it (NIST SP 800-63B §5.1.4.2).
 - [ ] A documented, tested rotation procedure for `CERT_ENCRYPTION_KEY` (PRD 9.3). Stored keys carry a `v1:` prefix for it.
 
 ## Before the old repositories are deleted

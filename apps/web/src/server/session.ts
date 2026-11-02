@@ -1,14 +1,14 @@
 import 'server-only';
 import type { SessionState } from '@comprobify/core';
-import { headers } from 'next/headers';
 import { cache } from 'react';
 import { redirect } from '@/i18n/navigation';
+import { currentHeaders } from './request';
 import { getRuntime } from './runtime';
 
 // Once per request: reading the session never extends it (FR-USR-2).
 export const getSession = cache(async (): Promise<SessionState> => {
   const { identity } = await getRuntime();
-  return identity.currentSession(new Headers(await headers()));
+  return identity.currentSession(await currentHeaders());
 });
 
 export async function requireSession(locale: string) {

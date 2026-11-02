@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
-vi.mock('next/headers', () => ({ headers: vi.fn() }));
+vi.mock('next/headers', () => ({ headers: vi.fn(), cookies: vi.fn() }));
 const { clientIp } = await import('./request');
 
 const ip = (xff?: string) => clientIp(new Headers(xff ? { 'x-forwarded-for': xff } : {}));

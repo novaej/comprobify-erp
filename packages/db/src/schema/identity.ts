@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { boolean, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 // Global identity tables, managed by Better Auth (ADR-009). No tenant_id, so no RLS.
 // Column names match what Better Auth expects; extra columns are ours.
@@ -20,6 +20,8 @@ export const users = pgTable('users', {
   // Language for emails; the UI follows the URL.
   locale: text('locale').default('es').notNull(),
   isSuperAdmin: boolean('is_super_admin').default(false).notNull(),
+  // Set by Better Auth's two-factor plugin once TOTP is confirmed (FR-USR-3).
+  twoFactorEnabled: boolean('two_factor_enabled').default(false).notNull(),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -79,6 +81,26 @@ export const verifications = pgTable(
     updatedAt: updatedAt(),
   },
   (table) => [index('verifications_identifier_idx').on(table.identifier)],
+);
+
+// Better Auth's two-factor plugin (FR-USR-3). The secret and backup codes are
+// encrypted by Better Auth with AUTH_SECRET; the counters drive its lockout.
+export const twoFactors = pgTable(
+  'two_factors',
+  {
+    id: id(),
+    secret: text('secret').notNull(),
+    backupCodes: text('backup_codes').notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    verified: boolean('verified').default(true).notNull(),
+    failedVerificationCount: integer('failed_verification_count').default(0).notNull(),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [index('two_factors_user_id_idx').on(table.userId)],
 );
 
 // Our limiter (FR-USR-4). Keys are hashed, so no email or IP is stored.

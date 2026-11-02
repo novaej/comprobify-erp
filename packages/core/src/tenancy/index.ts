@@ -26,6 +26,7 @@ export {
   removeMember,
   revokeInvitation,
   setIssuePointAccess,
+  setTwoFactorRequirement,
 } from './members';
 export type {
   InvitationRow,
