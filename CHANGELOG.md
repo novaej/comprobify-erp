@@ -35,4 +35,6 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - Onboarding: RUC structure check, any CA's P12, the certificate checked against the RUC, the private key encrypted with AES-256-GCM, certificate and logo stored on the organization and its twin, and the user starting in the twin (FR-ONB-2 to FR-ONB-4).
 - `CERT_ENCRYPTION_KEY`, and `pnpm test-certificate` for local testing.
 - Forms keep what was typed after an error.
+- The app shell: sidebar layout with the organization switcher and its Producción / Pruebas toggle (production only after go-live), the sandbox banner, the certificate banner at 30 days and on expiry, a skip link, and a mobile drawer (FR-USR-5, FR-UX-2).
+- A dashboard placeholder; signing in and onboarding land there.
 - `AUTH_SECRET`, `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, `MAILGUN_REGION` and `EMAIL_FROM`.

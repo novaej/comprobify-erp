@@ -1,5 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { createKeyCipher, fixedClock, onboardOrganization } from '@comprobify/core';
+import {
+  certificateStatus,
+  createKeyCipher,
+  fixedClock,
+  onboardOrganization,
+  resolveActor,
+} from '@comprobify/core';
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { eq, schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -118,5 +124,30 @@ describe('onboarding', () => {
         });
       }),
     ).rejects.toMatchObject({ cause: { code: '23505' } });
+  });
+
+  // The shell's certificate banner (FR-NOT-2): warn 30 days ahead, then expired.
+  it('reports the active certificate as ok, expiring, then expired', async () => {
+    const ruc = testRuc();
+    const notAfter = new Date(Date.now() + 90 * 86_400_000);
+    const { twinTenantId } = await onboardOrganization(
+      db,
+      input(ruc, createTestP12({ ruc, notAfter })),
+      deps,
+    );
+    const clock = fixedClock(new Date().toISOString());
+    const actor = await resolveActor(db, { userId: owner, tenantId: twinTenantId, clock });
+
+    const first = await certificateStatus(db, actor);
+    expect(first).toMatchObject({ state: 'ok' });
+    // X.509 keeps whole seconds, so measure from the stored date, not the one asked for.
+    const stored = first.state === 'missing' ? notAfter : first.notAfter;
+    clock.set(new Date(stored.getTime() - 10 * 86_400_000).toISOString());
+    await expect(certificateStatus(db, actor)).resolves.toMatchObject({
+      state: 'expiring',
+      daysLeft: 10,
+    });
+    clock.set(new Date(stored.getTime() + 86_400_000).toISOString());
+    await expect(certificateStatus(db, actor)).resolves.toMatchObject({ state: 'expired' });
   });
 });

@@ -73,7 +73,7 @@ export async function AuthShell({
           </div>
         </div>
 
-        <div className="flex flex-1 items-center justify-center p-4 pb-12">
+        <main id="main-content" className="flex flex-1 items-center justify-center p-4 pb-12">
           <div className="w-full max-w-sm">
             <div className="mb-7 text-center lg:text-left">
               <a href={`/${locale}`} className="mb-6 inline-block lg:hidden">
@@ -85,7 +85,7 @@ export async function AuthShell({
             </div>
             {children}
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );

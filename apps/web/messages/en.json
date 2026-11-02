@@ -111,7 +111,6 @@
     "signOutEverywhere": "Sign out on every device",
     "setUpCompany": "Set up my company",
     "organizations": "Your companies",
-    "welcome": "Your company is ready. You're in its test copy.",
     "activeTest": "Test, active",
     "activeProduction": "Production, active"
   },
@@ -161,5 +160,48 @@
     "INVALID_LOGO": "The logo must be a PNG, JPEG or GIF image up to 500 KB.",
     "INVALID_INPUT": "Check the details you entered.",
     "UNKNOWN": "An unexpected error occurred. Please try again."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "account": "My account",
+    "signOut": "Sign out",
+    "switchOrganization": "Switch company",
+    "environment": "Environment",
+    "production": "Production",
+    "test": "Test",
+    "productionBadge": "SRI Production",
+    "testBadge": "SRI Test",
+    "productionAfterGoLive": "Available once your company goes live.",
+    "collapseSidebar": "Collapse menu",
+    "lockSidebar": "Pin menu",
+    "groups": {
+      "operate": "Operations",
+      "manage": "Administration"
+    },
+    "mainNavigation": "Main navigation",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "skipToContent": "Skip to content"
+  },
+  "shell": {
+    "sandboxTitle": "You're in the test environment",
+    "sandboxBody": "Documents go to the SRI test environment and have no tax validity.",
+    "certificateExpiredTitle": "Your electronic signature has expired",
+    "certificateExpiredBody": "You can't issue documents until you renew it with your certificate authority and upload the new one.",
+    "certificateExpiringTitle": "Your electronic signature expires in {days, plural, =0 {less than a day} one {# day} other {# days}}",
+    "certificateExpiringBody": "Renew it with your certificate authority and upload the new one before it expires."
+  },
+  "roles": {
+    "OWNER": "Owner",
+    "ADMIN": "Administrator",
+    "SALES": "Sales",
+    "PURCHASING": "Purchasing and warehouse",
+    "ACCOUNTANT": "Accountant",
+    "VIEWER": "Read only"
+  },
+  "dashboard": {
+    "description": "Sales, purchasing and inventory will appear here as they are built.",
+    "welcomeTitle": "Your company is ready",
+    "welcomeBody": "You're in its test copy: issue test documents without affecting your real company."
   }
 }

@@ -111,7 +111,6 @@
     "signOutEverywhere": "Cerrar sesión en todos los dispositivos",
     "setUpCompany": "Configurar mi empresa",
     "organizations": "Tus empresas",
-    "welcome": "Tu empresa está lista. Estás en su copia de pruebas.",
     "activeTest": "Pruebas, activa",
     "activeProduction": "Producción, activa"
   },
@@ -161,5 +160,48 @@
     "INVALID_LOGO": "El logo debe ser una imagen PNG, JPEG o GIF de hasta 500 KB.",
     "INVALID_INPUT": "Revisa los datos ingresados.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "account": "Mi cuenta",
+    "signOut": "Cerrar sesión",
+    "switchOrganization": "Cambiar de empresa",
+    "environment": "Ambiente",
+    "production": "Producción",
+    "test": "Pruebas",
+    "productionBadge": "SRI Producción",
+    "testBadge": "SRI Pruebas",
+    "productionAfterGoLive": "Disponible cuando tu empresa pase a producción.",
+    "collapseSidebar": "Colapsar menú",
+    "lockSidebar": "Fijar menú",
+    "groups": {
+      "operate": "Operación",
+      "manage": "Administración"
+    },
+    "mainNavigation": "Navegación principal",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "skipToContent": "Saltar al contenido"
+  },
+  "shell": {
+    "sandboxTitle": "Estás en el ambiente de pruebas",
+    "sandboxBody": "Los comprobantes se envían al ambiente de pruebas del SRI y no tienen validez tributaria.",
+    "certificateExpiredTitle": "Tu firma electrónica está vencida",
+    "certificateExpiredBody": "No podrás emitir comprobantes hasta renovarla con tu entidad certificadora y subir la nueva.",
+    "certificateExpiringTitle": "Tu firma electrónica vence en {days, plural, =0 {menos de un día} one {# día} other {# días}}",
+    "certificateExpiringBody": "Renuévala con tu entidad certificadora y sube la nueva antes de que venza."
+  },
+  "roles": {
+    "OWNER": "Propietario",
+    "ADMIN": "Administrador",
+    "SALES": "Ventas",
+    "PURCHASING": "Compras y bodega",
+    "ACCOUNTANT": "Contador",
+    "VIEWER": "Solo lectura"
+  },
+  "dashboard": {
+    "description": "Los módulos de ventas, compras e inventario aparecerán aquí a medida que se construyan.",
+    "welcomeTitle": "Tu empresa está lista",
+    "welcomeBody": "Estás en su copia de pruebas: emite comprobantes de prueba sin afectar a tu empresa real."
   }
 }

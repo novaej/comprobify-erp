@@ -45,7 +45,7 @@ export async function signInAction(_: ActionState, form: FormData): Promise<Acti
       if (!isDomainError(error, 'RATE_LIMITED')) throw error;
     });
   }
-  if (state.done) redirect({ href: '/account', locale: localeOf(form) });
+  if (state.done) redirect({ href: '/dashboard', locale: localeOf(form) });
   return state;
 }
 
@@ -56,7 +56,7 @@ export async function verifyEmailAction(_: ActionState, form: FormData): Promise
   const state = await toActionState(() =>
     identity.verifyEmail({ token: field(form, 'token') }, meta),
   );
-  if (state.done) redirect({ href: '/account', locale: localeOf(form) });
+  if (state.done) redirect({ href: '/dashboard', locale: localeOf(form) });
   return state;
 }
 

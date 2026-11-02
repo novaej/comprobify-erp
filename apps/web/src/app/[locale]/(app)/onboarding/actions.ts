@@ -61,6 +61,6 @@ export async function onboardAction(_: ActionState, form: FormData): Promise<Act
       tenantId: created.twinTenantId,
     });
   });
-  if (state.done && twinTenantId) redirect({ href: '/account?welcome=1', locale });
+  if (state.done && twinTenantId) redirect({ href: '/dashboard?welcome=1', locale });
   return state;
 }

@@ -34,6 +34,10 @@ There is no Redis or message broker. Postgres holds data, sessions and jobs (ADR
 
 ESLint enforces the core rules: no Next.js or React in core, no `process.env` outside `packages/config`, and sibling modules only through their `index.ts` (NFR-ARCH-1, NFR-ARCH-4).
 
+## Web routes
+
+Under `apps/web/src/app/[locale]/`: `(auth)` holds the sign-in screens and sends signed-in users to the dashboard; `(app)` requires a session, and inside it `(shell)` requires an organization and renders the sidebar. Onboarding and the account page sit in `(app)` outside the shell, so they work before the first organization exists. `loadShell` picks the active organization with `chooseActiveOrganization`, the same rule the account page uses, and builds the actor context once per request.
+
 ## A request
 
 1. Caddy terminates TLS and forwards to web.

@@ -11,6 +11,6 @@ export default async function AuthLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  if ((await getSession()).status === 'active') redirect({ href: '/account', locale });
+  if ((await getSession()).status === 'active') redirect({ href: '/dashboard', locale });
   return children;
 }

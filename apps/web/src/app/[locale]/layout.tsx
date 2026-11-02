@@ -25,9 +25,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <NextIntlClientProvider>
-      <main id="main-content" className="min-h-full">
-        {children}
-      </main>
+      {children}
       <Toaster />
     </NextIntlClientProvider>
   );

@@ -21,7 +21,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const signedIn = (await getSession()).status === 'active';
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 md:p-8">
+    <main id="main-content" className="flex min-h-screen items-center justify-center p-4 md:p-8">
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
@@ -34,7 +34,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <Badge variant="secondary">{t('status')}</Badge>
           <div className="flex gap-2">
             {signedIn ? (
-              <Link href="/account" className={buttonVariants()}>
+              <Link href="/dashboard" className={buttonVariants()}>
                 {tLinks('account')}
               </Link>
             ) : (
@@ -50,6 +50,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           </div>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }

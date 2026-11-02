@@ -56,8 +56,8 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     expect((await page.request.get(link)).status()).toBe(200);
     await page.goto(link);
     await page.getByRole('button', { name: 'Confirmar mi correo' }).click();
-    await expect(page).toHaveURL(/\/es\/account$/);
-    await expect(page.getByText('Hola, Ana Pérez')).toBeVisible();
+    // Signed in, with no organization yet: onboarding comes first.
+    await expect(page).toHaveURL(/\/es\/onboarding$/);
   });
 
   test('signs out, refuses a wrong password, and signs back in', async ({ page }) => {
@@ -68,7 +68,9 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     // An error keeps what was typed.
     await expect(page.getByLabel('Correo electrónico')).toHaveValue(email);
     await signIn(page, email, password);
-    await expect(page).toHaveURL(/\/es\/account$/);
+    await expect(page).toHaveURL(/\/es\/onboarding$/);
+    await page.getByRole('link', { name: 'Mi cuenta' }).click();
+    await expect(page.getByText('Hola, Ana Pérez')).toBeVisible();
     await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click();
     await expect(page).toHaveURL(/\/es\/login$/);
     await page.goto('/es/account');
@@ -89,7 +91,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page.getByText('Tu contraseña cambió')).toBeVisible();
 
     await signIn(page, email, newPassword);
-    await expect(page).toHaveURL(/\/es\/account$/);
+    await expect(page).toHaveURL(/\/es\/onboarding$/);
   });
 
   test('sets up the company and lands in its test copy (FR-ONB-2 to FR-ONB-4)', async ({
@@ -102,7 +104,6 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
       buffer: createTestP12({ ruc: forRuc, password: 'clave' }),
     });
     await signIn(page, email, newPassword);
-    await page.getByRole('link', { name: 'Configurar mi empresa' }).click();
     await expect(page).toHaveURL(/\/es\/onboarding$/);
 
     await page.getByLabel('RUC').fill(ruc);
@@ -121,9 +122,32 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page.getByLabel('Contraseña de la firma')).toHaveValue('clave');
     await page.getByLabel('Archivo de firma (.p12)').setInputFiles(p12(ruc));
     await page.getByRole('button', { name: 'Crear mi empresa' }).click();
-    await expect(page).toHaveURL(/\/es\/account\?welcome=1$/);
+    await expect(page).toHaveURL(/\/es\/dashboard\?welcome=1$/);
     await expect(page.getByText('Tu empresa está lista')).toBeVisible();
-    await expect(page.getByText('Delta Comercial S.A.')).toBeVisible();
+  });
+
+  test('shows the shell: the organization, its test badge and the sandbox banner (FR-USR-5, FR-UX-2)', async ({
+    page,
+  }) => {
+    await signIn(page, email, newPassword);
+    await expect(page).toHaveURL(/\/es\/dashboard$/);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Delta Comercial S.A.');
+    const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
+    await expect(nav.getByText('SRI Pruebas')).toBeVisible();
+    await expect(page.getByText('Estás en el ambiente de pruebas')).toBeVisible();
+    // Production stays off until go-live (FR-ONB-5).
+    await expect(nav.getByRole('button', { name: 'Producción' })).toBeDisabled();
+    await expect(nav.getByRole('button', { name: 'Pruebas' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(nav.getByText('Propietario')).toBeVisible();
+
+    // The first tab stop skips past the navigation.
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('link', { name: 'Saltar al contenido' })).toBeFocused();
+
+    await nav.getByRole('link', { name: 'Mi cuenta' }).click();
     await expect(page.getByText('Pruebas, activa')).toBeVisible();
   });
 });
