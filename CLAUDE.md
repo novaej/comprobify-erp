@@ -171,7 +171,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/jobs/` | Queue registry and schedules |
 | `packages/core/src/identity/` | Better Auth setup, rate limits, sessions and idle timeout |
 | `packages/core/src/tenancy/` | Organizations and twins, roles and permissions, actor context, ambiente |
-| `packages/core/src/entitlements/` | Feature key registry, the starting modules and plans, `syncCatalog` (ADR-011) |
+| `packages/core/src/entitlements/` | Feature key registry, the starting modules and plans, `syncCatalog`, subscriptions (ADR-011) |
 | `packages/core/src/agreements/` | Legal texts (`texts/*.md`, published by the migrate step), personalization, acceptance |
 | `docs/legal/review-notes.md` | What changed in the legal texts and the open legal questions |
 | `packages/core/src/audit/` | `recordAudit` (same transaction as the change), the activity list, sign-ins |

@@ -45,4 +45,5 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - `AGREEMENTS_ENABLED`, `OPERATOR_NAME`, `OPERATOR_RUC`, `OPERATOR_ADDRESS` and `SUPPORT_EMAIL`.
 - An isolation sweep: every tenant table, found from the database catalog, holds rows for two companies and a twin, and none sees another's (Milestone 1 gate, NFR-SEC-1).
 - The plan catalog: feature keys in code, and modules and plans as platform data that only system context can write, with the starting catalog seeded once by the migrate step (FR-PLAN-1, FR-PLAN-2, ADR-011).
+- Subscriptions: each company and its twin hold a plan, paid or complimentary, with add-on modules, Personalizado's limits and price, and per-company overrides, all under RLS. New companies start on Gratis, and the migrate step puts existing ones on it (FR-PLAN-1a, FR-PLAN-1b, FR-ONB-6a).
 - `AUTH_SECRET`, `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, `MAILGUN_REGION` and `EMAIL_FROM`.

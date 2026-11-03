@@ -6,6 +6,8 @@ export { FEATURES, FEATURE_KEYS } from './features';
 export type { BooleanFeature, FeatureKey, FeatureKind, LimitFeature } from './features';
 export { STARTING_MODULES, STARTING_PLANS } from './catalog';
 export type { ModuleKey, ModuleStatus, PlanLimits, PlanStatus } from './catalog';
+export { DEFAULT_PLAN_KEY, startDefaultSubscriptions } from './subscriptions';
+export type { CompanyTenants } from './subscriptions';
 
 export type CatalogSync = { features: string[]; modules: string[]; plans: string[] };
 

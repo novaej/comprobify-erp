@@ -5,6 +5,7 @@ export { certificateStatus, CERTIFICATE_WARNING_DAYS } from './certificate-statu
 export type { CertificateStatus } from './certificate-status';
 export type { Ambiente, AppEnv } from './ambiente';
 export {
+  assignDefaultPlans,
   createOrganization,
   createOrganizationInput,
   listOrganizations,

@@ -127,6 +127,20 @@
       "when": 1793707595886,
       "tag": "0017_entitlements_catalog_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793709495659,
+      "tag": "0018_subscriptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793709495991,
+      "tag": "0019_subscriptions_rls",
+      "breakpoints": true
     }
   ]
 }

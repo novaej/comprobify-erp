@@ -1,6 +1,7 @@
 import { and, eq, schema, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
 import { recordAudit } from '../audit';
+import { startDefaultSubscriptions } from '../entitlements';
 import { setActiveTenant } from '../identity';
 import { DomainError, type ActorContext, type Clock } from '../kernel';
 import type { Logo } from './logo';
@@ -123,7 +124,9 @@ export async function createOrganization(
           });
         }
       }
-      return { realTenantId: real!.id, twinTenantId: twin!.id };
+      const created = { realTenantId: real!.id, twinTenantId: twin!.id };
+      await startDefaultSubscriptions(tx, [created]);
+      return created;
     });
   } catch (error) {
     if (isUniqueViolation(error, 'tenants_ruc_mode_unique')) {
@@ -131,6 +134,22 @@ export async function createOrganization(
     }
     throw error;
   }
+}
+
+// The migrate step: every company created before plans existed starts on the
+// default plan. Companies that already have one are left alone.
+export async function assignDefaultPlans(db: Database): Promise<number> {
+  return db.withSystem('put companies without a plan on the default plan', async ({ db: tx }) => {
+    const { tenants } = schema;
+    const twins = await tx
+      .select({ realTenantId: tenants.twinOf, twinTenantId: tenants.id })
+      .from(tenants)
+      .where(eq(tenants.mode, 'TEST'));
+    return startDefaultSubscriptions(
+      tx,
+      twins.map((twin) => ({ realTenantId: twin.realTenantId!, twinTenantId: twin.twinTenantId })),
+    );
+  });
 }
 
 export type OrganizationEntry = {

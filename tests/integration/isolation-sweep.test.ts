@@ -109,6 +109,18 @@ describe('isolation sweep over every tenant table', () => {
     await acceptAgreements(ctx, db, { ipAddress: '203.0.113.9', userAgent: 'Sweep' }, parties);
     for (const tenantId of [org.realTenantId, org.twinTenantId]) {
       await recordSessionStart(db, { tenantId, userId: owner, sessionId: randomUUID() });
+      // Direct rows until the super admin functions exist (Milestone 2, step 5).
+      await db.withSystem('test: give the company an add-on and an override', ({ executeSql }) =>
+        executeSql(
+          `WITH s AS (SELECT id FROM subscriptions WHERE tenant_id = $1),
+                item AS (INSERT INTO subscription_items (tenant_id, subscription_id, kind, module_id)
+                         SELECT $1, s.id, 'MODULE', m.id FROM s, modules m WHERE m.key = 'INVENTORY')
+           INSERT INTO tenant_feature_overrides
+             (tenant_id, feature_key, feature_kind, effect, reason, created_by)
+           VALUES ($1, 'RIDE_LOGO', 'BOOLEAN', 'GRANT', 'sweep', $2)`,
+          [tenantId, owner],
+        ),
+      );
     }
     return org;
   };
@@ -144,7 +156,7 @@ describe('isolation sweep over every tenant table', () => {
     await db.close();
   });
 
-  it('finds the tenant tables built in Milestone 1', () => {
+  it('finds the tenant tables built so far', () => {
     expect(tables).toEqual(
       expect.arrayContaining([
         'agreement_acceptances',
@@ -155,6 +167,9 @@ describe('isolation sweep over every tenant table', () => {
         'issue_point_access',
         'issue_points',
         'memberships',
+        'subscription_items',
+        'subscriptions',
+        'tenant_feature_overrides',
         'tenant_logos',
         'warehouses',
       ]),
