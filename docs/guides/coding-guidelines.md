@@ -38,6 +38,8 @@ Hand-written SQL (functions, triggers) goes in a custom migration: `pnpm --filte
 
 1. Add the key and its kind (`BOOLEAN` or `LIMIT`) to `FEATURES` in `packages/core/src/entitlements/features.ts`. Never rename a key or change its kind; add a new one.
 2. The migrate step syncs it to `features`. It grants nothing until the super admin puts it in a module, or a new starting module in `catalog.ts` carries it (seeded once, by key).
+3. Enforce it in core: `requireFeature(ctx, key)` for a boolean, `requireWithinLimit(ctx.entitlements, key, used)` for a limit, where `used` is the count before the one being added. Pages use `hasFeature` only to hide or lock (FR-ROLE-3).
+4. Give the error code a message in each form's error group that can raise it.
 
 ## Adding a job
 

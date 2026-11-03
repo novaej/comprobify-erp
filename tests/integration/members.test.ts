@@ -24,7 +24,7 @@ import {
 import { testRuc } from '@comprobify/core/testing';
 import { schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, appUrl, testLogger } from './helpers';
+import { appDatabase, appUrl, grantSeats, testLogger } from './helpers';
 
 // FR-USR-1, FR-ROLE-1, FR-ROLE-2, FR-ONB-6a, ADR-010. Milestone 1 gate: role restrictions.
 describe('members', () => {
@@ -101,6 +101,7 @@ describe('members', () => {
       branch: { code: '001', name: 'Matriz', address: null },
       issuePointCode: '001',
     });
+    await grantSeats(db, org, owner);
     ownerCtx = await actor(owner);
   });
 

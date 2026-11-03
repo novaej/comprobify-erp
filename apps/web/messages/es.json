@@ -247,6 +247,7 @@
   "usersError": {
     "FORBIDDEN": "Tu rol no permite esta acción.",
     "ALREADY_MEMBER": "Esa persona ya es miembro.",
+    "LIMIT_REACHED": "Tu plan ya no tiene usuarios disponibles. Las invitaciones pendientes también cuentan.",
     "OWNER_PROTECTED": "El propietario solo cambia mediante una transferencia.",
     "CANNOT_CHANGE_SELF": "No puedes cambiar tu propio rol ni quitarte.",
     "NOT_A_MEMBER": "Esa persona ya no es miembro.",
@@ -272,6 +273,7 @@
   "inviteError": {
     "INVITATION_INVALID": "Esta invitación ya no es válida.",
     "INVITATION_OTHER_EMAIL": "Esta invitación es para otro correo.",
+    "LIMIT_REACHED": "La empresa ya no tiene usuarios disponibles en su plan. Avisa a quien te invitó.",
     "EMAIL_TAKEN": "Ya existe una cuenta con ese correo. Inicia sesión para aceptar.",
     "PASSWORD_MISMATCH": "Las contraseñas no coinciden.",
     "SIGN_IN_FIRST": "Inicia sesión para aceptar.",

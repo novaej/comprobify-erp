@@ -19,7 +19,7 @@ import {
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import type { Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, appUrl, testLogger } from './helpers';
+import { appDatabase, appUrl, grantSeats, testLogger } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1]);
 const parties = {
@@ -65,6 +65,7 @@ describe('isolation sweep over every tenant table', () => {
       },
       { keyCipher: createKeyCipher('e'.repeat(64)), clock },
     );
+    await grantSeats(db, org, owner);
     const ctx = await resolveActor(db, { userId: owner, tenantId: org.realTenantId, clock });
     const memberEmail = `swi.${randomUUID()}@example.com`;
     const invited = await createVerifiedUser(auth, {
@@ -109,16 +110,14 @@ describe('isolation sweep over every tenant table', () => {
     await acceptAgreements(ctx, db, { ipAddress: '203.0.113.9', userAgent: 'Sweep' }, parties);
     for (const tenantId of [org.realTenantId, org.twinTenantId]) {
       await recordSessionStart(db, { tenantId, userId: owner, sessionId: randomUUID() });
-      // Direct rows until the super admin functions exist (Milestone 2, step 5).
-      await db.withSystem('test: give the company an add-on and an override', ({ executeSql }) =>
+      // A direct row until the super admin functions exist (Milestone 2, step 5);
+      // grantSeats above wrote the override.
+      await db.withSystem('test: give the company an add-on', ({ executeSql }) =>
         executeSql(
-          `WITH s AS (SELECT id FROM subscriptions WHERE tenant_id = $1),
-                item AS (INSERT INTO subscription_items (tenant_id, subscription_id, kind, module_id)
-                         SELECT $1, s.id, 'MODULE', m.id FROM s, modules m WHERE m.key = 'INVENTORY')
-           INSERT INTO tenant_feature_overrides
-             (tenant_id, feature_key, feature_kind, effect, reason, created_by)
-           VALUES ($1, 'RIDE_LOGO', 'BOOLEAN', 'GRANT', 'sweep', $2)`,
-          [tenantId, owner],
+          `INSERT INTO subscription_items (tenant_id, subscription_id, kind, module_id)
+           SELECT $1, s.id, 'MODULE', m.id
+           FROM subscriptions s, modules m WHERE s.tenant_id = $1 AND m.key = 'INVENTORY'`,
+          [tenantId],
         ),
       );
     }

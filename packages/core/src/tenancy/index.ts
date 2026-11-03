@@ -13,7 +13,7 @@ export {
   switchOrganization,
 } from './organizations';
 export type { CreatedOrganization, OrganizationEntry, StoredCertificate } from './organizations';
-export { LOGO_MAX_BYTES, sniffLogo } from './logo';
+export { companyLogo, LOGO_MAX_BYTES, sniffLogo } from './logo';
 export type { Logo } from './logo';
 export {
   acceptInvitation,

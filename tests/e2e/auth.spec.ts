@@ -28,6 +28,28 @@ async function emailLink(
   }
 }
 
+// Gratis allows one user. Until the super admin area exists (Milestone 2, step 5),
+// the owner's companies get more seats from an override written here.
+async function grantSeats(ownerEmail: string): Promise<void> {
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(`SET LOCAL app.rls_system = 'on'`);
+    await client.query(
+      `INSERT INTO tenant_feature_overrides
+         (tenant_id, feature_key, feature_kind, effect, limit_value, reason, created_by)
+       SELECT m.tenant_id, 'USERS', 'LIMIT', 'LIMIT', 20, 'e2e seats', u.id
+       FROM memberships m JOIN users u ON u.id = m.user_id
+       WHERE u.email = $1 AND m.role = 'OWNER'`,
+      [ownerEmail],
+    );
+    await client.query('COMMIT');
+  } finally {
+    await client.end();
+  }
+}
+
 async function signIn(page: Page, email: string, password: string) {
   await page.goto('/es/login');
   await page.getByLabel('Correo electrónico').fill(email);
@@ -161,6 +183,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     browser,
   }) => {
     const viewerEmail = `viewer.${randomUUID()}@example.com`;
+    await grantSeats(email);
     await signIn(page, email, newPassword);
     await page
       .getByRole('navigation', { name: 'Navegación principal' })

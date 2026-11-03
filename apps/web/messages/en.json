@@ -247,6 +247,7 @@
   "usersError": {
     "FORBIDDEN": "Your role doesn't allow this.",
     "ALREADY_MEMBER": "That person is already a member.",
+    "LIMIT_REACHED": "Your plan has no users left. Pending invitations count too.",
     "OWNER_PROTECTED": "The owner only changes through a transfer.",
     "CANNOT_CHANGE_SELF": "You can't change your own role or remove yourself.",
     "NOT_A_MEMBER": "That person is no longer a member.",
@@ -272,6 +273,7 @@
   "inviteError": {
     "INVITATION_INVALID": "This invitation is no longer valid.",
     "INVITATION_OTHER_EMAIL": "This invitation is for another email.",
+    "LIMIT_REACHED": "The company has no users left on its plan. Let the person who invited you know.",
     "EMAIL_TAKEN": "An account with that email already exists. Sign in to accept.",
     "PASSWORD_MISMATCH": "Passwords do not match.",
     "SIGN_IN_FIRST": "Sign in to accept.",

@@ -24,7 +24,7 @@ import {
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, appUrl, testLogger } from './helpers';
+import { appDatabase, appUrl, grantSeats, testLogger } from './helpers';
 
 // FR-NOT-4, FR-ONB-5.
 describe('audit log and go-live', () => {
@@ -106,6 +106,7 @@ describe('audit log and go-live', () => {
       },
       { keyCipher: createKeyCipher('d'.repeat(64)), clock },
     );
+    await grantSeats(db, org, owner);
     ownerCtx = await resolveActor(db, { userId: owner, tenantId: org.realTenantId, clock });
   });
 

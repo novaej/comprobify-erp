@@ -8,6 +8,8 @@ export { STARTING_MODULES, STARTING_PLANS } from './catalog';
 export type { ModuleKey, ModuleStatus, PlanLimits, PlanStatus } from './catalog';
 export { DEFAULT_PLAN_KEY, startDefaultSubscriptions } from './subscriptions';
 export type { CompanyTenants } from './subscriptions';
+export { currentPeriodStart, loadEntitlements, resolveEntitlements } from './resolve';
+export type { EntitlementSources, ModuleSource } from './resolve';
 
 export type CatalogSync = { features: string[]; modules: string[]; plans: string[] };
 

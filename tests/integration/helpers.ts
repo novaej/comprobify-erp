@@ -61,3 +61,22 @@ export function ownerDatabase(): Database {
     logger: testLogger(),
   });
 }
+
+// Gratis allows one user. Until the super admin functions exist (Milestone 2, step 5),
+// a test company gets more seats from an override written here, in it and its twin.
+export async function grantSeats(
+  db: Database,
+  org: { realTenantId: string; twinTenantId: string },
+  createdBy: string,
+  seats = 20,
+): Promise<void> {
+  await db.withSystem('test: give a company more seats', async ({ executeSql }) => {
+    for (const tenantId of [org.realTenantId, org.twinTenantId])
+      await executeSql(
+        `INSERT INTO tenant_feature_overrides
+           (tenant_id, feature_key, feature_kind, effect, limit_value, reason, created_by)
+         VALUES ($1, 'USERS', 'LIMIT', 'LIMIT', $2, 'test seats', $3)`,
+        [tenantId, seats, createdBy],
+      );
+  });
+}

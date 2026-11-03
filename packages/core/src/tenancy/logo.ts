@@ -1,4 +1,5 @@
-import { DomainError } from '../kernel';
+import { eq, schema, type Database } from '@comprobify/db';
+import { DomainError, hasFeature, type ActorContext } from '../kernel';
 
 export const LOGO_MAX_BYTES = 500 * 1024;
 
@@ -16,4 +17,19 @@ export function sniffLogo(content: Buffer): Logo {
   const head = content.subarray(0, 6).toString('ascii');
   if (head === 'GIF87a' || head === 'GIF89a') return { content, contentType: 'image/gif' };
   throw new DomainError('INVALID_LOGO', 'The logo must be a PNG, JPEG or GIF image');
+}
+
+// The logo printed on documents. Onboarding stores it on any plan; it is used only
+// while the company has RIDE_LOGO (the Marca module), so upgrading brings it back.
+export async function companyLogo(ctx: ActorContext, db: Database): Promise<Logo | null> {
+  if (!hasFeature(ctx, 'RIDE_LOGO')) return null;
+  return db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+    const [row] = await tx
+      .select({ content: schema.tenantLogos.content, contentType: schema.tenantLogos.contentType })
+      .from(schema.tenantLogos)
+      .where(eq(schema.tenantLogos.tenantId, ctx.tenantId));
+    return row
+      ? { content: row.content, contentType: row.contentType as Logo['contentType'] }
+      : null;
+  });
 }

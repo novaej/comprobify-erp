@@ -1,5 +1,6 @@
 import type { TENANT_MODES } from '@comprobify/db';
 import type { Clock } from './clock';
+import type { Entitlements } from './entitlements';
 
 // The same list as the database CHECK (CLAUDE.md rule 17).
 export type TenantMode = (typeof TENANT_MODES)[number];
@@ -11,6 +12,7 @@ export type ActorContext = {
   permissions: readonly string[];
   // null means no restriction (FR-ROLE-2).
   issuePointIds: readonly string[] | null;
+  entitlements: Entitlements;
   clock: Clock;
 } & ({ userId: string; apiKeyId?: never } | { apiKeyId: string; userId?: never });
 

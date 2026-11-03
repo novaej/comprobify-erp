@@ -1,7 +1,7 @@
 import { and, eq, schema, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
 import { recordAudit } from '../audit';
-import { startDefaultSubscriptions } from '../entitlements';
+import { loadEntitlements, startDefaultSubscriptions } from '../entitlements';
 import { setActiveTenant } from '../identity';
 import { DomainError, type ActorContext, type Clock } from '../kernel';
 import type { Logo } from './logo';
@@ -237,6 +237,8 @@ export async function resolveActor(
       userId: input.userId,
       permissions: permissionsFor(row.role),
       issuePointIds: await restrictedIssuePoints(tx, input.userId),
+      // FR-PLAN-4: once per request; the twin reads its own mirrored rows.
+      entitlements: await loadEntitlements(tx, input.tenantId, input.clock.now()),
       clock: input.clock,
     };
   });

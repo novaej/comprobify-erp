@@ -1,11 +1,27 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { and, ASSIGNABLE_ROLES, eq, schema, sql, type Database, type Tx } from '@comprobify/db';
+import {
+  and,
+  ASSIGNABLE_ROLES,
+  count,
+  eq,
+  schema,
+  sql,
+  type Database,
+  type Tx,
+} from '@comprobify/db';
 import { z } from 'zod';
 import { agreementsAccepted } from '../agreements';
+import { loadEntitlements } from '../entitlements';
 import { recordAudit } from '../audit';
 import type { RateLimiter } from '../identity';
 import type { Jobs } from '../jobs';
-import { DomainError, requirePermission, type ActorContext, type Clock } from '../kernel';
+import {
+  DomainError,
+  requirePermission,
+  requireWithinLimit,
+  type ActorContext,
+  type Clock,
+} from '../kernel';
 import type { Role } from './roles';
 
 const INVITATION_DAYS = 7;
@@ -34,6 +50,28 @@ async function pairOf(tx: Tx['db'], tenantId: string): Promise<Pair> {
     .from(tenants)
     .where(eq(tenants.twinOf, realTenantId));
   return { realTenantId, twinTenantId: twin?.id ?? null, name: real!.tradeName ?? real!.legalName };
+}
+
+// FR-USR-1: seats are the real organization's active members, plus its pending
+// invitations when inviting, so invitations can't overrun the USERS limit.
+async function seatsUsed(
+  tx: Tx['db'],
+  realTenantId: string,
+  pendingAt: Date | null,
+): Promise<number> {
+  const { memberships, invitations } = schema;
+  const [members] = await tx
+    .select({ n: count() })
+    .from(memberships)
+    .where(and(eq(memberships.tenantId, realTenantId), eq(memberships.active, true)));
+  if (!pendingAt) return members!.n;
+  const [pending] = await tx
+    .select({ n: count() })
+    .from(invitations)
+    .where(
+      sql`${invitations.tenantId} = ${realTenantId} AND ${invitations.acceptedAt} IS NULL AND ${invitations.revokedAt} IS NULL AND ${invitations.expiresAt} > ${pendingAt}`,
+    );
+  return members!.n + pending!.n;
 }
 
 // ADR-010: every membership change lands in the organization and its twin together.
@@ -184,6 +222,8 @@ export async function inviteMember(
       .where(
         sql`${invitations.tenantId} = ${pair.realTenantId} AND ${invitations.email} = ${input.email} AND ${invitations.acceptedAt} IS NULL AND ${invitations.revokedAt} IS NULL`,
       );
+    // After revoking this email's old invitation, so re-sending doesn't take a seat.
+    requireWithinLimit(ctx.entitlements, 'USERS', await seatsUsed(tx.db, pair.realTenantId, now));
     await tx.db.insert(invitations).values({
       tenantId: pair.realTenantId,
       email: input.email,
@@ -432,6 +472,12 @@ export async function acceptInvitation(
       throw new DomainError('INVITATION_OTHER_EMAIL', 'This invitation is for another email');
     }
     const pair = await pairOf(tx, row.tenantId);
+    // The limit may have dropped since the invitation was sent.
+    requireWithinLimit(
+      await loadEntitlements(tx, pair.realTenantId, now),
+      'USERS',
+      await seatsUsed(tx, pair.realTenantId, null),
+    );
     await writeMembership(tx, pair, input.userId, { role: row.role, active: true });
     await tx.update(invitations).set({ acceptedAt: now }).where(eq(invitations.id, row.id));
     await recordAudit(tx, {
