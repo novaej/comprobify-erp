@@ -6,11 +6,17 @@ Open work only. Tick steps as they land. When a milestone's gate passes, remove 
 
 **Gate:** toggling a feature per tenant changes UI and core behaviour.
 
-Before starting: answer PRD open question 2 (can a tenant buy single features as add-ons, or only whole plans?), which shapes the billing tables; and read API ADRs 029, 031 and 034 ([docs/adr/README.md](docs/adr/README.md)). Break the scope into steps here.
+The model is in [ADR-011](docs/adr/011-plans-modules-and-entitlements.md): feature keys in code, modules and plans as data, subscriptions with items, overrides, twins mirrored. Prices wait for Milestone 8.
+
+- [ ] 1. Catalog: the feature key registry in a new `entitlements` module, synced to `features` by the migrate step; platform tables `modules`, `module_features`, `plans`, `plan_modules` and `plan_limits`, with status CHECKs generated from TypeScript; the starting modules and plans seeded once (FR-PLAN-1, FR-PLAN-2).
+- [ ] 2. Subscriptions: `subscriptions` (plan, `PAID` or `COMPLIMENTARY` with a reason, Personalizado's negotiated price), `subscription_items` and `tenant_feature_overrides`, under forced RLS and mirrored into the twin; new companies start on Gratis, and existing ones are moved onto it (FR-PLAN-1a, FR-PLAN-1b, FR-ONB-6a).
+- [ ] 3. Resolver and enforcement: entitlements resolved once per request into the actor context, with the dated rule for removed modules; `requireFeature` and `requireWithinLimit` in the kernel (`FEATURE_NOT_ENABLED`, `LIMIT_REACHED`); applied to what exists today: `USERS` on invitations and `RIDE_LOGO` on the logo (FR-PLAN-3, FR-PLAN-4, FR-USR-1).
+- [ ] 4. UI gating: navigation and pages hide or lock what the company doesn't have; a plan page showing the plan, modules, limits and usage (FR-PLAN-4).
+- [ ] 5. Super admin area: its own route group and layout with no tenant, `PlatformActor` checks in core; editors for plans and modules (contents, status); per company: plan, add-ons, Personalizado, complimentary and overrides, each recorded in the activity log (FR-ADM-1, FR-ADM-3, ADR-010).
+- [ ] 6. Gate and close: E2E where switching a feature for one company changes its screens and core refuses it; isolation sweep covering the new tables; docs.
 
 ## Carried forward from Milestone 1
 
-- **Milestone 2:** seat limits on invitations (FR-USR-1) need entitlements.
 - **Milestone 3:** organization settings with contribuyente especial, agente de retención and RIMPE (onboarding collects only the accounting flag) and certificate renewal (FR-ONB-3); twin reset; starting sequentials asked at go-live, before the first real document; issue-point restrictions applied as query filters once documents exist (FR-ROLE-2: the actor already carries them).
 - **Milestones 5 and 6:** go-live offers to copy master data from the twin (FR-ONB-5) once products, clients and suppliers exist.
 - **Not scheduled:** ownership transfer (PRD section 3). Today nobody can change or remove the owner.

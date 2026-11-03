@@ -30,7 +30,7 @@ The current product is an invoicing API with a web UI on top. The new product is
 ### Goals (MVP)
 1. One system: one Next.js application plus one background worker, sharing one TypeScript domain core and one Postgres database.
 2. The full ERP flow: catalogue → purchases → stock → sale orders → invoices (partial, bulk) → SRI authorization → buyer email, with the SRI side as robust as today's (retries, re-issue, correction, verification).
-3. All SRI document types planned so far: factura (01), nota de crédito (04), guía de remisión (06), comprobante de retención (07), liquidación de compra (03), plus import of received documents (XML).
+3. SRI document types factura (01), nota de crédito (04) and guía de remisión (06). Comprobante de retención (07), liquidación de compra (03) and the import of received documents (XML) come after the MVP, but are in the plan catalog from the start (ADR-011).
 4. Every feature switchable per plan and per tenant (entitlements) from day one.
 5. Subscription billing (bank transfer with proof, card via Payphone, document packs) as today.
 6. The same look and feel as the current web app (design tokens, components, layout, Spanish-first i18n).
@@ -102,14 +102,16 @@ The current product is an invoicing API with a web UI on top. The new product is
 
 ### 5.3 Plans, entitlements, subscription billing
 
-- **FR-PLAN-1** Tables `plans`, `features` (`key`, `kind` boolean|limit, description), `plan_features` (limit value, `null` = unlimited), `tenant_feature_overrides` (grant, revoke, change limit). Resolution: override → plan → off. A new plan is data, not code.
-- **FR-PLAN-2** Every feature is a key, including the ones that are "free for everyone" today. Seed list (extend as modules are added):
+- **FR-PLAN-1** Three layers (ADR-011). **Feature keys** (`key`, `kind` boolean|limit) are in code and synced to a `features` table. **Modules** (`modules`, `module_features`) are named sets of keys and the unit that is sold; a key may sit in several modules, and a module is `AVAILABLE` or `COMING_SOON` (not sellable). **Plans** (`plans`, `plan_modules`, `plan_limits`, `null` = unlimited) are modules plus limit values, with a status (`DRAFT`, `PUBLISHED`, `RETIRED`) and a `self_service` flag. Plans and modules are data, edited by the super admin. Every plan contains the base module, Facturación.
+- **FR-PLAN-1a** A tenant holds one subscription to a plan plus items: `MODULE` (an add-on on a self-service plan, or the operator's pick for Personalizado), `LIMIT` (Personalizado's limit values), and from Milestone 8 extra seats and document packs. Personalizado is not self-service: the operator sets its modules, limits and a negotiated price per company, and edits them later. Resolution per key: tenant override → subscription items → plan → off. The subscription, items and overrides are mirrored into the twin.
+- **FR-PLAN-1b** A subscription is `PAID` or `COMPLIMENTARY`. Complimentary is set by the operator with a reason: never charged, never renews, never expires, left out of revenue. The owner's own company runs on one.
+- **FR-PLAN-2** Every feature is a key, including the ones that are "free for everyone" today. Starting catalog and plans in ADR-011. Keys (extend as modules are added):
   - Limits: `DOCUMENT_QUOTA`, `MAX_BRANCHES`, `MAX_ISSUE_POINTS_PER_BRANCH`, `USERS`.
-  - Document types: `DOC_TYPE_01`, `DOC_TYPE_04`, `DOC_TYPE_06`, `DOC_TYPE_07`, `DOC_TYPE_03`, `RECEIVED_DOCS_IMPORT`.
-  - ERP: `CATALOG`, `CLIENTS`, `PROVIDERS`, `INVENTORY`, `MULTI_WAREHOUSE` (post-MVP), `PURCHASE_ORDERS`, `SALE_ORDERS`, `BULK_INVOICING`, `REPORTS_ADVANCED`, `DOCUMENT_TEMPLATES`.
+  - Document types: `DOC_TYPE_01`, `DOC_TYPE_04`, `DOC_TYPE_06`; coming soon: `DOC_TYPE_07`, `DOC_TYPE_03`, `RECEIVED_DOCS_IMPORT`.
+  - ERP: `CATALOG`, `CLIENTS`, `PROVIDERS`, `INVENTORY`, `MULTI_WAREHOUSE` (post-MVP), `PURCHASE_ORDERS`, `SALE_ORDERS`, `RECEIVABLES`, `BULK_INVOICING`, `REPORTS_BASIC`, `REPORTS_ADVANCED`, `DOCUMENT_TEMPLATES`.
   - Other: `BUYER_EMAIL`, `RIDE_LOGO`, `DOCUMENT_VOID`, `EXTRA_SEATS`, `DOCUMENT_PACKS`.
-  - Reserved for post-MVP: `API_ACCESS`, `API_KEYS`, `WEBHOOKS`, `MCP_READ`, `MCP_WRITE`.
-- **FR-PLAN-3** Losing a document-type feature only blocks enabling it on an issue point; an already-active type keeps working (grandfathering).
+  - Coming soon (post-MVP): `API_ACCESS`, `API_KEYS`, `WEBHOOKS`, `MCP_READ`, `MCP_WRITE`, and the limits `API_KEYS_MAX`, `WEBHOOK_ENDPOINTS_MAX`, `API_RATE_LIMIT`.
+- **FR-PLAN-3** Losing a document-type feature only blocks enabling it on an issue point; an already-active type keeps working (grandfathering). Losing any other module keeps its data readable and refuses changes. Removing a module from a published plan is dated at least 30 days ahead and reaches each tenant at their next renewal; additions apply immediately.
 - **FR-PLAN-4** Entitlements are resolved once per request and cached in the request context; the UI hides or locks what the tenant doesn't have, and the core enforces it (`FEATURE_NOT_ENABLED`).
 - **FR-BILL-1** Subscriptions: plan + interval (monthly/yearly, yearly = 10× monthly), period start/end, statuses `PENDING_PAYMENT`, `ACTIVE`, `CANCELLED`, `EXPIRED`. Port ADR-017, 023, 025, 027, 029, 032, 033 rules.
 - **FR-BILL-2** Payments: purposes `INITIAL`, `RENEWAL`, `TIER_CHANGE`, `SEAT_CHANGE`, `DOCUMENT_PACK`; amounts stored as base + IVA (`IVA_RATE` config, snapshot on the payment) + total; short hand-typable payment code; pricing breakdown JSON for prorated changes.
@@ -144,9 +146,9 @@ The current product is an invoicing API with a web UI on top. The new product is
 - **FR-PUR-1 Purchase orders:** `DRAFT → SENT → PARTIALLY_RECEIVED → RECEIVED → CLOSED`, `CANCELLED` from DRAFT/SENT. Lines from the catalogue.
 - **FR-PUR-2 Receiving:** full or partial per line, creating `PURCHASE_RECEIPT` movements and updating average cost.
 - **FR-PUR-3** Email the PO to the provider as PDF (optional).
-- **FR-PUR-4 Received documents import:** upload one or many authorized XMLs (SRI has no service to list received documents). Parse into provider (created if new) and a purchase record with lines; deduplicate by access key; can prefill a PO receipt and a retención. PDFs accepted only as attachments. Later: inbound email address per tenant.
-- **FR-PUR-5 Retención (07):** generated from a received purchase/provider invoice; retention codes and percentages from the catalogue; sent to SRI like any document.
-- **FR-PUR-6 Liquidación de compra (03):** for purchases from people without a RUC; creates the purchase and, when stock applies, the receipt.
+- **FR-PUR-4 Received documents import (post-MVP):** upload one or many authorized XMLs (SRI has no service to list received documents). Parse into provider (created if new) and a purchase record with lines; deduplicate by access key; can prefill a PO receipt and a retención. PDFs accepted only as attachments. Later: inbound email address per tenant.
+- **FR-PUR-5 Retención (07, post-MVP):** generated from a received purchase/provider invoice; retention codes and percentages from the catalogue; sent to SRI like any document.
+- **FR-PUR-6 Liquidación de compra (03, post-MVP):** for purchases from people without a RUC; creates the purchase and, when stock applies, the receipt.
 
 ### 5.7 Sales
 
@@ -165,7 +167,7 @@ The current product is an invoicing API with a web UI on top. The new product is
 
 This is the most rule-dense module. Section 6 lists the SRI rules it must follow.
 
-- **FR-DOC-1 Types:** 01, 04, 06, 07, 03 in the MVP. A registry maps each type to its builder, XSD, validator, RIDE mapper and header label; adding a type = one entry plus those pieces (port `docs/guides/coding-guidelines.md` "Adding a new document type").
+- **FR-DOC-1 Types:** 01, 04, 06 in the MVP; 07 and 03 after it. A registry maps each type to its builder, XSD, validator, RIDE mapper and header label; adding a type = one entry plus those pieces (port `docs/guides/coding-guidelines.md` "Adding a new document type").
 - **FR-DOC-2 Creation pipeline** (all inside one transaction, except signing which happens before commit):
   1. idempotency check (key + payload hash; same key + different payload → 409);
   2. entitlement and issue-point checks (`can_issue` pause flag, allowed types);
@@ -215,9 +217,9 @@ This is the most rule-dense module. Section 6 lists the SRI rules it must follow
 
 ### 5.12 Platform administration (super admin)
 
-- **FR-ADM-1** Tenants: list/search, status, plan, quota, feature overrides, verify email, promote, suspend/reactivate with reason, event log.
+- **FR-ADM-1** Tenants: list/search, status, plan and add-ons, Personalizado modules/limits/price, complimentary with reason, quota, feature overrides, verify email, promote, suspend/reactivate with reason, event log.
 - **FR-ADM-2** Payments review with proof viewer, verify/reject/refund; invoicing queue; Payphone reconciliation view.
-- **FR-ADM-3** Prices (plans, seats, packs) draft/publish; plans and features editor.
+- **FR-ADM-3** Prices (plans, modules, seats, packs) draft/publish; plans and modules editor (contents, status).
 - **FR-ADM-4** Legal agreements and email templates editor/publisher.
 - **FR-ADM-5** Jobs view: last run, outcome, failed jobs with retry; documents overdue at SRI across tenants.
 - **FR-ADM-6** Impersonation (read-only "view as tenant") with audit entry; post-MVP if time is short.
@@ -486,7 +488,7 @@ Port layout, tokens and components from `comprobify-web` (Appendix A). Screens:
 - Onboarding wizard; issue-point picker/switcher.
 - Dashboard.
 - Sales: sale orders (list, form, detail with invoices and stock), invoices (list, new, detail), credit notes, guías, bulk stack view, receivables.
-- Purchases: purchase orders, receiving, received documents import, retenciones, liquidaciones.
+- Purchases: purchase orders, receiving; after the MVP, received documents import, retenciones, liquidaciones.
 - Inventory: stock levels, movements, adjustments, valuation.
 - Master data: products, clients, providers, warehouses, templates.
 - Documents: all documents, pending/failed ("Documentos pendientes"), detail timeline, re-issue/correct/void dialogs.
@@ -505,7 +507,7 @@ Status badges cover every document state including `SEND_FAILED`, "retrying unti
 - **CI (GitHub Actions):** lint, type-check, unit, integration (Postgres service with RLS), build image, dependency audit; E2E on main.
 - **CD:** merge to `main` deploys to staging when `STAGING_INFRA_ENABLED=true`; a GitHub Release deploys to production. Migrations run before the new version starts, with `lock_timeout`; deploy waits for `/health`.
 - **Terraform:** droplet, firewall, reserved IP, DNS, DB cluster, Spaces. Treat `user_data` changes carefully: they force droplet replacement. Use `ignore_changes = [user_data]` plus documented `-replace` for intentional rebuilds, and always `terraform plan` before `apply`.
-- **Cutover from the current system:** see 15, milestone 10. Production today holds mainly the owner's own data; migrate tenants, issuers (→ branches/issue points), certificates (re-encrypt if the key changes), sequentials (**must continue exactly**), authorized documents and XML (read-only history), clients and products. Old access keys must keep resolving in the new system. Data in the old `public` schema goes to the real organization; data in the old `sandbox` schema (and `tenants.sandbox = true` tenants) goes to the test twin, or is dropped if not worth keeping.
+- **Cutover from the current system:** see 15, milestone 10. Production today holds mainly the owner's own data; migrate tenants, issuers (→ branches/issue points), certificates (re-encrypt if the key changes), sequentials (**must continue exactly**), authorized documents and XML (read-only history), clients and products. Old access keys must keep resolving in the new system. The owner's company gets a complimentary subscription (FR-PLAN-1b), and migrated documents don't use quota. Data in the old `public` schema goes to the real organization; data in the old `sandbox` schema (and `tenants.sandbox = true` tenants) goes to the test twin, or is dropped if not worth keeping.
 
 ---
 
@@ -551,16 +553,16 @@ Each milestone: code + tests + docs. Local first; staging only before production
 |---|---|---|---|
 | 0 | Foundations | Monorepo, CI, config validation, Drizzle + migrations, RLS helpers and catalog test, pg-boss wiring, logging/Sentry, design system port, i18n, CLAUDE.md, ADRs for stack | Empty app deploys locally with Docker; RLS catalog test passes |
 | 1 | Identity and tenancy | Auth, sessions, users/roles/invites, onboarding wizard creating the real organization and its test twin, switcher toggle, go-live flow, certificates (written to both), branches/issue points, warehouses auto-created, legal agreements, audit log | Two tenants and a tenant/twin pair fully isolated (integration); ambiente rule covered for every deployment × mode cell; invite + role restrictions E2E |
-| 2 | Entitlements and plans | Plans/features/overrides, resolver, UI gating, admin editor | Toggling a feature per tenant changes UI and core behaviour |
+| 2 | Entitlements and plans | Feature keys, modules, plans, subscriptions with items (no payments), overrides, resolver, UI gating, admin editor including Personalizado and complimentary | Toggling a feature per tenant changes UI and core behaviour |
 | 3 | SRI engine: factura | Catalogues, products/clients (basic), builder, XSD, signer, access key, sequentials, direct invoice, send/authorize jobs, RIDE, buyer email, statuses, retry calendar, deadline check, re-issue, correction, void with verification, 24 h alert | Invoice authorized in SRI test env; fake-clock tests for 23:59 / D+1 / month end; 43/70 handled |
-| 4 | Other SRI documents | Nota de crédito (with balance lock and stock return), guía, retención, liquidación, received XML import | Each type authorized in SRI test env with its RIDE |
+| 4 | Other SRI documents | Nota de crédito (with balance lock and stock return), guía de remisión | Each type authorized in SRI test env with its RIDE |
 | 5 | Inventory and purchasing | Ledger, levels, adjustments, opening balances, POs, receiving, average cost | Receipt and adjustment reflected; nightly verify finds no drift |
 | 6 | Sales | Sale orders, reservations, partial invoicing, correction from the order, receivables basic | 10 units invoiced 4 + 6 → INVOICED, stock right; NOT_AUTHORIZED corrected via order; void returns quantities |
 | 7 | Bulk invoicing | Batches, fair queuing, stack view | 1,000-item batch locally with quota cut; other tenant's invoice latency within NFR-PERF-3 |
 | 8 | Billing | Subscriptions, payments (SPI + Payphone), proofs, review, packs, renewals, past due, prices with notice, seats, operator invoicing queue | Full upgrade/renewal/expiry cycle with fake clock; Payphone test card |
 | 9 | Notifications, reports, admin | All notification types/emails, dashboard, reports and exports, super admin area | Reports match seeded data; templates editable |
 | 10 | Production readiness and cutover | Load test, security review, backups/restore drill, data migration from the current system, staging rehearsal, runbooks, user guide | Migrated copy reconciles (counts, sequentials, XML hashes); deploy checklist done; security review done with no open high or critical findings; restore drill passed; load test meets NFR-PERF-1 and NFR-PERF-3; hardening backlog in `NEXT_STEPS.md` empty or each remaining item accepted by the owner |
-| 11+ | Post-MVP | Public API, API keys, webhooks, batches API, MCP, OAuth, developer docs | — |
+| 11+ | Post-MVP | Retención, liquidación de compra, received XML import; public API, API keys, webhooks, batches API, MCP, OAuth, developer docs, Integración plans | — |
 
 Order rationale: the SRI engine (3) comes before ERP modules because every sales flow ends in it; billing (8) comes late because the owner is the only paying user until cutover, but its data model is created in milestone 2.
 
@@ -582,7 +584,7 @@ Order rationale: the SRI engine (3) comes before ERP modules because every sales
 ## 17. Open questions
 
 1. Document packs: sizes, prices, expiry vs rollover; which plans can buy them.
-2. New plan structure (pricing restructure) with entitlements. Can a tenant buy single features as paid add-ons on top of a plan, or only whole plans? Decide before milestone 2: add-ons mean a subscription holds several priced items, which shapes the billing tables.
+2. ~~Add-ons or whole plans only~~: decided, modules as add-ons and a negotiated Personalizado (ADR-011). Prices per plan and module: Milestone 8.
 3. Accountant: month-boundary re-issue and chronological order; consumidor-final cap; void deadline; retention period.
 4. Verify resolutions NAC-DGERCGC25-00000014/17 texts.
 5. Is "RUC Proveedor" campo adicional still required?

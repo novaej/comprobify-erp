@@ -31,6 +31,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [008](008-config-and-observability.md) | Config validation, logging, Sentry | Accepted |
 | [009](009-authentication.md) | Authentication with Better Auth | Accepted |
 | [010](010-tenancy-and-user-context.md) | Tenancy model and the user context | Accepted |
+| [011](011-plans-modules-and-entitlements.md) | Plans, modules and entitlements | Accepted |
 
 ## Old ADRs to read before each milestone
 
