@@ -2,6 +2,7 @@ export * from './kernel';
 export * from './jobs';
 export * from './email';
 export * from './identity';
+export * from './audit';
 export * from './tenancy';
 export * from './certificates';
 export { registerHandlers } from './register-handlers';

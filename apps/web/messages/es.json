@@ -185,7 +185,8 @@
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
     "skipToContent": "Saltar al contenido",
-    "users": "Usuarios"
+    "users": "Usuarios",
+    "activity": "Actividad"
   },
   "shell": {
     "sandboxTitle": "Estás en el ambiente de pruebas",
@@ -206,7 +207,12 @@
   "dashboard": {
     "description": "Los módulos de ventas, compras e inventario aparecerán aquí a medida que se construyan.",
     "welcomeTitle": "Tu empresa está lista",
-    "welcomeBody": "Estás en su copia de pruebas: emite comprobantes de prueba sin afectar a tu empresa real."
+    "welcomeBody": "Estás en su copia de pruebas: emite comprobantes de prueba sin afectar a tu empresa real.",
+    "goLiveTitle": "¿Listo para emitir de verdad?",
+    "goLiveBody": "Cuando termines de probar, pasa tu empresa a producción.",
+    "goLiveAction": "Pasar a producción",
+    "liveTitle": "Tu empresa está en producción",
+    "liveBody": "Estás trabajando en la empresa real. Cambia a Pruebas cuando quieras ensayar algo."
   },
   "users": {
     "title": "Usuarios",
@@ -304,6 +310,57 @@
     "INVALID_CODE": "Ese código no es válido. Revisa la hora de tu teléfono y vuelve a intentarlo.",
     "TWO_FACTOR_LOCKED": "Demasiados códigos incorrectos. Espera 15 minutos.",
     "INVALID_INPUT": "Revisa los datos ingresados.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+  },
+  "audit": {
+    "title": "Actividad",
+    "description": "Quién hizo qué y cuándo en esta empresa. Los registros no se pueden editar ni borrar.",
+    "empty": "Todavía no hay actividad.",
+    "system": "El sistema",
+    "allPoints": "todos los puntos",
+    "on": "activada",
+    "off": "desactivada",
+    "actions": {
+      "organization": {
+        "created": "creó la empresa",
+        "went_live": "pasó la empresa a producción",
+        "two_factor_requirement_changed": "cambió la exigencia de verificación en dos pasos"
+      },
+      "certificate": {
+        "uploaded": "subió la firma electrónica"
+      },
+      "member": {
+        "invited": "invitó a",
+        "invitation_revoked": "anuló la invitación a",
+        "joined": "se unió a la empresa",
+        "role_changed": "cambió el rol de",
+        "removed": "quitó a",
+        "issue_points_changed": "cambió los puntos de emisión de"
+      },
+      "agreements": {
+        "accepted": "aceptó los documentos legales"
+      },
+      "session": {
+        "started": "inició sesión"
+      }
+    }
+  },
+  "goLive": {
+    "title": "Pasar {organization} a producción",
+    "description": "Tu empresa real empezará a emitir comprobantes con validez tributaria.",
+    "point1": "Los comprobantes de la empresa real se enviarán al ambiente de producción del SRI.",
+    "point2": "Tu copia de pruebas sigue disponible para probar, separada de la real.",
+    "point3": "Este paso no se puede deshacer.",
+    "point4": "Antes del primer comprobante te pediremos los números iniciales, si vienes de otro proveedor.",
+    "confirm": "Entiendo que este paso no se puede deshacer.",
+    "submit": "Pasar a producción",
+    "submitting": "Pasando a producción...",
+    "alreadyLive": "Esta empresa ya está en producción."
+  },
+  "goLiveError": {
+    "CONFIRM_REQUIRED": "Marca la casilla para confirmar.",
+    "ALREADY_LIVE": "Esta empresa ya está en producción.",
+    "FORBIDDEN": "Solo el propietario puede pasar la empresa a producción.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
   }
 }

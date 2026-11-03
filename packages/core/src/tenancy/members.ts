@@ -1,10 +1,10 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { and, ASSIGNABLE_ROLES, eq, schema, sql, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
+import { recordAudit } from '../audit';
 import type { RateLimiter } from '../identity';
 import type { Jobs } from '../jobs';
-import { DomainError, type ActorContext, type Clock } from '../kernel';
-import { requirePermission } from './organizations';
+import { DomainError, requirePermission, type ActorContext, type Clock } from '../kernel';
 import type { Role } from './roles';
 
 const INVITATION_DAYS = 7;
@@ -200,6 +200,12 @@ export async function inviteMember(
         organization: pair.name,
       },
     });
+    await recordAudit(tx.db, {
+      tenantId: pair.realTenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'member.invited',
+      details: { email: input.email, role: input.role },
+    });
   });
 }
 
@@ -212,10 +218,19 @@ export async function revokeInvitation(
   await db.withSystem('revoke an invitation', async ({ db: tx }) => {
     const pair = await pairOf(tx, ctx.tenantId);
     const { invitations } = schema;
-    await tx
+    const revoked = await tx
       .update(invitations)
       .set({ revokedAt: ctx.clock.now() })
-      .where(and(eq(invitations.id, invitationId), eq(invitations.tenantId, pair.realTenantId)));
+      .where(and(eq(invitations.id, invitationId), eq(invitations.tenantId, pair.realTenantId)))
+      .returning({ email: invitations.email });
+    if (revoked[0]) {
+      await recordAudit(tx, {
+        tenantId: pair.realTenantId,
+        actorUserId: ctx.userId ?? null,
+        action: 'member.invitation_revoked',
+        details: { email: revoked[0].email },
+      });
+    }
   });
 }
 
@@ -232,6 +247,13 @@ export async function changeRole(
       const pair = await pairOf(tx, ctx.tenantId);
       guardTarget(ctx, await targetMembership(tx, pair.realTenantId, raw.userId), raw.userId);
       await writeMembership(tx, pair, raw.userId, { role, active: true });
+      await recordAudit(tx, {
+        tenantId: pair.realTenantId,
+        actorUserId: ctx.userId ?? null,
+        action: 'member.role_changed',
+        subjectUserId: raw.userId,
+        details: { role },
+      });
     },
   );
 }
@@ -243,6 +265,12 @@ export async function removeMember(ctx: ActorContext, db: Database, userId: stri
     const pair = await pairOf(tx, ctx.tenantId);
     guardTarget(ctx, await targetMembership(tx, pair.realTenantId, userId), userId);
     await writeMembership(tx, pair, userId, { active: false });
+    await recordAudit(tx, {
+      tenantId: pair.realTenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'member.removed',
+      subjectUserId: userId,
+    });
   });
 }
 
@@ -325,6 +353,13 @@ export async function setIssuePointAccess(
             });
         }
       }
+      await recordAudit(tx, {
+        tenantId: pair.realTenantId,
+        actorUserId: ctx.userId ?? null,
+        action: 'member.issue_points_changed',
+        subjectUserId: raw.userId,
+        details: { points: [...wanted].sort() },
+      });
     },
   );
 }
@@ -398,6 +433,12 @@ export async function acceptInvitation(
     const pair = await pairOf(tx, row.tenantId);
     await writeMembership(tx, pair, input.userId, { role: row.role, active: true });
     await tx.update(invitations).set({ acceptedAt: now }).where(eq(invitations.id, row.id));
+    await recordAudit(tx, {
+      tenantId: pair.realTenantId,
+      actorUserId: input.userId,
+      action: 'member.joined',
+      details: { role: row.role },
+    });
     return { realTenantId: pair.realTenantId, twinTenantId: pair.twinTenantId };
   });
 }
@@ -420,6 +461,35 @@ export async function setTwoFactorRequirement(
             .set({ requireTwoFactor: required })
             .where(eq(schema.tenants.id, tenantId));
       }
+      await recordAudit(tx, {
+        tenantId: pair.realTenantId,
+        actorUserId: ctx.userId ?? null,
+        action: 'organization.two_factor_requirement_changed',
+        details: { required },
+      });
     },
   );
+}
+
+// FR-ONB-5: one-way, Owner only. The real organization can issue from now on; the
+// twin stays for testing. Agreements (when enabled) and starting sequentials join
+// this step in 7b and Milestone 3.
+export async function goLive(ctx: ActorContext, db: Database): Promise<{ realTenantId: string }> {
+  requirePermission(ctx, 'organization.go_live');
+  return db.withSystem('take an organization live', async ({ db: tx }) => {
+    const pair = await pairOf(tx, ctx.tenantId);
+    const now = ctx.clock.now();
+    const updated = await tx
+      .update(schema.tenants)
+      .set({ liveAt: now })
+      .where(sql`${schema.tenants.id} = ${pair.realTenantId} AND ${schema.tenants.liveAt} IS NULL`)
+      .returning({ id: schema.tenants.id });
+    if (!updated[0]) throw new DomainError('ALREADY_LIVE', 'This organization is already live');
+    await recordAudit(tx, {
+      tenantId: pair.realTenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'organization.went_live',
+    });
+    return { realTenantId: pair.realTenantId };
+  });
 }

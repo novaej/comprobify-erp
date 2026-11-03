@@ -39,4 +39,6 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - A dashboard placeholder; signing in and onboarding land there.
 - Users page: invitations by email (the link's `GET` never uses it up), role changes, soft removal and issue-point restrictions, each applied to the organization and its twin. New users set their password on the invitation and start verified (FR-USR-1, FR-ROLE-1 to FR-ROLE-3).
 - Two-step verification with an authenticator app (TOTP) and single-use backup codes, set up and turned off from the account page; an organization can require it of every member (FR-USR-3).
+- The company activity log: append-only, recording organization, certificate and member changes, the two-step requirement, go-live and sign-ins, readable by Owner, Admin and Accountant (FR-NOT-4).
+- Go-live: the Owner takes the real company to production, one way, from a page that explains what changes (FR-ONB-5).
 - `AUTH_SECRET`, `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, `MAILGUN_REGION` and `EMAIL_FROM`.

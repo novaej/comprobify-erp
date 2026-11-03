@@ -185,7 +185,8 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "skipToContent": "Skip to content",
-    "users": "Users"
+    "users": "Users",
+    "activity": "Activity"
   },
   "shell": {
     "sandboxTitle": "You're in the test environment",
@@ -206,7 +207,12 @@
   "dashboard": {
     "description": "Sales, purchasing and inventory will appear here as they are built.",
     "welcomeTitle": "Your company is ready",
-    "welcomeBody": "You're in its test copy: issue test documents without affecting your real company."
+    "welcomeBody": "You're in its test copy: issue test documents without affecting your real company.",
+    "goLiveTitle": "Ready to issue for real?",
+    "goLiveBody": "When you're done testing, take your company live.",
+    "goLiveAction": "Go live",
+    "liveTitle": "Your company is live",
+    "liveBody": "You're working in the real company. Switch to Test whenever you want to try something."
   },
   "users": {
     "title": "Users",
@@ -304,6 +310,57 @@
     "INVALID_CODE": "That code isn't valid. Check your phone's clock and try again.",
     "TWO_FACTOR_LOCKED": "Too many wrong codes. Wait 15 minutes.",
     "INVALID_INPUT": "Check the details you entered.",
+    "UNKNOWN": "An unexpected error occurred. Please try again."
+  },
+  "audit": {
+    "title": "Activity",
+    "description": "Who did what, and when, in this company. Entries can't be edited or deleted.",
+    "empty": "No activity yet.",
+    "system": "The system",
+    "allPoints": "all points",
+    "on": "on",
+    "off": "off",
+    "actions": {
+      "organization": {
+        "created": "created the company",
+        "went_live": "took the company live",
+        "two_factor_requirement_changed": "changed the two-step verification requirement"
+      },
+      "certificate": {
+        "uploaded": "uploaded the electronic signature"
+      },
+      "member": {
+        "invited": "invited",
+        "invitation_revoked": "revoked the invitation to",
+        "joined": "joined the company",
+        "role_changed": "changed the role of",
+        "removed": "removed",
+        "issue_points_changed": "changed the issue points of"
+      },
+      "agreements": {
+        "accepted": "accepted the legal documents"
+      },
+      "session": {
+        "started": "signed in"
+      }
+    }
+  },
+  "goLive": {
+    "title": "Take {organization} live",
+    "description": "Your real company will start issuing documents with tax validity.",
+    "point1": "The real company's documents will go to the SRI production environment.",
+    "point2": "Your test copy stays available for testing, separate from the real one.",
+    "point3": "This step can't be undone.",
+    "point4": "Before the first document we'll ask for starting numbers, if you're moving from another provider.",
+    "confirm": "I understand this step can't be undone.",
+    "submit": "Go live",
+    "submitting": "Going live...",
+    "alreadyLive": "This company is already live."
+  },
+  "goLiveError": {
+    "CONFIRM_REQUIRED": "Check the box to confirm.",
+    "ALREADY_LIVE": "This company is already live.",
+    "FORBIDDEN": "Only the owner can take the company live.",
     "UNKNOWN": "An unexpected error occurred. Please try again."
   }
 }

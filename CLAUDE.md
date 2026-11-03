@@ -135,6 +135,7 @@ Found while setting up this repo:
 25. Using `instanceof` on errors in `apps/web`. Next bundles core more than once, and the runtime on `globalThis` comes from another bundle than the action, so `instanceof DomainError` fails. Use `isDomainError`, which checks a `Symbol.for` brand.
 26. Giving a form an `action` prop. React 19 resets it after the action runs, so an error wipes what the user typed. Use `useFormAction`, which submits through `onSubmit`.
 27. Reading the session from `headers()` in a server action. It keeps the cookies the request arrived with, so after Better Auth rotates the session (2FA setup) the page sees no session. `currentHeaders()` builds the Cookie header from `cookies()`, which has the new one.
+28. Redirecting from a server action that changes the organization or its mode without `revalidatePath(`/${locale}`, 'layout')`. Pages in `(shell)` share its layout, which the client reuses, so the badge, banners and switcher stay stale.
 
 **Left behind on purpose** (never port): reserved API keys and pool, `requireInternalService` and the BFF secret, P12-based recovery and `alreadyLinked`, promotion key mirroring, tenant = API key identity, duplicated rows across databases, the notification-sync webhook receiver, the `sandbox` schema and `tenants.sandbox`, RabbitMQ with `pending_effects` and its sweep, droplet cron jobs, two migration tools.
 
@@ -169,6 +170,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/jobs/` | Queue registry and schedules |
 | `packages/core/src/identity/` | Better Auth setup, rate limits, sessions and idle timeout |
 | `packages/core/src/tenancy/` | Organizations and twins, roles and permissions, actor context, ambiente |
+| `packages/core/src/audit/` | `recordAudit` (same transaction as the change), the activity list, sign-ins |
 | `packages/core/src/tenancy/members.ts` | Invitations, role changes, removal, issue-point restrictions, all mirrored in the twin |
 | `packages/core/src/certificates/` | P12 parsing, the RUC match, key encryption |
 | `packages/core/src/testing/` | Test helpers, such as generated P12 files (`@comprobify/core/testing`) |

@@ -4,6 +4,7 @@ import {
   chooseActiveOrganization,
   isDomainError,
   listOrganizations,
+  recordSessionStart,
   resolveActor,
   systemClock,
 } from '@comprobify/core';
@@ -31,6 +32,12 @@ export const loadShell = cache(async (locale: string) => {
       clock: systemClock,
     });
     const certificate = await certificateStatus(db, actor);
+    // FR-NOT-4: once per session and company, however many pages it opens.
+    await recordSessionStart(db, {
+      tenantId: active.tenantId,
+      userId: session.user.id,
+      sessionId: session.sessionId,
+    });
     return { session, organizations, active, actor, certificate };
   } catch (error) {
     // Removed since the list was read: start over without it.

@@ -1,3 +1,4 @@
+import { AUDIT_ACTIONS } from '@comprobify/core';
 import { describe, expect, it } from 'vitest';
 import en from '../../messages/en.json';
 import es from '../../messages/es.json';
@@ -26,5 +27,13 @@ describe('message files', () => {
       });
     expect(empty(es)).toEqual([]);
     expect(empty(en)).toEqual([]);
+  });
+
+  // A new audit event can't ship without its label in both languages (FR-NOT-4).
+  it('label every audit event', () => {
+    for (const messages of [es, en]) {
+      const labels = keys(messages.audit.actions).sort();
+      expect(labels).toEqual([...AUDIT_ACTIONS].sort());
+    }
   });
 });

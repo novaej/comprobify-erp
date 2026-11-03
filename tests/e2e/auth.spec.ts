@@ -211,6 +211,34 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await guest.close();
   });
 
+  test('takes the company live and records it in the activity log (FR-ONB-5, FR-NOT-4)', async ({
+    page,
+  }) => {
+    await signIn(page, email, newPassword);
+    await expect(page).toHaveURL(/\/es\/dashboard$/);
+    await page.getByRole('link', { name: 'Pasar a producción' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Pasar Delta Comercial S.A. a producción' }),
+    ).toBeVisible();
+    await page.getByLabel('Entiendo que este paso no se puede deshacer.').check();
+    await page.getByRole('button', { name: 'Pasar a producción' }).click();
+
+    await expect(page).toHaveURL(/\/es\/dashboard\?live=1$/);
+    await expect(page.getByText('Tu empresa está en producción')).toBeVisible();
+    await expect(page.getByText('Estás en el ambiente de pruebas')).toHaveCount(0);
+    const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
+    await expect(nav.getByText('SRI Producción')).toBeVisible();
+    await expect(nav.getByRole('button', { name: 'Producción' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    await nav.getByRole('link', { name: 'Actividad' }).click();
+    const log = page.getByRole('list', { name: 'Actividad' });
+    await expect(log).toContainText('pasó la empresa a producción');
+    await expect(log).toContainText('inició sesión');
+  });
+
   // Last: every sign-in after this one needs the code.
   test('turns on two-step verification and needs the code to sign in (FR-USR-3)', async ({
     page,

@@ -1,5 +1,6 @@
 import { and, eq, schema, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
+import { recordAudit } from '../audit';
 import { setActiveTenant } from '../identity';
 import { DomainError, type ActorContext, type Clock } from '../kernel';
 import type { Logo } from './logo';
@@ -103,6 +104,24 @@ export async function createOrganization(
         }
         if (extras.logo)
           await tx.insert(tenantLogos).values({ tenantId: tenant.id, ...extras.logo });
+        await recordAudit(tx, {
+          tenantId: tenant.id,
+          actorUserId: input.ownerUserId,
+          action: 'organization.created',
+          details: { ruc: input.ruc, mode: tenant.mode },
+        });
+        if (extras.certificate) {
+          await recordAudit(tx, {
+            tenantId: tenant.id,
+            actorUserId: input.ownerUserId,
+            action: 'certificate.uploaded',
+            details: {
+              fingerprint: extras.certificate.fingerprint,
+              issuerName: extras.certificate.issuerName,
+              notAfter: extras.certificate.notAfter.toISOString(),
+            },
+          });
+        }
       }
       return { realTenantId: real!.id, twinTenantId: twin!.id };
     });
@@ -226,11 +245,4 @@ export async function switchOrganization(
   });
   if (!member) throw new DomainError('NOT_A_MEMBER', 'Not a member of this organization');
   await setActiveTenant(db.identity, input);
-}
-
-// Core enforces permissions; pages only hide what this would refuse (FR-ROLE-3).
-export function requirePermission(ctx: ActorContext, permission: string): void {
-  if (!ctx.permissions.includes(permission)) {
-    throw new DomainError('FORBIDDEN', `Missing permission ${permission}`, { permission });
-  }
 }

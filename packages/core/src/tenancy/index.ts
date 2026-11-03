@@ -8,7 +8,6 @@ export {
   createOrganization,
   createOrganizationInput,
   listOrganizations,
-  requirePermission,
   resolveActor,
   switchOrganization,
 } from './organizations';
@@ -19,6 +18,7 @@ export {
   acceptInvitation,
   changeRole,
   getInvitation,
+  goLive,
   inviteInput,
   inviteMember,
   listIssuePoints,
