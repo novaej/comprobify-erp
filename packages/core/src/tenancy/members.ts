@@ -127,19 +127,23 @@ export type MemberRow = {
 };
 export type InvitationRow = { id: string; email: string; role: Role; expiresAt: Date };
 
-// The users page (FR-USR-1). Read in the real organization, which the actor belongs to
-// through the mirrored membership.
-export async function listMembers(
-  ctx: ActorContext,
-  db: Database,
-): Promise<{ members: MemberRow[]; invitations: InvitationRow[] }> {
-  requirePermission(ctx, 'users.read');
-  const realTenantId = await db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+// The real organization of the actor's tenant, which the actor also belongs to
+// through the mirrored membership; members and invitations live there.
+const realTenantOf = (ctx: ActorContext, db: Database): Promise<string> =>
+  db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
     const [tenant] = await tx
       .select({ id: schema.tenants.id, twinOf: schema.tenants.twinOf })
       .from(schema.tenants);
     return tenant?.twinOf ?? tenant!.id;
   });
+
+// The users page (FR-USR-1).
+export async function listMembers(
+  ctx: ActorContext,
+  db: Database,
+): Promise<{ members: MemberRow[]; invitations: InvitationRow[] }> {
+  requirePermission(ctx, 'users.read');
+  const realTenantId = await realTenantOf(ctx, db);
   return db.withTenant({ tenantId: realTenantId }, async ({ db: tx }) => {
     const { memberships, users, invitations, issuePointAccess } = schema;
     const rows = await tx
@@ -179,6 +183,36 @@ export async function listMembers(
       )
       .orderBy(invitations.createdAt);
     return { members, invitations: pending };
+  });
+}
+
+export type CompanyUsage = {
+  USERS: number;
+  MAX_BRANCHES: number;
+  MAX_ISSUE_POINTS_PER_BRANCH: number;
+};
+
+// What the company uses of each limit, for the plan and users pages (FR-PLAN-4).
+// Seats count pending invitations, as inviting does.
+export async function companyUsage(ctx: ActorContext, db: Database): Promise<CompanyUsage> {
+  if (!ctx.permissions.includes('billing.read')) requirePermission(ctx, 'users.read');
+  const realTenantId = await realTenantOf(ctx, db);
+  return db.withTenant({ tenantId: realTenantId }, async ({ db: tx }) => {
+    const { branches, issuePoints } = schema;
+    const [branchCount] = await tx
+      .select({ n: count() })
+      .from(branches)
+      .where(eq(branches.active, true));
+    const perBranch = await tx
+      .select({ n: count() })
+      .from(issuePoints)
+      .where(eq(issuePoints.active, true))
+      .groupBy(issuePoints.branchId);
+    return {
+      USERS: await seatsUsed(tx, realTenantId, ctx.clock.now()),
+      MAX_BRANCHES: branchCount!.n,
+      MAX_ISSUE_POINTS_PER_BRANCH: Math.max(0, ...perBranch.map((row) => row.n)),
+    };
   });
 }
 

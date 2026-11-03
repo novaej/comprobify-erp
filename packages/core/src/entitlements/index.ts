@@ -8,6 +8,8 @@ export { STARTING_MODULES, STARTING_PLANS } from './catalog';
 export type { ModuleKey, ModuleStatus, PlanLimits, PlanStatus } from './catalog';
 export { DEFAULT_PLAN_KEY, startDefaultSubscriptions } from './subscriptions';
 export type { CompanyTenants } from './subscriptions';
+export { planOverview, SHOWN_LIMITS } from './overview';
+export type { PlanModule, PlanOverview } from './overview';
 export { currentPeriodStart, loadEntitlements, resolveEntitlements } from './resolve';
 export type { EntitlementSources, ModuleSource } from './resolve';
 

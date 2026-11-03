@@ -2,11 +2,13 @@ import { randomUUID } from 'node:crypto';
 import {
   acceptInvitation,
   companyLogo,
+  companyUsage,
   createJobs,
   createOrganization,
   createRateLimiter,
   fixedClock,
   inviteMember,
+  planOverview,
   resolveActor,
   type CreatedOrganization,
   type Jobs,
@@ -156,5 +158,47 @@ describe('entitlements', () => {
     await expect(
       acceptInvitation(db, { token, userId: first.id, userEmail: first.email }, clock),
     ).rejects.toMatchObject({ code: 'LIMIT_REACHED' });
+  });
+
+  it('shows the plan, its modules and add-ons, and the limits as resolved', async () => {
+    const owner = await newUser();
+    const org = await newCompany(owner.id);
+    await addModule(org, 'BRANDING');
+    const ctx = await resolveActor(db, { userId: owner.id, tenantId: org.twinTenantId, clock });
+    const overview = await planOverview(ctx, db);
+    expect(overview).toMatchObject({
+      plan: { key: 'FREE', nameEs: 'Gratis', selfService: true },
+      billing: 'PAID',
+      limits: { DOCUMENT_QUOTA: 5, USERS: 1, MAX_BRANCHES: 1, MAX_ISSUE_POINTS_PER_BRANCH: 1 },
+    });
+    expect(overview.modules.map((module) => [module.key, module.source])).toEqual([
+      ['INVOICING', 'PLAN'],
+      ['BRANDING', 'ADD_ON'],
+    ]);
+  });
+
+  it('counts usage in the real company, from the twin too, for whoever may see it', async () => {
+    const owner = await newUser();
+    const org = await newCompany(owner.id);
+    await grantSeats(db, org, owner.id, 5);
+    const real = await resolveActor(db, { userId: owner.id, tenantId: org.realTenantId, clock });
+    await inviteMember(
+      real,
+      db,
+      { email: `use.${randomUUID()}@example.com`, role: 'SALES', locale: 'es' },
+      deps(),
+    );
+    const twin = await resolveActor(db, { userId: owner.id, tenantId: org.twinTenantId, clock });
+    await expect(companyUsage(twin, db)).resolves.toEqual({
+      USERS: 2,
+      MAX_BRANCHES: 1,
+      MAX_ISSUE_POINTS_PER_BRANCH: 1,
+    });
+    const viewer = {
+      ...real,
+      permissions: real.permissions.filter((p) => p !== 'billing.read' && p !== 'users.read'),
+    };
+    await expect(companyUsage(viewer, db)).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    await expect(planOverview(viewer, db)).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });
 });

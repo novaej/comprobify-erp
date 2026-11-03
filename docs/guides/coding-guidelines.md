@@ -57,6 +57,7 @@ A schedule goes in `schedules` in the same file, with its time zone.
 - Every string is in `apps/web/messages/es.json` and `en.json`, with the same keys. A test checks this.
 - Use `Link` and `redirect` from `@/i18n/navigation`, so links keep the locale.
 - A page inside the shell gets the actor from `loadShell(locale)`. If the role lacks the page's permission, render `<NoAccess />`; core refuses the actions anyway.
+- A page behind a feature renders `<FeatureLocked actor={actor} />` when `hasFeature(actor, key)` is false, and its nav item sets `feature`, which hides the link. A limit that's used up is said on the page before the form, from `limitOf` and `companyUsage`; core still refuses with `LIMIT_REACHED`.
 - Forms use `useFormAction` or `ActionForm`, never a form `action` prop, so an error keeps what was typed. Actions return `{ error: code }`, shown from a message namespace.
 - An action that changes the organization or its mode calls `revalidatePath(`/${locale}`, 'layout')` before redirecting, so the shell's badge and banners update.
 - Message keys never contain `.`; next-intl reads it as a path.

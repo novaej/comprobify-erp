@@ -1,4 +1,4 @@
-import { listIssuePoints, listMembers } from '@comprobify/core';
+import { companyUsage, limitOf, listIssuePoints, listMembers } from '@comprobify/core';
 import { Badge } from '@comprobify/ui/components/badge';
 import {
   Card,
@@ -9,6 +9,7 @@ import {
 } from '@comprobify/ui/components/card';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { NoAccess } from '@/components/no-access';
+import { Link } from '@/i18n/navigation';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
 import {
@@ -28,10 +29,14 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
   if (!actor.permissions.includes('users.read')) return <NoAccess />;
 
   const { db } = await getRuntime();
-  const [{ members, invitations }, points] = await Promise.all([
+  const [{ members, invitations }, points, usage] = await Promise.all([
     listMembers(actor, db),
     listIssuePoints(actor, db),
+    companyUsage(actor, db),
   ]);
+  // Core refuses the invitation anyway (FR-USR-1); this says so before it's typed.
+  const seats = limitOf(actor.entitlements, 'USERS');
+  const seatsLeft = seats === null || usage.USERS < seats;
   const t = await getTranslations('users');
   const tRoles = await getTranslations('roles');
   const manage = actor.permissions.includes('users.manage');
@@ -69,7 +74,18 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
             <CardDescription>{t('inviteDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <InviteForm />
+            {seatsLeft ? (
+              <InviteForm />
+            ) : (
+              <p className="text-sm text-muted-foreground" role="note">
+                {t('seatsFull', { seats: seats ?? 0 })}{' '}
+                {actor.permissions.includes('billing.read') && (
+                  <Link href="/plan" className="font-medium text-primary hover:underline">
+                    {t('seePlan')}
+                  </Link>
+                )}
+              </p>
+            )}
           </CardContent>
         </Card>
       )}

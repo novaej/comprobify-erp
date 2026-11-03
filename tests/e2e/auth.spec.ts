@@ -178,12 +178,25 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page.getByText('Pruebas, activa')).toBeVisible();
   });
 
+  test('shows the plan, its modules and limits (FR-PLAN-4)', async ({ page }) => {
+    await signIn(page, email, newPassword);
+    await page
+      .getByRole('navigation', { name: 'Navegación principal' })
+      .last()
+      .getByRole('link', { name: 'Plan' })
+      .click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Plan');
+    await expect(page.getByText('Gratis', { exact: true })).toBeVisible();
+    await expect(page.getByRole('list', { name: 'Módulos' })).toContainText('Facturación');
+    const usersRow = page.getByRole('main').getByText('Usuarios', { exact: true }).locator('..');
+    await expect(usersRow).toContainText('1 de 1');
+  });
+
   test('invites a read-only member who joins and sees only what the role allows (FR-USR-1, FR-ROLE-3)', async ({
     page,
     browser,
   }) => {
     const viewerEmail = `viewer.${randomUUID()}@example.com`;
-    await grantSeats(email);
     await signIn(page, email, newPassword);
     await page
       .getByRole('navigation', { name: 'Navegación principal' })
@@ -191,6 +204,10 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
       .getByRole('link', { name: 'Usuarios' })
       .click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Usuarios');
+    // Gratis has one seat, the owner's, so the page says so instead of offering the form.
+    await expect(page.getByText(/^Tu plan permite 1 usuario/)).toBeVisible();
+    await grantSeats(email);
+    await page.reload();
     await page.getByLabel('Correo electrónico').fill(viewerEmail);
     await page.getByLabel('Rol', { exact: true }).selectOption('VIEWER');
     await page.getByRole('button', { name: 'Enviar invitación' }).click();
@@ -214,10 +231,11 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(viewer).toHaveURL(/\/es\/dashboard$/);
     await expect(viewer.getByRole('heading', { level: 1 })).toHaveText('Delta Comercial S.A.');
 
-    // Read-only: no Users link, and the page itself refuses.
+    // Read-only: no Users or Plan link, and the page itself refuses.
     const viewerNav = viewer.getByRole('navigation', { name: 'Navegación principal' }).last();
     await expect(viewerNav.getByText('Solo lectura')).toBeVisible();
     await expect(viewerNav.getByRole('link', { name: 'Usuarios' })).toHaveCount(0);
+    await expect(viewerNav.getByRole('link', { name: 'Plan' })).toHaveCount(0);
     await viewer.goto('/es/users');
     await expect(viewer.getByRole('heading', { name: 'No tienes acceso' })).toBeVisible();
 

@@ -44,6 +44,7 @@ export default async function ShellLayout({
           activeRealTenantId={active.entry.realTenantId}
           mode={active.mode}
           permissions={actor.permissions}
+          features={actor.entitlements.features}
           user={{
             name: session.user.name,
             email: session.user.email,

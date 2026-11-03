@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Package,
   ScrollText,
   UserRound,
   UsersRound,
@@ -25,10 +26,11 @@ import { OrgSwitcher, type SwitcherOrganization } from './org-switcher';
 type NavItem = {
   href: string;
   icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
-  labelKey: 'dashboard' | 'users' | 'activity' | 'legal';
+  labelKey: 'dashboard' | 'users' | 'activity' | 'plan' | 'legal';
   group: 'operate' | 'manage';
-  // Core still enforces it; this only hides the link (FR-ROLE-3).
+  // Core still enforces both; these only hide the link (FR-ROLE-3, FR-PLAN-4).
   permission: string | null;
+  feature?: string;
 };
 
 // Modules add their entries as they arrive.
@@ -53,6 +55,13 @@ const NAV_ITEMS: NavItem[] = [
     labelKey: 'activity',
     group: 'manage',
     permission: 'audit.read',
+  },
+  {
+    href: '/plan',
+    icon: Package,
+    labelKey: 'plan',
+    group: 'manage',
+    permission: 'billing.read',
   },
   { href: '/legal', icon: FileText, labelKey: 'legal', group: 'manage', permission: null },
 ];
@@ -91,6 +100,7 @@ export type NavProps = {
   activeRealTenantId: string;
   mode: 'TEST' | 'PRODUCTION';
   permissions: readonly string[];
+  features: readonly string[];
   user: { name: string; email: string; roleLabel: string };
 };
 
@@ -102,7 +112,14 @@ const initialsOf = (name: string) =>
     .map((part) => part[0]?.toUpperCase())
     .join('');
 
-export function Nav({ organizations, activeRealTenantId, mode, permissions, user }: NavProps) {
+export function Nav({
+  organizations,
+  activeRealTenantId,
+  mode,
+  permissions,
+  features,
+  user,
+}: NavProps) {
   const t = useTranslations('nav');
   const tTheme = useTranslations('theme');
   const locale = useLocale();
@@ -112,7 +129,9 @@ export function Nav({ organizations, activeRealTenantId, mode, permissions, user
   const [hovered, setHovered] = useState(false);
   const expanded = !collapsed || hovered;
   const items = NAV_ITEMS.filter(
-    (item) => !item.permission || permissions.includes(item.permission),
+    (item) =>
+      (!item.permission || permissions.includes(item.permission)) &&
+      (!item.feature || features.includes(item.feature)),
   );
   const themeLabels = { toLight: tTheme('toLight'), toDark: tTheme('toDark') };
 

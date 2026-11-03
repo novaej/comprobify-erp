@@ -71,6 +71,8 @@ What a company has is tenant data under RLS: one `subscriptions` row (its plan, 
 
 `resolveActor` resolves them once per request into `ctx.entitlements`: the override wins, then subscription items, then the plan, then off. Boolean keys are the union of every module's keys; a coming-soon module grants nothing; a module or key removed with a date stays until the first period start after it (the Ecuador calendar month until billing has periods). Core checks with `requireFeature` (`FEATURE_NOT_ENABLED`) and `requireWithinLimit` (`LIMIT_REACHED`; a missing limit is 0, `null` is unlimited). The loader filters by `tenant_id` itself, so code without an actor, such as accepting an invitation, can resolve a company in system context.
 
+The web app only hides or locks: nav items carry a feature key, a page behind one renders `FeatureLocked`, and the plan page shows the plan, its modules and each limit with its usage (`planOverview`, `companyUsage`).
+
 ## Audit log
 
 `audit_events` is tenant data with RLS, and append-only: the app role can insert and read, not update or delete. Core writes an event with `recordAudit` in the same transaction as the change, so a rolled-back change leaves none. Event names are one TypeScript list that generates the CHECK, and the web test requires a label for each. Changes to an organization and its twin are recorded in the real organization's log.

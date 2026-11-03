@@ -187,7 +187,8 @@
     "skipToContent": "Skip to content",
     "users": "Users",
     "activity": "Activity",
-    "legal": "Legal documents"
+    "legal": "Legal documents",
+    "plan": "Plan"
   },
   "shell": {
     "sandboxTitle": "You're in the test environment",
@@ -242,7 +243,9 @@
     "securityTitle": "Company security",
     "requireTwoFactor": "Require two-step verification of every member",
     "requireTwoFactorHint": "Anyone who hasn't turned it on must do so before working here.",
-    "saveSecurity": "Save"
+    "saveSecurity": "Save",
+    "seatsFull": "Your plan allows {seats, plural, one {# user} other {# users}}, and all are taken, counting pending invitations.",
+    "seePlan": "See the plan"
   },
   "usersError": {
     "FORBIDDEN": "Your role doesn't allow this.",
@@ -392,5 +395,31 @@
     "FORBIDDEN": "Only the owner can accept them.",
     "NO_AGREEMENTS": "No documents are published yet.",
     "UNKNOWN": "An unexpected error occurred. Please try again."
+  },
+  "featureLocked": {
+    "title": "This feature isn't in your plan",
+    "descriptionPlan": "See what your plan includes and which modules you can add.",
+    "descriptionAsk": "Ask the company owner or an administrator to add it to the plan.",
+    "seePlan": "See the plan"
+  },
+  "plan": {
+    "title": "Plan",
+    "description": "What your company's plan includes and how much of each limit you use.",
+    "current": "Current plan",
+    "complimentary": "Complimentary",
+    "changeSoon": "Soon you'll be able to change plan and add modules here.",
+    "modulesTitle": "Modules",
+    "comingSoon": "Coming soon",
+    "addOn": "Add-on",
+    "removesAt": "Leaves the plan on {date}",
+    "limitsTitle": "Limits",
+    "unlimited": "Unlimited",
+    "usedOf": "{used} of {limit}",
+    "limits": {
+      "DOCUMENT_QUOTA": "Documents per month",
+      "USERS": "Users",
+      "MAX_BRANCHES": "Branches",
+      "MAX_ISSUE_POINTS_PER_BRANCH": "Issue points per branch"
+    }
   }
 }

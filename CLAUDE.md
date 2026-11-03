@@ -183,6 +183,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `apps/web/src/server/request.ts` | `currentHeaders()` and `requestMeta()`: the cookies as they are now, and the client address |
 | `apps/web/src/server/shell.ts` | `loadShell`: session, organizations, active organization, actor, certificate status |
 | `apps/web/src/components/shell/` | Sidebar, organization switcher, top bar |
+| `apps/web/src/components/feature-locked.tsx` | What a page shows when the plan lacks its feature |
 | `packages/ui/` | Design system: tokens, components, theme |
 | `apps/web/messages/` | UI strings, `es` and `en` |
 | `apps/web/src/server/runtime.ts` | The web process's env, logger, database and jobs |

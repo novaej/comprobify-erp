@@ -187,7 +187,8 @@
     "skipToContent": "Saltar al contenido",
     "users": "Usuarios",
     "activity": "Actividad",
-    "legal": "Documentos legales"
+    "legal": "Documentos legales",
+    "plan": "Plan"
   },
   "shell": {
     "sandboxTitle": "Estás en el ambiente de pruebas",
@@ -242,7 +243,9 @@
     "securityTitle": "Seguridad de la empresa",
     "requireTwoFactor": "Exigir verificación en dos pasos a todos los miembros",
     "requireTwoFactorHint": "Quien no la tenga activada deberá activarla antes de seguir trabajando.",
-    "saveSecurity": "Guardar"
+    "saveSecurity": "Guardar",
+    "seatsFull": "Tu plan permite {seats, plural, one {# usuario} other {# usuarios}} y ya están ocupados, contando las invitaciones pendientes.",
+    "seePlan": "Ver el plan"
   },
   "usersError": {
     "FORBIDDEN": "Tu rol no permite esta acción.",
@@ -392,5 +395,31 @@
     "FORBIDDEN": "Solo el propietario puede aceptarlos.",
     "NO_AGREEMENTS": "Todavía no hay documentos publicados.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+  },
+  "featureLocked": {
+    "title": "Esta función no está en tu plan",
+    "descriptionPlan": "Revisa qué incluye tu plan y qué módulos puedes agregar.",
+    "descriptionAsk": "Pide al propietario o a un administrador de la empresa que la agregue al plan.",
+    "seePlan": "Ver el plan"
+  },
+  "plan": {
+    "title": "Plan",
+    "description": "Lo que incluye el plan de tu empresa y cuánto usas de cada límite.",
+    "current": "Plan actual",
+    "complimentary": "Cortesía",
+    "changeSoon": "Pronto podrás cambiar de plan y agregar módulos desde aquí.",
+    "modulesTitle": "Módulos",
+    "comingSoon": "Próximamente",
+    "addOn": "Adicional",
+    "removesAt": "Sale del plan el {date}",
+    "limitsTitle": "Límites",
+    "unlimited": "Ilimitado",
+    "usedOf": "{used} de {limit}",
+    "limits": {
+      "DOCUMENT_QUOTA": "Comprobantes por mes",
+      "USERS": "Usuarios",
+      "MAX_BRANCHES": "Sucursales",
+      "MAX_ISSUE_POINTS_PER_BRANCH": "Puntos de emisión por sucursal"
+    }
   }
 }

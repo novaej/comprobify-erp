@@ -18,6 +18,7 @@ export type { Logo } from './logo';
 export {
   acceptInvitation,
   changeRole,
+  companyUsage,
   getInvitation,
   goLive,
   inviteInput,
@@ -30,6 +31,7 @@ export {
   setTwoFactorRequirement,
 } from './members';
 export type {
+  CompanyUsage,
   InvitationRow,
   InvitationView,
   InviteDeps,
