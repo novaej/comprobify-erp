@@ -45,6 +45,7 @@ export default async function ShellLayout({
           mode={active.mode}
           permissions={actor.permissions}
           features={actor.entitlements.features}
+          isSuperAdmin={session.user.isSuperAdmin}
           user={{
             name: session.user.name,
             email: session.user.email,

@@ -45,6 +45,18 @@ GRANT CONNECT ON DATABASE comprobify_erp TO comprobify_erp_app;
 
 The migrations grant the app role its rights. Managed Postgres requires TLS: connection settings for it are verified in Milestone 10.
 
+## Super admins
+
+The flag that opens the platform area is never set from the app (ADR-010). The operator sets it with the owner role, for an account that already exists:
+
+```bash
+pnpm super-admin <email>             # locally, from .env
+pnpm super-admin <email> --revoke
+# in the image: cd /app/apps/worker && node --import tsx src/super-admin.ts <email>
+```
+
+The area also requires two-step verification, so set it up on that account before going to `/admin`.
+
 ## Environment
 
 `.env.example` lists every variable. An empty value counts as unset.

@@ -199,6 +199,8 @@ export const subscriptionItems = pgTable(
     featureKey: text('feature_key'),
     featureKind: text('feature_kind', { enum: FEATURE_KINDS }).default('LIMIT').notNull(),
     limitValue: integer('limit_value'),
+    // A removed module stays until this period start (ADR-011).
+    removesAt: timestamp('removes_at', { withTimezone: true }),
     active: boolean('active').default(true).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),

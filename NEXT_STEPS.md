@@ -12,7 +12,8 @@ The model is in [ADR-011](docs/adr/011-plans-modules-and-entitlements.md): featu
 - [x] 2. Subscriptions: `subscriptions` (plan, `PAID` or `COMPLIMENTARY` with a reason, Personalizado's negotiated price), `subscription_items` and `tenant_feature_overrides`, under forced RLS and mirrored into the twin; new companies start on Gratis, and existing ones are moved onto it (FR-PLAN-1a, FR-PLAN-1b, FR-ONB-6a).
 - [x] 3. Resolver and enforcement: entitlements resolved once per request into the actor context, with the dated rule for removed modules; `requireFeature` and `requireWithinLimit` in the kernel (`FEATURE_NOT_ENABLED`, `LIMIT_REACHED`); applied to what exists today: `USERS` on invitations and `RIDE_LOGO` on the logo (FR-PLAN-3, FR-PLAN-4, FR-USR-1).
 - [x] 4. UI gating: navigation and pages hide or lock what the company doesn't have; a plan page showing the plan, modules, limits and usage (FR-PLAN-4).
-- [ ] 5. Super admin area: its own route group and layout with no tenant, `PlatformActor` checks in core; editors for plans and modules (contents, status); per company: plan, add-ons, Personalizado, complimentary and overrides, each recorded in the activity log (FR-ADM-1, FR-ADM-3, ADR-010).
+- [x] 5a. Super admin area: its own route group and layout with no tenant, `PlatformActor` checks in core, two-step verification required; per company: plan, add-ons, Personalizado, complimentary and overrides, each recorded in the activity log (FR-ADM-1, ADR-010).
+- [ ] 5b. Editors for plans and modules: names, status, contents, dated removals (FR-ADM-3).
 - [ ] 6. Gate and close: E2E where switching a feature for one company changes its screens and core refuses it; isolation sweep covering the new tables; docs.
 
 ## Carried forward from Milestone 1

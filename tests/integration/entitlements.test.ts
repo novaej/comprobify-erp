@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   acceptInvitation,
+  addModule as platformAddModule,
   companyLogo,
   companyUsage,
   createJobs,
@@ -10,13 +11,14 @@ import {
   inviteMember,
   planOverview,
   resolveActor,
+  setOverride,
   type CreatedOrganization,
   type Jobs,
 } from '@comprobify/core';
 import { testRuc } from '@comprobify/core/testing';
 import { schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, appUrl, grantSeats, testLogger } from './helpers';
+import { appDatabase, appUrl, grantSeats, superAdmin, testLogger } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1]);
 
@@ -50,20 +52,8 @@ describe('entitlements', () => {
       { logo: { content: PNG, contentType: 'image/png' } },
     );
 
-  // Direct rows until the super admin functions exist (Milestone 2, step 5).
-  const system = (text: string, values: unknown[]) =>
-    db.withSystem('test: change what a company has', ({ executeSql }) => executeSql(text, values));
-  const addModule = (org: CreatedOrganization, key: string) =>
-    Promise.all(
-      [org.realTenantId, org.twinTenantId].map((tenantId) =>
-        system(
-          `INSERT INTO subscription_items (tenant_id, subscription_id, kind, module_id)
-           SELECT $1, s.id, 'MODULE', m.id FROM subscriptions s, modules m
-           WHERE s.tenant_id = $1 AND m.key = $2`,
-          [tenantId, key],
-        ),
-      ),
-    );
+  const addModule = async (org: CreatedOrganization, moduleKey: string) =>
+    platformAddModule(await superAdmin(db), db, { realTenantId: org.realTenantId, moduleKey });
 
   const deps = () => ({
     jobs,
@@ -118,12 +108,13 @@ describe('entitlements', () => {
   it('lets an override take a plan feature away', async () => {
     const owner = await newUser();
     const org = await newCompany(owner.id);
-    await system(
-      `INSERT INTO tenant_feature_overrides
-         (tenant_id, feature_key, feature_kind, effect, reason, created_by)
-       VALUES ($1, 'CLIENTS', 'BOOLEAN', 'REVOKE', 'test', $2)`,
-      [org.realTenantId, owner.id],
-    );
+    await setOverride(await superAdmin(db), db, {
+      realTenantId: org.realTenantId,
+      featureKey: 'CLIENTS',
+      effect: 'REVOKE',
+      limitValue: null,
+      reason: 'test',
+    });
     const real = await resolveActor(db, { userId: owner.id, tenantId: org.realTenantId, clock });
     expect(real.entitlements.features).not.toContain('CLIENTS');
   });
@@ -141,7 +132,7 @@ describe('entitlements', () => {
       details: { feature: 'USERS', limit: 1 },
     });
 
-    await grantSeats(db, org, owner.id, 2);
+    await grantSeats(db, org, 2);
     const first = await newUser();
     await invite(first.email);
     // The pending invitation holds the second seat, but re-sending it doesn't take a third.
@@ -151,9 +142,7 @@ describe('entitlements', () => {
     });
 
     // Fewer seats now than when it was sent: accepting is refused.
-    await system(`UPDATE tenant_feature_overrides SET limit_value = 1 WHERE tenant_id = ANY($1)`, [
-      [org.realTenantId, org.twinTenantId],
-    ]);
+    await grantSeats(db, org, 1);
     const token = await tokenFor(first.email);
     await expect(
       acceptInvitation(db, { token, userId: first.id, userEmail: first.email }, clock),
@@ -180,7 +169,7 @@ describe('entitlements', () => {
   it('counts usage in the real company, from the twin too, for whoever may see it', async () => {
     const owner = await newUser();
     const org = await newCompany(owner.id);
-    await grantSeats(db, org, owner.id, 5);
+    await grantSeats(db, org, 5);
     const real = await resolveActor(db, { userId: owner.id, tenantId: org.realTenantId, clock });
     await inviteMember(
       real,

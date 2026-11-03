@@ -1,7 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { loadTestEnv } from '@comprobify/config/env';
 import type { Logger } from '@comprobify/config/logger';
-import { createDatabase, type Database } from '@comprobify/db';
+import {
+  resolvePlatformActor,
+  setOverride,
+  systemClock,
+  type PlatformActor,
+} from '@comprobify/core';
+import { createDatabase, schema, type Database } from '@comprobify/db';
 import { Client } from 'pg';
 import { vi } from 'vitest';
 
@@ -62,21 +68,31 @@ export function ownerDatabase(): Database {
   });
 }
 
-// Gratis allows one user. Until the super admin functions exist (Milestone 2, step 5),
-// a test company gets more seats from an override written here, in it and its twin.
+// A super admin, as the operator script makes one (ADR-010).
+export async function superAdmin(db: Database): Promise<PlatformActor> {
+  const [user] = await db.identity
+    .insert(schema.users)
+    .values({
+      name: 'Operator',
+      email: `op.${randomUUID()}@example.com`,
+      emailVerified: true,
+      isSuperAdmin: true,
+    })
+    .returning({ id: schema.users.id });
+  return resolvePlatformActor(db.identity, { userId: user!.id, clock: systemClock });
+}
+
+// Gratis allows one user: a test company gets more through the operator's override.
 export async function grantSeats(
   db: Database,
-  org: { realTenantId: string; twinTenantId: string },
-  createdBy: string,
+  org: { realTenantId: string },
   seats = 20,
 ): Promise<void> {
-  await db.withSystem('test: give a company more seats', async ({ executeSql }) => {
-    for (const tenantId of [org.realTenantId, org.twinTenantId])
-      await executeSql(
-        `INSERT INTO tenant_feature_overrides
-           (tenant_id, feature_key, feature_kind, effect, limit_value, reason, created_by)
-         VALUES ($1, 'USERS', 'LIMIT', 'LIMIT', $2, 'test seats', $3)`,
-        [tenantId, seats, createdBy],
-      );
+  await setOverride(await superAdmin(db), db, {
+    realTenantId: org.realTenantId,
+    featureKey: 'USERS',
+    effect: 'LIMIT',
+    limitValue: seats,
+    reason: 'test seats',
   });
 }

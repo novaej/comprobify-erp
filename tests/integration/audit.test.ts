@@ -106,7 +106,7 @@ describe('audit log and go-live', () => {
       },
       { keyCipher: createKeyCipher('d'.repeat(64)), clock },
     );
-    await grantSeats(db, org, owner);
+    await grantSeats(db, org);
     ownerCtx = await resolveActor(db, { userId: owner, tenantId: org.realTenantId, clock });
   });
 

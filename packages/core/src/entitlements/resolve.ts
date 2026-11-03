@@ -4,7 +4,7 @@ import type { ModuleStatus } from './catalog';
 
 export type ModuleSource = {
   status: ModuleStatus;
-  // The plan's link to the module; null for a module bought as an item.
+  // A dated removal: of the plan's link, or of the add-on item.
   removesAt: Date | null;
   features: { key: string; removesAt: Date | null }[];
 };
@@ -84,6 +84,7 @@ export async function loadEntitlements(
       moduleId: subscriptionItems.moduleId,
       featureKey: subscriptionItems.featureKey,
       limitValue: subscriptionItems.limitValue,
+      removesAt: subscriptionItems.removesAt,
     })
     .from(subscriptionItems)
     .where(
@@ -121,7 +122,7 @@ export async function loadEntitlements(
     {
       planModules: fromPlan.map((row) => moduleSource(row.moduleId, row.removesAt)),
       itemModules: items.flatMap((item) =>
-        item.kind === 'MODULE' ? [moduleSource(item.moduleId!, null)] : [],
+        item.kind === 'MODULE' ? [moduleSource(item.moduleId!, item.removesAt)] : [],
       ),
       planLimits: Object.fromEntries(limitRows.map((row) => [row.key, row.value])),
       itemLimits: Object.fromEntries(

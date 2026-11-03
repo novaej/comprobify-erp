@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import {
   acceptAgreements,
   acceptInvitation,
+  addModule,
   createAuth,
   createJobs,
   createKeyCipher,
@@ -19,7 +20,7 @@ import {
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import type { Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, appUrl, grantSeats, testLogger } from './helpers';
+import { appDatabase, appUrl, grantSeats, superAdmin, testLogger } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1]);
 const parties = {
@@ -65,7 +66,7 @@ describe('isolation sweep over every tenant table', () => {
       },
       { keyCipher: createKeyCipher('e'.repeat(64)), clock },
     );
-    await grantSeats(db, org, owner);
+    await grantSeats(db, org);
     const ctx = await resolveActor(db, { userId: owner, tenantId: org.realTenantId, clock });
     const memberEmail = `swi.${randomUUID()}@example.com`;
     const invited = await createVerifiedUser(auth, {
@@ -107,19 +108,14 @@ describe('isolation sweep over every tenant table', () => {
         rateLimiter: createRateLimiter(db.identity, () => clock.now()),
       },
     );
+    // grantSeats wrote an override; an add-on fills subscription_items.
+    await addModule(await superAdmin(db), db, {
+      realTenantId: org.realTenantId,
+      moduleKey: 'INVENTORY',
+    });
     await acceptAgreements(ctx, db, { ipAddress: '203.0.113.9', userAgent: 'Sweep' }, parties);
     for (const tenantId of [org.realTenantId, org.twinTenantId]) {
       await recordSessionStart(db, { tenantId, userId: owner, sessionId: randomUUID() });
-      // A direct row until the super admin functions exist (Milestone 2, step 5);
-      // grantSeats above wrote the override.
-      await db.withSystem('test: give the company an add-on', ({ executeSql }) =>
-        executeSql(
-          `INSERT INTO subscription_items (tenant_id, subscription_id, kind, module_id)
-           SELECT $1, s.id, 'MODULE', m.id
-           FROM subscriptions s, modules m WHERE s.tenant_id = $1 AND m.key = 'INVENTORY'`,
-          [tenantId],
-        ),
-      );
     }
     return org;
   };

@@ -7,7 +7,26 @@ export type { BooleanFeature, FeatureKey, FeatureKind, LimitFeature } from './fe
 export { STARTING_MODULES, STARTING_PLANS } from './catalog';
 export type { ModuleKey, ModuleStatus, PlanLimits, PlanStatus } from './catalog';
 export { DEFAULT_PLAN_KEY, startDefaultSubscriptions } from './subscriptions';
+export {
+  applyAddModule,
+  applyBilling,
+  applyClearLimit,
+  applyClearOverride,
+  applyLimit,
+  applyNegotiatedPrice,
+  applyOverride,
+  applyPlanChange,
+  applyRemoveModule,
+  billingInput,
+  CUSTOM_PLAN_KEY,
+  limitInput,
+  overrideInput,
+  priceInput,
+} from './writes';
+export type { Named, PlanChange } from './writes';
 export type { CompanyTenants } from './subscriptions';
+export { catalogChoices, companyPlanDetail, subscriptionSummaries } from './admin-reads';
+export type { CatalogChoices, CompanyPlanDetail, SubscriptionSummary } from './admin-reads';
 export { planOverview, SHOWN_LIMITS } from './overview';
 export type { PlanModule, PlanOverview } from './overview';
 export { currentPeriodStart, loadEntitlements, resolveEntitlements } from './resolve';

@@ -48,6 +48,7 @@ pnpm build
 pnpm stack:up            # Docker stack on :8080: caddy, migrate, web, worker, using the postgres18 container
 pnpm stack:down
 pnpm test-certificate <ruc>   # a test P12 (password: secret) to try onboarding locally
+pnpm super-admin <email>      # give an existing account the platform area (--revoke takes it away)
 ```
 
 ---
@@ -172,6 +173,8 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/identity/` | Better Auth setup, rate limits, sessions and idle timeout |
 | `packages/core/src/tenancy/` | Organizations and twins, roles and permissions, actor context, ambiente |
 | `packages/core/src/entitlements/` | Feature key registry, the starting modules and plans, `syncCatalog`, subscriptions, the resolver (ADR-011) |
+| `packages/core/src/platform/` | The super admin's workflows: companies, their plans, add-ons, Personalizado, complimentary, overrides |
+| `apps/web/src/app/[locale]/(admin)/` | The platform area, outside any company (`loadPlatform`) |
 | `packages/core/src/agreements/` | Legal texts (`texts/*.md`, published by the migrate step), personalization, acceptance |
 | `docs/legal/review-notes.md` | What changed in the legal texts and the open legal questions |
 | `packages/core/src/audit/` | `recordAudit` (same transaction as the change), the activity list, sign-ins |

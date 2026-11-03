@@ -188,7 +188,8 @@
     "users": "Usuarios",
     "activity": "Actividad",
     "legal": "Documentos legales",
-    "plan": "Plan"
+    "plan": "Plan",
+    "platformAdmin": "Administración de la plataforma"
   },
   "shell": {
     "sandboxTitle": "Estás en el ambiente de pruebas",
@@ -311,7 +312,8 @@
     "backupHint": "Guárdalos en un lugar seguro. Cada uno sirve una sola vez si pierdes tu teléfono. No los volverás a ver.",
     "confirmCode": "Código de 6 dígitos de tu app",
     "confirm": "Confirmar y activar",
-    "requiredByOrganization": "Tu empresa exige la verificación en dos pasos. Actívala para continuar."
+    "requiredByOrganization": "Tu empresa exige la verificación en dos pasos. Actívala para continuar.",
+    "requiredByPlatform": "La administración de la plataforma exige la verificación en dos pasos. Actívala para entrar."
   },
   "securityError": {
     "INVALID_CREDENTIALS": "La contraseña no es correcta.",
@@ -350,8 +352,23 @@
       },
       "session": {
         "started": "inició sesión"
+      },
+      "subscription": {
+        "plan_changed": "cambió el plan a",
+        "billing_changed": "cambió el cobro del plan a",
+        "price_changed": "cambió el precio negociado a",
+        "module_added": "agregó el módulo",
+        "module_removed": "programó el retiro del módulo",
+        "limit_set": "cambió un límite del plan",
+        "limit_cleared": "devolvió un límite al valor del plan"
+      },
+      "entitlements": {
+        "override_set": "puso una excepción a",
+        "override_cleared": "quitó la excepción a"
       }
-    }
+    },
+    "complimentary": "cortesía",
+    "paid": "pagada"
   },
   "goLive": {
     "title": "Pasar {organization} a producción",
@@ -421,5 +438,67 @@
       "MAX_BRANCHES": "Sucursales",
       "MAX_ISSUE_POINTS_PER_BRANCH": "Puntos de emisión por sucursal"
     }
+  },
+  "admin": {
+    "badge": "Plataforma",
+    "navigation": "Navegación de la plataforma",
+    "backToApp": "Volver a la aplicación",
+    "companiesTitle": "Empresas",
+    "companiesDescription": "Todas las empresas, de la más reciente a la más antigua.",
+    "search": "Buscar por RUC o nombre",
+    "searchButton": "Buscar",
+    "noCompanies": "No hay empresas que coincidan.",
+    "complimentary": "Cortesía",
+    "live": "En producción",
+    "notLive": "En pruebas",
+    "suspended": "Suspendida",
+    "backToCompanies": "← Empresas",
+    "plan": "Plan",
+    "changePlan": "Cambiar plan",
+    "complimentaryLabel": "Cortesía: nunca se cobra, no se renueva ni vence",
+    "reason": "Motivo",
+    "save": "Guardar",
+    "monthlyPrice": "Precio mensual negociado, sin IVA (USD)",
+    "module": "Módulo",
+    "addModule": "Agregar módulo",
+    "addOnsTitle": "Módulos adicionales",
+    "addOnsDescription": "Se agregan al instante. Al quitarlos, la empresa los conserva hasta el inicio del próximo mes.",
+    "removeModuleFor": "Quitar {name}",
+    "keepModuleFor": "Conservar {name}",
+    "limitsTitle": "Límites",
+    "limitsCustom": "Valores propios de Personalizado. Sin un valor propio, se usa el del plan.",
+    "limitsPlan": "Vienen del plan y de las excepciones. Para valores propios, usa Personalizado.",
+    "unlimited": "Ilimitado",
+    "usePlanValue": "Usar el valor del plan",
+    "overridesTitle": "Excepciones",
+    "overridesDescription": "Ganan sobre el plan y los módulos. Úsalas para casos puntuales, con un motivo.",
+    "feature": "Función",
+    "effect": "Efecto",
+    "effects": {
+      "GRANT": "Activar",
+      "REVOKE": "Desactivar"
+    },
+    "limitValue": "Valor del límite",
+    "setOverride": "Guardar excepción",
+    "clearOverrideFor": "Quitar la excepción de {feature}",
+    "resolvedTitle": "Funciones activas",
+    "resolvedDescription": "Lo que la empresa tiene hoy, ya combinado."
+  },
+  "adminError": {
+    "FORBIDDEN": "Solo la administración de la plataforma puede hacer esto.",
+    "NOT_FOUND": "No se encontró la empresa.",
+    "PLAN_NOT_AVAILABLE": "Ese plan no está publicado.",
+    "SAME_PLAN": "La empresa ya está en ese plan.",
+    "NOT_CUSTOM_PLAN": "Solo Personalizado tiene límites y precio propios.",
+    "MODULE_NOT_FOUND": "No existe ese módulo.",
+    "MODULE_NOT_AVAILABLE": "Ese módulo no se puede agregar.",
+    "MODULE_IN_PLAN": "El plan ya incluye ese módulo.",
+    "MODULE_ALREADY_ADDED": "La empresa ya tiene ese módulo.",
+    "MODULE_NOT_ADDED": "La empresa no tiene ese módulo como adicional.",
+    "LIMIT_NOT_SET": "Ese límite ya usa el valor del plan.",
+    "INVALID_OVERRIDE": "Una función se activa o desactiva; un límite recibe un valor.",
+    "OVERRIDE_NOT_FOUND": "No hay una excepción para esa función.",
+    "INVALID_INPUT": "Revisa los datos ingresados.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
   }
 }

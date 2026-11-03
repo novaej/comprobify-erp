@@ -92,7 +92,11 @@ export default async function AccountPage({
         </CardHeader>
         <CardContent>
           {twoFactorRequired && !session.user.twoFactorEnabled && (
-            <Notice tone="error">{tSecurity('requiredByOrganization')}</Notice>
+            <Notice tone="error">
+              {tSecurity(
+                twoFactorRequired === 'admin' ? 'requiredByPlatform' : 'requiredByOrganization',
+              )}
+            </Notice>
           )}
           <TwoFactorSettings enabled={session.user.twoFactorEnabled} />
         </CardContent>

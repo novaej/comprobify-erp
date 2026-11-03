@@ -23,3 +23,4 @@ export {
   verifyEmailInput,
 } from './service';
 export type { Identity, IdentityOptions, RequestMeta, SessionState, SessionUser } from './service';
+export { assertSuperAdmin, resolvePlatformActor, setSuperAdmin } from './platform-actor';

@@ -7,5 +7,6 @@ export * from './audit';
 export * from './entitlements';
 export * from './tenancy';
 export * from './certificates';
+export * from './platform';
 export { registerHandlers } from './register-handlers';
 export type { HandlerDeps } from './register-handlers';

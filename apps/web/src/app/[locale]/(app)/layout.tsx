@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { requireSession } from '@/server/session';
 import { ActivityTracker } from './activity-tracker';
 
-// Every page under (app) needs an active session. The sidebar shell arrives in step 5.
+// Every page under (app) needs an active session; the sidebar shell is in (shell).
 export default async function AppLayout({
   children,
   params,

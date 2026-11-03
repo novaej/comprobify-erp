@@ -28,8 +28,8 @@ async function emailLink(
   }
 }
 
-// Gratis allows one user. Until the super admin area exists (Milestone 2, step 5),
-// the owner's companies get more seats from an override written here.
+// Gratis allows one user. The owner's companies get more seats from an override
+// written here, so the invitation test doesn't depend on the admin area.
 async function grantSeats(ownerEmail: string): Promise<void> {
   const client = new Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
@@ -50,6 +50,17 @@ async function grantSeats(ownerEmail: string): Promise<void> {
   }
 }
 
+// The operator script's job, done directly: the flag is never set from the app.
+async function setSuperAdmin(userEmail: string): Promise<void> {
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
+  try {
+    await client.query('UPDATE users SET is_super_admin = true WHERE email = $1', [userEmail]);
+  } finally {
+    await client.end();
+  }
+}
+
 async function signIn(page: Page, email: string, password: string) {
   await page.goto('/es/login');
   await page.getByLabel('Correo electrónico').fill(email);
@@ -63,6 +74,10 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
   const email = `e2e.${randomUUID()}@example.com`;
   const password = 'correct horse battery';
   const newPassword = 'a brand new passphrase';
+  // Set by the two-step test, for the tests after it.
+  let totp: () => Promise<string>;
+  // This run's company: earlier runs left others with the same name.
+  let companyRuc = '';
 
   test('protected pages send a visitor to sign in', async ({ page }) => {
     await page.goto('/es/account');
@@ -125,6 +140,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     page,
   }) => {
     const ruc = testRuc();
+    companyRuc = ruc;
     const p12 = (forRuc: string) => ({
       name: 'firma.p12',
       mimeType: 'application/x-pkcs12',
@@ -319,7 +335,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
 
     // What an authenticator app does with the key.
     const key = (await page.locator('code').innerText()).trim();
-    const totp = () => createOTP(new TextDecoder().decode(base32.decode(key))).totp();
+    totp = () => createOTP(new TextDecoder().decode(base32.decode(key))).totp();
     await page.getByLabel('Código de 6 dígitos de tu app').fill(await totp());
     await page.getByRole('button', { name: 'Confirmar y activar' }).click();
     await expect(page.getByText('La verificación en dos pasos está activada.')).toBeVisible();
@@ -343,5 +359,38 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     ).toBeChecked();
     await page.goto('/es/dashboard');
     await expect(page).toHaveURL(/\/es\/dashboard$/);
+  });
+
+  test('lets a super admin change the company plan from the platform area (ADR-010, FR-ADM-1)', async ({
+    page,
+  }) => {
+    await signIn(page, email, newPassword);
+    await page.getByLabel('Código', { exact: true }).fill(await totp());
+    await page.getByRole('button', { name: 'Verificar' }).click();
+    await expect(page).toHaveURL(/\/es\/dashboard$/);
+    // Not advertised to anyone without the flag.
+    await page.goto('/es/admin');
+    await expect(page.getByRole('heading', { name: 'Página no encontrada' })).toBeVisible();
+
+    await setSuperAdmin(email);
+    await page.goto('/es/dashboard');
+    await page
+      .getByRole('navigation', { name: 'Navegación principal' })
+      .last()
+      .getByRole('link', { name: 'Administración de la plataforma' })
+      .click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Empresas');
+    await page.getByRole('searchbox', { name: 'Buscar por RUC o nombre' }).fill(companyRuc);
+    await page.getByRole('button', { name: 'Buscar' }).click();
+    await page.getByRole('link', { name: new RegExp(companyRuc) }).click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Delta Comercial S.A.');
+
+    await page.getByLabel('Plan', { exact: true }).selectOption({ label: 'Negocio' });
+    await page.getByRole('button', { name: 'Cambiar plan' }).click();
+    await expect(page.getByRole('main')).toContainText('Inventario');
+
+    // The company sees it on its own plan page.
+    await page.goto('/es/plan');
+    await expect(page.getByText('Negocio', { exact: true })).toBeVisible();
   });
 });

@@ -188,7 +188,8 @@
     "users": "Users",
     "activity": "Activity",
     "legal": "Legal documents",
-    "plan": "Plan"
+    "plan": "Plan",
+    "platformAdmin": "Platform administration"
   },
   "shell": {
     "sandboxTitle": "You're in the test environment",
@@ -311,7 +312,8 @@
     "backupHint": "Keep them somewhere safe. Each works once if you lose your phone. You won't see them again.",
     "confirmCode": "6-digit code from your app",
     "confirm": "Confirm and turn on",
-    "requiredByOrganization": "Your company requires two-step verification. Turn it on to continue."
+    "requiredByOrganization": "Your company requires two-step verification. Turn it on to continue.",
+    "requiredByPlatform": "Platform administration requires two-step verification. Turn it on to enter."
   },
   "securityError": {
     "INVALID_CREDENTIALS": "The password is wrong.",
@@ -350,8 +352,23 @@
       },
       "session": {
         "started": "signed in"
+      },
+      "subscription": {
+        "plan_changed": "changed the plan to",
+        "billing_changed": "changed the plan billing to",
+        "price_changed": "changed the negotiated price to",
+        "module_added": "added the module",
+        "module_removed": "scheduled the removal of the module",
+        "limit_set": "changed a plan limit",
+        "limit_cleared": "returned a limit to the plan value"
+      },
+      "entitlements": {
+        "override_set": "set an exception for",
+        "override_cleared": "removed the exception for"
       }
-    }
+    },
+    "complimentary": "complimentary",
+    "paid": "paid"
   },
   "goLive": {
     "title": "Take {organization} live",
@@ -421,5 +438,67 @@
       "MAX_BRANCHES": "Branches",
       "MAX_ISSUE_POINTS_PER_BRANCH": "Issue points per branch"
     }
+  },
+  "admin": {
+    "badge": "Platform",
+    "navigation": "Platform navigation",
+    "backToApp": "Back to the app",
+    "companiesTitle": "Companies",
+    "companiesDescription": "Every company, newest first.",
+    "search": "Search by RUC or name",
+    "searchButton": "Search",
+    "noCompanies": "No companies match.",
+    "complimentary": "Complimentary",
+    "live": "Live",
+    "notLive": "Testing",
+    "suspended": "Suspended",
+    "backToCompanies": "← Companies",
+    "plan": "Plan",
+    "changePlan": "Change plan",
+    "complimentaryLabel": "Complimentary: never charged, never renews or expires",
+    "reason": "Reason",
+    "save": "Save",
+    "monthlyPrice": "Negotiated monthly price, before VAT (USD)",
+    "module": "Module",
+    "addModule": "Add module",
+    "addOnsTitle": "Add-on modules",
+    "addOnsDescription": "Added at once. When removed, the company keeps them until next month starts.",
+    "removeModuleFor": "Remove {name}",
+    "keepModuleFor": "Keep {name}",
+    "limitsTitle": "Limits",
+    "limitsCustom": "Custom's own values. Without one, the plan's value applies.",
+    "limitsPlan": "They come from the plan and exceptions. For own values, use Custom.",
+    "unlimited": "Unlimited",
+    "usePlanValue": "Use the plan's value",
+    "overridesTitle": "Exceptions",
+    "overridesDescription": "They win over the plan and modules. Use them for one-off cases, with a reason.",
+    "feature": "Feature",
+    "effect": "Effect",
+    "effects": {
+      "GRANT": "Turn on",
+      "REVOKE": "Turn off"
+    },
+    "limitValue": "Limit value",
+    "setOverride": "Save exception",
+    "clearOverrideFor": "Remove the exception for {feature}",
+    "resolvedTitle": "Active features",
+    "resolvedDescription": "What the company has today, combined."
+  },
+  "adminError": {
+    "FORBIDDEN": "Only platform administration can do this.",
+    "NOT_FOUND": "Company not found.",
+    "PLAN_NOT_AVAILABLE": "That plan isn't published.",
+    "SAME_PLAN": "The company is already on that plan.",
+    "NOT_CUSTOM_PLAN": "Only Custom has its own limits and price.",
+    "MODULE_NOT_FOUND": "No such module.",
+    "MODULE_NOT_AVAILABLE": "That module can't be added.",
+    "MODULE_IN_PLAN": "The plan already includes that module.",
+    "MODULE_ALREADY_ADDED": "The company already has that module.",
+    "MODULE_NOT_ADDED": "The company doesn't have that module as an add-on.",
+    "LIMIT_NOT_SET": "That limit already uses the plan's value.",
+    "INVALID_OVERRIDE": "A feature is turned on or off; a limit takes a value.",
+    "OVERRIDE_NOT_FOUND": "There is no exception for that feature.",
+    "INVALID_INPUT": "Check the details you entered.",
+    "UNKNOWN": "An unexpected error occurred. Please try again."
   }
 }

@@ -57,7 +57,7 @@ Onboarding checks the RUC's structure, reads the P12 whatever the CA, and requir
 
 Organizations live in `tenants`. Registration creates two rows: the real organization (`PRODUCTION`) and its test twin (`TEST`, `twin_of` set), each with the same branch, issue point and warehouse, and the owner's membership mirrored in both (ADR-010). Child tables carry `tenant_id` and reference their parent through `(tenant_id, id)`, so a row can't point into another tenant.
 
-Three contexts exist, each set per transaction: tenant (everyday work), user (only for the user's own memberships and organizations, before a tenant is chosen) and system (cross-tenant jobs and the super admin area, logged with a reason). The super admin works outside any tenant, through a `PlatformActor`.
+Three contexts exist, each set per transaction: tenant (everyday work), user (only for the user's own memberships and organizations, before a tenant is chosen) and system (cross-tenant jobs and the super admin area, logged with a reason). The super admin works outside any tenant, through a `PlatformActor`: `resolvePlatformActor` checks the flag, every admin call checks it again, and the `/admin` area also needs two-step verification. The `platform` module owns each admin workflow in one system-context transaction: it reads the company and its twin through `tenancy`, writes through `entitlements`, and records the change in the company's activity log.
 
 ### Policies
 

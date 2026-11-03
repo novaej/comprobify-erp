@@ -27,6 +27,16 @@ export const AUDIT_ACTIONS = [
   'member.issue_points_changed',
   'agreements.accepted',
   'session.started',
+  // The super admin's changes to what a company has (ADR-011).
+  'subscription.plan_changed',
+  'subscription.billing_changed',
+  'subscription.price_changed',
+  'subscription.module_added',
+  'subscription.module_removed',
+  'subscription.limit_set',
+  'subscription.limit_cleared',
+  'entitlements.override_set',
+  'entitlements.override_cleared',
 ] as const;
 
 // Append-only: the app role may insert and read, never update or delete.

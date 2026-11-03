@@ -7,6 +7,7 @@ import {
   requireFeature,
   requireWithinLimit,
   startOfEcuadorMonth,
+  startOfNextEcuadorMonth,
   systemClock,
   type ActorContext,
 } from './index';
@@ -103,5 +104,16 @@ describe('entitlement checks (FR-PLAN-4)', () => {
     );
     expect(() => requireWithinLimit(ctx.entitlements, 'DOCUMENT_QUOTA', 1e6)).not.toThrow();
     expect(limitOf(ctx.entitlements, 'MAX_BRANCHES')).toBe(0);
+  });
+});
+
+describe('startOfNextEcuadorMonth', () => {
+  it('lands on the next Ecuador month, across the year and from its last minute', () => {
+    expect(startOfNextEcuadorMonth(new Date('2026-12-31T12:00:00Z')).toISOString()).toBe(
+      '2027-01-01T05:00:00.000Z',
+    );
+    expect(startOfNextEcuadorMonth(new Date('2027-02-01T04:59:00Z')).toISOString()).toBe(
+      '2027-02-01T05:00:00.000Z',
+    );
   });
 });

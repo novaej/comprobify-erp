@@ -11,6 +11,7 @@ import {
   Menu,
   Package,
   ScrollText,
+  ShieldCheck,
   UserRound,
   UsersRound,
   X,
@@ -101,6 +102,8 @@ export type NavProps = {
   mode: 'TEST' | 'PRODUCTION';
   permissions: readonly string[];
   features: readonly string[];
+  // The platform area, outside any company (ADR-010).
+  isSuperAdmin: boolean;
   user: { name: string; email: string; roleLabel: string };
 };
 
@@ -118,6 +121,7 @@ export function Nav({
   mode,
   permissions,
   features,
+  isSuperAdmin,
   user,
 }: NavProps) {
   const t = useTranslations('nav');
@@ -206,6 +210,16 @@ export function Nav({
             {user.roleLabel}
           </span>
         </div>
+      )}
+      {isSuperAdmin && (
+        <Link
+          href="/admin"
+          title={t('platformAdmin')}
+          aria-label={t('platformAdmin')}
+          className="rounded-md p-1.5 text-sidebar-muted transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        >
+          <ShieldCheck className="h-4 w-4" aria-hidden />
+        </Link>
       )}
       <Link
         href="/account"

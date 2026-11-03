@@ -19,6 +19,7 @@
     "lint": "eslint .",
     "stack:down": "docker compose -f infra/compose.yaml down",
     "stack:up": "docker compose -f infra/compose.yaml up -d --build --wait",
+    "super-admin": "pnpm --filter @comprobify/worker super-admin",
     "test": "turbo run test",
     "test-certificate": "pnpm --filter @comprobify/worker test-certificate",
     "test:e2e": "pnpm --filter @comprobify/e2e-tests test:e2e",

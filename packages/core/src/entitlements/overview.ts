@@ -1,5 +1,6 @@
 import { and, eq, schema, type Database, type SUBSCRIPTION_BILLING } from '@comprobify/db';
 import { limitOf, requirePermission, type ActorContext } from '../kernel';
+import { currentPeriodStart } from './resolve';
 import type { ModuleStatus } from './catalog';
 
 export type PlanModule = {
@@ -59,7 +60,7 @@ export async function planOverview(ctx: ActorContext, db: Database): Promise<Pla
       .innerJoin(modules, eq(modules.id, planModules.moduleId))
       .where(eq(planModules.planId, row.planId));
     const addOns = await tx
-      .select(columns)
+      .select({ ...columns, removesAt: subscriptionItems.removesAt })
       .from(subscriptionItems)
       .innerJoin(modules, eq(modules.id, subscriptionItems.moduleId))
       .where(
@@ -69,12 +70,16 @@ export async function planOverview(ctx: ActorContext, db: Database): Promise<Pla
           eq(subscriptionItems.active, true),
         ),
       );
-    const inPlan = new Set(fromPlan.map((module) => module.key));
+    // A removal whose period has started is gone; the resolver agrees.
+    const periodStart = currentPeriodStart(ctx.clock.now());
+    const current = <T extends { removesAt: Date | null }>(rows: T[]) =>
+      rows.filter((row) => row.removesAt === null || row.removesAt > periodStart);
+    const inPlan = new Set(current(fromPlan).map((module) => module.key));
     const listed = [
-      ...fromPlan.map((module) => ({ ...module, source: 'PLAN' as const })),
-      ...addOns
+      ...current(fromPlan).map((module) => ({ ...module, source: 'PLAN' as const })),
+      ...current(addOns)
         .filter((module) => !inPlan.has(module.key))
-        .map((module) => ({ ...module, source: 'ADD_ON' as const, removesAt: null })),
+        .map((module) => ({ ...module, source: 'ADD_ON' as const })),
     ].sort((a, b) => a.sortOrder - b.sortOrder);
 
     return {

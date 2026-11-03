@@ -141,6 +141,13 @@
       "when": 1793709495991,
       "tag": "0019_subscriptions_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793719852978,
+      "tag": "0020_platform_admin",
+      "breakpoints": true
     }
   ]
 }

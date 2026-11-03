@@ -16,6 +16,7 @@ export default async function AuditPage({ params }: { params: Promise<{ locale: 
   const events = await listAuditEvents(actor, db, { limit: 200 });
   const t = await getTranslations('audit');
   const tRoles = await getTranslations('roles');
+  const english = locale === 'en';
   const when = new Intl.DateTimeFormat(locale === 'en' ? 'en' : 'es-EC', {
     dateStyle: 'medium',
     timeStyle: 'short',
@@ -29,6 +30,16 @@ export default async function AuditPage({ params }: { params: Promise<{ locale: 
       return details.points.length ? details.points.join(', ') : t('allPoints');
     if (typeof details.required === 'boolean') return details.required ? t('on') : t('off');
     if (typeof details.issuerName === 'string') return details.issuerName;
+    // Names were stored with the change, so a later rename doesn't rewrite history.
+    if (typeof details.planEs === 'string')
+      return String(english ? details.planEn : details.planEs);
+    if (typeof details.moduleEs === 'string')
+      return String(english ? details.moduleEn : details.moduleEs);
+    if (typeof details.billing === 'string')
+      return details.billing === 'COMPLIMENTARY' ? t('complimentary') : t('paid');
+    if (typeof details.feature === 'string') return details.feature;
+    if (typeof details.monthlyPrice === 'string') return `$${details.monthlyPrice}`;
+    if ('monthlyPrice' in details) return '—';
     return '';
   };
 

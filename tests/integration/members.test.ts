@@ -101,7 +101,7 @@ describe('members', () => {
       branch: { code: '001', name: 'Matriz', address: null },
       issuePointCode: '001',
     });
-    await grantSeats(db, org, owner);
+    await grantSeats(db, org);
     ownerCtx = await actor(owner);
   });
 
