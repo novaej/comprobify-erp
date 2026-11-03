@@ -15,7 +15,7 @@ const e2e = loadE2eEnv({
     process.env.E2E_MIGRATION_DATABASE_URL ??
     'postgres://comprobify_erp_owner:changeme@localhost:5432/comprobify_erp_e2e',
 });
-// The app Playwright starts, global setup's migrate step and the tests all read these.
+// The app Playwright starts, its migrate step and the tests all read these.
 process.env.DATABASE_URL = e2e.E2E_DATABASE_URL;
 process.env.MIGRATION_DATABASE_URL = e2e.E2E_MIGRATION_DATABASE_URL;
 
@@ -38,7 +38,6 @@ process.env.E2E_AGREEMENTS ??= process.env.E2E_BASE_URL
 
 export default defineConfig({
   testDir: '.',
-  globalSetup: './global-setup.ts',
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
@@ -47,7 +46,9 @@ export default defineConfig({
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: 'pnpm --filter @comprobify/web start',
+        // Migrate first: Playwright starts this before any global setup would run.
+        command:
+          'pnpm --silent --filter @comprobify/worker db:migrate && pnpm --filter @comprobify/web start',
         url: `${baseURL}/health`,
         reuseExistingServer: !process.env.CI,
         timeout: 60_000,

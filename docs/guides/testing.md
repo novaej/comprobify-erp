@@ -23,7 +23,7 @@ The isolation sweep fills every tenant table with rows for two companies and a t
 
 ## E2E tests
 
-They use their own database, `comprobify_erp_e2e` (`E2E_DATABASE_URL`, `E2E_MIGRATION_DATABASE_URL`; the name must end in `_e2e`), and migrate it in global setup. Every run leaves its accounts, companies and test plans behind, because nothing is deleted, so it is never the database used with `pnpm dev`. The Docker stack uses it too, so the tests can read its queued emails. `pnpm db:reset e2e` starts it over.
+They use their own database, `comprobify_erp_e2e` (`E2E_DATABASE_URL`, `E2E_MIGRATION_DATABASE_URL`; the name must end in `_e2e`), and Playwright migrates it before starting the app; the Docker stack's migrate step does it there. Every run leaves its accounts, companies and test plans behind, because nothing is deleted, so it is never the database used with `pnpm dev`. The Docker stack uses it too, so the tests can read its queued emails. `pnpm db:reset e2e` starts it over.
 
 Playwright starts the built app on `:3000` unless `E2E_BASE_URL` is set:
 

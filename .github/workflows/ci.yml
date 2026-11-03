@@ -109,7 +109,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f infra/postgres/bootstrap.sql
-      # Playwright's global setup migrates the E2E database itself.
+      # Playwright migrates the E2E database before it starts the app.
       - run: pnpm build
       - run: pnpm --filter @comprobify/e2e-tests exec playwright install --with-deps chromium
       - run: pnpm test:e2e
