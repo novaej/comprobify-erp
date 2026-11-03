@@ -115,10 +115,22 @@ export const testEnvSchema = z.object({
   TEST_MIGRATION_DATABASE_URL: testDatabaseUrl,
 });
 
+// E2E runs leave their accounts and companies behind (nothing is deleted), so they get
+// a database of their own, never the one used with `pnpm dev`.
+const e2eDatabaseUrl = postgresUrl.refine((url) => new URL(url).pathname.endsWith('_e2e'), {
+  message: 'database name must end in _e2e',
+});
+
+export const e2eEnvSchema = z.object({
+  E2E_DATABASE_URL: e2eDatabaseUrl,
+  E2E_MIGRATION_DATABASE_URL: e2eDatabaseUrl,
+});
+
 export type WebEnv = z.output<typeof webEnvSchema>;
 export type WorkerEnv = z.output<typeof workerEnvSchema>;
 export type MigrateEnv = z.output<typeof migrateEnvSchema>;
 export type TestEnv = z.output<typeof testEnvSchema>;
+export type E2eEnv = z.output<typeof e2eEnvSchema>;
 
 type Source = Record<string, string | undefined>;
 
@@ -154,3 +166,5 @@ export const loadMigrateEnv = (source: Source = process.env): MigrateEnv =>
 
 export const loadTestEnv = (source: Source = process.env): TestEnv =>
   parseEnv(testEnvSchema, source);
+
+export const loadE2eEnv = (source: Source = process.env): E2eEnv => parseEnv(e2eEnvSchema, source);

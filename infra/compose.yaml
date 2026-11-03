@@ -21,7 +21,7 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-local}
       LOG_FORMAT: json
-      MIGRATION_DATABASE_URL: ${STACK_MIGRATION_DATABASE_URL:-postgres://comprobify_erp_owner:changeme@host.docker.internal:5432/comprobify_erp_local}
+      MIGRATION_DATABASE_URL: ${STACK_MIGRATION_DATABASE_URL:-postgres://comprobify_erp_owner:changeme@host.docker.internal:5432/comprobify_erp_e2e}
     restart: 'no'
 
   web:
@@ -30,7 +30,7 @@ services:
       APP_ENV: ${APP_ENV:-local}
       LOG_FORMAT: json
       APP_URL: ${STACK_APP_URL:-http://localhost:8080}
-      DATABASE_URL: ${STACK_DATABASE_URL:-postgres://comprobify_erp_app:changeme@host.docker.internal:5432/comprobify_erp_local}
+      DATABASE_URL: ${STACK_DATABASE_URL:-postgres://comprobify_erp_app:changeme@host.docker.internal:5432/comprobify_erp_e2e}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -57,7 +57,7 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-local}
       LOG_FORMAT: json
-      DATABASE_URL: ${STACK_DATABASE_URL:-postgres://comprobify_erp_app:changeme@host.docker.internal:5432/comprobify_erp_local}
+      DATABASE_URL: ${STACK_DATABASE_URL:-postgres://comprobify_erp_app:changeme@host.docker.internal:5432/comprobify_erp_e2e}
     depends_on:
       migrate:
         condition: service_completed_successfully

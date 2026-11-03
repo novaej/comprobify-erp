@@ -37,13 +37,14 @@ pnpm install
 pnpm dev                 # web + worker in watch mode
 pnpm db:setup            # roles and databases on the local postgres18 container (see GETTING_STARTED.md)
 pnpm db:migrate          # as the owner role: SQL migrations, then pg-boss schema and queues
+pnpm db:reset <local|test|e2e|all>  # drop, recreate and migrate a local database; local asks first
 pnpm db:generate         # new migration from the Drizzle schema
 pnpm lint                # also enforces the core module boundaries
 pnpm format              # Prettier; format:check in CI
 pnpm typecheck
 pnpm test                # unit, no database
 pnpm test:integration    # real Postgres, RLS on, app role, database name must end in _test
-pnpm test:e2e            # Playwright, against the built app or E2E_BASE_URL
+pnpm test:e2e            # Playwright, against the built app or E2E_BASE_URL; its own _e2e database
 pnpm build
 pnpm stack:up            # Docker stack on :8080: caddy, migrate, web, worker, using the postgres18 container
 pnpm stack:down

@@ -4,7 +4,7 @@
 |---|---|---|
 | `pnpm test` | Unit tests in each package | Nothing |
 | `pnpm test:integration` | `tests/integration`, against real Postgres with RLS on | `postgres18`, `pnpm db:setup` |
-| `pnpm test:e2e` | `tests/e2e`, Playwright smoke test in Chromium | A database, then `pnpm build` |
+| `pnpm test:e2e` | `tests/e2e`, Playwright smoke test in Chromium | `pnpm db:setup`, then `pnpm build` |
 
 ## Unit tests
 
@@ -22,6 +22,8 @@ The RLS catalog test (NFR-SEC-5) fails when any table with `tenant_id` lacks for
 The isolation sweep fills every tenant table with rows for two companies and a twin, then checks that no company sees another's rows. It finds the tables from the catalog, so a new table is checked automatically, and it fails if any table has no data, so give it data for each new table.
 
 ## E2E tests
+
+They use their own database, `comprobify_erp_e2e` (`E2E_DATABASE_URL`, `E2E_MIGRATION_DATABASE_URL`; the name must end in `_e2e`), and migrate it in global setup. Every run leaves its accounts, companies and test plans behind, because nothing is deleted, so it is never the database used with `pnpm dev`. The Docker stack uses it too, so the tests can read its queued emails. `pnpm db:reset e2e` starts it over.
 
 Playwright starts the built app on `:3000` unless `E2E_BASE_URL` is set:
 

@@ -1,7 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
+  e2eEnvSchema,
   InvalidEnvError,
+  loadE2eEnv,
   loadMigrateEnv,
   loadTestEnv,
   loadWebEnv,
@@ -133,6 +135,20 @@ describe('test env', () => {
   });
 });
 
+describe('loadE2eEnv', () => {
+  it('refuses a database that is not an E2E one', () => {
+    const app = 'postgres://app:secret@localhost:5432/comprobify_erp_local';
+    expect(() => loadE2eEnv({ E2E_DATABASE_URL: app, E2E_MIGRATION_DATABASE_URL: app })).toThrow(
+      /E2E_DATABASE_URL: database name must end in _e2e/,
+    );
+    const e2e = 'postgres://app:secret@localhost:5432/comprobify_erp_e2e';
+    expect(loadE2eEnv({ E2E_DATABASE_URL: e2e, E2E_MIGRATION_DATABASE_URL: e2e })).toEqual({
+      E2E_DATABASE_URL: e2e,
+      E2E_MIGRATION_DATABASE_URL: e2e,
+    });
+  });
+});
+
 describe('.env.example', () => {
   const example = readFileSync(new URL('../../../.env.example', import.meta.url), 'utf8');
   const documented = new Set(
@@ -140,9 +156,13 @@ describe('.env.example', () => {
   );
 
   it('documents every schema variable', () => {
-    const keys = [webEnvSchema, workerEnvSchema, migrateEnvSchema, testEnvSchema].flatMap(
-      (schema) => Object.keys(schema.shape),
-    );
+    const keys = [
+      webEnvSchema,
+      workerEnvSchema,
+      migrateEnvSchema,
+      testEnvSchema,
+      e2eEnvSchema,
+    ].flatMap((schema) => Object.keys(schema.shape));
     expect(keys.filter((key) => !documented.has(key))).toEqual([]);
   });
 });

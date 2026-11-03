@@ -29,7 +29,7 @@ pnpm stack:up     # build, migrate, then web, worker and Caddy on http://localho
 pnpm stack:down
 ```
 
-It uses the `postgres18` container on the host through `host.docker.internal`. `STACK_HTTP_PORT`, `STACK_DATABASE_URL`, `STACK_MIGRATION_DATABASE_URL` and `STACK_APP_URL` override the defaults. Logs are JSON.
+It uses `comprobify_erp_e2e` on the `postgres18` container on the host, through `host.docker.internal`, the same database as the E2E tests. `STACK_HTTP_PORT`, `STACK_DATABASE_URL`, `STACK_MIGRATION_DATABASE_URL` and `STACK_APP_URL` override the defaults. Logs are JSON.
 
 ## Database roles on a new server
 
@@ -80,6 +80,7 @@ The area also requires two-step verification, so set it up on that account befor
 | `EMAIL_FROM` | worker | Sender address |
 | `SRI_MOCK_MODE` | web, worker | Refused when `APP_ENV=production` |
 | `TEST_DATABASE_URL`, `TEST_MIGRATION_DATABASE_URL` | tests only | Database name must end in `_test` |
+| `E2E_DATABASE_URL`, `E2E_MIGRATION_DATABASE_URL` | E2E tests only | Database name must end in `_e2e`; defaults to the local one |
 
 ## Health
 

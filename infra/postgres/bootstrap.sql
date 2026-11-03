@@ -15,10 +15,10 @@ BEGIN
 END $$;
 
 SELECT format('CREATE DATABASE %I OWNER comprobify_erp_owner', name)
-FROM unnest(ARRAY['comprobify_erp_local', 'comprobify_erp_test']) AS name
+FROM unnest(ARRAY['comprobify_erp_local', 'comprobify_erp_test', 'comprobify_erp_e2e']) AS name
 WHERE NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = name)
 \gexec
 
 -- Other projects' roles share this cluster.
-REVOKE ALL ON DATABASE comprobify_erp_local, comprobify_erp_test FROM PUBLIC;
-GRANT CONNECT ON DATABASE comprobify_erp_local, comprobify_erp_test TO comprobify_erp_app;
+REVOKE ALL ON DATABASE comprobify_erp_local, comprobify_erp_test, comprobify_erp_e2e FROM PUBLIC;
+GRANT CONNECT ON DATABASE comprobify_erp_local, comprobify_erp_test, comprobify_erp_e2e TO comprobify_erp_app;

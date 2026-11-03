@@ -1,8 +1,23 @@
 import { existsSync } from 'node:fs';
+import { loadE2eEnv } from '@comprobify/config/env';
 import { defineConfig, devices } from '@playwright/test';
 
 // The auth tests read queued emails from the database. CI sets real variables.
 if (existsSync('../../.env')) process.loadEnvFile('../../.env');
+
+// Runs leave their accounts and companies behind, so they use their own database, never
+// the one `pnpm dev` uses. The defaults match .env.example and the Docker stack.
+const e2e = loadE2eEnv({
+  E2E_DATABASE_URL:
+    process.env.E2E_DATABASE_URL ??
+    'postgres://comprobify_erp_app:changeme@localhost:5432/comprobify_erp_e2e',
+  E2E_MIGRATION_DATABASE_URL:
+    process.env.E2E_MIGRATION_DATABASE_URL ??
+    'postgres://comprobify_erp_owner:changeme@localhost:5432/comprobify_erp_e2e',
+});
+// The app Playwright starts, global setup's migrate step and the tests all read these.
+process.env.DATABASE_URL = e2e.E2E_DATABASE_URL;
+process.env.MIGRATION_DATABASE_URL = e2e.E2E_MIGRATION_DATABASE_URL;
 
 // E2E_BASE_URL points at a running app, such as the Docker stack on :8080.
 // Without it, Playwright starts the built web app itself.
@@ -23,6 +38,7 @@ process.env.E2E_AGREEMENTS ??= process.env.E2E_BASE_URL
 
 export default defineConfig({
   testDir: '.',
+  globalSetup: './global-setup.ts',
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',

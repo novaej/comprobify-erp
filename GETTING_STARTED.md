@@ -43,7 +43,9 @@ pnpm db:setup
 pnpm db:migrate
 ```
 
-`pnpm db:setup` is safe to re-run. It creates `comprobify_erp_owner`, `comprobify_erp_app`, `comprobify_erp_local` and `comprobify_erp_test`. Set `POSTGRES_CONTAINER` if your container has a different name.
+`pnpm db:setup` is safe to re-run. It creates `comprobify_erp_owner`, `comprobify_erp_app` and three databases: `comprobify_erp_local` for `pnpm dev`, `comprobify_erp_test` for the integration tests, and `comprobify_erp_e2e` for the E2E tests and the Docker stack. Set `POSTGRES_CONTAINER` if your container has a different name.
+
+To start any of them over, `pnpm db:reset <local|test|e2e|all>` drops it, creates it again and migrates it. Nothing in the app deletes data, so this is how to clear it locally. Resetting `local` asks you to type its name first (or pass `--yes`), since it holds your own accounts and companies.
 
 ## 5. Check the setup
 
@@ -73,7 +75,7 @@ Both refuse to start if the env is invalid or the database role could bypass RLS
 pnpm stack:up
 ```
 
-This builds the image and runs migrate, web, worker and Caddy on http://localhost:8080, against the same `postgres18` container. `pnpm stack:down` stops it. See [docs/deployment.md](docs/deployment.md).
+This builds the image and runs migrate, web, worker and Caddy on http://localhost:8080, against `comprobify_erp_e2e` on the same `postgres18` container, so it doesn't touch what you create with `pnpm dev`. `pnpm stack:down` stops it. See [docs/deployment.md](docs/deployment.md).
 
 ## 8. Run the E2E smoke test
 
@@ -83,4 +85,4 @@ pnpm build
 pnpm test:e2e
 ```
 
-To test the Docker stack instead: `E2E_BASE_URL=http://localhost:8080 pnpm test:e2e`. More in [docs/guides/testing.md](docs/guides/testing.md).
+The tests run against `comprobify_erp_e2e` and migrate it first; each run leaves its accounts and companies there, and `pnpm db:reset e2e` clears them. To test the Docker stack instead: `E2E_BASE_URL=http://localhost:8080 pnpm test:e2e`. More in [docs/guides/testing.md](docs/guides/testing.md).
