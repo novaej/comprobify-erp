@@ -9,10 +9,15 @@ The rules in [CLAUDE.md](../../CLAUDE.md) come first. This guide covers how to a
 - Inputs and outputs are Zod schemas (NFR-ARCH-2). Errors are `DomainError` with a stable `code` (NFR-ARCH-6).
 - Check permissions in core, even when the page already did (FR-ROLE-3).
 - Take time from `ctx.clock`, never `new Date()`, so tests can fix it.
+- Start with `requirePermission(ctx, '…')`, then validate input, then read and write.
+- Record what changed with `recordAudit(tx, …)` in the same transaction, with an allow-listed `details` object: never secrets or tokens. Add the event name to `AUDIT_ACTIONS` and its label to both message files; a test checks the labels.
+- A change to an organization that must land in its twin too (memberships, its settings) runs in one `withSystem` transaction after the permission check, writes both tenants, and records the event in the real organization's log (ADR-010).
+- Functions for the platform operator take a `PlatformActor`, not `ActorContext`, and read across tenants only through `withSystem`.
 
 ## Database access
 
-- Go through `withTenant(ctx, fn)` or `withSystem(reason, fn)`. The reason is a sentence a reviewer can judge, such as `'daily billing run'`.
+- Go through `withTenant(ctx, fn)` or `withSystem(reason, fn)`. The reason is a sentence a reviewer can judge, such as `'daily billing run'`. `withUser` is only for the user's own memberships and organizations (ADR-010).
+- Drizzle wraps Postgres errors: the SQLSTATE and constraint are on `error.cause`.
 - Use Drizzle or `sql` parameters. Never build SQL from strings.
 - Money and quantities are `numeric` in the database and a decimal library in code.
 - No hard deletes: use a status or `active`.
@@ -22,7 +27,10 @@ The rules in [CLAUDE.md](../../CLAUDE.md) come first. This guide covers how to a
 1. Add it to the Drizzle schema in `packages/db/src/schema/`, with `tenant_id` if a tenant owns it and `uuidv7()` as the key default.
 2. Run `pnpm db:generate`, and review the SQL.
 3. For a tenant-owned table, add `SELECT app_enable_tenant_rls('public.<table>'::regclass);` to the migration. The catalog test fails without it.
-4. Never edit a migration once merged. Write a new one.
+4. A child table references its parent through `(tenant_id, id)`, so a row can't point into another tenant.
+5. Give the isolation sweep (`tests/integration/isolation-sweep.test.ts`) data for the new table; it fails while any tenant table is empty.
+6. A status or type column gets a CHECK generated from a TypeScript list with `oneOf` (CLAUDE.md rule 17).
+7. Never edit a migration once merged. Write a new one.
 
 Hand-written SQL (functions, triggers) goes in a custom migration: `pnpm --filter @comprobify/db exec drizzle-kit generate --custom --name=<name>`.
 
@@ -41,6 +49,11 @@ A schedule goes in `schedules` in the same file, with its time zone.
 - Components come from `@comprobify/ui/components/*`. Add new shadcn components from `packages/ui` with `pnpm dlx shadcn add`.
 - Every string is in `apps/web/messages/es.json` and `en.json`, with the same keys. A test checks this.
 - Use `Link` and `redirect` from `@/i18n/navigation`, so links keep the locale.
+- A page inside the shell gets the actor from `loadShell(locale)`. If the role lacks the page's permission, render `<NoAccess />`; core refuses the actions anyway.
+- Forms use `useFormAction` or `ActionForm`, never a form `action` prop, so an error keeps what was typed. Actions return `{ error: code }`, shown from a message namespace.
+- An action that changes the organization or its mode calls `revalidatePath(`/${locale}`, 'layout')` before redirecting, so the shell's badge and banners update.
+- Message keys never contain `.`; next-intl reads it as a path.
+- Read the session through `getSession`, built on `currentHeaders()`, never `headers()` (CLAUDE.md, common mistake 27).
 
 ## Comments
 

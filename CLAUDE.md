@@ -2,7 +2,7 @@
 
 Primary guide for AI assistants and developers. Every rule here takes precedence over defaults. `docs/PRD.md` is the source of truth for what to build; this file is how to build it. Keep it current: it changes with every milestone.
 
-**Status:** Milestone 1 (Identity and tenancy) in progress; see `NEXT_STEPS.md`. Decisions are in [docs/adr/](docs/adr/README.md).
+**Status:** Milestone 1 (Identity and tenancy) done. Milestone 2 (Entitlements and plans) is next; see `NEXT_STEPS.md`. Decisions are in [docs/adr/](docs/adr/README.md).
 
 ---
 
@@ -185,6 +185,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `apps/web/messages/` | UI strings, `es` and `en` |
 | `apps/web/src/server/runtime.ts` | The web process's env, logger, database and jobs |
 | `tests/integration/rls-catalog.test.ts` | NFR-SEC-5 catalog test |
+| `tests/integration/isolation-sweep.test.ts` | Every tenant table, from the catalog, proven isolated between companies and twins |
 | `tests/e2e/smoke.spec.ts` | Playwright smoke test |
 | `Dockerfile`, `infra/compose.yaml` | The image and the local stack |
 | `.github/workflows/ci.yml` | CI |

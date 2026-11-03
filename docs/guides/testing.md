@@ -19,6 +19,8 @@ Next to the code, as `*.test.ts`. No database, no network. Take time from a `fix
 
 The RLS catalog test (NFR-SEC-5) fails when any table with `tenant_id` lacks forced RLS or the standard policy. There is no allow-list.
 
+The isolation sweep fills every tenant table with rows for two companies and a twin, then checks that no company sees another's rows. It finds the tables from the catalog, so a new table is checked automatically, and it fails if any table has no data, so give it data for each new table.
+
 ## E2E tests
 
 Playwright starts the built app on `:3000` unless `E2E_BASE_URL` is set:
