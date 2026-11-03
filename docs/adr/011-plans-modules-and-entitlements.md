@@ -61,6 +61,14 @@ Milestone 2 creates the subscription and its items without payments, so the bill
 - An addition reaches every tenant on it immediately.
 - A removal is dated at least 30 days ahead, like a price change (FR-BILL-6). A tenant keeps a module while it is in the plan now or was at the start of the tenant's current period, so the removal reaches each tenant at their first renewal after that date. Until billing exists, the period is the calendar month.
 
+**Editing the catalog** (FR-ADM-3). The super admin edits modules and plans from the platform area:
+
+- Module status only moves forward, from coming soon to available; going back would take a module from every company at once. Plans move draft → published → retired, and a retired plan can be published again. New modules start coming soon; new plans start as drafts with the base module and Gratis's limits.
+- Adding a key to a module, adding a module to a plan or raising a limit is immediate. Removing a key or a module, or lowering a limit, is dated 30 days ahead, unless the module is coming soon or the plan is a draft, when nothing depends on it yet.
+- A lowered limit keeps its current value and the new one with its date; a company gets the new value from its first period starting on or after that date. Raising it again cancels the lowering.
+- Rows are never deleted: a removal is a date, and adding back before it cancels it.
+- Every catalog change is recorded in `platform_audit_events`, the platform's own append-only log, since it reaches every company on a plan rather than one.
+
 **Starting catalog.** Limits are placeholders until prices are set in Milestone 8.
 
 | Module | Keys | Status |

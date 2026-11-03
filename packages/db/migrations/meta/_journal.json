@@ -148,6 +148,20 @@
       "when": 1793719852978,
       "tag": "0020_platform_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793736520388,
+      "tag": "0021_catalog_editing",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793736520717,
+      "tag": "0022_catalog_editing_rules",
+      "breakpoints": true
     }
   ]
 }

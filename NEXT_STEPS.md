@@ -14,12 +14,13 @@ The model is in [ADR-011](docs/adr/011-plans-modules-and-entitlements.md): featu
 - [x] 4. UI gating: navigation and pages hide or lock what the company doesn't have; a plan page showing the plan, modules, limits and usage (FR-PLAN-4).
 - [x] 5a. Super admin area: its own route group and layout with no tenant, `PlatformActor` checks in core, two-step verification required; per company: plan, add-ons, Personalizado, complimentary and overrides, each recorded in the activity log (FR-ADM-1, ADR-010).
 - [x] 5b. UI alignment: port the shared building blocks (page header, stack table, confirm and scrolling dialogs, empty state, toned badges, banner actions, required fields, toasts), rebuild every screen so far with them and the admin area with its own sidebar, and run axe on every page in E2E (FR-UX-2, FR-UX-3).
-- [ ] 5c. Editors for plans and modules: names, status, contents; removals and lowered limits dated 30 days ahead; a super admin with no company lands in the platform area (FR-ADM-3).
+- [x] 5c. Editors for plans and modules: names, status, contents; removals and lowered limits dated 30 days ahead; a super admin with no company lands in the platform area (FR-ADM-3).
 - [ ] 6. Gate and close: E2E where switching a feature for one company changes its screens and core refuses it; isolation sweep covering the new tables; docs.
 
 ## Carried forward from Milestone 1
 
 - **Milestone 3:** organization settings with contribuyente especial, agente de retención and RIMPE (onboarding collects only the accounting flag) and certificate renewal (FR-ONB-3); twin reset; starting sequentials asked at go-live, before the first real document; issue-point restrictions applied as query filters once documents exist (FR-ROLE-2: the actor already carries them).
+- **Milestone 9:** email the companies on a plan when a module or a lower limit is scheduled to leave it, as with price changes (FR-BILL-6, FR-NOT-2); a page for the platform activity log (`platform_audit_events`).
 - **Milestones 5 and 6:** go-live offers to copy master data from the twin (FR-ONB-5) once products, clients and suppliers exist.
 - **Not scheduled:** ownership transfer (PRD section 3). Today nobody can change or remove the owner.
 

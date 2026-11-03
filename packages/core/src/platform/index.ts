@@ -23,6 +23,8 @@ import { assertSuperAdmin } from '../identity';
 import { startOfNextEcuadorMonth, type PlatformActor } from '../kernel';
 import { companyRow, listCompanyRows, type CompanyRow } from '../tenancy';
 
+export * from './catalog';
+
 // The super admin area (ADR-010, FR-ADM-1): platform work outside any tenant. Each
 // function owns its system-context transaction and records the change in the company's
 // activity log, written in the real company like every change to a company and its twin.

@@ -131,11 +131,19 @@ export const planLimits = pgTable(
     featureKey: text('feature_key').notNull(),
     featureKind: text('feature_kind', { enum: FEATURE_KINDS }).default('LIMIT').notNull(),
     value: integer('value'),
+    // A lower value, announced 30 days ahead: it reaches each tenant at its first
+    // period start on or after pending_from (ADR-011).
+    pendingValue: integer('pending_value'),
+    pendingFrom: timestamp('pending_from', { withTimezone: true }),
   },
   (table) => [
     primaryKey({ columns: [table.planId, table.featureKey] }),
     check('plan_limits_limit_check', sql`feature_kind = 'LIMIT'`),
     check('plan_limits_value_check', sql`value IS NULL OR value >= 0`),
+    check(
+      'plan_limits_pending_check',
+      sql`(pending_from IS NULL) = (pending_value IS NULL) AND (pending_value IS NULL OR pending_value >= 0)`,
+    ),
     foreignKey({
       name: 'plan_limits_feature_fk',
       columns: [table.featureKey, table.featureKind],

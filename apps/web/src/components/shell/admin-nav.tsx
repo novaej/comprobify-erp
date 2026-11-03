@@ -4,8 +4,10 @@ import { cn } from '@comprobify/ui/lib/utils';
 import { ThemeToggle } from '@comprobify/ui/theme';
 import {
   ArrowLeftRight,
+  Blocks,
   Building2,
   LogOut,
+  Package,
   Menu,
   ShieldCheck,
   X,
@@ -18,11 +20,29 @@ import { Link, usePathname } from '@/i18n/navigation';
 import { LocaleSwitcher } from '../locale-switcher';
 import { Logomark, LogoLockup } from '../logo';
 
-type AdminItem = { href: string; icon: LucideIcon; labelKey: 'companies'; exact?: boolean };
+type AdminItem = {
+  href: string;
+  icon: LucideIcon;
+  labelKey: 'companies' | 'plans' | 'modules';
+  // The pages under it; /admin itself is the companies list.
+  section: string;
+};
 
-// Platform work, grouped like the app's sidebar (ADR-010). Editors join in step 5c.
-const GROUPS: { group: 'operate'; items: AdminItem[] }[] = [
-  { group: 'operate', items: [{ href: '/admin', icon: Building2, labelKey: 'companies' }] },
+// Platform work, grouped like the app's sidebar (ADR-010).
+const GROUPS: { group: 'operate' | 'catalog'; items: AdminItem[] }[] = [
+  {
+    group: 'operate',
+    items: [
+      { href: '/admin', icon: Building2, labelKey: 'companies', section: '/admin/companies' },
+    ],
+  },
+  {
+    group: 'catalog',
+    items: [
+      { href: '/admin/plans', icon: Package, labelKey: 'plans', section: '/admin/plans' },
+      { href: '/admin/modules', icon: Blocks, labelKey: 'modules', section: '/admin/modules' },
+    ],
+  },
 ];
 
 // The platform's sidebar: the same look as the app's, without a company or switcher.
@@ -51,9 +71,8 @@ export function AdminNav({ user }: { user: { name: string; email: string } }) {
                 {t(`groups.${group}`)}
               </p>
               <ul className="flex flex-col gap-0.5">
-                {items.map(({ href, icon: Icon, labelKey }) => {
-                  // /admin is the companies list and every company page under it.
-                  const active = pathname === href || pathname.startsWith(`${href}/companies`);
+                {items.map(({ href, icon: Icon, labelKey, section }) => {
+                  const active = pathname === href || pathname.startsWith(section);
                   return (
                     <li key={href}>
                       <Link

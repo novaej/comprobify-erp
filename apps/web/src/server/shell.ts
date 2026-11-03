@@ -19,7 +19,9 @@ export const loadShell = cache(async (locale: string) => {
   const { db } = await getRuntime();
   const organizations = await listOrganizations(db, session.user.id);
   const active = chooseActiveOrganization(organizations, session.activeTenantId);
-  if (!active) return redirect({ href: '/onboarding', locale });
+  // A platform account usually has no company of its own; onboarding stays a link away.
+  if (!active)
+    return redirect({ href: session.user.isSuperAdmin ? '/admin' : '/onboarding', locale });
   // FR-USR-3: the organization requires TOTP, so set it up before working there.
   if (active.entry.requireTwoFactor && !session.user.twoFactorEnabled) {
     return redirect({ href: '/account?twoFactorRequired=1', locale });

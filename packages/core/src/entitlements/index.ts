@@ -27,6 +27,22 @@ export type { Named, PlanChange } from './writes';
 export type { CompanyTenants } from './subscriptions';
 export { catalogChoices, companyPlanDetail, subscriptionSummaries } from './admin-reads';
 export type { CatalogChoices, CompanyPlanDetail, SubscriptionSummary } from './admin-reads';
+export {
+  applyAddModuleFeature,
+  applyAddPlanModule,
+  applyCreateModule,
+  applyCreatePlan,
+  applyPlanLimit,
+  applyRemoveModuleFeature,
+  applyRemovePlanModule,
+  applyUpdateModule,
+  applyUpdatePlan,
+  catalogView,
+  MODULE_STATUS_MOVES,
+  NOTICE_DAYS,
+  PLAN_STATUS_MOVES,
+} from './catalog-admin';
+export type { CatalogView, LimitChange } from './catalog-admin';
 export { planOverview, SHOWN_LIMITS } from './overview';
 export type { PlanModule, PlanOverview } from './overview';
 export { currentPeriodStart, loadEntitlements, resolveEntitlements } from './resolve';

@@ -67,3 +67,36 @@ export const auditEvents = pgTable(
       .where(sql`${table.action} = 'session.started'`),
   ],
 );
+
+// The super admin's changes to the platform catalog, which reach every tenant on a plan.
+// No tenant_id: it is platform data, written in system context and never updated.
+export const PLATFORM_AUDIT_ACTIONS = [
+  'module.created',
+  'module.updated',
+  'module.feature_added',
+  'module.feature_removed',
+  'plan.created',
+  'plan.updated',
+  'plan.module_added',
+  'plan.module_removed',
+  'plan.limit_changed',
+] as const;
+
+export const platformAuditEvents = pgTable(
+  'platform_audit_events',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`uuidv7()`),
+    actorUserId: uuid('actor_user_id')
+      .notNull()
+      .references(() => users.id),
+    action: text('action', { enum: PLATFORM_AUDIT_ACTIONS }).notNull(),
+    details: jsonb('details').$type<Record<string, unknown>>().default({}).notNull(),
+    occurredAt: timestamp('occurred_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    check('platform_audit_events_action_check', oneOf('action', PLATFORM_AUDIT_ACTIONS)),
+    index('platform_audit_events_occurred_idx').on(table.occurredAt),
+  ],
+);

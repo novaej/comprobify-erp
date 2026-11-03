@@ -1,4 +1,13 @@
-import { AUDIT_ACTIONS, desc, eq, schema, sql, type Database, type Tx } from '@comprobify/db';
+import {
+  AUDIT_ACTIONS,
+  desc,
+  eq,
+  PLATFORM_AUDIT_ACTIONS,
+  schema,
+  sql,
+  type Database,
+  type Tx,
+} from '@comprobify/db';
 import { requirePermission, type ActorContext } from '../kernel';
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -21,6 +30,25 @@ export async function recordAudit(tx: Tx['db'], event: AuditEvent): Promise<void
     actorUserId: event.actorUserId,
     action: event.action,
     subjectUserId: event.subjectUserId ?? null,
+    details: event.details ?? {},
+  });
+}
+
+export type PlatformAuditAction = (typeof PLATFORM_AUDIT_ACTIONS)[number];
+
+// The platform's own log: catalog changes that reach every company on a plan (ADR-011).
+// Same transaction as the change, like recordAudit.
+export async function recordPlatformAudit(
+  tx: Tx['db'],
+  event: {
+    actorUserId: string;
+    action: PlatformAuditAction;
+    details?: Record<string, string | number | boolean | null>;
+  },
+): Promise<void> {
+  await tx.insert(schema.platformAuditEvents).values({
+    actorUserId: event.actorUserId,
+    action: event.action,
     details: event.details ?? {},
   });
 }

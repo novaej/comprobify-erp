@@ -4,13 +4,15 @@ import { Button } from '@comprobify/ui/components/button';
 import { Input } from '@comprobify/ui/components/input';
 import { Switch } from '@comprobify/ui/components/switch';
 import { cn } from '@comprobify/ui/lib/utils';
-import { Pencil, Plus, Trash2, Undo2 } from 'lucide-react';
+import { Plus, Trash2, Undo2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
 import { ChoiceSelect, type Choice } from '@/components/choice-select';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { FormDialog } from '@/components/form-dialog';
+import { DetailTile } from '@/components/detail-tile';
 import { FormField } from '@/components/form-field';
+import { LimitValueFields } from '@/components/limit-value-fields';
 import { SectionCard } from '@/components/section-card';
 import { ToneBadge } from '@/components/tone-badge';
 import { useServerAction } from '@/components/use-server-action';
@@ -84,7 +86,7 @@ export function CompanyManager({ company }: { company: CompanyView }) {
       >
         <p className="text-2xl font-semibold tracking-tight">{company.plan.name}</p>
         <dl className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <Tile
+          <DetailTile
             label={t('billing')}
             value={company.billing.complimentary ? t('complimentary') : t('paid')}
             detail={company.billing.reason}
@@ -92,7 +94,7 @@ export function CompanyManager({ company }: { company: CompanyView }) {
             editLabel={t('changeBilling')}
           />
           {company.plan.custom && (
-            <Tile
+            <DetailTile
               label={t('monthlyPrice')}
               value={company.price ? `$${company.price}` : t('noPrice')}
               onEdit={() => setDialog({ kind: 'price' })}
@@ -173,7 +175,7 @@ export function CompanyManager({ company }: { company: CompanyView }) {
       >
         <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {company.limits.map((limit) => (
-            <Tile
+            <DetailTile
               key={limit.key}
               label={limit.label}
               value={limit.resolved}
@@ -317,42 +319,6 @@ export function CompanyManager({ company }: { company: CompanyView }) {
   );
 }
 
-// A <dl> row: the edit button lives in the <dd>, the only place a list allows it.
-function Tile({
-  label,
-  value,
-  detail,
-  onEdit,
-  editLabel,
-}: {
-  label: string;
-  value: string;
-  detail?: string | null;
-  onEdit?: () => void;
-  editLabel: string;
-}) {
-  return (
-    <div className="flex min-h-11 items-center justify-between gap-3 rounded-md bg-muted/40 px-3 py-1.5">
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="flex items-center gap-1 text-sm font-medium">
-        {value}
-        {detail && <span className="text-xs font-normal text-muted-foreground">({detail})</span>}
-        {onEdit && (
-          <button
-            type="button"
-            onClick={onEdit}
-            title={editLabel}
-            aria-label={editLabel}
-            className={iconButton}
-          >
-            <Pencil className="h-4 w-4" aria-hidden />
-          </button>
-        )}
-      </dd>
-    </div>
-  );
-}
-
 function PlanDialog({
   company,
   open,
@@ -451,7 +417,7 @@ function ModuleDialog({
   onClose: () => void;
 }) {
   const t = useTranslations('admin');
-  const [module, setModule] = useState(company.modules[0]?.value ?? '');
+  const [moduleKey, setModuleKey] = useState(company.modules[0]?.value ?? '');
   return (
     <FormDialog
       open={open}
@@ -462,52 +428,19 @@ function ModuleDialog({
       action={addModuleAction}
       errors="adminError"
       success={t('moduleAdded')}
-      extra={{ realTenantId: company.realTenantId, moduleKey: module }}
+      extra={{ realTenantId: company.realTenantId, moduleKey }}
     >
       <FormField label={t('module')} required>
         {(props) => (
           <ChoiceSelect
-            value={module}
-            onChange={setModule}
+            value={moduleKey}
+            onChange={setModuleKey}
             options={company.modules}
             a11y={props}
           />
         )}
       </FormField>
     </FormDialog>
-  );
-}
-
-function ValueFields({ label, value }: { label: string; value?: number | null }) {
-  const t = useTranslations('admin');
-  const [unlimited, setUnlimited] = useState(value === null);
-  return (
-    <div className="flex flex-wrap items-end gap-3">
-      <FormField label={label} className="flex-1">
-        {(props) => (
-          <Input
-            {...props}
-            name="value"
-            type="number"
-            min={0}
-            step={1}
-            defaultValue={value ?? ''}
-            disabled={unlimited}
-            required={!unlimited}
-          />
-        )}
-      </FormField>
-      <label className="flex h-8 items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          name="unlimited"
-          checked={unlimited}
-          onChange={(event) => setUnlimited(event.target.checked)}
-          className="h-4 w-4 accent-primary"
-        />
-        {t('unlimited')}
-      </label>
-    </div>
   );
 }
 
@@ -538,7 +471,7 @@ function LimitDialog({
       success={t('limitSaved')}
       extra={{ realTenantId: company.realTenantId, featureKey: limit.key }}
     >
-      <ValueFields label={limit.label} value={limit.own} />
+      <LimitValueFields label={limit.label} value={limit.own} />
       {limit.own !== undefined && (
         <Button
           type="button"
@@ -603,7 +536,7 @@ function OverrideDialog({
         )}
       </FormField>
       {isLimit ? (
-        <ValueFields label={t('limitValue')} />
+        <LimitValueFields label={t('limitValue')} />
       ) : (
         <FormField label={t('effect')} required>
           {(props) => (

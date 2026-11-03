@@ -441,5 +441,40 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     // The company sees it on its own plan page.
     await page.goto('/es/plan');
     await expect(page.getByText('Negocio', { exact: true })).toBeVisible();
+
+    // FR-ADM-3: a new plan starts as a draft (plans are never deleted, so the run names it) with the base module; changes to it are immediate.
+    await page.goto('/es/admin/plans');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Planes');
+    await look(page, 'admin-plans');
+    const planKey = `E2E_${randomUUID().replaceAll('-', '').slice(0, 8).toUpperCase()}`;
+    await page.getByRole('button', { name: 'Nuevo plan' }).click();
+    const newPlan = page.getByRole('dialog', { name: 'Nuevo plan' });
+    await newPlan.getByLabel('Clave').fill(planKey);
+    await newPlan.getByLabel('Nombre en español').fill(`Plan ${planKey}`);
+    await newPlan.getByLabel('Nombre en inglés').fill('Test plan');
+    await look(page, 'admin-plan-new');
+    await newPlan.getByRole('button', { name: 'Crear' }).click();
+    await expect(page.getByText('Plan creado.')).toBeVisible();
+    await page.getByRole('link', { name: `Plan ${planKey}` }).click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(`Plan ${planKey}`);
+    const planModules = page.getByRole('list', { name: 'Módulos del plan' });
+    await expect(planModules).toContainText('Facturación');
+    await page.getByRole('button', { name: 'Agregar módulo' }).click();
+    const addModule = page.getByRole('dialog', { name: 'Agregar módulo' });
+    await addModule.getByRole('combobox', { name: 'Módulo' }).click();
+    await page.getByRole('option', { name: 'Inventario' }).click();
+    await addModule.getByRole('button', { name: 'Agregar' }).click();
+    await expect(page.getByText('Módulo agregado al plan.')).toBeVisible();
+    await expect(planModules).toContainText('Inventario');
+    await look(page, 'admin-plan');
+
+    await page.goto('/es/admin/modules');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Módulos');
+    await look(page, 'admin-modules');
+    await page.getByRole('link', { name: 'Facturación', exact: true }).click();
+    await expect(page.getByRole('list', { name: 'Funciones del módulo' })).toContainText(
+      'DOC_TYPE_01',
+    );
+    await look(page, 'admin-module');
   });
 });

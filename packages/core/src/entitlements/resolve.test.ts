@@ -12,6 +12,7 @@ const sources = (extra: Partial<EntitlementSources> = {}): EntitlementSources =>
   planModules: [module(['DOC_TYPE_01', 'CLIENTS'])],
   itemModules: [],
   planLimits: { USERS: 1, DOCUMENT_QUOTA: 5 },
+  pendingLimits: {},
   itemLimits: {},
   overrides: [],
   ...extra,
@@ -84,5 +85,29 @@ describe('resolveEntitlements', () => {
     expect(removed('2026-11-15T00:00:00Z')).toEqual(['DOC_TYPE_01', 'INVENTORY', 'SALE_ORDERS']);
     // Removed before this period began: gone.
     expect(removed('2026-10-20T00:00:00Z')).toEqual(['DOC_TYPE_01']);
+  });
+
+  it('lowers a plan limit only from the first period starting on or after its date', () => {
+    const lowered = (from: string) =>
+      resolveEntitlements(
+        sources({
+          planLimits: { USERS: 10 },
+          pendingLimits: { USERS: { value: 3, from: new Date(from) } },
+        }),
+        periodStart,
+      ).limits.USERS;
+    expect(lowered('2026-11-20T00:00:00Z')).toBe(10);
+    expect(lowered('2026-11-01T05:00:00Z')).toBe(3);
+    // Personalizado's own value still wins over the plan's, lowered or not.
+    expect(
+      resolveEntitlements(
+        sources({
+          planLimits: { USERS: 10 },
+          pendingLimits: { USERS: { value: 3, from: new Date('2026-10-01T05:00:00Z') } },
+          itemLimits: { USERS: 7 },
+        }),
+        periodStart,
+      ).limits.USERS,
+    ).toBe(7);
   });
 });

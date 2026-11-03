@@ -13,6 +13,8 @@ export type EntitlementSources = {
   planModules: ModuleSource[];
   itemModules: ModuleSource[];
   planLimits: Record<string, number | null>;
+  // A lower plan value announced ahead: it applies from the first period starting on or after `from`.
+  pendingLimits: Record<string, { value: number; from: Date }>;
   itemLimits: Record<string, number | null>;
   overrides: { key: string; effect: 'GRANT' | 'REVOKE' | 'LIMIT'; limitValue: number | null }[];
 };
@@ -31,7 +33,10 @@ export function resolveEntitlements(sources: EntitlementSources, periodStart: Da
     for (const feature of module.features)
       if (present(feature.removesAt, periodStart)) features.add(feature.key);
   }
-  const limits = { ...sources.planLimits, ...sources.itemLimits };
+  const planLimits = { ...sources.planLimits };
+  for (const [key, pending] of Object.entries(sources.pendingLimits))
+    if (periodStart >= pending.from) planLimits[key] = pending.value;
+  const limits = { ...planLimits, ...sources.itemLimits };
   for (const override of sources.overrides) {
     if (override.effect === 'GRANT') features.add(override.key);
     else if (override.effect === 'REVOKE') features.delete(override.key);
@@ -101,7 +106,12 @@ export async function loadEntitlements(
   });
 
   const limitRows = await tx
-    .select({ key: planLimits.featureKey, value: planLimits.value })
+    .select({
+      key: planLimits.featureKey,
+      value: planLimits.value,
+      pendingValue: planLimits.pendingValue,
+      pendingFrom: planLimits.pendingFrom,
+    })
     .from(planLimits)
     .where(eq(planLimits.planId, subscription.planId));
   const overrides = await tx
@@ -125,6 +135,13 @@ export async function loadEntitlements(
         item.kind === 'MODULE' ? [moduleSource(item.moduleId!, item.removesAt)] : [],
       ),
       planLimits: Object.fromEntries(limitRows.map((row) => [row.key, row.value])),
+      pendingLimits: Object.fromEntries(
+        limitRows.flatMap((row) =>
+          row.pendingFrom && row.pendingValue !== null
+            ? [[row.key, { value: row.pendingValue, from: row.pendingFrom }]]
+            : [],
+        ),
+      ),
       itemLimits: Object.fromEntries(
         items
           .filter((item) => item.kind === 'LIMIT')
