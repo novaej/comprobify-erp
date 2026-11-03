@@ -2,6 +2,7 @@ export { createDatabase } from './context';
 export type { Database, DatabaseOptions, IdentityDb, TenantContext, Tx } from './context';
 export * as schema from './schema';
 export {
+  AGREEMENT_TYPES,
   ASSIGNABLE_ROLES,
   AUDIT_ACTIONS,
   MEMBERSHIP_ROLES,

@@ -53,3 +53,11 @@ export async function createProbe(owner: Client, name: string, protect: boolean)
   );
   if (protect) await owner.query(`SELECT app_enable_tenant_rls('public.${name}'::regclass)`);
 }
+
+// Owner-role Database, for steps the migrate step does, such as publishing legal texts.
+export function ownerDatabase(): Database {
+  return createDatabase({
+    connectionString: env.TEST_MIGRATION_DATABASE_URL,
+    logger: testLogger(),
+  });
+}

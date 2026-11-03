@@ -30,6 +30,8 @@ E2E_BASE_URL=http://localhost:8080 pnpm test:e2e   # against the Docker stack
 
 The account tests read the verification and reset links from the queued `email.send` jobs, so they need `DATABASE_URL` and no worker. Without a proxy in front, the app sees a loopback address and skips the per-IP rate limits, so E2E runs can repeat; through the Docker stack, the sign-up limit of 5 per address per hour applies.
 
+When Playwright starts the app itself, it turns the legal texts on with test operator details, so CI covers accepting them before go-live. Against `E2E_BASE_URL` the tests follow that app's `AGREEMENTS_ENABLED`, which is off in `.env.example`.
+
 Install the browser once with `pnpm --filter @comprobify/e2e-tests exec playwright install chromium`. Set the browser locale in a test that depends on language: the app picks it from `Accept-Language`.
 
 ## CI

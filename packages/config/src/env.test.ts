@@ -99,6 +99,19 @@ describe('auth and email', () => {
   });
 });
 
+describe('legal agreements', () => {
+  it('are off by default', () => {
+    expect(loadWebEnv(web)).toMatchObject({ AGREEMENTS_ENABLED: false });
+  });
+
+  it('need the operator details once on', () => {
+    const message = failure(() => loadWebEnv({ ...web, AGREEMENTS_ENABLED: 'true' }));
+    for (const name of ['OPERATOR_NAME', 'OPERATOR_RUC', 'OPERATOR_ADDRESS', 'SUPPORT_EMAIL']) {
+      expect(message).toContain(`${name}: is required when AGREEMENTS_ENABLED is true`);
+    }
+  });
+});
+
 describe('test env', () => {
   const app = 'postgres://app:x@localhost:5432/comprobify_erp_test';
   const owner = 'postgres://owner:x@localhost:5432/comprobify_erp_test';

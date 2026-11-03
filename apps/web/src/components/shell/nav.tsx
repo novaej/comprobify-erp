@@ -5,6 +5,7 @@ import { ThemeToggle } from '@comprobify/ui/theme';
 import {
   ChevronLeft,
   ChevronRight,
+  FileText,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -24,7 +25,7 @@ import { OrgSwitcher, type SwitcherOrganization } from './org-switcher';
 type NavItem = {
   href: string;
   icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
-  labelKey: 'dashboard' | 'users' | 'activity';
+  labelKey: 'dashboard' | 'users' | 'activity' | 'legal';
   group: 'operate' | 'manage';
   // Core still enforces it; this only hides the link (FR-ROLE-3).
   permission: string | null;
@@ -53,6 +54,7 @@ const NAV_ITEMS: NavItem[] = [
     group: 'manage',
     permission: 'audit.read',
   },
+  { href: '/legal', icon: FileText, labelKey: 'legal', group: 'manage', permission: null },
 ];
 
 const COLLAPSED_KEY = 'nav-collapsed';

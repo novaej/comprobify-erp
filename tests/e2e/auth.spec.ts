@@ -216,6 +216,26 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
   }) => {
     await signIn(page, email, newPassword);
     await expect(page).toHaveURL(/\/es\/dashboard$/);
+
+    // FR-ONB-8: with the legal texts on, the owner accepts them before going live.
+    const agreements = process.env.E2E_AGREEMENTS === 'true';
+    const reminder = page.getByText('Acepta los documentos legales');
+    if (agreements) {
+      await expect(reminder).toBeVisible();
+      await page.getByRole('link', { name: /Revisa y acepta los Términos/ }).click();
+      const list = page.getByRole('list', { name: 'Documentos legales' });
+      await expect(list.getByText('Pendiente')).toHaveCount(3);
+      await list.getByRole('link', { name: /Acuerdo de Procesamiento de Datos/ }).click();
+      // The company's own copy, with every placeholder filled.
+      await expect(page.locator('article')).toContainText('Delta Comercial S.A.');
+      await expect(page.locator('article')).not.toContainText('{{');
+      await page.goBack();
+      await page.getByLabel(/He leído y acepto, en nombre de mi empresa/).check();
+      await page.getByRole('button', { name: 'Aceptar' }).click();
+      await expect(list.getByText(/Aceptado el/)).toHaveCount(3);
+      await page.goto('/es/dashboard');
+    }
+    await expect(reminder).toHaveCount(0);
     await page.getByRole('link', { name: 'Pasar a producción' }).click();
     await expect(
       page.getByRole('heading', { name: 'Pasar Delta Comercial S.A. a producción' }),
@@ -237,6 +257,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     const log = page.getByRole('list', { name: 'Actividad' });
     await expect(log).toContainText('pasó la empresa a producción');
     await expect(log).toContainText('inició sesión');
+    if (agreements) await expect(log).toContainText('aceptó los documentos legales');
   });
 
   // Last: every sign-in after this one needs the code.

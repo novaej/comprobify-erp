@@ -6,6 +6,7 @@ export const ROLES = MEMBERSHIP_ROLES;
 export const PERMISSIONS = [
   'organization.manage',
   'organization.go_live',
+  'organization.accept_agreements',
   'organization.transfer_ownership',
   'organization.reset_twin',
   'users.read',
@@ -40,7 +41,11 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   OWNER: PERMISSIONS,
   ADMIN: PERMISSIONS.filter(
     (permission) =>
-      permission !== 'organization.go_live' && permission !== 'organization.transfer_ownership',
+      ![
+        'organization.go_live',
+        'organization.accept_agreements',
+        'organization.transfer_ownership',
+      ].includes(permission),
   ),
   SALES: [
     'catalog.read',

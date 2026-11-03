@@ -41,4 +41,6 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - Two-step verification with an authenticator app (TOTP) and single-use backup codes, set up and turned off from the account page; an organization can require it of every member (FR-USR-3).
 - The company activity log: append-only, recording organization, certificate and member changes, the two-step requirement, go-live and sign-ins, readable by Owner, Admin and Accountant (FR-NOT-4).
 - Go-live: the Owner takes the real company to production, one way, from a page that explains what changes (FR-ONB-5).
+- Legal documents: the Terms, Privacy Policy and DPA as versioned texts published from the repo by the migrate step, a personalized copy per company, and acceptance by the Owner recorded with its copy, IP address and browser. Off (`AGREEMENTS_ENABLED=false`) until the owner approves the texts; when on, go-live requires them (FR-ONB-8).
+- `AGREEMENTS_ENABLED`, `OPERATOR_NAME`, `OPERATOR_RUC`, `OPERATOR_ADDRESS` and `SUPPORT_EMAIL`.
 - `AUTH_SECRET`, `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, `MAILGUN_REGION` and `EMAIL_FROM`.

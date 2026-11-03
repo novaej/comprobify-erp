@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { and, ASSIGNABLE_ROLES, eq, schema, sql, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
+import { agreementsAccepted } from '../agreements';
 import { recordAudit } from '../audit';
 import type { RateLimiter } from '../identity';
 import type { Jobs } from '../jobs';
@@ -474,10 +475,18 @@ export async function setTwoFactorRequirement(
 // FR-ONB-5: one-way, Owner only. The real organization can issue from now on; the
 // twin stays for testing. Agreements (when enabled) and starting sequentials join
 // this step in 7b and Milestone 3.
-export async function goLive(ctx: ActorContext, db: Database): Promise<{ realTenantId: string }> {
+export async function goLive(
+  ctx: ActorContext,
+  db: Database,
+  options: { requireAgreements: boolean } = { requireAgreements: false },
+): Promise<{ realTenantId: string }> {
   requirePermission(ctx, 'organization.go_live');
   return db.withSystem('take an organization live', async ({ db: tx }) => {
     const pair = await pairOf(tx, ctx.tenantId);
+    // FR-ONB-5: with agreements enabled, the company must have accepted every current text.
+    if (options.requireAgreements && !(await agreementsAccepted(tx, pair.realTenantId))) {
+      throw new DomainError('AGREEMENTS_PENDING', 'The legal texts must be accepted first');
+    }
     const now = ctx.clock.now();
     const updated = await tx
       .update(schema.tenants)

@@ -186,7 +186,8 @@
     "closeMenu": "Close menu",
     "skipToContent": "Skip to content",
     "users": "Users",
-    "activity": "Activity"
+    "activity": "Activity",
+    "legal": "Legal documents"
   },
   "shell": {
     "sandboxTitle": "You're in the test environment",
@@ -194,7 +195,9 @@
     "certificateExpiredTitle": "Your electronic signature has expired",
     "certificateExpiredBody": "You can't issue documents until you renew it with your certificate authority and upload the new one.",
     "certificateExpiringTitle": "Your electronic signature expires in {days, plural, =0 {less than a day} one {# day} other {# days}}",
-    "certificateExpiringBody": "Renew it with your certificate authority and upload the new one before it expires."
+    "certificateExpiringBody": "Renew it with your certificate authority and upload the new one before it expires.",
+    "agreementsTitle": "Accept the legal documents",
+    "agreementsBody": "Review and accept the Terms, Privacy Policy and DPA to go live."
   },
   "roles": {
     "OWNER": "Owner",
@@ -361,6 +364,31 @@
     "CONFIRM_REQUIRED": "Check the box to confirm.",
     "ALREADY_LIVE": "This company is already live.",
     "FORBIDDEN": "Only the owner can take the company live.",
+    "UNKNOWN": "An unexpected error occurred. Please try again.",
+    "AGREEMENTS_PENDING": "Accept the legal documents first, in Legal documents."
+  },
+  "legal": {
+    "title": "Legal documents",
+    "description": "The terms that govern your company's use of Comprobify, personalized with its details.",
+    "underReview": "The legal documents are under review and will be published soon.",
+    "pending": "Pending",
+    "acceptedOn": "Accepted {date}",
+    "types": {
+      "TERMS": "Terms of Service",
+      "PRIVACY": "Privacy Policy",
+      "DPA": "Data Processing Agreement"
+    },
+    "acceptLabel": "I've read and accept, on behalf of my company, the Terms of Service, the Privacy Policy and the Data Processing Agreement.",
+    "accept": "Accept",
+    "accepting": "Accepting...",
+    "ownerAccepts": "The company's owner must accept them.",
+    "version": "Version {version}"
+  },
+  "legalError": {
+    "CONFIRM_REQUIRED": "Check the box to accept.",
+    "AGREEMENTS_DISABLED": "The legal documents are under review.",
+    "FORBIDDEN": "Only the owner can accept them.",
+    "NO_AGREEMENTS": "No documents are published yet.",
     "UNKNOWN": "An unexpected error occurred. Please try again."
   }
 }

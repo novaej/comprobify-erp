@@ -12,9 +12,9 @@ export async function goLiveAction(_: ActionState, form: FormData): Promise<Acti
   const locale = form.get('locale') === 'en' ? 'en' : 'es';
   if (form.get('confirm') !== 'on') return { error: 'CONFIRM_REQUIRED' };
   const { actor, session } = await loadShell(locale);
-  const { db } = await getRuntime();
+  const { db, env } = await getRuntime();
   const state = await toActionState(async () => {
-    const { realTenantId } = await goLive(actor, db);
+    const { realTenantId } = await goLive(actor, db, { requireAgreements: env.AGREEMENTS_ENABLED });
     await switchOrganization(db, {
       userId: session.user.id,
       sessionId: session.sessionId,

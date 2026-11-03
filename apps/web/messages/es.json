@@ -186,7 +186,8 @@
     "closeMenu": "Cerrar menú",
     "skipToContent": "Saltar al contenido",
     "users": "Usuarios",
-    "activity": "Actividad"
+    "activity": "Actividad",
+    "legal": "Documentos legales"
   },
   "shell": {
     "sandboxTitle": "Estás en el ambiente de pruebas",
@@ -194,7 +195,9 @@
     "certificateExpiredTitle": "Tu firma electrónica está vencida",
     "certificateExpiredBody": "No podrás emitir comprobantes hasta renovarla con tu entidad certificadora y subir la nueva.",
     "certificateExpiringTitle": "Tu firma electrónica vence en {days, plural, =0 {menos de un día} one {# día} other {# días}}",
-    "certificateExpiringBody": "Renuévala con tu entidad certificadora y sube la nueva antes de que venza."
+    "certificateExpiringBody": "Renuévala con tu entidad certificadora y sube la nueva antes de que venza.",
+    "agreementsTitle": "Acepta los documentos legales",
+    "agreementsBody": "Revisa y acepta los Términos, la Política de Privacidad y el DPA para pasar a producción."
   },
   "roles": {
     "OWNER": "Propietario",
@@ -361,6 +364,31 @@
     "CONFIRM_REQUIRED": "Marca la casilla para confirmar.",
     "ALREADY_LIVE": "Esta empresa ya está en producción.",
     "FORBIDDEN": "Solo el propietario puede pasar la empresa a producción.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "AGREEMENTS_PENDING": "Primero acepta los documentos legales, en Documentos legales."
+  },
+  "legal": {
+    "title": "Documentos legales",
+    "description": "Los términos que rigen el uso de Comprobify por tu empresa, personalizados con sus datos.",
+    "underReview": "Los documentos legales están en revisión y se publicarán pronto.",
+    "pending": "Pendiente",
+    "acceptedOn": "Aceptado el {date}",
+    "types": {
+      "TERMS": "Términos de Servicio",
+      "PRIVACY": "Política de Privacidad",
+      "DPA": "Acuerdo de Procesamiento de Datos"
+    },
+    "acceptLabel": "He leído y acepto, en nombre de mi empresa, los Términos de Servicio, la Política de Privacidad y el Acuerdo de Procesamiento de Datos.",
+    "accept": "Aceptar",
+    "accepting": "Aceptando...",
+    "ownerAccepts": "El propietario de la empresa debe aceptarlos.",
+    "version": "Versión {version}"
+  },
+  "legalError": {
+    "CONFIRM_REQUIRED": "Marca la casilla para aceptar.",
+    "AGREEMENTS_DISABLED": "Los documentos legales están en revisión.",
+    "FORBIDDEN": "Solo el propietario puede aceptarlos.",
+    "NO_AGREEMENTS": "Todavía no hay documentos publicados.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
   }
 }

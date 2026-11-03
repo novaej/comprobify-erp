@@ -170,6 +170,8 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/jobs/` | Queue registry and schedules |
 | `packages/core/src/identity/` | Better Auth setup, rate limits, sessions and idle timeout |
 | `packages/core/src/tenancy/` | Organizations and twins, roles and permissions, actor context, ambiente |
+| `packages/core/src/agreements/` | Legal texts (`texts/*.md`, published by the migrate step), personalization, acceptance |
+| `docs/legal/review-notes.md` | What changed in the legal texts and the open legal questions |
 | `packages/core/src/audit/` | `recordAudit` (same transaction as the change), the activity list, sign-ins |
 | `packages/core/src/tenancy/members.ts` | Invitations, role changes, removal, issue-point restrictions, all mirrored in the twin |
 | `packages/core/src/certificates/` | P12 parsing, the RUC match, key encryption |

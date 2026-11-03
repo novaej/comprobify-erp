@@ -64,8 +64,34 @@ export const webEnvSchema = z
     AUTH_SECRET: z.string().min(32),
     // AES-256-GCM key for certificate private keys (FR-ONB-3). Losing it loses every key.
     CERT_ENCRYPTION_KEY: z.string().regex(/^[0-9a-fA-F]{64}$/, 'must be 64 hex characters'),
+    // Off until the owner approves the legal texts (docs/legal/review-notes.md).
+    AGREEMENTS_ENABLED: flag.default(false),
+    // The operator named in the legal texts; required once agreements are on.
+    OPERATOR_NAME: z.string().optional(),
+    OPERATOR_RUC: z
+      .string()
+      .regex(/^[0-9]{13}$/, 'must be 13 digits')
+      .optional(),
+    OPERATOR_ADDRESS: z.string().optional(),
+    SUPPORT_EMAIL: z.email().optional(),
   })
-  .superRefine(refuseMockInProduction);
+  .superRefine((env, ctx) => {
+    refuseMockInProduction(env, ctx);
+    if (!env.AGREEMENTS_ENABLED) return;
+    for (const name of [
+      'OPERATOR_NAME',
+      'OPERATOR_RUC',
+      'OPERATOR_ADDRESS',
+      'SUPPORT_EMAIL',
+    ] as const) {
+      if (!env[name])
+        ctx.addIssue({
+          code: 'custom',
+          path: [name],
+          message: 'is required when AGREEMENTS_ENABLED is true',
+        });
+    }
+  });
 
 export const workerEnvSchema = z
   .object({ ...runtimeShape, ...mailShape })

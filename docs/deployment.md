@@ -16,7 +16,7 @@ The image runs as `node`, includes `xmllint` for SRI XSD validation, and pins `n
 
 ## Release order
 
-1. Run **migrate** to completion, as `comprobify_erp_owner`. It sets `lock_timeout`, so a held lock fails it fast instead of blocking traffic. Close any SQL client on the database first (Appendix B, lesson 12).
+1. Run **migrate** to completion, as `comprobify_erp_owner`. It also publishes a new version of any legal text that changed in the repo, which asks every company to accept it again. It sets `lock_timeout`, so a held lock fails it fast instead of blocking traffic. Close any SQL client on the database first (Appendix B, lesson 12).
 2. Start **web** and **worker** with the new image, as `comprobify_erp_app`.
 3. Wait for `GET /health` to return 200 before routing traffic.
 
@@ -60,6 +60,8 @@ The migrations grant the app role its rights. Managed Postgres requires TLS: con
 | `MIGRATION_DATABASE_URL` | migrate | `comprobify_erp_owner` |
 | `APP_URL` | web | Public URL. Email links point here. |
 | `CERT_ENCRYPTION_KEY` | web | 64 hex characters (`openssl rand -hex 32`). Encrypts certificate private keys; losing it makes every stored key unusable, so back it up with the database credentials. |
+| `AGREEMENTS_ENABLED` | web | `false` until the owner approves the legal texts (`docs/legal/review-notes.md`). When `true`, go-live requires acceptance. |
+| `OPERATOR_NAME`, `OPERATOR_RUC`, `OPERATOR_ADDRESS`, `SUPPORT_EMAIL` | web | The operator named in the legal texts. Required when `AGREEMENTS_ENABLED` is `true`. |
 | `AUTH_SECRET` | web | At least 32 characters. Signs session cookies and tokens; rotating it signs everyone out. |
 | `MAILGUN_API_KEY`, `MAILGUN_DOMAIN` | worker | Required outside `local`. Locally, emails are logged instead. |
 | `MAILGUN_REGION` | worker | `us` (default) or `eu` |

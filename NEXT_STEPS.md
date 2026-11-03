@@ -14,9 +14,9 @@ Open work only. Tick steps as they land. When a milestone's gate passes, remove 
 - [x] **Step 6: users and roles.**
   - [x] 6a: invites (`GET` checks, `POST` accepts), role changes, soft removal, issue-point restrictions.
   - [x] 6b: optional TOTP and the tenant setting that requires it.
-- [ ] **Step 7: go-live, agreements, audit.**
+- [x] **Step 7: go-live, agreements, audit.**
   - [x] 7a: the tenant audit log (append-only, with events for everything so far and sign-ins per company) and go-live (Owner only, one-way).
-  - [ ] 7b: legal agreements: the old texts ported as v1 for the owner's review, versioned templates, per-tenant snapshots, acceptance events, `AGREEMENTS_ENABLED` off until approved, and go-live requiring acceptance when on.
+  - [x] 7b: legal agreements: the old texts ported as v1 for the owner's review, versioned templates, per-tenant snapshots, acceptance events, `AGREEMENTS_ENABLED` off until approved, and go-live requiring acceptance when on.
 - [ ] **Step 8: gate.** Isolation tests for two tenants and a tenant/twin pair, the ambiente matrix, invite and role E2E, docs.
 
 Seat limits (FR-USR-1) need entitlements, so they arrive in Milestone 2. Contribuyente especial, agente de retención and RIMPE go in organization settings in Milestone 3, when the XML needs them; onboarding collects only the accounting flag, as the old form did. Certificate renewal (FR-ONB-3) arrives with organization settings. Decided for Milestone 3: twin reset (it matters once test documents, sequentials and master data exist) and the starting sequentials asked at go-live, before the first real document. Ownership transfer (PRD section 3) isn't scheduled yet: today the owner can't be changed or removed by anyone. Go-live copies master data, which arrives in Milestones 5 and 6; Milestone 1 builds the go-live step that later milestones extend.
@@ -33,6 +33,10 @@ Seat limits (FR-USR-1) need entitlements, so they arrive in Milestone 2. Contrib
 - [ ] 9. Notifications, reports, admin
 - [ ] 10. Production readiness and cutover
 - [ ] 11+. Post-MVP: public API, API keys, webhooks, MCP, OAuth, developer docs
+
+## Before agreements are switched on
+
+- [ ] Owner, or a lawyer, approves the legal texts and answers the open questions in [docs/legal/review-notes.md](docs/legal/review-notes.md); then set `AGREEMENTS_ENABLED=true` and the operator details.
 
 ## Hardening backlog
 

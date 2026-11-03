@@ -8,6 +8,7 @@ import {
   createJobs,
   createRateLimiter,
   systemClock,
+  type AgreementParties,
   type Auth,
   type EmailLocale,
   type Identity,
@@ -25,6 +26,8 @@ export type Runtime = {
   identity: Identity;
   auth: Auth;
   keyCipher: KeyCipher;
+  // Null while the legal texts are under review (AGREEMENTS_ENABLED=false).
+  agreementParties: AgreementParties | null;
 };
 
 // On globalThis: Next bundles instrumentation and routes separately, so a
@@ -86,6 +89,17 @@ async function start(): Promise<Runtime> {
     identity,
     auth,
     keyCipher: createKeyCipher(env.CERT_ENCRYPTION_KEY),
+    // Env validation guarantees these when agreements are on.
+    agreementParties: env.AGREEMENTS_ENABLED
+      ? {
+          operator: {
+            name: env.OPERATOR_NAME!,
+            ruc: env.OPERATOR_RUC!,
+            address: env.OPERATOR_ADDRESS!,
+            supportEmail: env.SUPPORT_EMAIL!,
+          },
+        }
+      : null,
   };
 }
 

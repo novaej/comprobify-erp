@@ -1,4 +1,7 @@
-import { AlertCircle, AlertTriangle, FlaskConical } from 'lucide-react';
+import { agreementStatus } from '@comprobify/core';
+import { AlertCircle, AlertTriangle, FileText, FlaskConical } from 'lucide-react';
+import { Link } from '@/i18n/navigation';
+import { getRuntime } from '@/server/runtime';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { Banner } from '@/components/banner';
@@ -18,6 +21,12 @@ export default async function ShellLayout({
   const { locale } = await params;
   const { session, organizations, active, actor, certificate } = await loadShell(locale);
   const t = await getTranslations('shell');
+  const { db, agreementParties } = await getRuntime();
+  // FR-ONB-8: only the owner can accept, so only the owner is reminded.
+  const agreementsPending =
+    agreementParties !== null &&
+    actor.permissions.includes('organization.accept_agreements') &&
+    (await agreementStatus(actor, db)).some((row) => !row.accepted);
   const tRoles = await getTranslations('roles');
 
   return (
@@ -51,6 +60,13 @@ export default async function ShellLayout({
             {active.mode === 'TEST' && (
               <Banner tone="warning" icon={FlaskConical} role="note" title={t('sandboxTitle')}>
                 {t('sandboxBody')}
+              </Banner>
+            )}
+            {agreementsPending && (
+              <Banner tone="info" icon={FileText} title={t('agreementsTitle')}>
+                <Link href="/legal" className="underline underline-offset-4">
+                  {t('agreementsBody')}
+                </Link>
               </Banner>
             )}
             {certificate.state === 'expired' && (

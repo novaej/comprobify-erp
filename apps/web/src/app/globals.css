@@ -2,3 +2,35 @@
 
 /* Tailwind only scans this app by default. */
 @source '../../../../packages/ui/src';
+
+/* The legal texts, rendered from Markdown (Tailwind resets headings, lists and tables). */
+@layer components {
+  .prose-legal h1 {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+  .prose-legal h2 {
+    @apply mt-8 text-lg font-semibold;
+  }
+  .prose-legal p {
+    @apply my-3;
+  }
+  .prose-legal ul {
+    @apply my-3 list-disc space-y-1 pl-5;
+  }
+  .prose-legal ol {
+    @apply my-3 list-decimal space-y-1 pl-5;
+  }
+  .prose-legal table {
+    @apply my-4 w-full border-collapse text-xs;
+  }
+  .prose-legal th,
+  .prose-legal td {
+    @apply border border-border px-2 py-1.5 text-left align-top;
+  }
+  .prose-legal th {
+    @apply bg-muted font-medium;
+  }
+  .prose-legal code {
+    @apply font-mono;
+  }
+}
