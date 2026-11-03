@@ -7,6 +7,9 @@ import { getRuntime } from '@/server/runtime';
 import { getSession } from '@/server/session';
 import { signOutAction } from '../(app)/actions';
 import { AcceptForm, NewUserForm } from './forms';
+import { pageTitle } from '@/server/page-title';
+
+export const generateMetadata = pageTitle('invite');
 
 // GET only shows the invitation; accepting is a POST (Appendix B, lesson 5).
 export default async function InvitePage({

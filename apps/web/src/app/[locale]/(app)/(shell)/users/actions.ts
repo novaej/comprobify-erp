@@ -19,6 +19,14 @@ const text = (form: FormData, name: string) => {
   return typeof value === 'string' ? value : '';
 };
 const localeOf = (form: FormData) => (text(form, 'locale') === 'en' ? 'en' : 'es');
+const pointsOf = (form: FormData) =>
+  form
+    .getAll('points')
+    .filter((value): value is string => typeof value === 'string')
+    .map((value) => {
+      const [branchCode = '', pointCode = ''] = value.split('-');
+      return { branchCode, pointCode };
+    });
 
 // Core checks every permission; these only adapt the form (FR-ROLE-3).
 async function run(
@@ -47,14 +55,6 @@ export async function inviteAction(_: ActionState, form: FormData): Promise<Acti
   );
 }
 
-export async function changeRoleAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const { actor } = await loadShell(localeOf(form));
-  const { db } = await getRuntime();
-  return run(form, () =>
-    changeRole(actor, db, { userId: text(form, 'userId'), role: text(form, 'role') }),
-  );
-}
-
 export async function removeMemberAction(_: ActionState, form: FormData): Promise<ActionState> {
   const { actor } = await loadShell(localeOf(form));
   const { db } = await getRuntime();
@@ -67,17 +67,16 @@ export async function revokeInvitationAction(_: ActionState, form: FormData): Pr
   return run(form, () => revokeInvitation(actor, db, text(form, 'invitationId')));
 }
 
-export async function setAccessAction(_: ActionState, form: FormData): Promise<ActionState> {
+// The edit dialog: role, then issue points, each recorded on its own (FR-ROLE-1, FR-ROLE-2).
+export async function updateMemberAction(_: ActionState, form: FormData): Promise<ActionState> {
   const { actor } = await loadShell(localeOf(form));
   const { db } = await getRuntime();
-  const points = form
-    .getAll('points')
-    .filter((value): value is string => typeof value === 'string')
-    .map((value) => {
-      const [branchCode = '', pointCode = ''] = value.split('-');
-      return { branchCode, pointCode };
-    });
-  return run(form, () => setIssuePointAccess(actor, db, { userId: text(form, 'userId'), points }));
+  const userId = text(form, 'userId');
+  return run(form, async () => {
+    if (text(form, 'role') !== text(form, 'currentRole'))
+      await changeRole(actor, db, { userId, role: text(form, 'role') });
+    await setIssuePointAccess(actor, db, { userId, points: pointsOf(form) });
+  });
 }
 
 export async function setTwoFactorRequirementAction(

@@ -2,6 +2,9 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { AuthCard, AuthShell } from '@/components/auth-shell';
 import { BackLink } from '../back-link';
 import { ForgotPasswordForm } from '../forms';
+import { pageTitle } from '@/server/page-title';
+
+export const generateMetadata = pageTitle('forgotPassword');
 
 export default async function ForgotPasswordPage({
   params,

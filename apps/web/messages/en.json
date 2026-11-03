@@ -3,7 +3,8 @@
     "description": "SRI electronic invoicing — Ecuador"
   },
   "common": {
-    "retry": "Retry"
+    "retry": "Retry",
+    "cancel": "Cancel"
   },
   "theme": {
     "toLight": "Switch to light mode",
@@ -108,12 +109,17 @@
     "requestNewLink": "Request a new link"
   },
   "account": {
-    "title": "Hello, {name}",
-    "comingSoon": "Your company is set up in the next build step.",
+    "title": "My account",
     "signOut": "Sign out",
-    "signOutEverywhere": "Sign out on every device",
+    "signOutEverywhere": "Sign out on all devices",
+    "signOutEverywhereTitle": "Sign out on all devices?",
+    "signOutEverywhereDescription": "Every session you have ends, this one included. You'll sign in again on each device.",
+    "sessionsTitle": "Sessions",
+    "sessionsDescription": "Your session ends on its own after 30 minutes without activity.",
     "setUpCompany": "Set up my company",
     "organizations": "Your companies",
+    "noCompanyTitle": "You don't have a company yet",
+    "noCompanyDescription": "Set it up to start issuing documents. If you were invited, open the link in the email.",
     "activeTest": "Test, active",
     "activeProduction": "Production, active"
   },
@@ -199,7 +205,8 @@
     "certificateExpiringTitle": "Your electronic signature expires in {days, plural, =0 {less than a day} one {# day} other {# days}}",
     "certificateExpiringBody": "Renew it with your certificate authority and upload the new one before it expires.",
     "agreementsTitle": "Accept the legal documents",
-    "agreementsBody": "Review and accept the Terms, Privacy Policy and DPA to go live."
+    "agreementsBody": "Review and accept the Terms, Privacy Policy and DPA to go live.",
+    "agreementsAction": "Review and accept"
   },
   "roles": {
     "OWNER": "Owner",
@@ -221,30 +228,54 @@
   },
   "users": {
     "title": "Users",
-    "description": "Who works with your company and what they can do. Changes also apply to the test copy.",
-    "inviteTitle": "Invite someone",
-    "inviteDescription": "We'll send a link that expires in 7 days.",
-    "email": "Email address",
+    "description": "Who works with your company and what they can do. Changes apply to the test copy too.",
+    "invite": "Invite",
+    "inviteDescription": "We'll send a link to join, valid for 7 days.",
+    "sendInvitation": "Send invitation",
+    "invited": "Invitation sent.",
+    "email": "Email",
     "role": "Role",
-    "invite": "Send invitation",
-    "inviting": "Sending...",
     "membersTitle": "Members",
-    "pendingTitle": "Pending invitations",
-    "restricted": "Only {points}",
-    "roleFor": "{name}'s role",
-    "saveRole": "Save",
+    "table": {
+      "name": "Name",
+      "issuePoints": "Issue points",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "INVITED": "Invited"
+    },
+    "you": "you",
+    "allPoints": "All points",
+    "edit": "Edit",
+    "editName": "Edit {name}",
+    "issuePoints": "Issue points",
+    "issuePointsHint": "With none checked, they can use all of them.",
+    "save": "Save changes",
+    "saved": "Changes saved.",
+    "cancel": "Cancel",
     "remove": "Remove",
     "removeName": "Remove {name}",
+    "removed": "The person was removed from the company.",
+    "removeDialog": {
+      "title": "Remove from the company?",
+      "description": "They'll lose access to the company and its test copy. You can invite them again later."
+    },
     "revoke": "Revoke",
     "revokeFor": "Revoke the invitation to {email}",
-    "expires": "expires {date}",
-    "issuePointsFor": "{name}'s issue points",
-    "issuePointsHint": "Check none to allow all of them.",
-    "saveIssuePoints": "Save points",
-    "securityTitle": "Company security",
+    "revoked": "Invitation revoked.",
+    "revokeDialog": {
+      "title": "Revoke the invitation?",
+      "description": "The link that was sent will stop working."
+    },
+    "expires": "Expires {date}",
     "requireTwoFactor": "Require two-step verification of every member",
-    "requireTwoFactorHint": "Anyone who hasn't turned it on must do so before working here.",
-    "saveSecurity": "Save",
+    "requireTwoFactorHint": "Anyone without it will have to turn it on before they keep working.",
+    "securitySaved": "Two-step verification requirement saved.",
+    "seatUsage": "{used} of {limit} users, counting pending invitations",
+    "seatUsageUnlimited": "{used} users, no limit on your plan",
     "seatsFull": "Your plan allows {seats, plural, one {# user} other {# users}}, and all are taken, counting pending invitations.",
     "seePlan": "See the plan"
   },
@@ -368,7 +399,12 @@
       }
     },
     "complimentary": "complimentary",
-    "paid": "paid"
+    "paid": "paid",
+    "table": {
+      "what": "What happened",
+      "when": "When"
+    },
+    "emptyHint": "You'll see who changed what in the company here, such as invitations, roles and plan changes."
   },
   "goLive": {
     "title": "Take {organization} live",
@@ -380,7 +416,8 @@
     "confirm": "I understand this step can't be undone.",
     "submit": "Go live",
     "submitting": "Going live...",
-    "alreadyLive": "This company is already live."
+    "alreadyLive": "This company is already live.",
+    "whatChanges": "What changes"
   },
   "goLiveError": {
     "CONFIRM_REQUIRED": "Check the box to confirm.",
@@ -404,7 +441,16 @@
     "accept": "Accept",
     "accepting": "Accepting...",
     "ownerAccepts": "The company's owner must accept them.",
-    "version": "Version {version}"
+    "version": "Version {version}",
+    "underReviewTitle": "Under review",
+    "accepted": "Documents accepted.",
+    "acceptTitle": "Accept the documents",
+    "acceptDescription": "They are recorded with the date, your IP address and your browser.",
+    "table": {
+      "document": "Document",
+      "version": "Version",
+      "status": "Status"
+    }
   },
   "legalError": {
     "CONFIRM_REQUIRED": "Check the box to accept.",
@@ -440,38 +486,76 @@
     }
   },
   "admin": {
-    "badge": "Platform",
-    "navigation": "Platform navigation",
-    "backToApp": "Back to the app",
     "companiesTitle": "Companies",
     "companiesDescription": "Every company, newest first.",
     "search": "Search by RUC or name",
     "searchButton": "Search",
-    "noCompanies": "No companies match.",
+    "noMatchesTitle": "No results",
+    "noMatches": "No company matches the search. Try the full RUC.",
+    "noCompaniesTitle": "No companies yet",
+    "noCompanies": "They'll show here once someone sets theirs up.",
+    "table": {
+      "company": "Company",
+      "plan": "Plan",
+      "status": "Status"
+    },
     "complimentary": "Complimentary",
+    "paid": "Paid",
     "live": "Live",
     "notLive": "Testing",
     "suspended": "Suspended",
-    "backToCompanies": "← Companies",
+    "planTitle": "Plan",
     "plan": "Plan",
     "changePlan": "Change plan",
-    "complimentaryLabel": "Complimentary: never charged, never renews or expires",
+    "changePlanDescription": "Applies at once to the company and its test copy.",
+    "planChanged": "Plan changed.",
+    "billing": "Billing",
+    "changeBilling": "Change billing",
+    "complimentaryHint": "Never charged, never renews or expires. Recorded with the reason.",
+    "billingSaved": "Billing saved.",
     "reason": "Reason",
     "save": "Save",
-    "monthlyPrice": "Negotiated monthly price, before VAT (USD)",
-    "module": "Module",
-    "addModule": "Add module",
+    "monthlyPrice": "Negotiated monthly price",
+    "noPrice": "No price",
+    "changePrice": "Change the price",
+    "priceDescription": "Before VAT. Billing charges it from the next renewal.",
+    "priceHint": "In dollars, up to two decimals. Empty removes the price.",
+    "priceSaved": "Price saved.",
     "addOnsTitle": "Add-on modules",
     "addOnsDescription": "Added at once. When removed, the company keeps them until next month starts.",
-    "removeModuleFor": "Remove {name}",
+    "addModule": "Add module",
+    "addModuleDescription": "The company gets it at once, on top of what its plan includes.",
+    "moduleAdded": "Module added.",
+    "noAddOns": "The company has only what its plan includes.",
+    "removesAt": "Leaves on {date}",
     "keepModuleFor": "Keep {name}",
+    "moduleKept": "The module removal was cancelled.",
+    "removeModuleFor": "Remove {name}",
+    "removeModuleTitle": "Remove the module?",
+    "removeModuleDescription": "The company keeps it until next month starts. You can cancel before then.",
+    "removeModule": "Remove",
+    "moduleRemovalScheduled": "Removal scheduled.",
+    "module": "Module",
     "limitsTitle": "Limits",
     "limitsCustom": "Custom's own values. Without one, the plan's value applies.",
     "limitsPlan": "They come from the plan and exceptions. For own values, use Custom.",
+    "ownValue": "own",
+    "editLimit": "Change {limit}",
+    "limitSaved": "Limit saved.",
+    "limitCleared": "The limit is back to the plan's value.",
     "unlimited": "Unlimited",
     "usePlanValue": "Use the plan's value",
     "overridesTitle": "Exceptions",
     "overridesDescription": "They win over the plan and modules. Use them for one-off cases, with a reason.",
+    "addOverride": "Add exception",
+    "noOverrides": "No exceptions.",
+    "setOverride": "Save exception",
+    "overrideSaved": "Exception saved.",
+    "clearOverrideFor": "Remove the exception for {feature}",
+    "clearOverrideTitle": "Remove the exception?",
+    "clearOverrideDescription": "The company goes back to what its plan and modules give it.",
+    "clearOverride": "Remove",
+    "overrideCleared": "Exception removed.",
     "feature": "Feature",
     "effect": "Effect",
     "effects": {
@@ -479,8 +563,6 @@
       "REVOKE": "Turn off"
     },
     "limitValue": "Limit value",
-    "setOverride": "Save exception",
-    "clearOverrideFor": "Remove the exception for {feature}",
     "resolvedTitle": "Active features",
     "resolvedDescription": "What the company has today, combined."
   },
@@ -500,5 +582,36 @@
     "OVERRIDE_NOT_FOUND": "There is no exception for that feature.",
     "INVALID_INPUT": "Check the details you entered.",
     "UNKNOWN": "An unexpected error occurred. Please try again."
+  },
+  "pageTitles": {
+    "login": "Sign in",
+    "register": "Create account",
+    "checkEmail": "Check your email",
+    "verifyEmail": "Confirm your email",
+    "forgotPassword": "Recover password",
+    "resetPassword": "New password",
+    "twoFactor": "Two-step verification",
+    "onboarding": "Set up your company",
+    "account": "My account",
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "activity": "Activity",
+    "plan": "Plan",
+    "goLive": "Go live",
+    "legal": "Legal documents",
+    "legalDocument": "Legal document",
+    "invite": "Invitation",
+    "admin": "Companies · Platform",
+    "adminCompany": "Company · Platform"
+  },
+  "adminNav": {
+    "title": "Platform administration",
+    "navigation": "Platform navigation",
+    "badge": "Platform",
+    "groups": {
+      "operate": "Operate"
+    },
+    "companies": "Companies",
+    "backToApp": "Back to the app"
   }
 }

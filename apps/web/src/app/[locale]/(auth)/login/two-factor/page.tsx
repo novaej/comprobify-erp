@@ -3,6 +3,9 @@ import { AuthCard, AuthShell } from '@/components/auth-shell';
 import { safeNextPath } from '@/server/paths';
 import { BackLink } from '../../back-link';
 import { TwoFactorForm } from '../../forms';
+import { pageTitle } from '@/server/page-title';
+
+export const generateMetadata = pageTitle('twoFactor');
 
 // The second step of a sign-in (FR-USR-3). Better Auth's short-lived cookie from the
 // first step identifies the user; no session exists until a code is accepted.

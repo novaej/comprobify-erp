@@ -1,9 +1,14 @@
-import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Banner } from '@/components/banner';
 import { buttonVariants } from '@comprobify/ui/components/button';
 import { CheckCircle2, Rocket } from 'lucide-react';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { Banner } from '@/components/banner';
+import { PageHeader } from '@/components/page-header';
+import { SectionCard } from '@/components/section-card';
 import { Link } from '@/i18n/navigation';
 import { loadShell } from '@/server/shell';
+import { pageTitle } from '@/server/page-title';
+
+export const generateMetadata = pageTitle('dashboard');
 
 // A placeholder: the dashboard's figures arrive in Milestone 9 (FR-REP-1).
 export default async function DashboardPage({
@@ -30,16 +35,18 @@ export default async function DashboardPage({
           {t('liveBody')}
         </Banner>
       )}
-      <h1 className="text-2xl font-semibold tracking-tight">{active.entry.name}</h1>
-      <p className="mt-1.5 text-sm text-muted-foreground">{t('description')}</p>
+      <PageHeader title={active.entry.name} description={t('description')} />
       {!active.entry.live && actor.permissions.includes('organization.go_live') && (
-        <div className="mt-6 rounded-xl border border-border bg-card p-5">
-          <p className="font-medium">{t('goLiveTitle')}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{t('goLiveBody')}</p>
-          <Link href="/go-live" className={buttonVariants({ className: 'mt-4' })}>
-            {t('goLiveAction')}
-          </Link>
-        </div>
+        <SectionCard
+          title={t('goLiveTitle')}
+          description={t('goLiveBody')}
+          action={
+            <Link href="/go-live" className={buttonVariants({ size: 'sm' })}>
+              <Rocket className="mr-1.5 h-4 w-4" aria-hidden />
+              {t('goLiveAction')}
+            </Link>
+          }
+        />
       )}
     </div>
   );

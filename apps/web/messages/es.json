@@ -3,7 +3,8 @@
     "description": "Facturación electrónica SRI — Ecuador"
   },
   "common": {
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "cancel": "Cancelar"
   },
   "theme": {
     "toLight": "Cambiar a modo claro",
@@ -108,12 +109,17 @@
     "requestNewLink": "Solicitar un nuevo enlace"
   },
   "account": {
-    "title": "Hola, {name}",
-    "comingSoon": "Tu empresa se configura en el siguiente paso de la construcción.",
+    "title": "Mi cuenta",
     "signOut": "Cerrar sesión",
     "signOutEverywhere": "Cerrar sesión en todos los dispositivos",
+    "signOutEverywhereTitle": "¿Cerrar sesión en todos los dispositivos?",
+    "signOutEverywhereDescription": "Se cerrarán todas tus sesiones, también esta. Tendrás que volver a ingresar en cada dispositivo.",
+    "sessionsTitle": "Sesiones",
+    "sessionsDescription": "Tu sesión se cierra sola tras 30 minutos sin actividad.",
     "setUpCompany": "Configurar mi empresa",
     "organizations": "Tus empresas",
+    "noCompanyTitle": "Todavía no tienes una empresa",
+    "noCompanyDescription": "Configúrala para empezar a emitir comprobantes. Si te invitaron, abre el enlace del correo.",
     "activeTest": "Pruebas, activa",
     "activeProduction": "Producción, activa"
   },
@@ -199,7 +205,8 @@
     "certificateExpiringTitle": "Tu firma electrónica vence en {days, plural, =0 {menos de un día} one {# día} other {# días}}",
     "certificateExpiringBody": "Renuévala con tu entidad certificadora y sube la nueva antes de que venza.",
     "agreementsTitle": "Acepta los documentos legales",
-    "agreementsBody": "Revisa y acepta los Términos, la Política de Privacidad y el DPA para pasar a producción."
+    "agreementsBody": "Revisa y acepta los Términos, la Política de Privacidad y el DPA para pasar a producción.",
+    "agreementsAction": "Revisar y aceptar"
   },
   "roles": {
     "OWNER": "Propietario",
@@ -222,29 +229,53 @@
   "users": {
     "title": "Usuarios",
     "description": "Quién trabaja con tu empresa y qué puede hacer. Los cambios aplican también a la copia de pruebas.",
-    "inviteTitle": "Invitar a alguien",
-    "inviteDescription": "Le enviaremos un enlace que vence en 7 días.",
+    "invite": "Invitar",
+    "inviteDescription": "Le enviaremos un enlace para unirse, que vence en 7 días.",
+    "sendInvitation": "Enviar invitación",
+    "invited": "Invitación enviada.",
     "email": "Correo electrónico",
     "role": "Rol",
-    "invite": "Enviar invitación",
-    "inviting": "Enviando...",
     "membersTitle": "Miembros",
-    "pendingTitle": "Invitaciones pendientes",
-    "restricted": "Solo {points}",
-    "roleFor": "Rol de {name}",
-    "saveRole": "Guardar",
+    "table": {
+      "name": "Nombre",
+      "issuePoints": "Puntos de emisión",
+      "role": "Rol",
+      "status": "Estado",
+      "actions": "Acciones"
+    },
+    "status": {
+      "ACTIVE": "Activo",
+      "INVITED": "Invitado"
+    },
+    "you": "tú",
+    "allPoints": "Todos los puntos",
+    "edit": "Editar",
+    "editName": "Editar a {name}",
+    "issuePoints": "Puntos de emisión",
+    "issuePointsHint": "Si no marcas ninguno, puede usar todos.",
+    "save": "Guardar cambios",
+    "saved": "Cambios guardados.",
+    "cancel": "Cancelar",
     "remove": "Quitar",
     "removeName": "Quitar a {name}",
+    "removed": "Se quitó a la persona de la empresa.",
+    "removeDialog": {
+      "title": "¿Quitar de la empresa?",
+      "description": "Dejará de tener acceso a la empresa y a su copia de pruebas. Puedes invitarla de nuevo después."
+    },
     "revoke": "Anular",
     "revokeFor": "Anular la invitación a {email}",
-    "expires": "vence el {date}",
-    "issuePointsFor": "Puntos de emisión de {name}",
-    "issuePointsHint": "Si no marcas ninguno, puede usar todos.",
-    "saveIssuePoints": "Guardar puntos",
-    "securityTitle": "Seguridad de la empresa",
+    "revoked": "Invitación anulada.",
+    "revokeDialog": {
+      "title": "¿Anular la invitación?",
+      "description": "El enlace enviado dejará de funcionar."
+    },
+    "expires": "Vence el {date}",
     "requireTwoFactor": "Exigir verificación en dos pasos a todos los miembros",
     "requireTwoFactorHint": "Quien no la tenga activada deberá activarla antes de seguir trabajando.",
-    "saveSecurity": "Guardar",
+    "securitySaved": "Exigencia de verificación en dos pasos guardada.",
+    "seatUsage": "{used} de {limit} usuarios, contando las invitaciones pendientes",
+    "seatUsageUnlimited": "{used} usuarios, sin límite en tu plan",
     "seatsFull": "Tu plan permite {seats, plural, one {# usuario} other {# usuarios}} y ya están ocupados, contando las invitaciones pendientes.",
     "seePlan": "Ver el plan"
   },
@@ -368,7 +399,12 @@
       }
     },
     "complimentary": "cortesía",
-    "paid": "pagada"
+    "paid": "pagada",
+    "table": {
+      "what": "Qué pasó",
+      "when": "Cuándo"
+    },
+    "emptyHint": "Aquí verás quién cambió qué en la empresa, como invitaciones, roles y cambios de plan."
   },
   "goLive": {
     "title": "Pasar {organization} a producción",
@@ -380,7 +416,8 @@
     "confirm": "Entiendo que este paso no se puede deshacer.",
     "submit": "Pasar a producción",
     "submitting": "Pasando a producción...",
-    "alreadyLive": "Esta empresa ya está en producción."
+    "alreadyLive": "Esta empresa ya está en producción.",
+    "whatChanges": "Qué cambia"
   },
   "goLiveError": {
     "CONFIRM_REQUIRED": "Marca la casilla para confirmar.",
@@ -404,7 +441,16 @@
     "accept": "Aceptar",
     "accepting": "Aceptando...",
     "ownerAccepts": "El propietario de la empresa debe aceptarlos.",
-    "version": "Versión {version}"
+    "version": "Versión {version}",
+    "underReviewTitle": "En revisión",
+    "accepted": "Documentos aceptados.",
+    "acceptTitle": "Aceptar los documentos",
+    "acceptDescription": "Quedan registrados con la fecha, tu dirección IP y tu navegador.",
+    "table": {
+      "document": "Documento",
+      "version": "Versión",
+      "status": "Estado"
+    }
   },
   "legalError": {
     "CONFIRM_REQUIRED": "Marca la casilla para aceptar.",
@@ -440,38 +486,76 @@
     }
   },
   "admin": {
-    "badge": "Plataforma",
-    "navigation": "Navegación de la plataforma",
-    "backToApp": "Volver a la aplicación",
     "companiesTitle": "Empresas",
     "companiesDescription": "Todas las empresas, de la más reciente a la más antigua.",
     "search": "Buscar por RUC o nombre",
     "searchButton": "Buscar",
-    "noCompanies": "No hay empresas que coincidan.",
+    "noMatchesTitle": "Sin resultados",
+    "noMatches": "Ninguna empresa coincide con la búsqueda. Prueba con el RUC completo.",
+    "noCompaniesTitle": "Todavía no hay empresas",
+    "noCompanies": "Aparecerán aquí cuando alguien configure la suya.",
+    "table": {
+      "company": "Empresa",
+      "plan": "Plan",
+      "status": "Estado"
+    },
     "complimentary": "Cortesía",
+    "paid": "Pagado",
     "live": "En producción",
     "notLive": "En pruebas",
     "suspended": "Suspendida",
-    "backToCompanies": "← Empresas",
+    "planTitle": "Plan",
     "plan": "Plan",
     "changePlan": "Cambiar plan",
-    "complimentaryLabel": "Cortesía: nunca se cobra, no se renueva ni vence",
+    "changePlanDescription": "Se aplica al instante en la empresa y en su copia de pruebas.",
+    "planChanged": "Plan cambiado.",
+    "billing": "Cobro",
+    "changeBilling": "Cambiar el cobro",
+    "complimentaryHint": "Nunca se cobra, no se renueva ni vence. Queda registrado con el motivo.",
+    "billingSaved": "Cobro guardado.",
     "reason": "Motivo",
     "save": "Guardar",
-    "monthlyPrice": "Precio mensual negociado, sin IVA (USD)",
-    "module": "Módulo",
-    "addModule": "Agregar módulo",
+    "monthlyPrice": "Precio mensual negociado",
+    "noPrice": "Sin precio",
+    "changePrice": "Cambiar el precio",
+    "priceDescription": "Sin IVA. La facturación lo cobrará desde la próxima renovación.",
+    "priceHint": "En dólares, con hasta dos decimales. Vacío quita el precio.",
+    "priceSaved": "Precio guardado.",
     "addOnsTitle": "Módulos adicionales",
     "addOnsDescription": "Se agregan al instante. Al quitarlos, la empresa los conserva hasta el inicio del próximo mes.",
-    "removeModuleFor": "Quitar {name}",
+    "addModule": "Agregar módulo",
+    "addModuleDescription": "La empresa lo tendrá de inmediato, además de lo que incluye su plan.",
+    "moduleAdded": "Módulo agregado.",
+    "noAddOns": "La empresa solo tiene lo que incluye su plan.",
+    "removesAt": "Sale el {date}",
     "keepModuleFor": "Conservar {name}",
+    "moduleKept": "Se canceló el retiro del módulo.",
+    "removeModuleFor": "Quitar {name}",
+    "removeModuleTitle": "¿Quitar el módulo?",
+    "removeModuleDescription": "La empresa lo conserva hasta el inicio del próximo mes. Puedes cancelarlo antes.",
+    "removeModule": "Quitar",
+    "moduleRemovalScheduled": "Retiro programado.",
+    "module": "Módulo",
     "limitsTitle": "Límites",
     "limitsCustom": "Valores propios de Personalizado. Sin un valor propio, se usa el del plan.",
     "limitsPlan": "Vienen del plan y de las excepciones. Para valores propios, usa Personalizado.",
+    "ownValue": "propio",
+    "editLimit": "Cambiar {limit}",
+    "limitSaved": "Límite guardado.",
+    "limitCleared": "El límite vuelve al valor del plan.",
     "unlimited": "Ilimitado",
     "usePlanValue": "Usar el valor del plan",
     "overridesTitle": "Excepciones",
     "overridesDescription": "Ganan sobre el plan y los módulos. Úsalas para casos puntuales, con un motivo.",
+    "addOverride": "Agregar excepción",
+    "noOverrides": "Sin excepciones.",
+    "setOverride": "Guardar excepción",
+    "overrideSaved": "Excepción guardada.",
+    "clearOverrideFor": "Quitar la excepción de {feature}",
+    "clearOverrideTitle": "¿Quitar la excepción?",
+    "clearOverrideDescription": "La empresa vuelve a lo que dan su plan y sus módulos.",
+    "clearOverride": "Quitar",
+    "overrideCleared": "Excepción quitada.",
     "feature": "Función",
     "effect": "Efecto",
     "effects": {
@@ -479,8 +563,6 @@
       "REVOKE": "Desactivar"
     },
     "limitValue": "Valor del límite",
-    "setOverride": "Guardar excepción",
-    "clearOverrideFor": "Quitar la excepción de {feature}",
     "resolvedTitle": "Funciones activas",
     "resolvedDescription": "Lo que la empresa tiene hoy, ya combinado."
   },
@@ -500,5 +582,36 @@
     "OVERRIDE_NOT_FOUND": "No hay una excepción para esa función.",
     "INVALID_INPUT": "Revisa los datos ingresados.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+  },
+  "pageTitles": {
+    "login": "Iniciar sesión",
+    "register": "Crear cuenta",
+    "checkEmail": "Revisa tu correo",
+    "verifyEmail": "Confirma tu correo",
+    "forgotPassword": "Recuperar contraseña",
+    "resetPassword": "Nueva contraseña",
+    "twoFactor": "Verificación en dos pasos",
+    "onboarding": "Configura tu empresa",
+    "account": "Mi cuenta",
+    "dashboard": "Panel",
+    "users": "Usuarios",
+    "activity": "Actividad",
+    "plan": "Plan",
+    "goLive": "Pasar a producción",
+    "legal": "Documentos legales",
+    "legalDocument": "Documento legal",
+    "invite": "Invitación",
+    "admin": "Empresas · Plataforma",
+    "adminCompany": "Empresa · Plataforma"
+  },
+  "adminNav": {
+    "title": "Administración de la plataforma",
+    "navigation": "Navegación de la plataforma",
+    "badge": "Plataforma",
+    "groups": {
+      "operate": "Operación"
+    },
+    "companies": "Empresas",
+    "backToApp": "Volver a la aplicación"
   }
 }

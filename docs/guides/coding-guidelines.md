@@ -56,6 +56,15 @@ A schedule goes in `schedules` in the same file, with its time zone.
 - Components come from `@comprobify/ui/components/*`. Add new shadcn components from `packages/ui` with `pnpm dlx shadcn add`.
 - Every string is in `apps/web/messages/es.json` and `en.json`, with the same keys. A test checks this.
 - Use `Link` and `redirect` from `@/i18n/navigation`, so links keep the locale.
+- Every screen looks like the others (CLAUDE.md rule 19). Start from the existing screen closest to the new one and use the shared blocks:
+  - `PageHeader` opens every page: title, description, optional back link and actions.
+  - Lists sit in a `TableCard` with a `StackTable`, which becomes cards on phones. Row actions are icon buttons whose `aria-label` names the row ("Quitar a Ana").
+  - Blocks of settings or summaries are `SectionCard`s; label and value pairs are tiles in a `<dl>` grid.
+  - Creating and editing happen in a `FormDialog`; anything destructive or taking effect at once asks with `ConfirmDialog`. Success is a toast; the error stays beside the control.
+  - Status is a `ToneBadge` (success done, warning waiting, danger a problem, info, neutral); selects are `ChoiceSelect`; empty lists show an `EmptyState` with the next step; required fields are marked with `FormField`'s `required`.
+  - Pages outside the shell use `StandaloneShell` or `AuthShell`.
+  - Every page sets its title with `generateMetadata = pageTitle(key)`.
+- Call `look(page, name)` in the E2E flow for every new screen and dialog. It fails on serious axe findings in both themes; run with `E2E_SCREENSHOTS=<dir>` and look at the desktop and phone shots before calling the screen done.
 - A page inside the shell gets the actor from `loadShell(locale)`. If the role lacks the page's permission, render `<NoAccess />`; core refuses the actions anyway.
 - A page behind a feature renders `<FeatureLocked actor={actor} />` when `hasFeature(actor, key)` is false, and its nav item sets `feature`, which hides the link. A limit that's used up is said on the page before the form, from `limitOf` and `companyUsage`; core still refuses with `LIMIT_REACHED`.
 - Forms use `useFormAction` or `ActionForm`, never a form `action` prop, so an error keeps what was typed. Actions return `{ error: code }`, shown from a message namespace.

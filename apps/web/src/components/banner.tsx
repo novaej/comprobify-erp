@@ -16,25 +16,35 @@ export function Banner({
   icon: Icon,
   title,
   children,
+  action,
+  className,
   role = 'alert',
 }: {
   tone: BannerTone;
   icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
   title?: string;
   children?: ReactNode;
+  // A link or button at the end, such as "See the plan".
+  action?: ReactNode;
+  className?: string;
   // `alert` interrupts screen readers; `note` is for information that isn't urgent.
   role?: 'alert' | 'note';
 }) {
   return (
     <div
       role={role}
-      className={cn('mb-6 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm', TONES[tone])}
+      className={cn(
+        'mb-6 flex flex-wrap items-start gap-3 rounded-lg border px-4 py-3 text-sm',
+        TONES[tone],
+        className,
+      )}
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
       <div className="min-w-0 flex-1">
         {title && <p className="leading-snug font-semibold">{title}</p>}
-        {children && <div className={cn(title && 'mt-0.5 text-xs opacity-80')}>{children}</div>}
+        {children && <div className={cn(title && 'mt-0.5 text-xs')}>{children}</div>}
       </div>
+      {action && <div className="flex shrink-0 items-center gap-3">{action}</div>}
     </div>
   );
 }

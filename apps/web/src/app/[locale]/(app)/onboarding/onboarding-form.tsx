@@ -1,17 +1,12 @@
 'use client';
 
 import { Button } from '@comprobify/ui/components/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@comprobify/ui/components/card';
 import { Input } from '@comprobify/ui/components/input';
 import { useLocale, useTranslations } from 'next-intl';
 
+import { FormActionBar } from '@/components/form-action-bar';
 import { FormField } from '@/components/form-field';
+import { SectionCard } from '@/components/section-card';
 import { useFormAction } from '@/components/use-form-action';
 import { onboardAction } from './actions';
 
@@ -27,12 +22,9 @@ export function OnboardingForm() {
     <form onSubmit={onSubmit} className="space-y-6">
       <input type="hidden" name="locale" value={locale} />
       <fieldset disabled={pending} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('companySection')}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField label={t('ruc')} hint={t('rucHint')}>
+        <SectionCard title={t('companySection')}>
+          <div className="space-y-4">
+            <FormField required label={t('ruc')} hint={t('rucHint')}>
               {(props) => (
                 <Input
                   {...props}
@@ -44,13 +36,13 @@ export function OnboardingForm() {
                 />
               )}
             </FormField>
-            <FormField label={t('legalName')}>
+            <FormField required label={t('legalName')}>
               {(props) => <Input {...props} name="legalName" required />}
             </FormField>
             <FormField label={t('tradeName')} hint={t('tradeNameHint')}>
               {(props) => <Input {...props} name="tradeName" />}
             </FormField>
-            <FormField label={t('mainAddress')}>
+            <FormField required label={t('mainAddress')}>
               {(props) => <Input {...props} name="mainAddress" required />}
             </FormField>
             <label className="flex items-start gap-3 text-sm">
@@ -66,16 +58,12 @@ export function OnboardingForm() {
                 </span>
               </span>
             </label>
-          </CardContent>
-        </Card>
+          </div>
+        </SectionCard>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('certificateSection')}</CardTitle>
-            <CardDescription>{t('certificateHint')}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField label={t('certificateFile')}>
+        <SectionCard title={t('certificateSection')} description={t('certificateHint')}>
+          <div className="space-y-4">
+            <FormField required label={t('certificateFile')}>
               {(props) => (
                 <Input {...props} name="certificate" type="file" accept=".p12,.pfx" required />
               )}
@@ -85,24 +73,20 @@ export function OnboardingForm() {
                 <Input {...props} name="certificatePassword" type="password" autoComplete="off" />
               )}
             </FormField>
-          </CardContent>
-        </Card>
+          </div>
+        </SectionCard>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('logoSection')}</CardTitle>
-            <CardDescription>{t('logoHint')}</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <SectionCard title={t('logoSection')} description={t('logoHint')}>
+          <div>
             <FormField label={t('logoFile')}>
               {(props) => (
                 <Input {...props} name="logo" type="file" accept="image/png,image/jpeg,image/gif" />
               )}
             </FormField>
-          </CardContent>
-        </Card>
+          </div>
+        </SectionCard>
 
-        <details className="rounded-xl border border-border bg-card p-4">
+        <details className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <summary className="cursor-pointer text-sm font-medium">{t('advanced')}</summary>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <FormField label={t('branchCode')}>
@@ -144,9 +128,11 @@ export function OnboardingForm() {
           {message}
         </p>
       )}
-      <Button type="submit" className="h-11 w-full text-base" disabled={pending}>
-        {pending ? t('submitting') : t('submit')}
-      </Button>
+      <FormActionBar>
+        <Button type="submit" disabled={pending}>
+          {pending ? t('submitting') : t('submit')}
+        </Button>
+      </FormActionBar>
     </form>
   );
 }

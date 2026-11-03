@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from '@comprobify/ui/components/sonner';
 import { cn } from '@comprobify/ui/lib/utils';
 import { useLocale, useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
@@ -14,18 +15,26 @@ export function ActionForm({
   action,
   hidden = {},
   errors,
+  success,
   className,
   children,
 }: {
   action: Action;
   hidden?: Record<string, string>;
   errors: string;
+  // A toast once the action succeeds.
+  success?: string;
   className?: string;
   children: (pending: boolean) => ReactNode;
 }) {
   const locale = useLocale();
   const t = useTranslations(errors);
-  const { state, onSubmit, pending } = useFormAction(action);
+  // Toasted as the result arrives: the form may be gone from the page by the next render.
+  const { state, onSubmit, pending } = useFormAction<ActionState>(async (previous, form) => {
+    const next = await action(previous, form);
+    if (next.done && success) toast.success(success);
+    return next;
+  });
   const message = state.error && (t.has(state.error) ? t(state.error) : t('UNKNOWN'));
 
   return (

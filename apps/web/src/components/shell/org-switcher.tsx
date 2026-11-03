@@ -62,7 +62,6 @@ export function OrgSwitcher({
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={t('switchOrganization')}
         disabled={pending}
         onClick={() => setOpen((value) => !value)}
         className="flex w-full items-center justify-between gap-2 rounded-md text-left disabled:opacity-50"
@@ -81,6 +80,8 @@ export function OrgSwitcher({
           >
             {mode === 'PRODUCTION' ? t('productionBadge') : t('testBadge')}
           </span>
+          {/* After the visible text, so the accessible name starts with what is seen. */}
+          <span className="sr-only">, {t('switchOrganization')}</span>
         </span>
         <ChevronDown
           className={cn(

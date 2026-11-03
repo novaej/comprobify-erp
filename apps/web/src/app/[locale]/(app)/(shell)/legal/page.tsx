@@ -1,11 +1,26 @@
 import { agreementStatus } from '@comprobify/core';
-import { Badge } from '@comprobify/ui/components/badge';
-import { Card, CardContent } from '@comprobify/ui/components/card';
+import { FileText } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { EmptyState } from '@/components/empty-state';
+import { PageHeader } from '@/components/page-header';
+import { SectionCard } from '@/components/section-card';
+import {
+  StackBody,
+  StackCell,
+  StackHead,
+  StackHeader,
+  StackRow,
+  StackTable,
+  TableCard,
+} from '@/components/stack-table';
+import { ToneBadge } from '@/components/tone-badge';
 import { Link } from '@/i18n/navigation';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
 import { AcceptAgreementsForm } from './accept-form';
+import { pageTitle } from '@/server/page-title';
+
+export const generateMetadata = pageTitle('legal');
 
 const SLUGS = { TERMS: 'terms', PRIVACY: 'privacy', DPA: 'dpa' } as const;
 
@@ -20,8 +35,14 @@ export default async function LegalPage({ params }: { params: Promise<{ locale: 
   if (!agreementParties) {
     return (
       <div className="max-w-3xl">
-        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">{t('underReview')}</p>
+        <PageHeader title={t('title')} />
+        <TableCard>
+          <EmptyState
+            icon={FileText}
+            title={t('underReviewTitle')}
+            description={t('underReview')}
+          />
+        </TableCard>
       </div>
     );
   }
@@ -34,37 +55,50 @@ export default async function LegalPage({ params }: { params: Promise<{ locale: 
   });
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">{t('description')}</p>
-      </div>
-      <Card>
-        <CardContent>
-          <ul className="divide-y divide-border" aria-label={t('title')}>
+    <div className="max-w-3xl space-y-4">
+      <PageHeader title={t('title')} description={t('description')} className="mb-2" />
+      <TableCard>
+        <StackTable aria-label={t('title')}>
+          <StackHeader>
+            <StackRow className="bg-muted/40">
+              <StackHead className="pl-4">{t('table.document')}</StackHead>
+              <StackHead>{t('table.version')}</StackHead>
+              <StackHead className="pr-4">{t('table.status')}</StackHead>
+            </StackRow>
+          </StackHeader>
+          <StackBody>
             {status.map((row) => (
-              <li key={row.type} className="flex items-center justify-between gap-3 py-3 text-sm">
-                <Link
-                  href={`/legal/${SLUGS[row.type]}`}
-                  className="font-medium text-primary underline-offset-4 hover:underline"
-                >
-                  {t(`types.${row.type}`)} · v{row.version}
-                </Link>
-                {row.accepted && row.acceptedAt ? (
-                  <Badge variant="secondary">
-                    {t('acceptedOn', { date: when.format(row.acceptedAt) })}
-                  </Badge>
-                ) : (
-                  <Badge variant="outline">{t('pending')}</Badge>
-                )}
-              </li>
+              <StackRow key={row.type}>
+                <StackCell heading className="pl-4">
+                  <Link
+                    href={`/legal/${SLUGS[row.type]}`}
+                    className="font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    {t(`types.${row.type}`)}
+                  </Link>
+                </StackCell>
+                <StackCell label={t('table.version')} className="tabular-nums">
+                  v{row.version}
+                </StackCell>
+                <StackCell label={t('table.status')} className="pr-4 whitespace-nowrap">
+                  {row.accepted && row.acceptedAt ? (
+                    <ToneBadge tone="success">
+                      {t('acceptedOn', { date: when.format(row.acceptedAt) })}
+                    </ToneBadge>
+                  ) : (
+                    <ToneBadge tone="warning">{t('pending')}</ToneBadge>
+                  )}
+                </StackCell>
+              </StackRow>
             ))}
-          </ul>
-        </CardContent>
-      </Card>
+          </StackBody>
+        </StackTable>
+      </TableCard>
       {pending &&
         (actor.permissions.includes('organization.accept_agreements') ? (
-          <AcceptAgreementsForm />
+          <SectionCard title={t('acceptTitle')} description={t('acceptDescription')}>
+            <AcceptAgreementsForm />
+          </SectionCard>
         ) : (
           <p className="text-sm text-muted-foreground">{t('ownerAccepts')}</p>
         ))}

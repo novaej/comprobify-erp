@@ -13,7 +13,8 @@ The model is in [ADR-011](docs/adr/011-plans-modules-and-entitlements.md): featu
 - [x] 3. Resolver and enforcement: entitlements resolved once per request into the actor context, with the dated rule for removed modules; `requireFeature` and `requireWithinLimit` in the kernel (`FEATURE_NOT_ENABLED`, `LIMIT_REACHED`); applied to what exists today: `USERS` on invitations and `RIDE_LOGO` on the logo (FR-PLAN-3, FR-PLAN-4, FR-USR-1).
 - [x] 4. UI gating: navigation and pages hide or lock what the company doesn't have; a plan page showing the plan, modules, limits and usage (FR-PLAN-4).
 - [x] 5a. Super admin area: its own route group and layout with no tenant, `PlatformActor` checks in core, two-step verification required; per company: plan, add-ons, Personalizado, complimentary and overrides, each recorded in the activity log (FR-ADM-1, ADR-010).
-- [ ] 5b. Editors for plans and modules: names, status, contents, dated removals (FR-ADM-3).
+- [x] 5b. UI alignment: port the shared building blocks (page header, stack table, confirm and scrolling dialogs, empty state, toned badges, banner actions, required fields, toasts), rebuild every screen so far with them and the admin area with its own sidebar, and run axe on every page in E2E (FR-UX-2, FR-UX-3).
+- [ ] 5c. Editors for plans and modules: names, status, contents; removals and lowered limits dated 30 days ahead; a super admin with no company lands in the platform area (FR-ADM-3).
 - [ ] 6. Gate and close: E2E where switching a feature for one company changes its screens and core refuses it; isolation sweep covering the new tables; docs.
 
 ## Carried forward from Milestone 1

@@ -1,9 +1,23 @@
 import { listAuditEvents } from '@comprobify/core';
-import { Card, CardContent } from '@comprobify/ui/components/card';
+import { ScrollText } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { EmptyState } from '@/components/empty-state';
 import { NoAccess } from '@/components/no-access';
+import { PageHeader } from '@/components/page-header';
+import {
+  StackBody,
+  StackCell,
+  StackHead,
+  StackHeader,
+  StackRow,
+  StackTable,
+  TableCard,
+} from '@/components/stack-table';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
+import { pageTitle } from '@/server/page-title';
+
+export const generateMetadata = pageTitle('activity');
 
 // FR-NOT-4: who did what, when, in this company. Times in Ecuador (CLAUDE.md rule 15).
 export default async function AuditPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -44,46 +58,44 @@ export default async function AuditPage({ params }: { params: Promise<{ locale: 
   };
 
   return (
-    <div className="max-w-4xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">{t('description')}</p>
-      </div>
-      <Card>
-        <CardContent>
-          {events.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">{t('empty')}</p>
-          ) : (
-            <ul className="divide-y divide-border" aria-label={t('title')}>
+    <div className="max-w-5xl">
+      <PageHeader title={t('title')} description={t('description')} />
+      <TableCard>
+        {events.length === 0 ? (
+          <EmptyState icon={ScrollText} title={t('empty')} description={t('emptyHint')} />
+        ) : (
+          <StackTable aria-label={t('title')}>
+            <StackHeader>
+              <StackRow className="bg-muted/40">
+                <StackHead className="pl-4">{t('table.what')}</StackHead>
+                <StackHead className="pr-4 text-right">{t('table.when')}</StackHead>
+              </StackRow>
+            </StackHeader>
+            <StackBody>
               {events.map((event) => (
-                <li
-                  key={event.id}
-                  className="flex flex-col gap-0.5 py-3 text-sm sm:flex-row sm:items-baseline sm:justify-between sm:gap-4"
-                >
-                  <div className="min-w-0">
-                    <p>
-                      <span className="font-medium">{event.actorName ?? t('system')}</span>{' '}
-                      {t(`actions.${event.action}`)}
-                      {event.subjectName && (
-                        <span className="font-medium"> {event.subjectName}</span>
-                      )}
-                      {detail(event.details) && (
-                        <span className="text-muted-foreground"> · {detail(event.details)}</span>
-                      )}
-                    </p>
-                  </div>
-                  <time
-                    dateTime={event.occurredAt.toISOString()}
-                    className="shrink-0 text-xs text-muted-foreground"
+                <StackRow key={event.id}>
+                  <StackCell heading className="pl-4 whitespace-normal">
+                    <span className="font-medium">{event.actorName ?? t('system')}</span>{' '}
+                    {t(`actions.${event.action}`)}
+                    {event.subjectName && <span className="font-medium"> {event.subjectName}</span>}
+                    {detail(event.details) && (
+                      <span className="text-muted-foreground">: {detail(event.details)}</span>
+                    )}
+                  </StackCell>
+                  <StackCell
+                    label={t('table.when')}
+                    className="pr-4 text-right whitespace-nowrap text-muted-foreground"
                   >
-                    {when.format(event.occurredAt)}
-                  </time>
-                </li>
+                    <time dateTime={event.occurredAt.toISOString()}>
+                      {when.format(event.occurredAt)}
+                    </time>
+                  </StackCell>
+                </StackRow>
               ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+            </StackBody>
+          </StackTable>
+        )}
+      </TableCard>
     </div>
   );
 }

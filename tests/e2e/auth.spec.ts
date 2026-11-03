@@ -4,6 +4,7 @@ import { base32 } from '@better-auth/utils/base32';
 import { createOTP } from '@better-auth/utils/otp';
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { Client } from 'pg';
+import { look } from './look';
 
 // The worker isn't needed: the link is read from the queued email.send job.
 async function emailLink(
@@ -86,17 +87,20 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
 
   test('registers, and the emailed link only verifies on the button press', async ({ page }) => {
     await page.goto('/es/register');
+    await look(page, 'register');
     await page.getByLabel('Nombre').fill('Ana Pérez');
     await page.getByLabel('Correo electrónico').fill(email);
     await page.getByLabel('Contraseña', { exact: true }).fill(password);
     await page.getByLabel('Confirmar contraseña').fill(password);
     await page.getByRole('button', { name: 'Crear cuenta' }).click();
     await expect(page).toHaveURL(/\/es\/check-email$/);
+    await look(page, 'check-email');
 
     const link = await emailLink(email, 'verifyEmail');
     // A link scanner's GET must not consume the token.
     expect((await page.request.get(link)).status()).toBe(200);
     await page.goto(link);
+    await look(page, 'verify-email');
     await page.getByRole('button', { name: 'Confirmar mi correo' }).click();
     // Signed in, with no organization yet: onboarding comes first.
     await expect(page).toHaveURL(/\/es\/onboarding$/);
@@ -107,12 +111,14 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page.locator('form').getByRole('alert')).toHaveText(
       'Correo o contraseña incorrectos.',
     );
+    await look(page, 'login-error');
     // An error keeps what was typed.
     await expect(page.getByLabel('Correo electrónico')).toHaveValue(email);
     await signIn(page, email, password);
     await expect(page).toHaveURL(/\/es\/onboarding$/);
     await page.getByRole('link', { name: 'Mi cuenta' }).click();
-    await expect(page.getByText('Hola, Ana Pérez')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Mi cuenta');
+    await look(page, 'account-no-company');
     await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click();
     await expect(page).toHaveURL(/\/es\/login$/);
     await page.goto('/es/account');
@@ -121,11 +127,13 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
 
   test('resets the password through the emailed link', async ({ page }) => {
     await page.goto('/es/forgot-password');
+    await look(page, 'forgot-password');
     await page.getByLabel('Correo electrónico').fill(email);
     await page.getByRole('button', { name: 'Enviar enlace' }).click();
     await expect(page.getByText('Si ese correo corresponde a una cuenta')).toBeVisible();
 
     await page.goto(await emailLink(email, 'resetPassword'));
+    await look(page, 'reset-password');
     await page.getByLabel('Contraseña', { exact: true }).fill(newPassword);
     await page.getByLabel('Confirmar contraseña').fill(newPassword);
     await page.getByRole('button', { name: 'Restablecer contraseña' }).click();
@@ -149,6 +157,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await signIn(page, email, newPassword);
     await expect(page).toHaveURL(/\/es\/onboarding$/);
 
+    await look(page, 'onboarding');
     await page.getByLabel('RUC').fill(ruc);
     await page.getByLabel('Razón social').fill('Delta Comercial S.A.');
     await page.getByLabel('Dirección matriz').fill('Av. Amazonas N24, Quito');
@@ -179,12 +188,13 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(nav.getByText('SRI Pruebas')).toBeVisible();
     await expect(page.getByText('Estás en el ambiente de pruebas')).toBeVisible();
     // Production stays off until go-live (FR-ONB-5).
-    await expect(nav.getByRole('button', { name: 'Producción' })).toBeDisabled();
-    await expect(nav.getByRole('button', { name: 'Pruebas' })).toHaveAttribute(
+    await expect(nav.getByRole('button', { name: 'Producción', exact: true })).toBeDisabled();
+    await expect(nav.getByRole('button', { name: 'Pruebas', exact: true })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
     await expect(nav.getByText('Propietario')).toBeVisible();
+    await look(page, 'dashboard');
 
     // The first tab stop skips past the navigation.
     await page.keyboard.press('Tab');
@@ -192,6 +202,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
 
     await nav.getByRole('link', { name: 'Mi cuenta' }).click();
     await expect(page.getByText('Pruebas, activa')).toBeVisible();
+    await look(page, 'account');
   });
 
   test('shows the plan, its modules and limits (FR-PLAN-4)', async ({ page }) => {
@@ -202,6 +213,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
       .getByRole('link', { name: 'Plan' })
       .click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Plan');
+    await look(page, 'plan');
     await expect(page.getByText('Gratis', { exact: true })).toBeVisible();
     await expect(page.getByRole('list', { name: 'Módulos' })).toContainText('Facturación');
     const usersRow = page.getByRole('main').getByText('Usuarios', { exact: true }).locator('..');
@@ -224,11 +236,18 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page.getByText(/^Tu plan permite 1 usuario/)).toBeVisible();
     await grantSeats(email);
     await page.reload();
-    await page.getByLabel('Correo electrónico').fill(viewerEmail);
-    await page.getByLabel('Rol', { exact: true }).selectOption('VIEWER');
-    await page.getByRole('button', { name: 'Enviar invitación' }).click();
-    await expect(page.getByRole('list', { name: 'Invitaciones pendientes' })).toContainText(
-      viewerEmail,
+    await look(page, 'users');
+    await page.getByRole('button', { name: 'Invitar', exact: true }).click();
+    const inviteDialog = page.getByRole('dialog', { name: 'Invitar' });
+    await inviteDialog.getByLabel('Correo electrónico').fill(viewerEmail);
+    await inviteDialog.getByRole('combobox', { name: 'Rol' }).click();
+    await page.getByRole('option', { name: 'Solo lectura' }).click();
+    await look(page, 'users-invite');
+    await inviteDialog.getByRole('button', { name: 'Enviar invitación' }).click();
+    await expect(page.getByText('Invitación enviada.')).toBeVisible();
+    const members = page.getByRole('table', { name: 'Miembros' });
+    await expect(members.getByRole('row', { name: new RegExp(viewerEmail) })).toContainText(
+      'Invitado',
     );
 
     // The invitee opens the link in their own, signed-out browser.
@@ -240,6 +259,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(viewer.getByRole('heading', { level: 1 })).toHaveText(
       'Te invitaron a Delta Comercial S.A.',
     );
+    await look(viewer, 'invite-accept');
     await viewer.getByLabel('Nombre').fill('Vera Lector');
     await viewer.getByLabel('Contraseña', { exact: true }).fill('a viewer passphrase');
     await viewer.getByLabel('Confirmar contraseña').fill('a viewer passphrase');
@@ -254,15 +274,22 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(viewerNav.getByRole('link', { name: 'Plan' })).toHaveCount(0);
     await viewer.goto('/es/users');
     await expect(viewer.getByRole('heading', { name: 'No tienes acceso' })).toBeVisible();
+    await look(viewer, 'no-access');
 
     // The link works once.
     await viewer.goto(link);
     await expect(viewer.getByRole('heading', { level: 1 })).toHaveText('Invitación no válida');
+    await look(viewer, 'invite-invalid');
 
     // Removed: the next page sends them back to onboarding.
     await page.reload();
     await page.getByRole('button', { name: 'Quitar a Vera Lector' }).click();
-    await expect(page.getByRole('list', { name: 'Miembros' })).not.toContainText('Vera Lector');
+    const confirm = page.getByRole('dialog', { name: '¿Quitar de la empresa?' });
+    await expect(confirm).toContainText('Vera Lector');
+    await look(page, 'users-remove');
+    await confirm.getByRole('button', { name: 'Quitar' }).click();
+    await expect(page.getByText('Se quitó a la persona de la empresa.')).toBeVisible();
+    await expect(page.getByRole('table', { name: 'Miembros' })).not.toContainText('Vera Lector');
     await viewer.goto('/es/dashboard');
     await expect(viewer).toHaveURL(/\/es\/onboarding$/);
     await guest.close();
@@ -279,16 +306,19 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     const reminder = page.getByText('Acepta los documentos legales');
     if (agreements) {
       await expect(reminder).toBeVisible();
-      await page.getByRole('link', { name: /Revisa y acepta los Términos/ }).click();
-      const list = page.getByRole('list', { name: 'Documentos legales' });
+      await page.getByRole('link', { name: 'Revisar y aceptar' }).click();
+      const list = page.getByRole('table', { name: 'Documentos legales' });
       await expect(list.getByText('Pendiente')).toHaveCount(3);
+      await look(page, 'legal');
       await list.getByRole('link', { name: /Acuerdo de Procesamiento de Datos/ }).click();
       // The company's own copy, with every placeholder filled.
       await expect(page.locator('article')).toContainText('Delta Comercial S.A.');
       await expect(page.locator('article')).not.toContainText('{{');
+      await look(page, 'legal-document');
       await page.goBack();
       await page.getByLabel(/He leído y acepto, en nombre de mi empresa/).check();
-      await page.getByRole('button', { name: 'Aceptar' }).click();
+      await page.getByRole('button', { name: 'Aceptar', exact: true }).click();
+      await expect(page.getByText('Documentos aceptados.')).toBeVisible();
       await expect(list.getByText(/Aceptado el/)).toHaveCount(3);
       await page.goto('/es/dashboard');
     }
@@ -297,6 +327,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(
       page.getByRole('heading', { name: 'Pasar Delta Comercial S.A. a producción' }),
     ).toBeVisible();
+    await look(page, 'go-live');
     await page.getByLabel('Entiendo que este paso no se puede deshacer.').check();
     await page.getByRole('button', { name: 'Pasar a producción' }).click();
 
@@ -305,16 +336,17 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page.getByText('Estás en el ambiente de pruebas')).toHaveCount(0);
     const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
     await expect(nav.getByText('SRI Producción')).toBeVisible();
-    await expect(nav.getByRole('button', { name: 'Producción' })).toHaveAttribute(
+    await expect(nav.getByRole('button', { name: 'Producción', exact: true })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
 
     await nav.getByRole('link', { name: 'Actividad' }).click();
-    const log = page.getByRole('list', { name: 'Actividad' });
+    const log = page.getByRole('table', { name: 'Actividad' });
     await expect(log).toContainText('pasó la empresa a producción');
     await expect(log).toContainText('inició sesión');
     if (agreements) await expect(log).toContainText('aceptó los documentos legales');
+    await look(page, 'activity');
   });
 
   // Last: every sign-in after this one needs the code.
@@ -332,6 +364,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(
       page.getByRole('list', { name: 'Códigos de respaldo' }).getByRole('listitem'),
     ).toHaveCount(10);
+    await look(page, 'two-factor-setup');
 
     // What an authenticator app does with the key.
     const key = (await page.locator('code').innerText()).trim();
@@ -340,9 +373,13 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await page.getByRole('button', { name: 'Confirmar y activar' }).click();
     await expect(page.getByText('La verificación en dos pasos está activada.')).toBeVisible();
 
-    await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click();
+    await page
+      .getByRole('main')
+      .getByRole('button', { name: 'Cerrar sesión', exact: true })
+      .click();
     await signIn(page, email, newPassword);
     await expect(page).toHaveURL(/\/es\/login\/two-factor$/);
+    await look(page, 'login-two-factor');
     await page.getByLabel('Código', { exact: true }).fill('000000');
     await page.getByRole('button', { name: 'Verificar' }).click();
     await expect(page.locator('form').getByRole('alert')).toHaveText('Ese código no es válido.');
@@ -352,11 +389,13 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
 
     // Requiring it of every member leaves this owner, who has it, at work.
     await page.goto('/es/users');
-    await page.getByLabel('Exigir verificación en dos pasos a todos los miembros').check();
-    await page.getByRole('button', { name: 'Guardar', exact: true }).first().click();
-    await expect(
-      page.getByLabel('Exigir verificación en dos pasos a todos los miembros'),
-    ).toBeChecked();
+    const requirement = page.getByRole('switch', {
+      name: 'Exigir verificación en dos pasos a todos los miembros',
+    });
+    await requirement.click();
+    await expect(page.getByText('Exigencia de verificación en dos pasos guardada.')).toBeVisible();
+    await page.reload();
+    await expect(requirement).toBeChecked();
     await page.goto('/es/dashboard');
     await expect(page).toHaveURL(/\/es\/dashboard$/);
   });
@@ -380,14 +419,24 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
       .getByRole('link', { name: 'Administración de la plataforma' })
       .click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Empresas');
+    await look(page, 'admin-companies');
     await page.getByRole('searchbox', { name: 'Buscar por RUC o nombre' }).fill(companyRuc);
     await page.getByRole('button', { name: 'Buscar' }).click();
-    await page.getByRole('link', { name: new RegExp(companyRuc) }).click();
+    await page
+      .getByRole('row', { name: new RegExp(companyRuc) })
+      .getByRole('link', { name: 'Delta Comercial S.A.' })
+      .click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Delta Comercial S.A.');
+    await look(page, 'admin-company');
 
-    await page.getByLabel('Plan', { exact: true }).selectOption({ label: 'Negocio' });
     await page.getByRole('button', { name: 'Cambiar plan' }).click();
-    await expect(page.getByRole('main')).toContainText('Inventario');
+    const planDialog = page.getByRole('dialog', { name: 'Cambiar plan' });
+    await planDialog.getByRole('combobox', { name: 'Plan' }).click();
+    await page.getByRole('option', { name: 'Negocio' }).click();
+    await look(page, 'admin-plan-dialog');
+    await planDialog.getByRole('button', { name: 'Cambiar plan' }).click();
+    await expect(page.getByText('Plan cambiado.')).toBeVisible();
+    await expect(page.getByRole('list', { name: 'Funciones activas' })).toContainText('INVENTORY');
 
     // The company sees it on its own plan page.
     await page.goto('/es/plan');

@@ -44,4 +44,6 @@ const Toaster = ({ ...props }: ToasterProps) => {
   );
 };
 
+// Re-exported so callers share the Toaster's store, not a second copy of sonner.
+export { toast } from 'sonner';
 export { Toaster };

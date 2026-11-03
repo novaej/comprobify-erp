@@ -2,6 +2,9 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { AuthCard, AuthShell } from '@/components/auth-shell';
 import { BackLink } from '../back-link';
 import { ResendVerificationForm } from '../forms';
+import { pageTitle } from '@/server/page-title';
+
+export const generateMetadata = pageTitle('checkEmail');
 
 export default async function CheckEmailPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

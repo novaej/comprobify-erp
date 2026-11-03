@@ -91,8 +91,9 @@ Both processes run from one Docker image. Postgres holds data, sessions and the 
 16. **Migrations are forward-only**, set `lock_timeout`, and never get edited once merged.
 17. **Status CHECKs and triggers are generated from the TypeScript definition** (FR-DOC-3). Never keep two hand-written copies.
 18. **Every UI string is in the message files.** Spanish is the default, English secondary.
-19. **English for identifiers, tables and columns.** Spanish only where SRI mandates it (XML element names).
-20. **Log fields are an explicit allow-list.** Never log headers, query strings, tokens or P12 data.
+19. **Every screen looks and behaves like the others** (FR-UX-2). Build it from the shared blocks in `apps/web/src/components/` (page header, stack table, section card, form and confirm dialogs, toned badges, empty state, banner, `ChoiceSelect`), copying the structure of an existing screen of the same kind. No hand-rolled headers, lists or native selects; anything destructive or immediate asks first. `look()` in the E2E suite runs axe on every screen it reaches.
+20. **English for identifiers, tables and columns.** Spanish only where SRI mandates it (XML element names).
+21. **Log fields are an explicit allow-list.** Never log headers, query strings, tokens or P12 data.
 
 ---
 
@@ -187,6 +188,8 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `apps/web/src/server/shell.ts` | `loadShell`: session, organizations, active organization, actor, certificate status |
 | `apps/web/src/components/shell/` | Sidebar, organization switcher, top bar |
 | `apps/web/src/components/feature-locked.tsx` | What a page shows when the plan lacks its feature |
+| `apps/web/src/components/` | The shared screen blocks every page is built from (rule 19) |
+| `tests/e2e/look.ts` | axe on every screen, both themes; `E2E_SCREENSHOTS=<dir>` saves desktop and phone shots |
 | `packages/ui/` | Design system: tokens, components, theme |
 | `apps/web/messages/` | UI strings, `es` and `en` |
 | `apps/web/src/server/runtime.ts` | The web process's env, logger, database and jobs |

@@ -2,6 +2,9 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { AuthCard, AuthShell, Notice } from '@/components/auth-shell';
 import { BackLink, FooterLink } from '../back-link';
 import { ResetPasswordForm } from '../forms';
+import { pageTitle } from '@/server/page-title';
+
+export const generateMetadata = pageTitle('resetPassword');
 
 // GET shows the form; the token is consumed only by its POST (Appendix B, lesson 5).
 export default async function ResetPasswordPage({

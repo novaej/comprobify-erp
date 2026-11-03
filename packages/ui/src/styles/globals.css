@@ -88,7 +88,8 @@
   --muted-foreground: oklch(0.513 0.021 253);
   --accent: oklch(0.922 0.011 90);
   --accent-foreground: oklch(0.286 0.023 256);
-  --destructive: oklch(0.529 0.147 33);
+  /* Darker than the port: red text on its 10-20% tint reaches 4.5:1 (WCAG AA). */
+  --destructive: oklch(0.49 0.147 33);
   --border: oklch(0.886 0.014 89);
   --input: oklch(0.886 0.014 89);
   --ring: oklch(0.511 0.086 186);
@@ -146,7 +147,7 @@
   --muted-foreground: oklch(0.711 0.024 254);
   --accent: oklch(0.322 0.03 258);
   --accent-foreground: oklch(0.889 0.013 256);
-  --destructive: oklch(0.76 0.089 31);
+  --destructive: oklch(0.82 0.089 31);
   --border: oklch(0.345 0.03 256);
   --input: oklch(0.345 0.03 256);
   --ring: oklch(0.725 0.086 184);

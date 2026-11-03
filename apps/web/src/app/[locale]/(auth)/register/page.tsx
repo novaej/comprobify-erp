@@ -2,6 +2,9 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { AuthCard, AuthShell } from '@/components/auth-shell';
 import { BackLink, FooterLink } from '../back-link';
 import { SignUpForm } from '../forms';
+import { pageTitle } from '@/server/page-title';
+
+export const generateMetadata = pageTitle('register');
 
 export default async function RegisterPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

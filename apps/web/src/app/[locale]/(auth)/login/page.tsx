@@ -3,6 +3,9 @@ import { AuthCard, AuthShell, Notice } from '@/components/auth-shell';
 import { safeNextPath } from '@/server/paths';
 import { BackLink, FooterLink } from '../back-link';
 import { SignInForm } from '../forms';
+import { pageTitle } from '@/server/page-title';
+
+export const generateMetadata = pageTitle('login');
 
 const NOTICES = { idle: 'idleTimeout', reset: 'passwordReset' } as const;
 

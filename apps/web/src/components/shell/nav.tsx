@@ -197,7 +197,7 @@ export function Nav({
   const footer = (showLabels: boolean) => (
     <div className={cn('flex items-center gap-2', !showLabels && 'flex-col')}>
       <div
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary/20 text-xs font-semibold text-sidebar-primary select-none"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-xs font-semibold text-sidebar-primary-foreground select-none"
         title={showLabels ? undefined : user.name}
         aria-hidden
       >
@@ -206,7 +206,7 @@ export function Nav({
       {showLabels && (
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs font-medium text-sidebar-foreground">{user.name}</p>
-          <span className="mt-0.5 inline-flex items-center rounded bg-sidebar-primary/15 px-1.5 py-0.5 text-2xs leading-none font-medium text-sidebar-primary">
+          <span className="mt-0.5 inline-flex items-center rounded bg-sidebar-primary/15 px-1.5 py-0.5 text-2xs leading-none font-medium text-sidebar-foreground">
             {user.roleLabel}
           </span>
         </div>
