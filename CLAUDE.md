@@ -136,6 +136,7 @@ Found while setting up this repo:
 26. Giving a form an `action` prop. React 19 resets it after the action runs, so an error wipes what the user typed. Use `useFormAction`, which submits through `onSubmit`.
 27. Reading the session from `headers()` in a server action. It keeps the cookies the request arrived with, so after Better Auth rotates the session (2FA setup) the page sees no session. `currentHeaders()` builds the Cookie header from `cookies()`, which has the new one.
 28. Redirecting from a server action that changes the organization or its mode without `revalidatePath(`/${locale}`, 'layout')`. Pages in `(shell)` share its layout, which the client reuses, so the badge, banners and switcher stay stale.
+29. Expecting RLS to refuse a write. A policy-denied `UPDATE` matches no rows and succeeds. Guard writes that must fail loud with a trigger that raises, as `app_protect_platform_table` does.
 
 **Left behind on purpose** (never port): reserved API keys and pool, `requireInternalService` and the BFF secret, P12-based recovery and `alreadyLinked`, promotion key mirroring, tenant = API key identity, duplicated rows across databases, the notification-sync webhook receiver, the `sandbox` schema and `tenants.sandbox`, RabbitMQ with `pending_effects` and its sweep, droplet cron jobs, two migration tools.
 
@@ -170,6 +171,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/jobs/` | Queue registry and schedules |
 | `packages/core/src/identity/` | Better Auth setup, rate limits, sessions and idle timeout |
 | `packages/core/src/tenancy/` | Organizations and twins, roles and permissions, actor context, ambiente |
+| `packages/core/src/entitlements/` | Feature key registry, the starting modules and plans, `syncCatalog` (ADR-011) |
 | `packages/core/src/agreements/` | Legal texts (`texts/*.md`, published by the migrate step), personalization, acceptance |
 | `docs/legal/review-notes.md` | What changed in the legal texts and the open legal questions |
 | `packages/core/src/audit/` | `recordAudit` (same transaction as the change), the activity list, sign-ins |

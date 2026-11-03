@@ -8,7 +8,7 @@ Open work only. Tick steps as they land. When a milestone's gate passes, remove 
 
 The model is in [ADR-011](docs/adr/011-plans-modules-and-entitlements.md): feature keys in code, modules and plans as data, subscriptions with items, overrides, twins mirrored. Prices wait for Milestone 8.
 
-- [ ] 1. Catalog: the feature key registry in a new `entitlements` module, synced to `features` by the migrate step; platform tables `modules`, `module_features`, `plans`, `plan_modules` and `plan_limits`, with status CHECKs generated from TypeScript; the starting modules and plans seeded once (FR-PLAN-1, FR-PLAN-2).
+- [x] 1. Catalog: the feature key registry in a new `entitlements` module, synced to `features` by the migrate step; platform tables `modules`, `module_features`, `plans`, `plan_modules` and `plan_limits`, with status CHECKs generated from TypeScript; the starting modules and plans seeded once (FR-PLAN-1, FR-PLAN-2).
 - [ ] 2. Subscriptions: `subscriptions` (plan, `PAID` or `COMPLIMENTARY` with a reason, Personalizado's negotiated price), `subscription_items` and `tenant_feature_overrides`, under forced RLS and mirrored into the twin; new companies start on Gratis, and existing ones are moved onto it (FR-PLAN-1a, FR-PLAN-1b, FR-ONB-6a).
 - [ ] 3. Resolver and enforcement: entitlements resolved once per request into the actor context, with the dated rule for removed modules; `requireFeature` and `requireWithinLimit` in the kernel (`FEATURE_NOT_ENABLED`, `LIMIT_REACHED`); applied to what exists today: `USERS` on invitations and `RIDE_LOGO` on the logo (FR-PLAN-3, FR-PLAN-4, FR-USR-1).
 - [ ] 4. UI gating: navigation and pages hide or lock what the company doesn't have; a plan page showing the plan, modules, limits and usage (FR-PLAN-4).

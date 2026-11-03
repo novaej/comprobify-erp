@@ -113,6 +113,20 @@
       "when": 1793666497798,
       "tag": "0015_agreements_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793707595516,
+      "tag": "0016_entitlements_catalog",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793707595886,
+      "tag": "0017_entitlements_catalog_rules",
+      "breakpoints": true
     }
   ]
 }

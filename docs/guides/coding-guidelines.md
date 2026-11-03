@@ -26,13 +26,18 @@ The rules in [CLAUDE.md](../../CLAUDE.md) come first. This guide covers how to a
 
 1. Add it to the Drizzle schema in `packages/db/src/schema/`, with `tenant_id` if a tenant owns it and `uuidv7()` as the key default.
 2. Run `pnpm db:generate`, and review the SQL.
-3. For a tenant-owned table, add `SELECT app_enable_tenant_rls('public.<table>'::regclass);` to the migration. The catalog test fails without it.
+3. For a tenant-owned table, add `SELECT app_enable_tenant_rls('public.<table>'::regclass);` to the migration. The catalog test fails without it. A platform table (no tenant, written only by the migrate step or the super admin) gets `SELECT app_protect_platform_table('public.<table>'::regclass);` instead, which refuses writes outside system context.
 4. A child table references its parent through `(tenant_id, id)`, so a row can't point into another tenant.
 5. Give the isolation sweep (`tests/integration/isolation-sweep.test.ts`) data for the new table; it fails while any tenant table is empty.
 6. A status or type column gets a CHECK generated from a TypeScript list with `oneOf` (CLAUDE.md rule 17).
 7. Never edit a migration once merged. Write a new one.
 
 Hand-written SQL (functions, triggers) goes in a custom migration: `pnpm --filter @comprobify/db exec drizzle-kit generate --custom --name=<name>`.
+
+## Adding a feature key
+
+1. Add the key and its kind (`BOOLEAN` or `LIMIT`) to `FEATURES` in `packages/core/src/entitlements/features.ts`. Never rename a key or change its kind; add a new one.
+2. The migrate step syncs it to `features`. It grants nothing until the super admin puts it in a module, or a new starting module in `catalog.ts` carries it (seeded once, by key).
 
 ## Adding a job
 

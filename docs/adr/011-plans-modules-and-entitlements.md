@@ -36,7 +36,8 @@ The old system had seven tiers, each a fixed set of limits and allowed document 
 
 - **A key may sit in several modules.** A tenant's booleans are the union of all its modules. `PROVIDERS` is in Compras and later in Retenciones, Liquidaciones and Comprobantes recibidos, so no module depends on another and the plan builder needs one rule only (below).
 - **The base module, Facturación, is in every plan.** A plan without it can't be saved, and the personalized plan can't drop it.
-- **A module has a status:** `AVAILABLE` or `COMING_SOON`. A coming-soon module can't be put in a published plan or bought. A key whose code isn't built yet belongs only to coming-soon modules.
+- **A module has a status:** `AVAILABLE` or `COMING_SOON`. A coming-soon module can't be bought on its own. A plan may list it: the plan shows it as coming soon, and it grants nothing until it becomes available, so Empresa gets guías de remisión when they ship.
+- **Only system context writes the catalog.** A statement trigger raises `42501` on any other write, because a refused RLS `UPDATE` matches no rows and succeeds silently. Feature keys are written by the migrate step only.
 - **A plan has a status** (`DRAFT`, `PUBLISHED`, `RETIRED`) and a `self_service` flag. Personalizado is not self-service.
 
 **What a tenant has.** A tenant holds one subscription to a plan, plus subscription items:

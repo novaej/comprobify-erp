@@ -17,7 +17,7 @@ How the system fits together. Requirements are in [PRD.md](PRD.md); the reasons 
 
 - **web** serves pages, server actions and route handlers. It only sends jobs.
 - **worker** runs job handlers, cron schedules and queue maintenance.
-- **migrate** runs before each release as the owner role: SQL migrations, then the pg-boss schema and queues.
+- **migrate** runs before each release as the owner role: SQL migrations, then the pg-boss schema and queues, the plan catalog and the legal texts.
 
 There is no Redis or message broker. Postgres holds data, sessions and jobs (ADR-005).
 
@@ -62,6 +62,10 @@ Three contexts exist, each set per transaction: tenant (everyday work), user (on
 ### Policies
 
 Every tenant-owned table has `tenant_id` and the standard policy from `app_enable_tenant_rls()`. A query without a tenant or system context raises `RLS: no tenant or system context` instead of returning nothing (ADR-004). Two tables differ, as ADR-010 records: `memberships` also admits the user context for the user's own rows, and `tenants`, keyed by `id`, admits the organizations the user belongs to; in user context both are read-only. The catalog test checks each table's exact policy. Cross-tenant work uses `withSystem(reason, …)`, which logs the reason. The app role can't bypass RLS, delete rows or change the schema, and web and worker refuse to start if it could (NFR-SEC-4).
+
+## Plans and entitlements
+
+Feature keys are a registry in `packages/core/src/entitlements/features.ts`, the only layer in code. Modules (sets of keys, the unit that is sold) and plans (modules plus limits) are platform data in `features`, `modules`, `module_features`, `plans`, `plan_modules` and `plan_limits` (ADR-011). The migrate step syncs new keys and seeds any starting module or plan missing by key; after that the super admin edits them, and the seed never overwrites a row. Every context can read the catalog. A statement trigger refuses writes outside system context, and feature keys are written by the migrate step only.
 
 ## Audit log
 

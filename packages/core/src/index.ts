@@ -4,6 +4,7 @@ export * from './email';
 export * from './identity';
 export * from './agreements';
 export * from './audit';
+export * from './entitlements';
 export * from './tenancy';
 export * from './certificates';
 export { registerHandlers } from './register-handlers';
