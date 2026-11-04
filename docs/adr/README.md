@@ -34,6 +34,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [011](011-plans-modules-and-entitlements.md) | Plans, modules and entitlements | Accepted |
 | [012](012-money-and-sri-catalogues.md) | Money arithmetic and SRI catalogues | Accepted |
 | [013](013-sri-xml-xsd-and-signature.md) | SRI XML, XSD validation and the XAdES-BES signature | Accepted |
+| [014](014-sri-client-and-mock.md) | The SRI client and the mock SRI | Accepted |
 
 ## Old ADRs to read before each milestone
 

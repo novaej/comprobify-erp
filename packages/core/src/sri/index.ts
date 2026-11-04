@@ -22,3 +22,25 @@ export { validateXml } from './xsd';
 export type { ValidatedDocumentType, XsdResult } from './xsd';
 export { signXml } from './signer';
 export type { SigningKey } from './signer';
+export {
+  createSriClient,
+  fetchTransport,
+  parseAuthorization,
+  parseReception,
+  parseValidity,
+  SRI_BASE_URLS,
+  SRI_HOLDS_CODES,
+  SRI_SEQUENTIAL_TAKEN,
+  SriTransportError,
+} from './client';
+export type {
+  AuthorizationResult,
+  ReceptionResult,
+  SriClient,
+  SriClientOptions,
+  SriTransport,
+  ValidityResult,
+} from './client';
+export { createMockSri } from './mock';
+export type { MockOutcome, MockSri } from './mock';
+export type { SriMessage } from './soap';

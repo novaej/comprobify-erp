@@ -2,3 +2,4 @@
 export { createTestP12, testRuc } from './certificates';
 export type { TestP12Options } from './certificates';
 export { sampleFactura } from './factura';
+export { serveMockSri } from './mock-sri-server';

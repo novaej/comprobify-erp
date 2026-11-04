@@ -101,6 +101,8 @@ Any refusal rolls the number back. The buyer is a client read through `parties` 
 
 `sri/factura.ts` builds the factura XML in the XSD's element order, through a small writer (`sri/xml.ts`) whose output is already in canonical form: double quotes, sorted attributes, no self-closing tags, C14N's escapes. `validateXml` checks it with `xmllint` against the XSDs embedded in `sri/xsd/`, before anything is signed. `signXml` adds the XAdES-BES signature SRI accepts: RSA-SHA256, two references, the certificate only in KeyInfo. Its tests verify it with a real C14N implementation (ADR-013).
 
+`sri/client.ts` talks to SRI's reception, authorization and Consulta de validez services. It sends one request per call and throws `SriTransportError` only for transport failures, which are the only ones the jobs retry. It maps SRI's answers to `RECEIVED` (43 and 70 included), `RETURNED`, `AUTHORIZED`, `NOT_AUTHORIZED`, `PENDING`, and the validity states. The endpoint comes from the document's ambiente. `createMockSri` answers like SRI (RECIBIDA, DEVUELTA, 43, 45, 70, scripted failures) for tests and for `SRI_MOCK_MODE` (ADR-014).
+
 ## Audit log
 
 `audit_events` is tenant data with RLS, and append-only: the app role can insert and read, not update or delete. Core writes an event with `recordAudit` in the same transaction as the change, so a rolled-back change leaves none. Event names are one TypeScript list that generates the CHECK, and the web test requires a label for each. Changes to an organization and its twin are recorded in the real organization's log.
