@@ -2,7 +2,7 @@
 
 Primary guide for AI assistants and developers. Every rule here takes precedence over defaults. `docs/PRD.md` is the source of truth for what to build; this file is how to build it. Keep it current: it changes with every milestone.
 
-**Status:** Milestone 1 (Identity and tenancy) done. Milestone 2 (Entitlements and plans) is next; see `NEXT_STEPS.md`. Decisions are in [docs/adr/](docs/adr/README.md).
+**Status:** Milestones 1 (Identity and tenancy) and 2 (Entitlements and plans) done. Milestone 3 (SRI engine: factura) is next; see `NEXT_STEPS.md`. Decisions are in [docs/adr/](docs/adr/README.md).
 
 ---
 

@@ -2,31 +2,21 @@
 
 Open work only. Tick steps as they land. When a milestone's gate passes, remove its section: `CHANGELOG.md` and git keep the history. Requirements and gates are in [docs/PRD.md](docs/PRD.md), section 15.
 
-## Current: Milestone 2, Entitlements and plans
+## Current: Milestone 3, SRI engine: factura
 
-**Gate:** toggling a feature per tenant changes UI and core behaviour.
+**Gate:** invoice authorized in the SRI test environment; fake-clock tests for 23:59, D+1 and month end; reception codes 43 and 70 handled.
 
-The model is in [ADR-011](docs/adr/011-plans-modules-and-entitlements.md): feature keys in code, modules and plans as data, subscriptions with items, overrides, twins mirrored. Prices wait for Milestone 8.
+Before starting: read PRD sections 5.8 and 6 and the Ficha Técnica in `docs/reference/` (ask the owner if it's missing), and the old API ADRs for this milestone ([docs/adr/README.md](docs/adr/README.md)). Break the scope into steps here.
 
-- [x] 1. Catalog: the feature key registry in a new `entitlements` module, synced to `features` by the migrate step; platform tables `modules`, `module_features`, `plans`, `plan_modules` and `plan_limits`, with status CHECKs generated from TypeScript; the starting modules and plans seeded once (FR-PLAN-1, FR-PLAN-2).
-- [x] 2. Subscriptions: `subscriptions` (plan, `PAID` or `COMPLIMENTARY` with a reason, Personalizado's negotiated price), `subscription_items` and `tenant_feature_overrides`, under forced RLS and mirrored into the twin; new companies start on Gratis, and existing ones are moved onto it (FR-PLAN-1a, FR-PLAN-1b, FR-ONB-6a).
-- [x] 3. Resolver and enforcement: entitlements resolved once per request into the actor context, with the dated rule for removed modules; `requireFeature` and `requireWithinLimit` in the kernel (`FEATURE_NOT_ENABLED`, `LIMIT_REACHED`); applied to what exists today: `USERS` on invitations and `RIDE_LOGO` on the logo (FR-PLAN-3, FR-PLAN-4, FR-USR-1).
-- [x] 4. UI gating: navigation and pages hide or lock what the company doesn't have; a plan page showing the plan, modules, limits and usage (FR-PLAN-4).
-- [x] 5a. Super admin area: its own route group and layout with no tenant, `PlatformActor` checks in core, two-step verification required; per company: plan, add-ons, Personalizado, complimentary and overrides, each recorded in the activity log (FR-ADM-1, ADR-010).
-- [x] 5b. UI alignment: port the shared building blocks (page header, stack table, confirm and scrolling dialogs, empty state, toned badges, banner actions, required fields, toasts), rebuild every screen so far with them and the admin area with its own sidebar, and run axe on every page in E2E (FR-UX-2, FR-UX-3).
-- [x] 5c. Editors for plans and modules: names, status, contents; removals and lowered limits dated 30 days ahead; a super admin with no company lands in the platform area (FR-ADM-3).
-- [ ] 6. Gate and close: E2E where switching a feature for one company changes its screens and core refuses it; isolation sweep covering the new tables; docs.
+## Carried forward
 
-## Carried forward from Milestone 1
-
-- **Milestone 3:** organization settings with contribuyente especial, agente de retención and RIMPE (onboarding collects only the accounting flag) and certificate renewal (FR-ONB-3); twin reset; starting sequentials asked at go-live, before the first real document; issue-point restrictions applied as query filters once documents exist (FR-ROLE-2: the actor already carries them).
+- **Milestone 3:** enabling a document type on an issue point needs its `DOC_TYPE_*` feature, and an active type keeps working if the plan loses it (FR-PLAN-3); `DOCUMENT_QUOTA` is checked when issuing, never for the twin (FR-BILL-7); organization settings with contribuyente especial, agente de retención and RIMPE (onboarding collects only the accounting flag) and certificate renewal (FR-ONB-3); twin reset; starting sequentials asked at go-live, before the first real document; issue-point restrictions applied as query filters once documents exist (FR-ROLE-2: the actor already carries them).
 - **Milestone 9:** email the companies on a plan when a module or a lower limit is scheduled to leave it, as with price changes (FR-BILL-6, FR-NOT-2); a page for the platform activity log (`platform_audit_events`).
 - **Milestones 5 and 6:** go-live offers to copy master data from the twin (FR-ONB-5) once products, clients and suppliers exist.
 - **Not scheduled:** ownership transfer (PRD section 3). Today nobody can change or remove the owner.
 
 ## Upcoming milestones
 
-- [ ] 3. SRI engine: factura
 - [ ] 4. Other SRI documents
 - [ ] 5. Inventory and purchasing
 - [ ] 6. Sales
@@ -34,7 +24,7 @@ The model is in [ADR-011](docs/adr/011-plans-modules-and-entitlements.md): featu
 - [ ] 8. Billing
 - [ ] 9. Notifications, reports, admin
 - [ ] 10. Production readiness and cutover
-- [ ] 11+. Post-MVP: public API, API keys, webhooks, MCP, OAuth, developer docs
+- [ ] 11+. Post-MVP: retención, liquidación de compra and received XML import; public API, API keys, webhooks, MCP, OAuth, developer docs, Integración plans
 
 ## Before agreements are switched on
 

@@ -477,4 +477,57 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     );
     await look(page, 'admin-module');
   });
+
+  // Milestone 2 gate: switching a feature for one company changes its screens; core refuses
+  // what the screen no longer offers (tests/integration/milestone-2-gate.test.ts).
+  test('changes what the company can do when the super admin sets an exception (ADR-011)', async ({
+    page,
+  }) => {
+    await signIn(page, email, newPassword);
+    await page.getByLabel('Código', { exact: true }).fill(await totp());
+    await page.getByRole('button', { name: 'Verificar' }).click();
+    await expect(page).toHaveURL(/\/es\/dashboard$/);
+
+    const company = async () => {
+      await page.goto(`/es/admin?q=${companyRuc}`);
+      await page
+        .getByRole('row', { name: new RegExp(companyRuc) })
+        .getByRole('link', { name: 'Delta Comercial S.A.' })
+        .click();
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Delta Comercial S.A.');
+    };
+    const users = async () => {
+      await page.goto('/es/users');
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Usuarios');
+    };
+
+    // One user, the owner: the company can't invite anyone.
+    await company();
+    await page.getByRole('button', { name: 'Agregar excepción' }).click();
+    const exception = page.getByRole('dialog', { name: 'Agregar excepción' });
+    await exception.getByRole('combobox', { name: 'Función' }).click();
+    await page.getByRole('option', { name: 'USERS', exact: true }).click();
+    await exception.getByLabel('Valor del límite').fill('1');
+    await exception.getByLabel('Motivo').fill('Prueba del hito 2');
+    await look(page, 'admin-exception');
+    await exception.getByRole('button', { name: 'Guardar excepción' }).click();
+    await expect(page.getByText('Excepción guardada.')).toBeVisible();
+    await users();
+    await expect(page.getByText(/^Tu plan permite 1 usuario/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Invitar', exact: true })).toBeDisabled();
+
+    // Without the exception, Negocio's five users apply again.
+    await company();
+    await page.getByRole('button', { name: 'Quitar la excepción de USERS' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Quitar la excepción?' })
+      .getByRole('button', { name: 'Quitar' })
+      .click();
+    await expect(page.getByText('Excepción quitada.')).toBeVisible();
+    await users();
+    await expect(
+      page.getByText('1 de 5 usuarios, contando las invitaciones pendientes'),
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Invitar', exact: true })).toBeEnabled();
+  });
 });
