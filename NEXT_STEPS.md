@@ -12,13 +12,13 @@ Read PRD sections 5.8 and 6 and the Ficha Técnica v2.32 in `docs/reference/` be
 - [x] 2. Clients and products, basic: tenant tables under RLS, cédula and RUC check digits, consumidor final built in; list and form screens behind `CLIENTS` and `CATALOG` (FR-MD-1, FR-MD-2).
 - [x] 3. Company settings: contribuyente especial, agente de retención, RIMPE; document types per issue point, needing `DOC_TYPE_*` (FR-PLAN-3); starting sequentials asked at go-live (FR-ONB-3, FR-ONB-5).
 - [x] 4. Document core: documents, lines, events and sequentials (`FOR UPDATE`); the status machine with its generated trigger; the immutability trigger; the access key with Module 11 (FR-DOC-3, SRI rules 7 and 9).
-- [ ] 5. XML, XSD and signing: the factura builder in element order, `xmllint` validation before signing, the XAdES-BES signer (SRI rules 8 and 13). Settle the RIMPE legend: the factura XSD 2.1.0 only accepts `CONTRIBUYENTE RÉGIMEN RIMPE`, while the Ficha's Anexo 22 also requires `CONTRIBUYENTE NEGOCIO POPULAR - RÉGIMEN RIMPE`; check the XSD SRI publishes today.
+- [x] 5. XML, XSD and signing: the factura builder in element order, `xmllint` validation before signing, the XAdES-BES signer (SRI rules 8 and 13; ADR-013).
 - [ ] 6. Creating an invoice: the FR-DOC-2 pipeline in one transaction (idempotency, entitlements, `DOCUMENT_QUOTA` never for the twin, totals and taxes, consumidor final cap, FR-DOC-9 validation) with the send job enqueued in it.
 - [ ] 7. SRI client and mock SRI: reception, authorization and Consulta de validez over SOAP; a mock server answering like SRI (RECIBIDA, DEVUELTA, codes 43, 45, 70) for tests and local work.
 - [ ] 8. Send and authorize jobs: the retry calendar in Ecuador time, the deadline check, D+1 re-issue, the 24-hour alert; fixed-clock tests at 23:59, D+1 and month end (FR-DOC-4 to FR-DOC-6).
 - [ ] 9. Correction, void, RIDE and buyer email: same row and sequential; void checked against SRI; the RIDE from the authorized XML; RIDE and XML emailed (FR-DOC-7, FR-DOC-8, FR-DOC-10, FR-DOC-11).
 - [ ] 10. Document screens: the invoice form with keyboard line entry, list with filters, detail with timeline, pending documents, XML download (FR-DOC-12, FR-UX-4).
-- [ ] 11. Gate, **run by the owner**: an invoice authorized by SRI's test environment with a real certificate, following a checklist prepared here; the fixed-clock and 43/70 tests in CI.
+- [ ] 11. Gate, **run by the owner**: an invoice authorized by SRI's test environment with a real certificate, following a checklist prepared here; the fixed-clock and 43/70 tests in CI. The checklist includes the negocio popular RIMPE legend: the published factura XSD 2.1.0 refuses it, so send one to the test environment and settle it as ADR-013 says.
 
 ## Carried forward
 

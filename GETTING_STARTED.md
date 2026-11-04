@@ -4,6 +4,7 @@
 
 - Node.js 24 (`nvm use` reads `.nvmrc`)
 - Docker
+- `xmllint`, for SRI XML: part of macOS; `apt install libxml2-utils` on Debian and Ubuntu
 - pnpm, through Corepack:
 
 ```bash

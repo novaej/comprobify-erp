@@ -33,6 +33,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [010](010-tenancy-and-user-context.md) | Tenancy model and the user context | Accepted |
 | [011](011-plans-modules-and-entitlements.md) | Plans, modules and entitlements | Accepted |
 | [012](012-money-and-sri-catalogues.md) | Money arithmetic and SRI catalogues | Accepted |
+| [013](013-sri-xml-xsd-and-signature.md) | SRI XML, XSD validation and the XAdES-BES signature | Accepted |
 
 ## Old ADRs to read before each milestone
 
@@ -43,7 +44,7 @@ Port the ones still valid as "carried over" ADRs here, linking the original in `
 | 0 | 012, 020, 036, 037, 038, 039 |
 | 1 | 018, 035 (what to leave behind) |
 | 2 | 029, 031, 034 |
-| 3 | 003, 004, 006, 008, 009 |
+| 3 | 003, 004 (carried over as 013), 006, 008, 009 |
 | 8 | 017, 022, 023, 025, 027, 028, 032, 033 |
 | 9 | 024 |
 | When Redis is added | 026 |

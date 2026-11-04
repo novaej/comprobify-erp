@@ -18,3 +18,8 @@ export function startOfNextEcuadorMonth(at: Date): Date {
 export function ecuadorDate(at: Date): string {
   return new Date(at.getTime() - OFFSET_MS).toISOString().slice(0, 10);
 }
+
+// An instant as Ecuador wall time with its offset, as xsd:dateTime: 2026-11-10T10:00:00-05:00.
+export function ecuadorDateTime(at: Date): string {
+  return `${new Date(at.getTime() - OFFSET_MS).toISOString().slice(0, 19)}-05:00`;
+}

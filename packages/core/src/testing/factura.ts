@@ -1,0 +1,57 @@
+import type { FacturaInput } from '../sri';
+
+// A factura that uses every optional element and needs escaping, for builder and signer tests.
+export const sampleFactura = (overrides: Partial<FacturaInput> = {}): FacturaInput => ({
+  ambiente: '1',
+  accessKey: '1011202601179000000100110010010000000011234567813',
+  establishment: '001',
+  issuePoint: '001',
+  sequential: 1,
+  issueDate: '2026-11-10',
+  issuer: {
+    ruc: '1790000000001',
+    legalName: 'Alfa & Omega S.A.',
+    tradeName: 'Alfa <Tienda>',
+    mainAddress: 'Av. Amazonas N24-03, Quito',
+    branchAddress: 'Av. 6 de Diciembre, Quito',
+    requiredAccounting: true,
+    specialTaxpayerResolution: '12345',
+    withholdingAgentResolution: '1',
+    taxRegime: 'GENERAL',
+  },
+  buyer: {
+    idType: '05',
+    identification: '1710034065',
+    name: 'María "Mary" López',
+    address: 'Cumbayá',
+    email: 'maria@example.com',
+  },
+  lines: [
+    {
+      code: 'SRV-001',
+      auxiliaryCode: null,
+      name: 'Consultoría',
+      unit: 'hora',
+      quantity: '2.5',
+      unitPrice: '40.123456',
+      discount: '0.31',
+      ivaRateCode: '4',
+      additionalDetails: [{ name: 'Lote', value: 'A1' }],
+    },
+    {
+      code: 'LIB-001',
+      auxiliaryCode: 'ISBN-1',
+      name: 'Libro',
+      unit: null,
+      quantity: '1',
+      unitPrice: '12',
+      discount: '0',
+      ivaRateCode: '0',
+      additionalDetails: [],
+    },
+  ],
+  payments: [{ method: '20', amount: '127.33', term: 30, termUnit: 'dias' }],
+  additionalInfo: [{ name: 'Orden', value: 'OC-77' }],
+  providerRuc: '1712345678001',
+  ...overrides,
+});

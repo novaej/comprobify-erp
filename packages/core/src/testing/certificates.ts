@@ -10,6 +10,8 @@ export type TestP12Options = {
   notBefore?: Date;
   notAfter?: Date;
   commonName?: string;
+  // Hex, as X.509 stores it; real CAs use 16 bytes or more.
+  serialNumber?: string;
 };
 
 function keyPair() {
@@ -46,7 +48,7 @@ export function createTestP12(options: TestP12Options = {}): Buffer {
 
   const cert = forge.pki.createCertificate();
   cert.publicKey = leaf.publicKey;
-  cert.serialNumber = '02';
+  cert.serialNumber = options.serialNumber ?? '02';
   cert.validity.notBefore = options.notBefore ?? new Date(now - 86_400_000);
   cert.validity.notAfter = options.notAfter ?? new Date(now + 365 * 86_400_000);
   cert.setSubject([{ shortName: 'CN', value: options.commonName ?? 'ANA PEREZ' }]);

@@ -1,7 +1,12 @@
 export { fixedClock, systemClock, type Clock } from './clock';
 export type { ActorContext, PlatformActor, TenantMode } from './context';
 export { DomainError, isDomainError, type DomainErrorDetails } from './errors';
-export { ecuadorDate, startOfEcuadorMonth, startOfNextEcuadorMonth } from './ecuador-time';
+export {
+  ecuadorDate,
+  ecuadorDateTime,
+  startOfEcuadorMonth,
+  startOfNextEcuadorMonth,
+} from './ecuador-time';
 export {
   hasFeature,
   limitOf,
