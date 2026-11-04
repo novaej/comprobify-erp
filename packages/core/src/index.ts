@@ -9,5 +9,7 @@ export * from './tenancy';
 export * from './certificates';
 export * from './platform';
 export * from './sri';
+export * from './parties';
+export * from './catalog';
 export { registerHandlers } from './register-handlers';
 export type { HandlerDeps } from './register-handlers';

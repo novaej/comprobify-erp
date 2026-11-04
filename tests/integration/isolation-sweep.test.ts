@@ -3,6 +3,8 @@ import {
   acceptAgreements,
   acceptInvitation,
   addModule,
+  createClient,
+  createProduct,
   createAuth,
   createJobs,
   createKeyCipher,
@@ -116,6 +118,20 @@ describe('isolation sweep over every tenant table', () => {
     await acceptAgreements(ctx, db, { ipAddress: '203.0.113.9', userAgent: 'Sweep' }, parties);
     for (const tenantId of [org.realTenantId, org.twinTenantId]) {
       await recordSessionStart(db, { tenantId, userId: owner, sessionId: randomUUID() });
+      // Clients and products: each tenant, the twin included, keeps its own (FR-MD-1, FR-MD-2).
+      const actor = await resolveActor(db, { userId: owner, tenantId, clock });
+      await createClient(actor, db, {
+        idType: '05',
+        identification: '1710034065',
+        name: 'Cliente',
+      });
+      await createProduct(actor, db, {
+        code: 'P-1',
+        name: 'Producto',
+        kind: 'GOOD',
+        price: '1.00',
+        ivaRateCode: '4',
+      });
     }
     return org;
   };
@@ -158,10 +174,12 @@ describe('isolation sweep over every tenant table', () => {
         'audit_events',
         'branches',
         'certificates',
+        'clients',
         'invitations',
         'issue_point_access',
         'issue_points',
         'memberships',
+        'products',
         'subscription_items',
         'subscriptions',
         'tenant_feature_overrides',

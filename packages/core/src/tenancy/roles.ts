@@ -16,6 +16,7 @@ export const PERMISSIONS = [
   'certificates.manage',
   'catalog.read',
   'catalog.manage',
+  'clients.read',
   'clients.manage',
   'providers.manage',
   'sales.read',
@@ -50,6 +51,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   SALES: [
     'catalog.read',
     'catalog.manage',
+    'clients.read',
     'clients.manage',
     'sales.read',
     'sales.manage',

@@ -130,7 +130,7 @@ The current product is an invoicing API with a web UI on top. The new product is
 - **FR-MD-3 Providers:** same identity shape as clients, plus payment terms and default retention codes.
 - **FR-MD-4 Warehouses:** one per branch, created automatically with the branch. Every stock row carries `warehouse_id` so more warehouses per branch can be added later without a data migration.
 - **FR-MD-5 Document templates:** saved invoice line sets for recurring billing (exists today in the web app).
-- **FR-MD-6** SRI catalogues as seeded tables: id types, document types, tax types, tax rates (IVA 0/5/12/15/exento/no objeto, with SRI codes), payment methods (formaPago), term units, retention codes (renta and IVA).
+- **FR-MD-6** SRI catalogues as typed lists in code, with CHECKs generated from them and labels in the message files (ADR-012): id types, document types, tax types, tax rates (IVA 0/5/12/15/exento/no objeto, with SRI codes), payment methods (formaPago), term units. Retention codes (renta and IVA), a long list that changes yearly, become a table when retenciones arrive.
 
 ### 5.5 Inventory
 

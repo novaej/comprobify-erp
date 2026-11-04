@@ -57,4 +57,5 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - `pnpm db:reset <local|test|e2e|all>` to drop, recreate and migrate a local database.
 - The Milestone 2 gate: switching a module, an exception or a limit for one company changes its screens and what core allows, in it and its twin, while another company on the same plan is untouched (E2E and integration).
 - Decimal arithmetic with `decimal.js` and the rounding rules for SRI amounts, and the Ficha Técnica's catalogues (document types, identification types, taxes, IVA rates, payment methods, time units) as typed lists with labels in Spanish and English (ADR-012).
+- Clients and products: list, search, create, edit and deactivate, behind the `CLIENTS` and `CATALOG` features and their permissions (a new `clients.read`). Cédulas are checked by their check digit and RUCs by structure; prices keep six decimals; products carry today's IVA rates and up to three additional details (FR-MD-1, FR-MD-2).
 - `AUTH_SECRET`, `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, `MAILGUN_REGION` and `EMAIL_FROM`.

@@ -3,7 +3,9 @@
 import { cn } from '@comprobify/ui/lib/utils';
 import { ThemeToggle } from '@comprobify/ui/theme';
 import {
+  Boxes,
   ChevronLeft,
+  Contact,
   ChevronRight,
   FileText,
   LayoutDashboard,
@@ -27,7 +29,7 @@ import { OrgSwitcher, type SwitcherOrganization } from './org-switcher';
 type NavItem = {
   href: string;
   icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
-  labelKey: 'dashboard' | 'users' | 'activity' | 'plan' | 'legal';
+  labelKey: 'dashboard' | 'clients' | 'products' | 'users' | 'activity' | 'plan' | 'legal';
   group: 'operate' | 'manage';
   // Core still enforces both; these only hide the link (FR-ROLE-3, FR-PLAN-4).
   permission: string | null;
@@ -42,6 +44,22 @@ const NAV_ITEMS: NavItem[] = [
     labelKey: 'dashboard',
     group: 'operate',
     permission: null,
+  },
+  {
+    href: '/clients',
+    icon: Contact,
+    labelKey: 'clients',
+    group: 'operate',
+    permission: 'clients.read',
+    feature: 'CLIENTS',
+  },
+  {
+    href: '/products',
+    icon: Boxes,
+    labelKey: 'products',
+    group: 'operate',
+    permission: 'catalog.read',
+    feature: 'CATALOG',
   },
   {
     href: '/users',

@@ -220,6 +220,62 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(usersRow).toContainText('1 de 1');
   });
 
+  test('keeps the clients and products of the company (FR-MD-1, FR-MD-2)', async ({ page }) => {
+    await signIn(page, email, newPassword);
+    const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
+
+    await nav.getByRole('link', { name: 'Clientes' }).click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Clientes');
+    await look(page, 'clients-empty');
+    await page.getByRole('button', { name: 'Nuevo cliente' }).click();
+    const clientDialog = page.getByRole('dialog', { name: 'Nuevo cliente' });
+    await clientDialog
+      .getByRole('textbox', { name: 'Identificación', exact: true })
+      .fill('1710034066');
+    await clientDialog.getByLabel('Nombre o razón social').fill('María López');
+    await clientDialog.getByLabel('Correos').fill('maria@example.com');
+    await look(page, 'client-new');
+    await clientDialog.getByRole('button', { name: 'Crear cliente' }).click();
+    // A cédula whose check digit doesn't match is refused, and what was typed stays.
+    await expect(clientDialog.getByRole('alert')).toContainText(
+      'la identificación debe ser válida',
+    );
+    await clientDialog
+      .getByRole('textbox', { name: 'Identificación', exact: true })
+      .fill('1710034065');
+    await clientDialog.getByRole('button', { name: 'Crear cliente' }).click();
+    await expect(page.getByText('Cliente creado.')).toBeVisible();
+    await expect(page.getByRole('table', { name: 'Clientes' })).toContainText('María López');
+    await look(page, 'clients');
+
+    await nav.getByRole('link', { name: 'Productos' }).click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Productos y servicios');
+    await page.getByRole('button', { name: 'Nuevo producto' }).click();
+    const productDialog = page.getByRole('dialog', { name: 'Nuevo producto' });
+    await productDialog.getByRole('textbox', { name: 'Código', exact: true }).fill('SRV-001');
+    await productDialog
+      .getByRole('textbox', { name: 'Nombre', exact: true })
+      .fill('Asesoría contable');
+    await productDialog.getByLabel('Precio unitario').fill('45,50');
+    await look(page, 'product-new');
+    await productDialog.getByRole('button', { name: 'Crear producto' }).click();
+    await expect(page.getByText('Producto creado.')).toBeVisible();
+    const products = page.getByRole('table', { name: 'Productos y servicios' });
+    await expect(products.getByRole('row', { name: /Asesoría contable/ })).toContainText('$45,50');
+    await look(page, 'products');
+
+    // Deactivating asks first, and the product stays listed as inactive.
+    await page.getByRole('button', { name: 'Desactivar Asesoría contable' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Desactivar el producto?' })
+      .getByRole('button', { name: 'Desactivar' })
+      .click();
+    await expect(page.getByText('Producto desactivado.')).toBeVisible();
+    await expect(products.getByRole('row', { name: /Asesoría contable/ })).toContainText(
+      'Inactivo',
+    );
+  });
+
   test('invites a read-only member who joins and sees only what the role allows (FR-USR-1, FR-ROLE-3)', async ({
     page,
     browser,

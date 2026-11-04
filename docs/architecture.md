@@ -75,6 +75,10 @@ The super admin edits the catalog from the platform area (`platform/catalog.ts` 
 
 The web app only hides or locks: nav items carry a feature key, a page behind one renders `FeatureLocked`, and the plan page shows the plan, its modules and each limit with its usage (`planOverview`, `companyUsage`).
 
+## Master data
+
+Clients (`parties`) and products and services (`catalog`) are tenant data under RLS, behind the `CLIENTS` and `CATALOG` features and the `clients.*` and `catalog.*` permissions. A company and its twin keep their own lists. Consumidor final is never a row. A cédula must pass its check digit; a RUC is checked by structure only, as onboarding does. Prices are `numeric` with six decimals and stay decimal strings end to end (ADR-012). Nothing is deleted: an inactive client or product drops out of the pickers and stays on its documents.
+
 ## Audit log
 
 `audit_events` is tenant data with RLS, and append-only: the app role can insert and read, not update or delete. Core writes an event with `recordAudit` in the same transaction as the change, so a rolled-back change leaves none. Event names are one TypeScript list that generates the CHECK, and the web test requires a label for each. Changes to an organization and its twin are recorded in the real organization's log.

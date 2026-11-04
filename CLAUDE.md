@@ -179,6 +179,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/platform/` | The super admin's workflows: companies, their plans, add-ons, Personalizado, complimentary, overrides; editing plans and modules |
 | `apps/web/src/app/[locale]/(admin)/` | The platform area, outside any company (`loadPlatform`) |
 | `packages/core/src/sri/` | SRI catalogues (from `packages/db/src/schema/sri.ts`), totals and rounding (ADR-012); the builders, signer and client from Milestone 3 |
+| `packages/core/src/parties/`, `packages/core/src/catalog/` | Clients with identification checks; products and services (FR-MD-1, FR-MD-2) |
 | `packages/core/src/agreements/` | Legal texts (`texts/*.md`, published by the migrate step), personalization, acceptance |
 | `docs/legal/review-notes.md` | What changed in the legal texts and the open legal questions |
 | `packages/core/src/audit/` | `recordAudit` (same transaction as the change), the activity list, sign-ins |
