@@ -100,8 +100,8 @@ export async function grantSeats(
   });
 }
 
-// A signed document straight in the tables, until creating one has its pipeline
-// (Milestone 3, step 6). Same sequence and access key code as the real thing.
+// A signed document straight in the tables, for tests that need one in a tenant without
+// a certificate or go-live. Same sequence and access key code as createInvoice.
 export async function insertTestDocument(
   db: Database,
   tenantId: string,

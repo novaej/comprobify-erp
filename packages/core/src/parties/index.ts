@@ -9,6 +9,7 @@ import {
   SRI_TERM_UNITS,
   sql,
   type Database,
+  type Tx,
 } from '@comprobify/db';
 import { z } from 'zod';
 import { DomainError, requireFeature, requirePermission, type ActorContext } from '../kernel';
@@ -92,6 +93,22 @@ export async function listClients(
       .orderBy(sql`${clients.active} DESC`, asc(clients.name))
       .limit(200),
   );
+}
+
+// The buyer of a new document, read inside its transaction. Issuing needs only
+// documents.issue: the plan losing CLIENTS keeps existing clients usable (FR-PLAN-3).
+export async function buyerForDocument(
+  ctx: ActorContext,
+  tx: Tx,
+  id: string,
+): Promise<Pick<Client, 'idType' | 'identification' | 'name' | 'address' | 'emails'>> {
+  const [row] = await tx.db
+    .select()
+    .from(schema.clients)
+    .where(and(eq(schema.clients.id, id), eq(schema.clients.tenantId, ctx.tenantId)));
+  if (!row) throw new DomainError('NOT_FOUND', 'Client not found');
+  if (!row.active) throw new DomainError('CLIENT_INACTIVE', 'This client is inactive');
+  return row;
 }
 
 export async function getClient(ctx: ActorContext, db: Database, id: string): Promise<Client> {

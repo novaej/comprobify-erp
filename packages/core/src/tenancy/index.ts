@@ -40,6 +40,8 @@ export type {
   IssuePointOption,
   MemberRow,
 } from './members';
+export { issuingContext } from './issuing';
+export type { IssuingContext } from './issuing';
 export { onboardOrganization, onboardOrganizationInput } from './onboarding';
 export { isValidRucStructure } from './ruc';
 export { PERMISSIONS, permissionsFor, ROLE_PERMISSIONS, ROLES } from './roles';

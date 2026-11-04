@@ -21,6 +21,12 @@ export const queues = {
     options: { retryLimit: 5, retryDelay: 60, retryBackoff: true, expireInSeconds: 120 },
     concurrency: 5,
   },
+  // Created signed, in the same transaction (FR-DOC-2); the handler comes with the SRI client.
+  'sri.send': {
+    payload: z.object({ tenantId: z.uuid(), documentId: z.uuid() }),
+    options: { retryLimit: 0, expireInSeconds: 120 },
+    concurrency: 5,
+  },
   'identity.prune': {
     payload: z.object({}),
     options: { retryLimit: 2, expireInSeconds: 300 },
