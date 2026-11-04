@@ -1,4 +1,11 @@
-import { AUDIT_ACTIONS } from '@comprobify/core';
+import {
+  AUDIT_ACTIONS,
+  SRI_DOCUMENT_TYPES,
+  SRI_ID_TYPES,
+  SRI_IVA_RATES,
+  SRI_PAYMENT_METHODS,
+  SRI_TERM_UNITS,
+} from '@comprobify/core';
 import { describe, expect, it } from 'vitest';
 import en from '../../messages/en.json';
 import es from '../../messages/es.json';
@@ -35,5 +42,21 @@ describe('message files', () => {
       const labels = keys(messages.audit.actions).sort();
       expect(labels).toEqual([...AUDIT_ACTIONS].sort());
     }
+  });
+
+  // The SRI catalogues are code (ADR-012); each code is shown by its label.
+  it('label every SRI catalogue code', () => {
+    const catalogues = {
+      documentTypes: SRI_DOCUMENT_TYPES,
+      idTypes: SRI_ID_TYPES,
+      ivaRates: SRI_IVA_RATES.map((rate) => rate.code),
+      paymentMethods: SRI_PAYMENT_METHODS,
+      termUnits: SRI_TERM_UNITS,
+    };
+    for (const messages of [es, en])
+      for (const [name, codes] of Object.entries(catalogues))
+        expect(Object.keys(messages.sri[name as keyof typeof catalogues]).sort()).toEqual(
+          [...codes].sort(),
+        );
   });
 });

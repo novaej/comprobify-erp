@@ -56,4 +56,5 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - A separate `comprobify_erp_e2e` database for the E2E tests and the Docker stack, migrated before each run, so test data stays out of the one used with `pnpm dev`; `E2E_DATABASE_URL` and `E2E_MIGRATION_DATABASE_URL`.
 - `pnpm db:reset <local|test|e2e|all>` to drop, recreate and migrate a local database.
 - The Milestone 2 gate: switching a module, an exception or a limit for one company changes its screens and what core allows, in it and its twin, while another company on the same plan is untouched (E2E and integration).
+- Decimal arithmetic with `decimal.js` and the rounding rules for SRI amounts, and the Ficha Técnica's catalogues (document types, identification types, taxes, IVA rates, payment methods, time units) as typed lists with labels in Spanish and English (ADR-012).
 - `AUTH_SECRET`, `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, `MAILGUN_REGION` and `EMAIL_FROM`.

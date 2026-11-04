@@ -725,5 +725,47 @@
     "PLAN_NOT_FOUND": "No existe ese plan.",
     "INVALID_INPUT": "Revisa los datos ingresados.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+  },
+  "sri": {
+    "documentTypes": {
+      "01": "Factura",
+      "03": "Liquidación de compra",
+      "04": "Nota de crédito",
+      "05": "Nota de débito",
+      "06": "Guía de remisión",
+      "07": "Comprobante de retención"
+    },
+    "idTypes": {
+      "04": "RUC",
+      "05": "Cédula",
+      "06": "Pasaporte",
+      "07": "Consumidor final",
+      "08": "Identificación del exterior"
+    },
+    "ivaRates": {
+      "0": "IVA 0%",
+      "2": "IVA 12% (histórico)",
+      "3": "IVA 14% (histórico)",
+      "4": "IVA 15%",
+      "5": "IVA 5%",
+      "6": "No objeto de IVA",
+      "7": "Exento de IVA",
+      "8": "IVA diferenciado",
+      "10": "IVA 13%"
+    },
+    "paymentMethods": {
+      "01": "Sin utilización del sistema financiero",
+      "15": "Compensación de deudas",
+      "16": "Tarjeta de débito",
+      "17": "Dinero electrónico",
+      "18": "Tarjeta prepago",
+      "19": "Tarjeta de crédito",
+      "20": "Otros con utilización del sistema financiero",
+      "21": "Endoso de títulos"
+    },
+    "termUnits": {
+      "dias": "Días",
+      "meses": "Meses"
+    }
   }
 }

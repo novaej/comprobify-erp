@@ -6,7 +6,19 @@ Open work only. Tick steps as they land. When a milestone's gate passes, remove 
 
 **Gate:** invoice authorized in the SRI test environment; fake-clock tests for 23:59, D+1 and month end; reception codes 43 and 70 handled.
 
-Before starting: read PRD sections 5.8 and 6 and the Ficha Técnica in `docs/reference/` (ask the owner if it's missing), and the old API ADRs for this milestone ([docs/adr/README.md](docs/adr/README.md)). Break the scope into steps here.
+Read PRD sections 5.8 and 6 and the Ficha Técnica v2.32 in `docs/reference/` before each step. Everything runs against a mock SRI and test certificates; the one step that reaches the real SRI is the owner's to run.
+
+- [x] 1. Money and SRI catalogues: `decimal.js` with the rounding rules, and the Ficha's document types, identification types, taxes, IVA rates, payment methods and time units as typed lists in code, with their labels in the message files (ADR-012, NFR rule 14).
+- [ ] 2. Clients and products, basic: tenant tables under RLS, cédula and RUC check digits, consumidor final built in; list and form screens behind `CLIENTS` and `CATALOG` (FR-MD-1, FR-MD-2).
+- [ ] 3. Company settings: contribuyente especial, agente de retención, RIMPE; document types per issue point, needing `DOC_TYPE_*` (FR-PLAN-3); starting sequentials asked at go-live (FR-ONB-3, FR-ONB-5).
+- [ ] 4. Document core: documents, lines, events and sequentials (`FOR UPDATE`); the status machine with its generated trigger; the immutability trigger; the access key with Module 11 (FR-DOC-3, SRI rules 7 and 9).
+- [ ] 5. XML, XSD and signing: the factura builder in element order, `xmllint` validation before signing, the XAdES-BES signer (SRI rules 8 and 13).
+- [ ] 6. Creating an invoice: the FR-DOC-2 pipeline in one transaction (idempotency, entitlements, `DOCUMENT_QUOTA` never for the twin, totals and taxes, consumidor final cap, FR-DOC-9 validation) with the send job enqueued in it.
+- [ ] 7. SRI client and mock SRI: reception, authorization and Consulta de validez over SOAP; a mock server answering like SRI (RECIBIDA, DEVUELTA, codes 43, 45, 70) for tests and local work.
+- [ ] 8. Send and authorize jobs: the retry calendar in Ecuador time, the deadline check, D+1 re-issue, the 24-hour alert; fixed-clock tests at 23:59, D+1 and month end (FR-DOC-4 to FR-DOC-6).
+- [ ] 9. Correction, void, RIDE and buyer email: same row and sequential; void checked against SRI; the RIDE from the authorized XML; RIDE and XML emailed (FR-DOC-7, FR-DOC-8, FR-DOC-10, FR-DOC-11).
+- [ ] 10. Document screens: the invoice form with keyboard line entry, list with filters, detail with timeline, pending documents, XML download (FR-DOC-12, FR-UX-4).
+- [ ] 11. Gate, **run by the owner**: an invoice authorized by SRI's test environment with a real certificate, following a checklist prepared here; the fixed-clock and 43/70 tests in CI.
 
 ## Carried forward
 

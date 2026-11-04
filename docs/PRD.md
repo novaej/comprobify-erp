@@ -585,7 +585,7 @@ Order rationale: the SRI engine (3) comes before ERP modules because every sales
 
 1. Document packs: sizes, prices, expiry vs rollover; which plans can buy them.
 2. ~~Add-ons or whole plans only~~: decided, modules as add-ons and a negotiated Personalizado (ADR-011). Prices per plan and module: Milestone 8.
-3. Accountant: month-boundary re-issue and chronological order; consumidor-final cap; void deadline; retention period.
+3. Accountant: month-boundary re-issue and chronological order; consumidor-final cap; void deadline; retention period; which IVA rates beyond 0%, 15%, 5%, not subject and exempt a product may carry (the 13% by decree, the differentiated rate; ADR-012).
 4. Verify resolutions NAC-DGERCGC25-00000014/17 texts.
 5. Is "RUC Proveedor" campo adicional still required?
 6. Costing method: weighted average (proposed) vs FIFO.

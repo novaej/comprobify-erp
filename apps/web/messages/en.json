@@ -725,5 +725,47 @@
     "PLAN_NOT_FOUND": "No such plan.",
     "INVALID_INPUT": "Check the details you entered.",
     "UNKNOWN": "An unexpected error occurred. Please try again."
+  },
+  "sri": {
+    "documentTypes": {
+      "01": "Invoice",
+      "03": "Purchase settlement",
+      "04": "Credit note",
+      "05": "Debit note",
+      "06": "Delivery guide",
+      "07": "Withholding receipt"
+    },
+    "idTypes": {
+      "04": "RUC",
+      "05": "Ecuadorian ID",
+      "06": "Passport",
+      "07": "Final consumer",
+      "08": "Foreign ID"
+    },
+    "ivaRates": {
+      "0": "VAT 0%",
+      "2": "VAT 12% (historical)",
+      "3": "VAT 14% (historical)",
+      "4": "VAT 15%",
+      "5": "VAT 5%",
+      "6": "Not subject to VAT",
+      "7": "VAT exempt",
+      "8": "Differentiated VAT",
+      "10": "VAT 13%"
+    },
+    "paymentMethods": {
+      "01": "Outside the financial system",
+      "15": "Debt offsetting",
+      "16": "Debit card",
+      "17": "Electronic money",
+      "18": "Prepaid card",
+      "19": "Credit card",
+      "20": "Other through the financial system",
+      "21": "Endorsement of securities"
+    },
+    "termUnits": {
+      "dias": "Days",
+      "meses": "Months"
+    }
   }
 }

@@ -19,7 +19,8 @@ The rules in [CLAUDE.md](../../CLAUDE.md) come first. This guide covers how to a
 - Go through `withTenant(ctx, fn)` or `withSystem(reason, fn)`. The reason is a sentence a reviewer can judge, such as `'daily billing run'`. `withUser` is only for the user's own memberships and organizations (ADR-010).
 - Drizzle wraps Postgres errors: the SQLSTATE and constraint are on `error.cause`.
 - Use Drizzle or `sql` parameters. Never build SQL from strings.
-- Money and quantities are `numeric` in the database and a decimal library in code.
+- Money and quantities are `numeric` in the database and `Dec` (`decimal.js`, from the kernel) in code (ADR-012). They arrive as strings checked by `amountInput` or `preciseInput`, round with `money()`, and leave through `toSriAmount` or `toSriPrecise`. Never `parseFloat`, `Number()` or `toFixed` on a JavaScript number.
+- SRI codes come from the catalogues in `packages/db/src/schema/sri.ts` (re-exported by core's `sri` module), never typed as literals elsewhere; a column holding one gets a CHECK from the same list, and each code a label in the message files.
 - No hard deletes: use a status or `active`.
 
 ## Adding a table

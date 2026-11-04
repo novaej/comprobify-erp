@@ -32,6 +32,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [009](009-authentication.md) | Authentication with Better Auth | Accepted |
 | [010](010-tenancy-and-user-context.md) | Tenancy model and the user context | Accepted |
 | [011](011-plans-modules-and-entitlements.md) | Plans, modules and entitlements | Accepted |
+| [012](012-money-and-sri-catalogues.md) | Money arithmetic and SRI catalogues | Accepted |
 
 ## Old ADRs to read before each milestone
 

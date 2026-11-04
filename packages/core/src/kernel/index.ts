@@ -9,4 +9,13 @@ export {
   requireWithinLimit,
   type Entitlements,
 } from './entitlements';
+export {
+  amountInput,
+  Dec,
+  money,
+  preciseInput,
+  toSriAmount,
+  toSriPrecise,
+  type DecValue,
+} from './money';
 export { requirePermission } from './permissions';
