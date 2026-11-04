@@ -4,6 +4,8 @@ import {
   createJobs,
   createLogProvider,
   createMailgunProvider,
+  createMockSri,
+  createSriClient,
   registerHandlers,
   systemClock,
 } from '@comprobify/core';
@@ -36,6 +38,18 @@ const emailProvider =
       })
     : createLogProvider(logger);
 
+// ADR-014: the mock answers like SRI; the env refuses it in production.
+const sri = env.SRI_MOCK_MODE
+  ? createSriClient({ transport: createMockSri().transport })
+  : createSriClient({
+      baseUrls: {
+        ...(env.SRI_TEST_URL ? { '1': env.SRI_TEST_URL } : {}),
+        ...(env.SRI_PRODUCTION_URL ? { '2': env.SRI_PRODUCTION_URL } : {}),
+      },
+      timeoutMs: env.SRI_TIMEOUT_MS,
+    });
+if (env.SRI_MOCK_MODE) logger.warn('SRI mock mode: nothing is sent to SRI', { event: 'sri.mock' });
+
 const jobs = createJobs({
   connectionString: env.DATABASE_URL,
   role: 'worker',
@@ -49,6 +63,8 @@ await registerHandlers(jobs, {
   logger,
   emailProvider,
   identityDb: db.identity,
+  db,
+  sri,
   clock: systemClock,
 });
 logger.info('Worker started', { event: 'worker.started' });

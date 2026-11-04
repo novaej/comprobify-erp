@@ -93,8 +93,15 @@ export const webEnvSchema = z
     }
   });
 
+// The worker talks to SRI (ADR-014). The URLs default, in core, to SRI's own.
+const sriShape = {
+  SRI_TEST_URL: z.url().optional(),
+  SRI_PRODUCTION_URL: z.url().optional(),
+  SRI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120_000).default(20_000),
+};
+
 export const workerEnvSchema = z
-  .object({ ...runtimeShape, ...mailShape })
+  .object({ ...runtimeShape, ...mailShape, ...sriShape })
   .superRefine((env, ctx) => {
     refuseMockInProduction(env, ctx);
     requireMailOutsideLocal(env, ctx);

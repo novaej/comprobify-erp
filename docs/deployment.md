@@ -78,7 +78,9 @@ The area also requires two-step verification, so set it up on that account befor
 | `MAILGUN_API_KEY`, `MAILGUN_DOMAIN` | worker | Required outside `local`. Locally, emails are logged instead. |
 | `MAILGUN_REGION` | worker | `us` (default) or `eu` |
 | `EMAIL_FROM` | worker | Sender address |
-| `SRI_MOCK_MODE` | web, worker | Refused when `APP_ENV=production` |
+| `SRI_MOCK_MODE` | web, worker | Answers like SRI without calling it (ADR-014). Refused when `APP_ENV=production`; forced on in the local stack and CI |
+| `SRI_TEST_URL`, `SRI_PRODUCTION_URL` | worker | Base URLs of SRI's services; unset means SRI's own |
+| `SRI_TIMEOUT_MS` | worker | Per request, `20000` by default |
 | `TEST_DATABASE_URL`, `TEST_MIGRATION_DATABASE_URL` | tests only | Database name must end in `_test` |
 | `E2E_DATABASE_URL`, `E2E_MIGRATION_DATABASE_URL` | E2E tests only | Database name must end in `_e2e`; defaults to the local one |
 

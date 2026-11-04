@@ -103,6 +103,17 @@ Any refusal rolls the number back. The buyer is a client read through `parties` 
 
 `sri/client.ts` talks to SRI's reception, authorization and Consulta de validez services. It sends one request per call and throws `SriTransportError` only for transport failures, which are the only ones the jobs retry. It maps SRI's answers to `RECEIVED` (43 and 70 included), `RETURNED`, `AUTHORIZED`, `NOT_AUTHORIZED`, `PENDING`, and the validity states. The endpoint comes from the document's ambiente. `createMockSri` answers like SRI (RECIBIDA, DEVUELTA, 43, 45, 70, scripted failures) for tests and for `SRI_MOCK_MODE` (ADR-014).
 
+## Sending to SRI
+
+Creating a document enqueues `sri.send`. The worker's handlers (`documents/sending.ts`) each re-read the document under a row lock, act only if its status still calls for it, and call SRI outside any transaction. Each step is its own job, scheduled with `startAfter` from `documents/calendar.ts`:
+
+- **Send** (FR-DOC-4): `RECEIVED` schedules the first authorization check; `RETURNED` stops, and code 45 is logged for a person. A transport error makes it `SEND_FAILED` and schedules the next try: five about five minutes apart, then hourly with a spread. Retries stop at 23:59:59 of the issue day in Ecuador (`retry_until`).
+- **Deadline check:** once a try would pass that deadline, `sri.deadline` asks SRI once, read-only. If SRI has the document, it moves on to `RECEIVED` and its answer. If not, or if SRI couldn't be asked (`sri_unreachable`), it stays `SEND_FAILED` for the next-day re-issue.
+- **Authorization** (FR-DOC-5): checked quickly, then hourly for three days, then daily, never capped.
+- **Overdue sweep:** `sri.overdue` runs every 15 minutes and flags, once, any document still `RECEIVED` 24 hours later.
+
+Every transition writes an event with SRI's raw answer. CI and the local stack always run the mock.
+
 ## Audit log
 
 `audit_events` is tenant data with RLS, and append-only: the app role can insert and read, not update or delete. Core writes an event with `recordAudit` in the same transaction as the change, so a rolled-back change leaves none. Event names are one TypeScript list that generates the CHECK, and the web test requires a label for each. Changes to an organization and its twin are recorded in the real organization's log.

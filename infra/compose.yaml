@@ -30,6 +30,8 @@ services:
       APP_ENV: ${APP_ENV:-local}
       LOG_FORMAT: json
       APP_URL: ${STACK_APP_URL:-http://localhost:8080}
+      # The stack never calls SRI, whatever ../.env says (ADR-014).
+      SRI_MOCK_MODE: 'true'
       DATABASE_URL: ${STACK_DATABASE_URL:-postgres://comprobify_erp_app:changeme@host.docker.internal:5432/comprobify_erp_e2e}
     depends_on:
       migrate:
@@ -57,6 +59,7 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-local}
       LOG_FORMAT: json
+      SRI_MOCK_MODE: 'true'
       DATABASE_URL: ${STACK_DATABASE_URL:-postgres://comprobify_erp_app:changeme@host.docker.internal:5432/comprobify_erp_e2e}
     depends_on:
       migrate:

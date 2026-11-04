@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  boolean,
   check,
   foreignKey,
   index,
@@ -116,6 +117,17 @@ export const documents = pgTable(
     authorizationNumber: text('authorization_number'),
     authorizedAt: timestamp('authorized_at', { withTimezone: true }),
     authorizationXml: text('authorization_xml'),
+    // The sending calendar (FR-DOC-4, FR-DOC-5); operational, so the triggers leave them free.
+    // Retries stop at the end of the issue day, Ecuador time.
+    retryUntil: timestamp('retry_until', { withTimezone: true }),
+    sendAttempts: integer('send_attempts').default(0).notNull(),
+    // Set by the read-only check after the deadline; `sriUnreachable` when SRI couldn't be asked.
+    deadlineCheckedAt: timestamp('deadline_checked_at', { withTimezone: true }),
+    sriUnreachable: boolean('sri_unreachable').default(false).notNull(),
+    receivedAt: timestamp('received_at', { withTimezone: true }),
+    authorizationChecks: integer('authorization_checks').default(0).notNull(),
+    // FR-DOC-5: no final answer 24 hours after RECEIVED.
+    overdueAlertedAt: timestamp('overdue_alerted_at', { withTimezone: true }),
     // FR-DOC-2: the same key and payload give the same document; another payload, a conflict.
     idempotencyKey: text('idempotency_key'),
     payloadHash: text('payload_hash'),
@@ -146,6 +158,10 @@ export const documents = pgTable(
       .on(table.tenantId, table.idempotencyKey)
       .where(sql`idempotency_key IS NOT NULL`),
     index('documents_tenant_status_idx').on(table.tenantId, table.status),
+    // The overdue sweep reads across tenants.
+    index('documents_received_idx')
+      .on(table.receivedAt)
+      .where(sql`status = 'RECEIVED' AND overdue_alerted_at IS NULL`),
     check('documents_type_check', oneOf('document_type', SRI_DOCUMENT_TYPES)),
     check('documents_status_check', oneOf('status', DOCUMENT_STATUSES)),
     check('documents_ambiente_check', oneOf('ambiente', AMBIENTES)),

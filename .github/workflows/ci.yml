@@ -28,6 +28,8 @@ env:
   E2E_DATABASE_URL: postgres://comprobify_erp_app:changeme@localhost:5432/comprobify_erp_e2e
   E2E_MIGRATION_DATABASE_URL: postgres://comprobify_erp_owner:changeme@localhost:5432/comprobify_erp_e2e
   PGPASSWORD: postgres
+  # CI never calls SRI (ADR-014); env.test.ts checks this line.
+  SRI_MOCK_MODE: 'true'
 
 jobs:
   checks:

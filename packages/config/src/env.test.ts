@@ -166,3 +166,17 @@ describe('.env.example', () => {
     expect(keys.filter((key) => !documented.has(key))).toEqual([]);
   });
 });
+
+// ADR-014: only the owner sends to SRI, from the gate checklist. Everything automated
+// answers from the mock.
+describe('the SRI mock', () => {
+  const read = (path: string) => readFileSync(new URL(`../../../${path}`, import.meta.url), 'utf8');
+
+  it('is on in CI, in the local stack and in the example env', () => {
+    expect(read('.github/workflows/ci.yml')).toMatch(/^ {2}SRI_MOCK_MODE: 'true'$/m);
+    const stack = read('infra/compose.yaml');
+    expect(stack.match(/SRI_MOCK_MODE: 'true'/g)).toHaveLength(2);
+    expect(read('.env.example')).toMatch(/^SRI_MOCK_MODE=true$/m);
+    expect(read('.github/workflows/ci.yml')).not.toMatch(/SRI_(TEST|PRODUCTION)_URL/);
+  });
+});

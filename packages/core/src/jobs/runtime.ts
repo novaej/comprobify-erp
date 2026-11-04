@@ -10,6 +10,9 @@ export type JobHandler<Name extends QueueName> = (job: {
   data: QueuePayload<Name>;
 }) => Promise<void>;
 
+// A job that runs later, such as the next try on the SRI calendar (FR-DOC-4).
+export type EnqueueOptions = { startAfter?: Date };
+
 export type Jobs = {
   boss: PgBoss;
   start: () => Promise<void>;
@@ -18,6 +21,7 @@ export type Jobs = {
     tx: Tx,
     queue: Name,
     data: QueuePayload<Name>,
+    options?: EnqueueOptions,
   ) => Promise<string | null>;
   // Only where a library owns the write, so no transaction of ours exists: Better
   // Auth's verification and reset emails (ADR-009). The user can ask again.
@@ -68,7 +72,11 @@ export function createJobs(options: JobsOptions): Jobs {
     stop: () => boss.stop(),
 
     // The tx is the point: no commit, no job.
-    enqueue: (tx, queue, data) => boss.send(queue, queues[queue].payload.parse(data), { db: tx }),
+    enqueue: (tx, queue, data, options = {}) =>
+      boss.send(queue, queues[queue].payload.parse(data), {
+        db: tx,
+        ...(options.startAfter ? { startAfter: options.startAfter } : {}),
+      }),
     enqueueWithoutTransaction: (queue, data) => boss.send(queue, queues[queue].payload.parse(data)),
 
     work: async <Name extends QueueName>(queue: Name, handler: JobHandler<Name>) => {

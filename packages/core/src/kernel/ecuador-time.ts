@@ -23,3 +23,9 @@ export function ecuadorDate(at: Date): string {
 export function ecuadorDateTime(at: Date): string {
   return `${new Date(at.getTime() - OFFSET_MS).toISOString().slice(0, 19)}-05:00`;
 }
+
+// The last instant of an Ecuador calendar day (YYYY-MM-DD): 23:59:59.999 in Quito.
+export function endOfEcuadorDay(date: string): Date {
+  const [year, month, day] = date.split('-').map(Number) as [number, number, number];
+  return new Date(Date.UTC(year, month - 1, day + 1) + OFFSET_MS - 1);
+}
