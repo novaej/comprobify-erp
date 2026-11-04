@@ -276,6 +276,55 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     );
   });
 
+  test('sets the tax details and where the company issues from (FR-ONB-3, FR-PLAN-3)', async ({
+    page,
+  }) => {
+    await signIn(page, email, newPassword);
+    await page
+      .getByRole('navigation', { name: 'Navegación principal' })
+      .last()
+      .getByRole('link', { name: 'Empresa' })
+      .click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Empresa');
+    await look(page, 'settings');
+
+    await page.getByRole('button', { name: 'Editar', exact: true }).click();
+    const tax = page.getByRole('dialog', { name: 'Editar los datos tributarios' });
+    await tax.getByRole('combobox', { name: 'Régimen' }).click();
+    await page.getByRole('option', { name: 'RIMPE Emprendedor' }).click();
+    await tax.getByLabel('Agente de retención').fill('1');
+    await look(page, 'settings-tax');
+    await tax.getByRole('button', { name: 'Guardar' }).click();
+    await expect(page.getByText('Cambios guardados.')).toBeVisible();
+    await expect(page.getByRole('main')).toContainText('RIMPE Emprendedor');
+
+    // Gratis allows one branch: the second is refused, with the reason.
+    await page.getByRole('button', { name: 'Agregar establecimiento' }).click();
+    const branch = page.getByRole('dialog', { name: 'Agregar establecimiento' });
+    await branch.getByRole('textbox', { name: 'Código del establecimiento' }).fill('002');
+    await branch.getByRole('textbox', { name: 'Nombre', exact: true }).fill('Norte');
+    await branch
+      .getByRole('textbox', { name: 'Dirección', exact: true })
+      .fill('Av. 6 de Diciembre');
+    await branch.getByRole('button', { name: 'Crear' }).click();
+    await expect(branch.getByRole('alert')).toHaveText(
+      'Tu plan no permite más. Revisa los límites en Plan.',
+    );
+    await branch.getByRole('button', { name: 'Cancelar' }).click();
+
+    await page.getByRole('button', { name: 'Tipos de comprobante de 001-001' }).click();
+    const types = page.getByRole('dialog', { name: 'Tipos de comprobante de 001-001' });
+    await expect(types.getByRole('checkbox', { name: 'Factura' })).toBeChecked();
+    await look(page, 'settings-types');
+    await types.getByRole('button', { name: 'Cancelar' }).click();
+
+    const issues = page.getByRole('switch', { name: 'Emite comprobantes desde 001-001' });
+    await issues.click();
+    await expect(page.getByText('Punto de emisión en pausa.')).toBeVisible();
+    await issues.click();
+    await expect(page.getByText('Punto de emisión activo.')).toBeVisible();
+  });
+
   test('invites a read-only member who joins and sees only what the role allows (FR-USR-1, FR-ROLE-3)', async ({
     page,
     browser,
@@ -383,6 +432,8 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(
       page.getByRole('heading', { name: 'Pasar Delta Comercial S.A. a producción' }),
     ).toBeVisible();
+    // Coming from another provider: the real company continues at 101 (FR-ONB-5).
+    await page.getByLabel('Siguiente número de 001-001 · Factura').fill('101');
     await look(page, 'go-live');
     await page.getByLabel('Entiendo que este paso no se puede deshacer.').check();
     await page.getByRole('button', { name: 'Pasar a producción' }).click();
@@ -400,6 +451,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await nav.getByRole('link', { name: 'Actividad' }).click();
     const log = page.getByRole('table', { name: 'Actividad' });
     await expect(log).toContainText('pasó la empresa a producción');
+    await expect(log).toContainText('fijó los números iniciales: 001-001 01: 101');
     await expect(log).toContainText('inició sesión');
     if (agreements) await expect(log).toContainText('aceptó los documentos legales');
     await look(page, 'activity');

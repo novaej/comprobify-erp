@@ -22,7 +22,9 @@ import {
   type ActorContext,
   type Clock,
 } from '../kernel';
+import { pairOf, type Pair } from './pair';
 import type { Role } from './roles';
+import { setStartingSequentials, type startingSequentialInput } from './settings';
 
 const INVITATION_DAYS = 7;
 const assignableRole = z.enum(ASSIGNABLE_ROLES);
@@ -32,25 +34,6 @@ const email = z
   .transform((value) => value.trim().toLowerCase());
 
 const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
-
-type Pair = { realTenantId: string; twinTenantId: string | null; name: string };
-
-// The organization and its twin, from either one. System context only.
-async function pairOf(tx: Tx['db'], tenantId: string): Promise<Pair> {
-  const { tenants } = schema;
-  const [tenant] = await tx.select().from(tenants).where(eq(tenants.id, tenantId));
-  if (!tenant) throw new DomainError('NOT_FOUND', 'Organization not found');
-  const realTenantId = tenant.twinOf ?? tenant.id;
-  const [real] =
-    tenant.twinOf === null
-      ? [tenant]
-      : await tx.select().from(tenants).where(eq(tenants.id, realTenantId));
-  const [twin] = await tx
-    .select({ id: tenants.id })
-    .from(tenants)
-    .where(eq(tenants.twinOf, realTenantId));
-  return { realTenantId, twinTenantId: twin?.id ?? null, name: real!.tradeName ?? real!.legalName };
-}
 
 // FR-USR-1: seats are the real organization's active members, plus its pending
 // invitations when inviting, so invitations can't overrun the USERS limit.
@@ -558,7 +541,11 @@ export async function setTwoFactorRequirement(
 export async function goLive(
   ctx: ActorContext,
   db: Database,
-  options: { requireAgreements: boolean } = { requireAgreements: false },
+  options: {
+    requireAgreements: boolean;
+    // FR-ONB-5: the next numbers, when the company comes from another provider.
+    startingSequentials?: z.input<typeof startingSequentialInput>[];
+  } = { requireAgreements: false },
 ): Promise<{ realTenantId: string }> {
   requirePermission(ctx, 'organization.go_live');
   return db.withSystem('take an organization live', async ({ db: tx }) => {
@@ -579,6 +566,18 @@ export async function goLive(
       actorUserId: ctx.userId ?? null,
       action: 'organization.went_live',
     });
+    const started = await setStartingSequentials(
+      tx,
+      pair.realTenantId,
+      options.startingSequentials ?? [],
+    );
+    if (started.length > 0)
+      await recordAudit(tx, {
+        tenantId: pair.realTenantId,
+        actorUserId: ctx.userId ?? null,
+        action: 'sequence.starting_set',
+        details: { sequences: started },
+      });
     return { realTenantId: pair.realTenantId };
   });
 }

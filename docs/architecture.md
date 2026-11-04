@@ -75,6 +75,10 @@ The super admin edits the catalog from the platform area (`platform/catalog.ts` 
 
 The web app only hides or locks: nav items carry a feature key, a page behind one renders `FeatureLocked`, and the plan page shows the plan, its modules and each limit with its usage (`planOverview`, `companyUsage`).
 
+## Company settings
+
+The company's tax data (accounting flag, contribuyente especial and agente de retención resolutions, the RIMPE regime), its branches and issue points, and the document types each issue point issues are edited from the Empresa page and written to the company and its twin together, matched by code (`tenancy/settings.ts`). New branches and issue points count against the plan's `MAX_BRANCHES` and `MAX_ISSUE_POINTS_PER_BRANCH`. Enabling a document type needs its `DOC_TYPE_*` feature and a builder for it; one already enabled keeps working if the plan loses it (FR-PLAN-3). Every enabled type has a row in `document_sequences`, per issue point: the twin counts its own. At go-live the owner can set the real company's next numbers, for a company coming from another provider; a sequence only moves forward.
+
 ## Master data
 
 Clients (`parties`) and products and services (`catalog`) are tenant data under RLS, behind the `CLIENTS` and `CATALOG` features and the `clients.*` and `catalog.*` permissions. A company and its twin keep their own lists. Consumidor final is never a row. A cédula must pass its check digit; a RUC is checked by structure only, as onboarding does. Prices are `numeric` with six decimals and stay decimal strings end to end (ADR-012). Nothing is deleted: an inactive client or product drops out of the pickers and stays on its documents.

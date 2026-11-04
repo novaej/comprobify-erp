@@ -198,7 +198,8 @@
     "plan": "Plan",
     "platformAdmin": "Administración de la plataforma",
     "clients": "Clientes",
-    "products": "Productos"
+    "products": "Productos",
+    "company": "Empresa"
   },
   "shell": {
     "sandboxTitle": "Estás en el ambiente de pruebas",
@@ -368,7 +369,8 @@
       "organization": {
         "created": "creó la empresa",
         "went_live": "pasó la empresa a producción",
-        "two_factor_requirement_changed": "cambió la exigencia de verificación en dos pasos"
+        "two_factor_requirement_changed": "cambió la exigencia de verificación en dos pasos",
+        "settings_changed": "cambió los datos tributarios"
       },
       "certificate": {
         "uploaded": "subió la firma electrónica"
@@ -399,6 +401,18 @@
       "entitlements": {
         "override_set": "puso una excepción a",
         "override_cleared": "quitó la excepción a"
+      },
+      "branch": {
+        "created": "creó el establecimiento",
+        "updated": "cambió el establecimiento"
+      },
+      "issue_point": {
+        "created": "creó el punto de emisión",
+        "document_types_changed": "cambió los comprobantes del punto",
+        "paused_changed": "pausó o reanudó el punto"
+      },
+      "sequence": {
+        "starting_set": "fijó los números iniciales"
       }
     },
     "complimentary": "cortesía",
@@ -415,19 +429,24 @@
     "point1": "Los comprobantes de la empresa real se enviarán al ambiente de producción del SRI.",
     "point2": "Tu copia de pruebas sigue disponible para probar, separada de la real.",
     "point3": "Este paso no se puede deshacer.",
-    "point4": "Antes del primer comprobante te pediremos los números iniciales, si vienes de otro proveedor.",
+    "point4": "Si vienes de otro proveedor, indica abajo el siguiente número de cada punto de emisión.",
     "confirm": "Entiendo que este paso no se puede deshacer.",
     "submit": "Pasar a producción",
     "submitting": "Pasando a producción...",
     "alreadyLive": "Esta empresa ya está en producción.",
-    "whatChanges": "Qué cambia"
+    "whatChanges": "Qué cambia",
+    "startingTitle": "Números iniciales",
+    "startingDescription": "Si ya emitías comprobantes electrónicos con otro proveedor, pon el siguiente número de cada uno. Si empiezas ahora, deja 1.",
+    "startingFor": "Siguiente número de {point}"
   },
   "goLiveError": {
     "CONFIRM_REQUIRED": "Marca la casilla para confirmar.",
     "ALREADY_LIVE": "Esta empresa ya está en producción.",
     "FORBIDDEN": "Solo el propietario puede pasar la empresa a producción.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
-    "AGREEMENTS_PENDING": "Primero acepta los documentos legales, en Documentos legales."
+    "AGREEMENTS_PENDING": "Primero acepta los documentos legales, en Documentos legales.",
+    "SEQUENCE_BACKWARD": "Un número inicial no puede ser menor que el actual.",
+    "INVALID_INPUT": "Los números iniciales son enteros entre 1 y 999.999.999."
   },
   "legal": {
     "title": "Documentos legales",
@@ -611,7 +630,8 @@
     "adminModules": "Módulos · Plataforma",
     "adminModule": "Módulo · Plataforma",
     "clients": "Clientes",
-    "products": "Productos y servicios"
+    "products": "Productos y servicios",
+    "settings": "Empresa"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -899,6 +919,77 @@
     "FEATURE_NOT_ENABLED": "Tu plan no incluye el catálogo de productos.",
     "NOT_FOUND": "No se encontró el producto.",
     "INVALID_INPUT": "Revisa los datos: el precio admite hasta 6 decimales y los textos no pueden tener saltos de línea.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+  },
+  "settings": {
+    "title": "Empresa",
+    "description": "Los datos tributarios que salen en cada comprobante y desde dónde emite tu empresa. Los cambios aplican también a la copia de pruebas.",
+    "taxTitle": "Datos tributarios",
+    "taxDescription": "Así aparece tu empresa en sus comprobantes electrónicos.",
+    "edit": "Editar",
+    "editTax": "Editar los datos tributarios",
+    "editTaxDescription": "El RUC y la razón social vienen de tu firma electrónica y no se cambian aquí.",
+    "ruc": "RUC",
+    "legalName": "Razón social",
+    "tradeName": "Nombre comercial",
+    "tradeNameHint": "Opcional. Se muestra en lugar de la razón social.",
+    "mainAddress": "Dirección matriz",
+    "requiredAccounting": "Obligado a llevar contabilidad",
+    "requiredAccountingHint": "Sale como SI o NO en tus comprobantes.",
+    "taxRegime": "Régimen",
+    "regimes": {
+      "GENERAL": "Régimen general",
+      "RIMPE_EMPRENDEDOR": "RIMPE Emprendedor",
+      "RIMPE_NEGOCIO_POPULAR": "RIMPE Negocio Popular"
+    },
+    "specialTaxpayer": "Contribuyente especial",
+    "specialTaxpayerHint": "El número de resolución, si el SRI te designó.",
+    "withholdingAgent": "Agente de retención",
+    "withholdingAgentHint": "El número de resolución, hasta 8 dígitos.",
+    "yes": "Sí",
+    "no": "No",
+    "save": "Guardar",
+    "saved": "Cambios guardados.",
+    "create": "Crear",
+    "branchesTitle": "Establecimientos y puntos de emisión",
+    "branchesDescription": "Cada punto emite con su propia numeración, según los tipos de comprobante que tenga activos.",
+    "branchLabel": "Establecimiento {code} {name}",
+    "addBranch": "Agregar establecimiento",
+    "addBranchDescription": "Su dirección sale en los comprobantes que emite. Se crea también su bodega.",
+    "editBranch": "Editar",
+    "editBranchName": "Editar {name}",
+    "editBranchDescription": "El código no cambia: ya forma parte de la numeración.",
+    "branchCode": "Código del establecimiento",
+    "branchName": "Nombre",
+    "branchAddress": "Dirección",
+    "branchAddressHint": "La dirección del establecimiento en los comprobantes.",
+    "codeHint": "Tres dígitos, como 002.",
+    "branchCreated": "Establecimiento creado.",
+    "addPoint": "Agregar punto",
+    "addPointTo": "Agregar un punto de emisión a {name}",
+    "addPointDescription": "Empieza emitiendo facturas, con su numeración desde 1.",
+    "pointCode": "Código del punto de emisión",
+    "pointCreated": "Punto de emisión creado.",
+    "noPoints": "Este establecimiento todavía no tiene puntos de emisión.",
+    "noTypes": "Sin comprobantes",
+    "pausedBadge": "En pausa",
+    "issues": "Emite",
+    "issuesFor": "Emite comprobantes desde {point}",
+    "paused": "Punto de emisión en pausa.",
+    "resumed": "Punto de emisión activo.",
+    "documentTypes": "Tipos de comprobante",
+    "documentTypesFor": "Tipos de comprobante de {point}",
+    "documentTypesDescription": "Activa los que este punto emite. Desactivar uno no afecta lo ya emitido.",
+    "notInPlan": "Fuera de tu plan",
+    "moreTypesSoon": "Las notas de crédito y las guías de remisión llegarán pronto."
+  },
+  "settingsError": {
+    "FORBIDDEN": "Tu rol no permite cambiar los datos de la empresa.",
+    "LIMIT_REACHED": "Tu plan no permite más. Revisa los límites en Plan.",
+    "CODE_TAKEN": "Ese código ya está en uso.",
+    "FEATURE_NOT_ENABLED": "Tu plan no incluye ese tipo de comprobante.",
+    "NOT_FOUND": "No se encontró.",
+    "INVALID_INPUT": "Revisa los datos: los códigos son de tres dígitos y las resoluciones siguen el formato del SRI.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
   }
 }

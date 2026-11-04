@@ -44,6 +44,12 @@ export default async function AuditPage({ params }: { params: Promise<{ locale: 
       return details.points.length ? details.points.join(', ') : t('allPoints');
     if (typeof details.required === 'boolean') return details.required ? t('on') : t('off');
     if (typeof details.issuerName === 'string') return details.issuerName;
+    if (typeof details.point === 'string') return details.point;
+    if (typeof details.branch === 'string')
+      return typeof details.name === 'string'
+        ? `${details.branch} ${details.name}`
+        : details.branch;
+    if (Array.isArray(details.sequences)) return details.sequences.join(', ');
     // Names were stored with the change, so a later rename doesn't rewrite history.
     if (typeof details.planEs === 'string')
       return String(english ? details.planEn : details.planEs);

@@ -1,8 +1,10 @@
+import { companySettings } from '@comprobify/core';
 import { CheckCircle2, FlaskConical, Hash, Lock } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { NoAccess } from '@/components/no-access';
 import { PageHeader } from '@/components/page-header';
 import { SectionCard } from '@/components/section-card';
+import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
 import { GoLiveForm } from './form';
 import { pageTitle } from '@/server/page-title';
@@ -24,6 +26,18 @@ export default async function GoLivePage({ params }: { params: Promise<{ locale:
   if (!actor.permissions.includes('organization.go_live')) return <NoAccess />;
   const t = await getTranslations('goLive');
   const tNav = await getTranslations('nav');
+  const tSri = await getTranslations('sri');
+  // FR-ONB-5: one starting number per issue point and document type it issues.
+  const { db } = await getRuntime();
+  const settings = active.entry.live ? null : await companySettings(actor, db);
+  const points = (settings?.branches ?? []).flatMap((branch) =>
+    branch.issuePoints.flatMap((point) =>
+      point.documentTypes.map((type) => ({
+        key: `${branch.code}-${point.code}-${type}`,
+        label: `${branch.code}-${point.code} · ${tSri(`documentTypes.${type as '01'}`)}`,
+      })),
+    ),
+  );
 
   return (
     <div className="max-w-2xl">
@@ -46,7 +60,7 @@ export default async function GoLivePage({ params }: { params: Promise<{ locale:
                 </li>
               ))}
             </ul>
-            <GoLiveForm />
+            <GoLiveForm points={points} />
           </>
         )}
       </SectionCard>

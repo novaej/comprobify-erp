@@ -18,7 +18,8 @@ export function useServerAction(
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string>();
 
-  const run = (fields: FormData | Record<string, string>) => {
+  // `success` here overrides the hook's, when it depends on what this call does.
+  const run = (fields: FormData | Record<string, string>, call: { success?: string } = {}) => {
     const form = fields instanceof FormData ? fields : new FormData();
     if (!(fields instanceof FormData))
       for (const [name, value] of Object.entries(fields)) form.set(name, value);
@@ -30,7 +31,8 @@ export function useServerAction(
         return;
       }
       setError(undefined);
-      if (options.success) toast.success(options.success);
+      const message = call.success ?? options.success;
+      if (message) toast.success(message);
       options.onDone?.();
     });
   };

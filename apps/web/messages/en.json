@@ -198,7 +198,8 @@
     "plan": "Plan",
     "platformAdmin": "Platform administration",
     "clients": "Clients",
-    "products": "Products"
+    "products": "Products",
+    "company": "Company"
   },
   "shell": {
     "sandboxTitle": "You're in the test environment",
@@ -368,7 +369,8 @@
       "organization": {
         "created": "created the company",
         "went_live": "took the company live",
-        "two_factor_requirement_changed": "changed the two-step verification requirement"
+        "two_factor_requirement_changed": "changed the two-step verification requirement",
+        "settings_changed": "changed the tax details"
       },
       "certificate": {
         "uploaded": "uploaded the electronic signature"
@@ -399,6 +401,18 @@
       "entitlements": {
         "override_set": "set an exception for",
         "override_cleared": "removed the exception for"
+      },
+      "branch": {
+        "created": "created the branch",
+        "updated": "changed the branch"
+      },
+      "issue_point": {
+        "created": "created the issue point",
+        "document_types_changed": "changed the documents of the point",
+        "paused_changed": "paused or resumed the point"
+      },
+      "sequence": {
+        "starting_set": "set the starting numbers"
       }
     },
     "complimentary": "complimentary",
@@ -415,19 +429,24 @@
     "point1": "The real company's documents will go to the SRI production environment.",
     "point2": "Your test copy stays available for testing, separate from the real one.",
     "point3": "This step can't be undone.",
-    "point4": "Before the first document we'll ask for starting numbers, if you're moving from another provider.",
+    "point4": "If you come from another provider, enter below the next number of each issue point.",
     "confirm": "I understand this step can't be undone.",
     "submit": "Go live",
     "submitting": "Going live...",
     "alreadyLive": "This company is already live.",
-    "whatChanges": "What changes"
+    "whatChanges": "What changes",
+    "startingTitle": "Starting numbers",
+    "startingDescription": "If you already issued electronic documents with another provider, enter the next number of each. If you are starting now, leave 1.",
+    "startingFor": "Next number for {point}"
   },
   "goLiveError": {
     "CONFIRM_REQUIRED": "Check the box to confirm.",
     "ALREADY_LIVE": "This company is already live.",
     "FORBIDDEN": "Only the owner can take the company live.",
     "UNKNOWN": "An unexpected error occurred. Please try again.",
-    "AGREEMENTS_PENDING": "Accept the legal documents first, in Legal documents."
+    "AGREEMENTS_PENDING": "Accept the legal documents first, in Legal documents.",
+    "SEQUENCE_BACKWARD": "A starting number can't be lower than the current one.",
+    "INVALID_INPUT": "Starting numbers are whole numbers from 1 to 999,999,999."
   },
   "legal": {
     "title": "Legal documents",
@@ -611,7 +630,8 @@
     "adminModules": "Modules · Platform",
     "adminModule": "Module · Platform",
     "clients": "Clients",
-    "products": "Products and services"
+    "products": "Products and services",
+    "settings": "Company"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -899,6 +919,77 @@
     "FEATURE_NOT_ENABLED": "Your plan doesn't include the product catalog.",
     "NOT_FOUND": "Product not found.",
     "INVALID_INPUT": "Check the details: the price takes up to 6 decimals, and text can not have line breaks.",
+    "UNKNOWN": "An unexpected error occurred. Please try again."
+  },
+  "settings": {
+    "title": "Company",
+    "description": "The tax details on every document and where your company issues from. Changes apply to the test copy too.",
+    "taxTitle": "Tax details",
+    "taxDescription": "How your company appears on its electronic documents.",
+    "edit": "Edit",
+    "editTax": "Edit the tax details",
+    "editTaxDescription": "The RUC and legal name come from your signature and are not changed here.",
+    "ruc": "RUC",
+    "legalName": "Legal name",
+    "tradeName": "Trade name",
+    "tradeNameHint": "Optional. Shown instead of the legal name.",
+    "mainAddress": "Main address",
+    "requiredAccounting": "Required to keep accounts",
+    "requiredAccountingHint": "Printed as SI or NO on your documents.",
+    "taxRegime": "Regime",
+    "regimes": {
+      "GENERAL": "General regime",
+      "RIMPE_EMPRENDEDOR": "RIMPE Entrepreneur",
+      "RIMPE_NEGOCIO_POPULAR": "RIMPE Popular Business"
+    },
+    "specialTaxpayer": "Special taxpayer",
+    "specialTaxpayerHint": "The resolution number, if the SRI designated you.",
+    "withholdingAgent": "Withholding agent",
+    "withholdingAgentHint": "The resolution number, up to 8 digits.",
+    "yes": "Yes",
+    "no": "No",
+    "save": "Save",
+    "saved": "Changes saved.",
+    "create": "Create",
+    "branchesTitle": "Branches and issue points",
+    "branchesDescription": "Each point issues with its own numbering, for the document types it has enabled.",
+    "branchLabel": "Branch {code} {name}",
+    "addBranch": "Add branch",
+    "addBranchDescription": "Its address prints on the documents it issues. Its warehouse is created too.",
+    "editBranch": "Edit",
+    "editBranchName": "Edit {name}",
+    "editBranchDescription": "The code doesn't change: it is part of the numbering.",
+    "branchCode": "Branch code",
+    "branchName": "Name",
+    "branchAddress": "Address",
+    "branchAddressHint": "The branch's address on documents.",
+    "codeHint": "Three digits, such as 002.",
+    "branchCreated": "Branch created.",
+    "addPoint": "Add point",
+    "addPointTo": "Add an issue point to {name}",
+    "addPointDescription": "It starts issuing invoices, numbered from 1.",
+    "pointCode": "Issue point code",
+    "pointCreated": "Issue point created.",
+    "noPoints": "This branch has no issue points yet.",
+    "noTypes": "No documents",
+    "pausedBadge": "Paused",
+    "issues": "Issues",
+    "issuesFor": "Issues documents from {point}",
+    "paused": "Issue point paused.",
+    "resumed": "Issue point active.",
+    "documentTypes": "Document types",
+    "documentTypesFor": "Document types of {point}",
+    "documentTypesDescription": "Turn on the ones this point issues. Turning one off leaves what was issued alone.",
+    "notInPlan": "Not in your plan",
+    "moreTypesSoon": "Credit notes and delivery guides are coming soon."
+  },
+  "settingsError": {
+    "FORBIDDEN": "Your role can't change the company details.",
+    "LIMIT_REACHED": "Your plan doesn't allow more. See the limits in Plan.",
+    "CODE_TAKEN": "That code is in use.",
+    "FEATURE_NOT_ENABLED": "Your plan doesn't include that document type.",
+    "NOT_FOUND": "Not found.",
+    "INVALID_INPUT": "Check the details: codes are three digits and resolutions follow SRI's format.",
     "UNKNOWN": "An unexpected error occurred. Please try again."
   }
 }

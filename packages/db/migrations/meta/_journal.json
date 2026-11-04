@@ -176,6 +176,20 @@
       "when": 1793796848802,
       "tag": "0024_master_data_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793801784166,
+      "tag": "0025_company_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793801784508,
+      "tag": "0026_company_settings_rules",
+      "breakpoints": true
     }
   ]
 }

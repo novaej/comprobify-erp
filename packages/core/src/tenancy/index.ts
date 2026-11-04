@@ -44,3 +44,16 @@ export { onboardOrganization, onboardOrganizationInput } from './onboarding';
 export { isValidRucStructure } from './ruc';
 export { PERMISSIONS, permissionsFor, ROLE_PERMISSIONS, ROLES } from './roles';
 export type { Permission, Role } from './roles';
+export {
+  companyProfileInput,
+  companySettings,
+  createBranch,
+  createIssuePoint,
+  ISSUABLE_DOCUMENT_TYPES,
+  setIssuePointDocumentType,
+  setIssuePointPaused,
+  TAX_REGIMES,
+  updateBranch,
+  updateCompanyProfile,
+} from './settings';
+export type { CompanySettings } from './settings';

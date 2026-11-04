@@ -90,9 +90,17 @@ export async function createOrganization(
             address: input.branch.address ?? input.mainAddress,
           })
           .returning();
-        await tx
+        const [point] = await tx
           .insert(issuePoints)
-          .values({ tenantId: tenant.id, branchId: branch!.id, code: input.issuePointCode });
+          .values({ tenantId: tenant.id, branchId: branch!.id, code: input.issuePointCode })
+          .returning({ id: issuePoints.id });
+        // Facturas from the start: the base module has DOC_TYPE_01 on every plan (FR-PLAN-3).
+        await tx
+          .insert(schema.issuePointDocumentTypes)
+          .values({ tenantId: tenant.id, issuePointId: point!.id, documentType: '01' });
+        await tx
+          .insert(schema.documentSequences)
+          .values({ tenantId: tenant.id, issuePointId: point!.id, documentType: '01' });
         await tx
           .insert(warehouses)
           .values({ tenantId: tenant.id, branchId: branch!.id, name: input.branch.name });

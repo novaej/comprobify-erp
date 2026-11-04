@@ -16,10 +16,13 @@ import {
 } from 'drizzle-orm/pg-core';
 import { oneOf } from './checks';
 import { users } from './identity';
+import { SRI_DOCUMENT_TYPES } from './sri';
 
 // The single source for these values: CHECKs below and core both use them.
 export const TENANT_MODES = ['TEST', 'PRODUCTION'] as const;
 export const TENANT_STATUSES = ['ACTIVE', 'SUSPENDED'] as const;
+// The legend each regime prints on its documents (Ficha, Anexo 22).
+export const TAX_REGIMES = ['GENERAL', 'RIMPE_EMPRENDEDOR', 'RIMPE_NEGOCIO_POPULAR'] as const;
 export const MEMBERSHIP_ROLES = [
   'OWNER',
   'ADMIN',
@@ -54,6 +57,11 @@ export const tenants = pgTable(
     requiredAccounting: boolean('required_accounting').default(false).notNull(),
     // Members must use TOTP to work here (FR-USR-3); mirrored in the twin.
     requireTwoFactor: boolean('require_two_factor').default(false).notNull(),
+    // contribuyenteEspecial and agenteRetencion in the XML: resolution numbers, when the SRI
+    // gave one; taxRegime decides the RIMPE legend. All mirrored in the twin.
+    specialTaxpayerResolution: text('special_taxpayer_resolution'),
+    withholdingAgentResolution: text('withholding_agent_resolution'),
+    taxRegime: text('tax_regime', { enum: TAX_REGIMES }).default('GENERAL').notNull(),
     // Set by go-live; a real organization can't issue before it (FR-ONB-5).
     liveAt: timestamp('live_at', { withTimezone: true }),
     createdAt: createdAt(),
@@ -67,6 +75,16 @@ export const tenants = pgTable(
     // Only a twin points at another tenant, and every twin does.
     check('tenants_twin_check', sql`(${table.mode} = 'TEST') = (${table.twinOf} IS NOT NULL)`),
     check('tenants_idle_timeout_check', sql`${table.idleTimeoutMinutes} BETWEEN 5 AND 480`),
+    check('tenants_tax_regime_check', oneOf('tax_regime', TAX_REGIMES)),
+    // The factura XSD's own patterns.
+    check(
+      'tenants_special_taxpayer_check',
+      sql`special_taxpayer_resolution IS NULL OR special_taxpayer_resolution ~ '^[A-Za-z0-9]{3,13}$'`,
+    ),
+    check(
+      'tenants_withholding_agent_check',
+      sql`withholding_agent_resolution IS NULL OR withholding_agent_resolution ~ '^[0-9]{1,8}$'`,
+    ),
   ],
 );
 
@@ -115,6 +133,56 @@ export const issuePoints = pgTable(
     // Target for child foreign keys, so a child can't point into another tenant.
     unique('issue_points_tenant_id_unique').on(table.tenantId, table.id),
     check('issue_points_code_check', sql`${table.code} ~ '^[0-9]{3}$'`),
+  ],
+);
+
+// FR-PLAN-3: the document types an issue point issues. Enabling needs the type's feature;
+// one already enabled keeps working if the plan loses it. Disabled, never deleted.
+export const issuePointDocumentTypes = pgTable(
+  'issue_point_document_types',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id').notNull(),
+    issuePointId: uuid('issue_point_id').notNull(),
+    documentType: text('document_type', { enum: SRI_DOCUMENT_TYPES }).notNull(),
+    active: boolean('active').default(true).notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    foreignKey({
+      name: 'issue_point_document_types_issue_point_fk',
+      columns: [table.tenantId, table.issuePointId],
+      foreignColumns: [issuePoints.tenantId, issuePoints.id],
+    }),
+    unique('issue_point_document_types_unique').on(table.issuePointId, table.documentType),
+    check('issue_point_document_types_type_check', oneOf('document_type', SRI_DOCUMENT_TYPES)),
+  ],
+);
+
+// SRI rule 9: the next sequential per issue point and type, taken with FOR UPDATE when a
+// document is created. Only moves forward. The twin has its own, being its own rows.
+export const documentSequences = pgTable(
+  'document_sequences',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id').notNull(),
+    issuePointId: uuid('issue_point_id').notNull(),
+    documentType: text('document_type', { enum: SRI_DOCUMENT_TYPES }).notNull(),
+    nextValue: integer('next_value').default(1).notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    foreignKey({
+      name: 'document_sequences_issue_point_fk',
+      columns: [table.tenantId, table.issuePointId],
+      foreignColumns: [issuePoints.tenantId, issuePoints.id],
+    }),
+    unique('document_sequences_unique').on(table.issuePointId, table.documentType),
+    check('document_sequences_type_check', oneOf('document_type', SRI_DOCUMENT_TYPES)),
+    // Nine digits in the access key and the document number.
+    check('document_sequences_value_check', sql`next_value BETWEEN 1 AND 999999999`),
   ],
 );
 
