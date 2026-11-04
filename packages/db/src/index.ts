@@ -4,9 +4,14 @@ export * as schema from './schema';
 export {
   AGREEMENT_TYPES,
   ASSIGNABLE_ROLES,
+  AMBIENTES,
   AUDIT_ACTIONS,
   CLIENT_ID_TYPES,
   CONSUMER_FINAL_ID,
+  DOCUMENT_EVENT_TYPES,
+  DOCUMENT_STATUSES,
+  DOCUMENT_TRANSITIONS,
+  documentStatusTriggerBody,
   FEATURE_KINDS,
   MEMBERSHIP_ROLES,
   MODULE_STATUSES,
@@ -27,6 +32,7 @@ export {
   TENANT_MODES,
   TENANT_STATUSES,
 } from './schema';
+export type { DocumentStatus } from './schema';
 // Re-exported so callers share this package's drizzle-orm instance and types.
 export { and, asc, count, desc, eq, gte, ilike, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 export { UnsafeDatabaseError, findUnprotectedTables } from './boot-guard';

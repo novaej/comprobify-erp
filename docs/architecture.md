@@ -83,6 +83,10 @@ The company's tax data (accounting flag, contribuyente especial and agente de re
 
 Clients (`parties`) and products and services (`catalog`) are tenant data under RLS, behind the `CLIENTS` and `CATALOG` features and the `clients.*` and `catalog.*` permissions. A company and its twin keep their own lists. Consumidor final is never a row. A cédula must pass its check digit; a RUC is checked by structure only, as onboarding does. Prices are `numeric` with six decimals and stay decimal strings end to end (ADR-012). Nothing is deleted: an inactive client or product drops out of the pickers and stays on its documents.
 
+## Documents
+
+The `documents` module holds every electronic document: one row per document, with the buyer and totals as a snapshot, and its lines, payments and timeline in `document_lines`, `document_payments` and `document_events`. Those three are append-only: the app role can't update them, so a correction adds a new revision of the lines and the row points at it. The status machine is one TypeScript definition (`DOCUMENT_TRANSITIONS` in `packages/db/src/schema/documents.ts`) that generates the status CHECK and the trigger body in the migration; a test compares the live trigger with it (FR-DOC-3). A second trigger keeps the number fixed forever, sets the authorization once, and lets the content and access key change only when a document goes back to `SIGNED` to be corrected or re-issued. Sequentials come from `document_sequences` under `SELECT … FOR UPDATE` in the creating transaction, so a rolled-back document gives its number back and two at once never share one. The access key is built in `sri/access-key.ts` with its Module 11 check digit, from the issue date in Ecuador time.
+
 ## Audit log
 
 `audit_events` is tenant data with RLS, and append-only: the app role can insert and read, not update or delete. Core writes an event with `recordAudit` in the same transaction as the change, so a rolled-back change leaves none. Event names are one TypeScript list that generates the CHECK, and the web test requires a label for each. Changes to an organization and its twin are recorded in the real organization's log.

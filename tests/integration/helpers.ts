@@ -2,12 +2,15 @@ import { randomUUID } from 'node:crypto';
 import { loadTestEnv } from '@comprobify/config/env';
 import type { Logger } from '@comprobify/config/logger';
 import {
+  accessKey,
+  randomNumericCode,
   resolvePlatformActor,
   setOverride,
+  takeSequential,
   systemClock,
   type PlatformActor,
 } from '@comprobify/core';
-import { createDatabase, schema, type Database } from '@comprobify/db';
+import { createDatabase, eq, schema, type Database } from '@comprobify/db';
 import { Client } from 'pg';
 import { vi } from 'vitest';
 
@@ -94,5 +97,86 @@ export async function grantSeats(
     effect: 'LIMIT',
     limitValue: seats,
     reason: 'test seats',
+  });
+}
+
+// A signed document straight in the tables, until creating one has its pipeline
+// (Milestone 3, step 6). Same sequence and access key code as the real thing.
+export async function insertTestDocument(
+  db: Database,
+  tenantId: string,
+  options: { issueDate?: string } = {},
+): Promise<{ id: string; accessKey: string; sequential: number }> {
+  return db.withSystem('test: insert a signed document', async ({ db: tx }) => {
+    const [point] = await tx
+      .select({ id: schema.issuePoints.id, ruc: schema.tenants.ruc })
+      .from(schema.issuePoints)
+      .innerJoin(schema.tenants, eq(schema.tenants.id, schema.issuePoints.tenantId))
+      .where(eq(schema.issuePoints.tenantId, tenantId))
+      .limit(1);
+    const sequential = await takeSequential(tx, {
+      tenantId,
+      issuePointId: point!.id,
+      documentType: '01',
+    });
+    const key = accessKey({
+      issueDate: options.issueDate ?? '2026-11-10',
+      documentType: '01',
+      ruc: point!.ruc,
+      ambiente: '1',
+      series: '001001',
+      sequential,
+      numericCode: randomNumericCode(),
+    });
+    const [document] = await tx
+      .insert(schema.documents)
+      .values({
+        tenantId,
+        issuePointId: point!.id,
+        documentType: '01',
+        series: '001001',
+        sequential,
+        ambiente: '1',
+        accessKey: key,
+        issueDate: options.issueDate ?? '2026-11-10',
+        buyerIdType: '07',
+        buyerIdentification: '9999999999999',
+        buyerName: 'CONSUMIDOR FINAL',
+        subtotal: '10.00',
+        discount: '0.00',
+        taxTotals: [{ taxCode: '2', rateCode: '4', percent: '15', base: '10.00', value: '1.50' }],
+        total: '11.50',
+      })
+      .returning({ id: schema.documents.id });
+    await tx.insert(schema.documentLines).values({
+      tenantId,
+      documentId: document!.id,
+      revision: 1,
+      position: 1,
+      code: 'P-1',
+      name: 'Producto',
+      quantity: '1',
+      unitPrice: '10',
+      discount: '0',
+      ivaRateCode: '4',
+      ivaPercent: '15',
+      base: '10.00',
+      iva: '1.50',
+    });
+    await tx.insert(schema.documentPayments).values({
+      tenantId,
+      documentId: document!.id,
+      revision: 1,
+      position: 1,
+      method: '01',
+      amount: '11.50',
+    });
+    await tx.insert(schema.documentEvents).values({
+      tenantId,
+      documentId: document!.id,
+      type: 'CREATED',
+      toStatus: 'SIGNED',
+    });
+    return { id: document!.id, accessKey: key, sequential };
   });
 }

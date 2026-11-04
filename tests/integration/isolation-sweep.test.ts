@@ -22,7 +22,14 @@ import {
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import type { Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, appUrl, grantSeats, superAdmin, testLogger } from './helpers';
+import {
+  appDatabase,
+  appUrl,
+  grantSeats,
+  insertTestDocument,
+  superAdmin,
+  testLogger,
+} from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1]);
 const parties = {
@@ -125,6 +132,8 @@ describe('isolation sweep over every tenant table', () => {
         identification: '1710034065',
         name: 'Cliente',
       });
+      // Documents, lines, payments and events (FR-DOC-13).
+      await insertTestDocument(db, tenantId);
       await createProduct(actor, db, {
         code: 'P-1',
         name: 'Producto',
@@ -175,7 +184,11 @@ describe('isolation sweep over every tenant table', () => {
         'branches',
         'certificates',
         'clients',
+        'document_events',
+        'document_lines',
+        'document_payments',
         'document_sequences',
+        'documents',
         'invitations',
         'issue_point_document_types',
         'issue_point_access',

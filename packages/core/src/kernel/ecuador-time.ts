@@ -12,3 +12,9 @@ export function startOfNextEcuadorMonth(at: Date): Date {
   const start = startOfEcuadorMonth(at);
   return startOfEcuadorMonth(new Date(start.getTime() + 32 * 24 * 60 * 60 * 1000));
 }
+
+// The Ecuador calendar day of an instant, as YYYY-MM-DD: the issue date of a document
+// sent at that instant (SRI rule 6).
+export function ecuadorDate(at: Date): string {
+  return new Date(at.getTime() - OFFSET_MS).toISOString().slice(0, 10);
+}

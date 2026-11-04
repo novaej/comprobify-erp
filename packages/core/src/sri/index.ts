@@ -14,3 +14,5 @@ export {
 export type { IvaRateCode, PaymentMethod, SriDocumentType, SriIdType } from './catalogues';
 export { documentTotals, lineAmounts } from './totals';
 export type { DocumentTotals, LineAmounts, LineInput, TaxTotal } from './totals';
+export { accessKey, module11, randomNumericCode } from './access-key';
+export type { AccessKeyParts } from './access-key';

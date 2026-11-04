@@ -190,6 +190,20 @@
       "when": 1793801784508,
       "tag": "0026_company_settings_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1793804222185,
+      "tag": "0027_documents",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1793804222531,
+      "tag": "0028_documents_rules",
+      "breakpoints": true
     }
   ]
 }
