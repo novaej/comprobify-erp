@@ -1,4 +1,11 @@
-import { getDocument, isDomainError, type DocumentDetail } from '@comprobify/core';
+import {
+  ecuadorDate,
+  getDocument,
+  isDomainError,
+  systemClock,
+  voidDeadline,
+  type DocumentDetail,
+} from '@comprobify/core';
 import { buttonVariants } from '@comprobify/ui/components/button';
 import { cn } from '@comprobify/ui/lib/utils';
 import { AlertCircle, Download, FileText } from 'lucide-react';
@@ -24,6 +31,7 @@ import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
 import { STATUS_TONE } from '../document-status';
 import { CopyButton } from './copy-button';
+import { DocumentActions } from './document-actions';
 
 export const generateMetadata = pageTitle('document');
 
@@ -73,6 +81,7 @@ export default async function DocumentPage({
     : [];
   const authorized = document.status === 'AUTHORIZED' || document.status === 'VOIDED';
   const base = `/${locale}/documents/${document.id}`;
+  const today = ecuadorDate(systemClock.now());
 
   return (
     <div className="max-w-6xl space-y-6">
@@ -114,6 +123,15 @@ export default async function DocumentPage({
             </a>
           </>
         }
+      />
+
+      <DocumentActions
+        id={document.id}
+        allowed={document.allowed}
+        today={today}
+        todayShown={date(today)}
+        voidDeadline={date(voidDeadline(document.issueDate))}
+        buyerEmail={document.buyer.email}
       />
 
       {messages.length > 0 && (

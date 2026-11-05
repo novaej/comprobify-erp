@@ -4,6 +4,7 @@ import {
   checkAuthorization,
   companySettings,
   correctInvoice,
+  correctionDraft,
   createClient,
   createInvoice,
   createJobs,
@@ -12,6 +13,8 @@ import {
   createSriClient,
   findByAccessKey,
   fixedClock,
+  getDocument,
+  listPending,
   onboardOrganization,
   reissueDocument,
   requestReissue,
@@ -339,5 +342,69 @@ describe('correcting, re-issuing by hand and voiding', () => {
       voidDocument(actor, db, down.id, { attestedVoidedAtSri: true }, { sri }),
     ).resolves.toEqual({ status: 'VOIDED', attested: true });
     expect((await lastEvent(down)).details).toMatchObject({ attested: true });
+  });
+
+  it('offers each action only when its rule allows it, and lists what is pending', async () => {
+    const actor = await owner();
+    const returnedOne = await returned();
+    expect((await getDocument(actor, db, returnedOne.id)).allowed).toEqual({
+      correct: true,
+      reissue: false,
+      void: false,
+      resend: false,
+    });
+    const done = await authorized(clientId);
+    expect((await getDocument(actor, db, done.id)).allowed).toEqual({
+      correct: false,
+      reissue: false,
+      void: true,
+      resend: true,
+    });
+    // Consumidor final: no void, no email to send.
+    const consumer = await authorized(null);
+    expect((await getDocument(actor, db, consumer.id)).allowed).toMatchObject({
+      void: false,
+      resend: false,
+    });
+    const viewer: ActorContext = { ...actor, permissions: ['documents.read'] };
+    expect(Object.values((await getDocument(viewer, db, returnedOne.id)).allowed)).toEqual([
+      false,
+      false,
+      false,
+      false,
+    ]);
+
+    const pending = await listPending(actor, db);
+    expect(pending.map((row) => row.id)).toContain(returnedOne.id);
+    expect(pending.map((row) => row.id)).not.toContain(done.id);
+  });
+
+  it('starts a correction from the document as last signed, without the fields issuing adds', async () => {
+    const actor = await owner();
+    const point = (await companySettings(actor, db)).branches[0]!.issuePoints[0]!.id;
+    const document = await createInvoice(
+      actor,
+      db,
+      {
+        issuePointId: point,
+        ...content('10', clientId),
+        additionalInfo: [{ name: 'Orden', value: 'OC-7' }],
+      },
+      { ...issueDeps, providerRuc: '1712345678001' },
+    );
+    mock.queue('reception', { kind: 'returned', code: '35', message: 'DOCUMENTO INVÁLIDO' });
+    await sendDocument(deps, ref(document));
+    const draft = await correctionDraft(actor, db, document.id);
+    expect(draft).toMatchObject({
+      number: document.number,
+      clientId,
+      lines: [{ code: 'P-1', name: 'Café', quantity: '1.000000', unitPrice: '10.000000' }],
+      payments: [{ method: '01', amount: '11.50' }],
+      additionalInfo: [{ name: 'Orden', value: 'OC-7' }],
+    });
+    const done = await authorized(null);
+    await expect(correctionDraft(actor, db, done.id)).rejects.toMatchObject({
+      code: 'NOT_CORRECTABLE',
+    });
   });
 });

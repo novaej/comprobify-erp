@@ -60,9 +60,17 @@ function requireMailOutsideLocal(
 // signs. The worker decrypts a company's key with it for that company's re-issues (FR-DOC-6).
 const certificateKey = z.string().regex(/^[0-9a-fA-F]{64}$/, 'must be 64 hex characters');
 
+// SRI's services (ADR-014): the worker sends and asks, the web asks when voiding. The URLs default, in core, to SRI's own.
+const sriShape = {
+  SRI_TEST_URL: z.url().optional(),
+  SRI_PRODUCTION_URL: z.url().optional(),
+  SRI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120_000).default(20_000),
+};
+
 export const webEnvSchema = z
   .object({
     ...runtimeShape,
+    ...sriShape,
     APP_URL: z.url(),
     // Signs session cookies and tokens. Rotating it signs everyone out.
     AUTH_SECRET: z.string().min(32),
@@ -100,13 +108,6 @@ export const webEnvSchema = z
         });
     }
   });
-
-// The worker talks to SRI (ADR-014). The URLs default, in core, to SRI's own.
-const sriShape = {
-  SRI_TEST_URL: z.url().optional(),
-  SRI_PRODUCTION_URL: z.url().optional(),
-  SRI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120_000).default(20_000),
-};
 
 export const workerEnvSchema = z
   .object({ ...runtimeShape, ...mailShape, ...sriShape, CERT_ENCRYPTION_KEY: certificateKey })

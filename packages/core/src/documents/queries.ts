@@ -14,8 +14,15 @@ import {
   type SQL,
 } from '@comprobify/db';
 import { z } from 'zod';
-import { DomainError, requirePermission, type ActorContext } from '../kernel';
-import { authorizedXmlFile, SELECTABLE_IVA_RATES, SRI_IVA_RATES } from '../sri';
+import {
+  DomainError,
+  ecuadorDate,
+  hasFeature,
+  requirePermission,
+  type ActorContext,
+} from '../kernel';
+import { authorizedXmlFile, CONSUMER_FINAL_ID, SELECTABLE_IVA_RATES, SRI_IVA_RATES } from '../sri';
+import { rideData } from '../sri';
 import { DOCUMENT_STATUSES, type DocumentStatus } from './status';
 
 // FR-DOC-12 reads. A user restricted to issue points sees only theirs (FR-ROLE-2).
@@ -216,7 +223,53 @@ export type DocumentDetail = {
     occurredAt: Date;
   }[];
   previousKeys: { accessKey: string; issueDate: string; reason: string }[];
+  // What this user may do with it now (FR-DOC-6 to FR-DOC-8, FR-DOC-11). Core still checks
+  // each when it's done; this only decides what the screen offers.
+  allowed: DocumentActions;
 };
+
+export type DocumentActions = {
+  correct: boolean;
+  reissue: boolean;
+  void: boolean;
+  resend: boolean;
+};
+
+// The same rules the actions enforce: correctInvoice, requestReissue, voidDocument and
+// resendDocumentEmail.
+export function documentActions(
+  ctx: ActorContext,
+  row: Pick<
+    typeof schema.documents.$inferSelect,
+    | 'status'
+    | 'issueDate'
+    | 'deadlineCheckedAt'
+    | 'sriUnreachable'
+    | 'buyerIdentification'
+    | 'buyerEmail'
+  >,
+): DocumentActions {
+  const can = (permission: string) => ctx.permissions.includes(permission);
+  const today = ecuadorDate(ctx.clock.now());
+  const unsentChecked =
+    row.status === 'SEND_FAILED' && row.deadlineCheckedAt !== null && !row.sriUnreachable;
+  return {
+    correct:
+      can('documents.issue') &&
+      (row.status === 'RETURNED' || row.status === 'NOT_AUTHORIZED' || unsentChecked),
+    reissue: can('documents.issue') && row.status === 'SEND_FAILED' && row.issueDate < today,
+    void:
+      can('documents.void') &&
+      hasFeature(ctx, 'DOCUMENT_VOID') &&
+      row.status === 'AUTHORIZED' &&
+      row.buyerIdentification !== CONSUMER_FINAL_ID,
+    resend:
+      can('documents.issue') &&
+      hasFeature(ctx, 'BUYER_EMAIL') &&
+      row.status === 'AUTHORIZED' &&
+      row.buyerEmail !== null,
+  };
+}
 
 export async function getDocument(
   ctx: ActorContext,
@@ -310,6 +363,7 @@ export async function getDocument(
         issueDate: reissue.previousIssueDate,
         reason: reissue.reason,
       })),
+      allowed: documentActions(ctx, row),
     };
   });
 }
@@ -339,4 +393,127 @@ export async function documentXml(
         })
       : null;
   return { filename: `${row.accessKey}.xml`, content: authorized ?? row.signedXml };
+}
+
+// FR-DOC-12: everything not yet final, oldest first: what needs a person, or SRI.
+export const PENDING_STATUSES = [
+  'RETURNED',
+  'NOT_AUTHORIZED',
+  'SEND_FAILED',
+  'SIGNED',
+  'PENDING_SEND',
+  'RECEIVED',
+] as const satisfies readonly DocumentStatus[];
+
+export async function listPending(
+  ctx: ActorContext,
+  db: Database,
+): Promise<(DocumentListRow & { sriUnreachable: boolean; receivedAt: Date | null })[]> {
+  requirePermission(ctx, 'documents.read');
+  const { documents } = schema;
+  return db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+    const rows = await tx
+      .select()
+      .from(documents)
+      .where(and(restricted(ctx), inArray(documents.status, [...PENDING_STATUSES])))
+      .orderBy(asc(documents.issueDate), asc(documents.sequential))
+      .limit(500);
+    return rows.map((row) => ({
+      id: row.id,
+      number: documentNumber(row.series, row.sequential),
+      documentType: row.documentType,
+      issueDate: row.issueDate,
+      buyerName: row.buyerName,
+      buyerIdentification: row.buyerIdentification,
+      total: row.total,
+      status: row.status,
+      sriUnreachable: row.sriUnreachable,
+      receivedAt: row.receivedAt,
+    }));
+  });
+}
+
+export type CorrectionDraft = {
+  id: string;
+  number: string;
+  issuePointId: string;
+  issuePoint: string;
+  clientId: string | null;
+  lines: {
+    productId: string | null;
+    code: string;
+    auxiliaryCode: string | null;
+    name: string;
+    unit: string | null;
+    quantity: string;
+    unitPrice: string;
+    discount: string;
+    ivaRateCode: string;
+  }[];
+  payments: { method: string; amount: string; term: number | null; termUnit: string | null }[];
+  additionalInfo: { name: string; value: string }[];
+};
+
+// FR-DOC-7: what the correction form starts from: the document as last signed.
+export async function correctionDraft(
+  ctx: ActorContext,
+  db: Database,
+  documentId: string,
+): Promise<CorrectionDraft> {
+  requirePermission(ctx, 'documents.issue');
+  const id = z.uuid().parse(documentId);
+  const { documents, documentLines, documentPayments } = schema;
+  return db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+    const [row] = await tx
+      .select()
+      .from(documents)
+      .where(and(eq(documents.id, id), restricted(ctx)));
+    if (!row) throw new DomainError('NOT_FOUND', 'Document not found');
+    if (!documentActions(ctx, row).correct)
+      throw new DomainError('NOT_CORRECTABLE', 'This document can not be corrected now');
+    const [lines, payments] = await Promise.all([
+      tx
+        .select()
+        .from(documentLines)
+        .where(and(eq(documentLines.documentId, id), eq(documentLines.revision, row.revision)))
+        .orderBy(asc(documentLines.position)),
+      tx
+        .select()
+        .from(documentPayments)
+        .where(
+          and(eq(documentPayments.documentId, id), eq(documentPayments.revision, row.revision)),
+        )
+        .orderBy(asc(documentPayments.position)),
+    ]);
+    // The fields the company typed, without the ones issuing adds again.
+    const added = new Set(['Email', 'RUC Proveedor']);
+    const additionalInfo = row.signedXml
+      ? rideData(row.signedXml).additionalInfo.filter((field) => !added.has(field.name))
+      : [];
+    return {
+      id: row.id,
+      number: documentNumber(row.series, row.sequential),
+      issuePointId: row.issuePointId,
+      issuePoint: `${row.series.slice(0, 3)}-${row.series.slice(3)}`,
+      clientId: row.clientId,
+      lines: lines.map((line) => ({
+        productId: line.productId,
+        code: line.code,
+        auxiliaryCode: line.auxiliaryCode,
+        name: line.name,
+        unit: line.unit,
+        quantity: line.quantity,
+        unitPrice: line.unitPrice,
+        discount: line.discount,
+        ivaRateCode: line.ivaRateCode,
+      })),
+      payments: payments.map((payment) => ({
+        method: payment.method,
+        amount: payment.amount,
+        term: payment.term,
+        termUnit: payment.termUnit,
+      })),
+      additionalInfo,
+    };
+  });
 }

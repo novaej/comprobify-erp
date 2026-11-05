@@ -199,4 +199,11 @@ describe('the SRI client against the mock', () => {
       'https://cel.sri.gob.ec/comprobantes-electronicos-ws/ConsultaComprobante?wsdl',
     ]);
   });
+
+  it('reads unknown keys as voided for the web in mock mode (ADR-014)', async () => {
+    const web = createSriClient({ transport: createMockSri({ unknownKeys: 'VOIDED' }).transport });
+    await expect(web.validity(sampleFactura().accessKey, '1')).resolves.toMatchObject({
+      status: 'VOIDED',
+    });
+  });
 });

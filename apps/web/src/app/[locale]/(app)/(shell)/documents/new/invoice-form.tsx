@@ -14,7 +14,7 @@ import { FormActionBar } from '@/components/form-action-bar';
 import { FormField } from '@/components/form-field';
 import { SectionCard } from '@/components/section-card';
 import { formatCents, formTotals, normalizeDecimal, parseDecimal } from '@/lib/invoice-totals';
-import { createInvoiceAction } from './actions';
+import { correctInvoiceAction, createInvoiceAction } from './actions';
 
 export type ProductOption = {
   id: string;
@@ -50,6 +50,19 @@ type Line = {
 type Payment = { key: string; method: string; amount: string; term: string; termUnit: string };
 type Field = { key: string; name: string; value: string };
 
+// A correction starts from the document as last signed (FR-DOC-7).
+export type InvoiceDraft = {
+  documentId: string;
+  clientId: string | null;
+  lines: Omit<Line, 'key'>[];
+  payments: { method: string; amount: string; term: number | null; termUnit: string | null }[];
+  additionalInfo: { name: string; value: string }[];
+};
+
+// Stored decimals as typed: no trailing zeros, the locale's mark.
+const typed = (value: string, mark: string) =>
+  value.includes('.') ? value.replace(/\.?0+$/, '').replace('.', mark) : value;
+
 // The order Enter walks through a line (FR-UX-4).
 const LINE_FIELDS = ['code', 'name', 'quantity', 'unitPrice', 'discount'] as const;
 type LineField = (typeof LINE_FIELDS)[number];
@@ -75,6 +88,7 @@ export function InvoiceForm({
   consumerFinalMax,
   today,
   defaultIvaRate,
+  draft,
 }: {
   issuePoints: Choice[];
   ivaRates: (Choice & { percent: string })[];
@@ -85,6 +99,7 @@ export function InvoiceForm({
   consumerFinalMax: string;
   today: string;
   defaultIvaRate: string;
+  draft?: InvoiceDraft;
 }) {
   const t = useTranslations('invoiceForm');
   const tError = useTranslations('documentsError');
@@ -119,13 +134,54 @@ export function InvoiceForm({
   });
 
   const [issuePointId, setIssuePointId] = useState(issuePoints[0]?.value ?? '');
-  const [client, setClient] = useState<ClientOption | null>(null);
+  const [client, setClient] = useState<ClientOption | null>(
+    () => clients.find((option) => option.id === draft?.clientId) ?? null,
+  );
   const [clientQuery, setClientQuery] = useState('');
-  const [lines, setLines] = useState<Line[]>(() => [blankLine()]);
-  const [payments, setPayments] = useState<Payment[]>([
-    { key: newKey(), method: paymentMethods[0]?.value ?? '01', amount: '', term: '', termUnit: '' },
-  ]);
-  const [fields, setFields] = useState<Field[]>([]);
+  const [lines, setLines] = useState<Line[]>(() =>
+    draft
+      ? draft.lines.map((line) => ({
+          ...line,
+          key: newKey(),
+          quantity: typed(line.quantity, mark),
+          unitPrice: priceText(line.unitPrice, mark),
+          discount: Number(line.discount) === 0 ? '' : typed(line.discount, mark),
+        }))
+      : [blankLine()],
+  );
+  const [payments, setPayments] = useState<Payment[]>(() =>
+    draft && draft.payments.length > 0
+      ? draft.payments.map((payment) => ({
+          key: newKey(),
+          method: payment.method,
+          amount: typed(payment.amount, mark),
+          term: payment.term === null ? '' : String(payment.term),
+          termUnit: payment.termUnit ?? '',
+        }))
+      : [
+          {
+            key: newKey(),
+            method: paymentMethods[0]?.value ?? '01',
+            amount: '',
+            term: '',
+            termUnit: '',
+          },
+        ],
+  );
+  const [fields, setFields] = useState<Field[]>(() =>
+    (draft?.additionalInfo ?? []).map((field) => ({ key: newKey(), ...field })),
+  );
+  const copy = draft
+    ? {
+        submit: t('correct.submit'),
+        confirmTitle: t('correct.confirmTitle'),
+        confirmDescription: t('correct.confirmDescription'),
+      }
+    : {
+        submit: t('submit'),
+        confirmTitle: t('confirmTitle'),
+        confirmDescription: t('confirmDescription'),
+      };
   const [announcement, setAnnouncement] = useState('');
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string>();
@@ -257,10 +313,19 @@ export function InvoiceForm({
   const issue = () => {
     const form = new FormData();
     form.set('locale', locale);
-    form.set('payload', JSON.stringify(payload()));
+    const full = payload();
+    // A correction keeps its issue point and number, and has no idempotency key.
+    const content = {
+      clientId: full.clientId,
+      lines: full.lines,
+      payments: full.payments,
+      additionalInfo: full.additionalInfo,
+    };
+    form.set('payload', JSON.stringify(draft ? content : full));
+    if (draft) form.set('id', draft.documentId);
     startTransition(async () => {
-      // Success redirects to the new invoice; only a refusal comes back.
-      const state = await createInvoiceAction({}, form);
+      // Success redirects to the invoice; only a refusal comes back.
+      const state = await (draft ? correctInvoiceAction : createInvoiceAction)({}, form);
       if (state?.error) setError(tError.has(state.error) ? tError(state.error) : tError('UNKNOWN'));
     });
   };
@@ -288,7 +353,7 @@ export function InvoiceForm({
                     value={issuePointId}
                     onChange={setIssuePointId}
                     options={issuePoints}
-                    disabled={issuePoints.length < 2}
+                    disabled={issuePoints.length < 2 || Boolean(draft)}
                   />
                 )}
               </FormField>
@@ -754,7 +819,7 @@ export function InvoiceForm({
       <FormActionBar>
         <Button type="submit" disabled={pending || !canIssue}>
           <Send className="mr-1.5 h-4 w-4" aria-hidden />
-          {t('submit')}
+          {copy.submit}
         </Button>
       </FormActionBar>
 
@@ -764,13 +829,13 @@ export function InvoiceForm({
           setConfirming(open);
           if (!open) setError(undefined);
         }}
-        title={t('confirmTitle')}
-        description={t('confirmDescription')}
+        title={copy.confirmTitle}
+        description={copy.confirmDescription}
         detail={t('confirmDetail', {
           buyer: client?.name ?? t('buyer.consumerFinal'),
           total: show(totals.total),
         })}
-        confirmLabel={t('submit')}
+        confirmLabel={copy.submit}
         pending={pending}
         error={error}
         onConfirm={issue}

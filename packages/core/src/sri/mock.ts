@@ -74,7 +74,14 @@ const message = (identifier: string, text: string): SriMessage => ({
   type: 'ERROR',
 });
 
-export function createMockSri(options: { now?: () => Date } = {}): MockSri {
+export function createMockSri(
+  options: {
+    now?: () => Date;
+    // For the web in SRI_MOCK_MODE: it holds nothing the worker's mock sent, and there's no
+    // SRI portal to void on locally, so a key it doesn't know reads as voided.
+    unknownKeys?: 'NOT_FOUND' | 'VOIDED';
+  } = {},
+): MockSri {
   const now = options.now ?? (() => new Date());
   const held = new Map<string, Held>();
   const queues: Record<Service, MockOutcome[]> = { reception: [], authorization: [], validity: [] };
@@ -115,6 +122,8 @@ export function createMockSri(options: { now?: () => Date } = {}): MockSri {
   const onValidity = (key: string, outcome?: MockOutcome) => {
     const known = held.get(key);
     if (outcome?.kind === 'voided' && known) known.state = 'VOIDED';
+    if (!known && options.unknownKeys === 'VOIDED')
+      return validity(key, '<mensajes/><estadoAutorizacion>ANULADO</estadoAutorizacion>');
     if (!known || known.state === 'PROCESSING')
       return validity(
         key,

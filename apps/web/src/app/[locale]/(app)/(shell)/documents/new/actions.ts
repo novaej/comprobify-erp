@@ -1,6 +1,6 @@
 'use server';
 
-import { createInvoice } from '@comprobify/core';
+import { correctInvoice, createInvoice } from '@comprobify/core';
 import { redirect } from '@/i18n/navigation';
 import { toActionState, type ActionState } from '@/server/actions';
 import { getRuntime } from '@/server/runtime';
@@ -24,5 +24,28 @@ export async function createInvoiceAction(_: ActionState, form: FormData): Promi
       .id;
   });
   if (!id) return state;
+  return redirect({ href: `/documents/${id}`, locale });
+}
+
+// FR-DOC-7: the same row and number, sent again.
+export async function correctInvoiceAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const locale = form.get('locale') === 'en' ? 'en' : 'es';
+  const { actor } = await loadShell(locale);
+  const { db, issueDeps } = await getRuntime();
+  const raw = form.get('payload');
+  const id = form.get('id');
+  let payload: unknown;
+  try {
+    payload = JSON.parse(typeof raw === 'string' ? raw : '');
+  } catch {
+    return { error: 'INVALID_INPUT' };
+  }
+  if (typeof id !== 'string') return { error: 'INVALID_INPUT' };
+  let done = false;
+  const state = await toActionState(async () => {
+    await correctInvoice(actor, db, id, payload as Parameters<typeof correctInvoice>[3], issueDeps);
+    done = true;
+  });
+  if (!done) return state;
   return redirect({ href: `/documents/${id}`, locale });
 }

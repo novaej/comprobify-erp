@@ -25,6 +25,8 @@ export { findByAccessKey } from './lookup';
 export { documentRide, emailDocument, resendDocumentEmail } from './ride';
 export type { DocumentEmailDeps } from './ride';
 export {
+  correctionDraft,
+  documentActions,
   documentFilters,
   documentNumber,
   DOCUMENTS_PAGE_SIZE,
@@ -32,5 +34,14 @@ export {
   getDocument,
   issuingOptions,
   listDocuments,
+  listPending,
+  PENDING_STATUSES,
 } from './queries';
-export type { DocumentDetail, DocumentFilters, DocumentListRow, IssuingOptions } from './queries';
+export type {
+  CorrectionDraft,
+  DocumentActions,
+  DocumentDetail,
+  DocumentFilters,
+  DocumentListRow,
+  IssuingOptions,
+} from './queries';

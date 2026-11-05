@@ -7,7 +7,7 @@ import {
   type DocumentFilters as Filters,
 } from '@comprobify/core';
 import { buttonVariants } from '@comprobify/ui/components/button';
-import { ChevronRight, FileText, Plus } from 'lucide-react';
+import { ChevronRight, Clock, FileText, Plus } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { EmptyState } from '@/components/empty-state';
 import { NoAccess } from '@/components/no-access';
@@ -94,12 +94,21 @@ export default async function DocumentsPage({
         title={t('title')}
         description={t('description')}
         action={
-          canIssue && (
-            <Link href="/documents/new" className={buttonVariants({ size: 'sm' })}>
-              <Plus className="mr-1.5 h-4 w-4" aria-hidden />
-              {t('newInvoice')}
+          <>
+            <Link
+              href="/documents/pending"
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
+            >
+              <Clock className="mr-1.5 h-4 w-4" aria-hidden />
+              {t('pendingLink')}
             </Link>
-          )
+            {canIssue && (
+              <Link href="/documents/new" className={buttonVariants({ size: 'sm' })}>
+                <Plus className="mr-1.5 h-4 w-4" aria-hidden />
+                {t('newInvoice')}
+              </Link>
+            )}
+          </>
         }
       />
       <DocumentFilters

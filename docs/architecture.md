@@ -143,6 +143,14 @@ The form's live totals use exact integer arithmetic with ADR-012's rounding (`ap
 - Enter moves along the line and selects what's in the next field.
 - Enter in the discount opens a new line.
 
+**Actions** (FR-DOC-6 to FR-DOC-8, FR-DOC-11). `documentActions` decides what a document offers: correct, re-issue, void, resend. It applies the same rules as the actions themselves, plus the user's role and plan, and the detail page shows only those.
+
+- **Correct:** opens the invoice form filled from `correctionDraft` (the lines, payments, client and additional information as last signed).
+- **Re-issue:** confirms the new date before queueing the worker's re-issue.
+- **Void:** checks Consulta de validez from the web, and falls back to the user's attestation when SRI can't be asked.
+
+`/documents/pending` groups what isn't final yet, putting what needs a person before what waits for SRI.
+
 Every transition writes an event with SRI's raw answer. CI and the local stack always run the mock.
 
 ## Audit log

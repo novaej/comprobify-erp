@@ -62,6 +62,8 @@ Every result keeps the raw response, for the document's timeline (FR-DOC-13).
 
 `queue` scripts the next answers of a service: a dropped connection, a status code, junk, a DEVUELTA with a code, a pending authorization, a NO AUTORIZADO, a void.
 
+The web asks SRI too, once: Consulta de validez when voiding. In mock mode its mock sent nothing, and locally there's no SRI portal to void on, so the web's mock reads a key it doesn't know as voided (`unknownKeys: 'VOIDED'`).
+
 The mock serves both uses through one transport. In process, it backs `SRI_MOCK_MODE` for local work, which the env refuses on the production deployment. Behind real HTTP (`serveMockSri` in the test helpers), tests go through the client's real `fetch` path, timeouts included.
 
 ## Consequences

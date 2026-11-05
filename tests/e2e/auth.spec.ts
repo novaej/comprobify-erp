@@ -66,7 +66,7 @@ async function setSuperAdmin(userEmail: string): Promise<void> {
 
 // What the worker does, run here against the mock SRI: the app Playwright starts has no
 // worker. On the stack the worker may get there first; the handlers don't mind.
-async function sendAndAuthorize(documentId: string): Promise<void> {
+async function runSri(documentId: string, answer: 'authorize' | 'return'): Promise<void> {
   const silent = { debug() {}, info() {}, warn() {}, error() {}, child: () => silent };
   const db = createDatabase({ connectionString: process.env.DATABASE_URL!, logger: silent });
   try {
@@ -76,18 +76,40 @@ async function sendAndAuthorize(documentId: string): Promise<void> {
       ]).then((result) => result.rows),
     );
     const ref = { tenantId: row!.tenant_id, documentId };
+    const mock = createMockSri();
+    if (answer === 'return')
+      mock.queue('reception', { kind: 'returned', code: '35', message: 'DOCUMENTO INVÁLIDO' });
     const deps = {
       db,
-      sri: createSriClient({ transport: createMockSri().transport }),
+      sri: createSriClient({ transport: mock.transport }),
       jobs: { enqueue: () => Promise.resolve(null) },
       clock: { now: () => new Date() },
       logger: silent,
     };
     await sendDocument(deps, ref);
-    await checkAuthorization(deps, ref);
+    if (answer === 'authorize') await checkAuthorization(deps, ref);
   } finally {
     await db.close();
   }
+}
+
+// A one-line invoice to María López, from the form.
+async function issueInvoice(page: Page, unitPrice: string): Promise<string> {
+  await page.goto('/es/documents/new');
+  const client = page.getByRole('combobox', { name: 'Buscar cliente por nombre o identificación' });
+  await client.fill('María');
+  await client.press('Enter');
+  const line = page.getByRole('group', { name: 'Línea 1' });
+  await line.getByRole('combobox', { name: 'Código' }).fill('P-9');
+  await line.getByRole('textbox', { name: 'Descripción' }).fill('Mantenimiento');
+  await line.getByRole('textbox', { name: 'Precio unitario' }).fill(unitPrice);
+  await page.getByRole('button', { name: 'Emitir factura' }).click();
+  await page
+    .getByRole('dialog', { name: '¿Emitir la factura?' })
+    .getByRole('button', { name: 'Emitir factura' })
+    .click();
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Factura 001-001-');
+  return page.url().split('/').at(-1)!;
 }
 
 async function signIn(page: Page, email: string, password: string) {
@@ -418,7 +440,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     const documentId = page.url().split('/').at(-1)!;
     await look(page, 'document');
 
-    await sendAndAuthorize(documentId);
+    await runSri(documentId, 'authorize');
     await expect(async () => {
       await page.reload();
       await expect(page.getByRole('heading', { level: 1 })).toContainText('Autorizado', {
@@ -440,6 +462,66 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(list).toContainText('María López');
     await expect(list).toContainText('Autorizado');
     await look(page, 'documents');
+  });
+
+  test('corrects a returned invoice, resends and voids an authorized one (FR-DOC-7, FR-DOC-8, FR-DOC-11)', async ({
+    page,
+  }) => {
+    await signIn(page, email, newPassword);
+    // Signed in before going anywhere by URL.
+    await expect(
+      page.getByRole('navigation', { name: 'Navegación principal' }).last(),
+    ).toBeVisible();
+    const heading = page.getByRole('heading', { level: 1 });
+
+    // SRI returns it: the reasons show, and it waits on the pending screen.
+    const returned = await issueInvoice(page, '20');
+    await runSri(returned, 'return');
+    await page.reload();
+    await expect(heading).toContainText('Devuelto');
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Por qué el SRI lo devolvió' }),
+    ).toContainText('DOCUMENTO INVÁLIDO');
+    await page.goto('/es/documents/pending');
+    const needsYou = page.getByRole('table', { name: /Necesitan que los corrijas/ });
+    await expect(needsYou).toContainText('Devuelto');
+    await look(page, 'documents-pending');
+
+    // The correction opens the form with what was signed, and keeps the number.
+    await page.goto(`/es/documents/${returned}`);
+    await page.getByRole('link', { name: 'Corregir' }).click();
+    await expect(heading).toContainText('Corregir 001-001-');
+    const line = page.getByRole('group', { name: 'Línea 1' });
+    await expect(line.getByRole('textbox', { name: 'Descripción' })).toHaveValue('Mantenimiento');
+    await line.getByRole('textbox', { name: 'Precio unitario' }).fill('25');
+    await look(page, 'invoice-correct');
+    await page.getByRole('button', { name: 'Corregir y enviar' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Corregir y reenviar la factura?' })
+      .getByRole('button', { name: 'Corregir y enviar' })
+      .click();
+    await expect(heading).toContainText('Firmado');
+    expect(page.url()).toContain(returned);
+    await expect(page.getByRole('complementary')).toContainText('$28,75');
+
+    // An authorized one goes to the buyer again, and is voided once SRI shows it voided.
+    const authorized = await issueInvoice(page, '30');
+    await runSri(authorized, 'authorize');
+    await page.reload();
+    await expect(heading).toContainText('Autorizado');
+    await page.getByRole('button', { name: 'Reenviar al comprador' }).click();
+    const resend = page.getByRole('dialog', { name: '¿Reenviar al comprador?' });
+    await expect(resend).toContainText('maria@example.com');
+    await resend.getByRole('button', { name: 'Reenviar' }).click();
+    await expect(page.getByText('Envío en curso.')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Anular' }).click();
+    const voiding = page.getByRole('dialog', { name: '¿Marcar la factura como anulada?' });
+    await expect(voiding).toContainText('portal');
+    await look(page, 'document-void');
+    await voiding.getByRole('button', { name: 'Marcar como anulada' }).click();
+    await expect(page.getByText('Factura anulada.')).toBeVisible();
+    await expect(heading).toContainText('Anulado');
   });
 
   test('invites a read-only member who joins and sees only what the role allows (FR-USR-1, FR-ROLE-3)', async ({

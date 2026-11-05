@@ -635,7 +635,9 @@
     "settings": "Empresa",
     "documents": "Comprobantes",
     "newInvoice": "Nueva factura",
-    "document": "Comprobante"
+    "document": "Comprobante",
+    "pendingDocuments": "Pendientes",
+    "correctInvoice": "Corregir factura"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -1129,6 +1131,40 @@
         "xml": "Descargar XML",
         "rideLater": "El RIDE estará disponible cuando el SRI autorice el comprobante."
       }
+    },
+    "pendingLink": "Pendientes",
+    "pending": {
+      "title": "Pendientes",
+      "description": "Lo que todavía no tiene una respuesta final del SRI. Primero lo que necesita que hagas algo.",
+      "back": "Comprobantes",
+      "emptyTitle": "Nada pendiente",
+      "empty": "Todos los comprobantes tienen ya una respuesta final del SRI.",
+      "groups": {
+        "action": "Necesitan que los corrijas o re-emitas",
+        "sri": "Esperando al SRI"
+      },
+      "unreachable": "No se pudo consultar al SRI"
+    },
+    "actions": {
+      "correct": "Corregir",
+      "reissue": "Re-emitir",
+      "void": "Anular",
+      "resend": "Reenviar al comprador",
+      "reissueTitle": "¿Re-emitir con fecha de hoy?",
+      "reissueDescription": "Se firma de nuevo con fecha {date} y una clave nueva, con el mismo número, y se envía al SRI. Antes se consulta al SRI por si ya lo tiene.",
+      "reissueConfirm": "Re-emitir con fecha {date}",
+      "reissued": "Re-emisión en curso. El estado se actualiza en unos segundos.",
+      "voidTitle": "¿Marcar la factura como anulada?",
+      "voidDescription": "El SRI no anula por sistema: anúlala primero en su portal, hasta el {deadline}. Aquí se comprueba con el SRI que ya figura anulada.",
+      "voidConfirm": "Marcar como anulada",
+      "voided": "Factura anulada.",
+      "attestTitle": "El SRI no responde ahora",
+      "attestDescription": "No se pudo comprobar la anulación con el SRI. Si ya la anulaste en su portal, puedes confirmarlo tú. Queda registrado en el historial.",
+      "attestConfirm": "Confirmo que la anulé en el portal",
+      "resendTitle": "¿Reenviar al comprador?",
+      "resendDescription": "Se envían otra vez el RIDE y el XML autorizado a:",
+      "resendConfirm": "Reenviar",
+      "resent": "Envío en curso."
     }
   },
   "invoiceForm": {
@@ -1201,7 +1237,15 @@
     "confirmTitle": "¿Emitir la factura?",
     "confirmDescription": "Se firma y se envía al SRI. Después no se puede borrar: si el SRI la devuelve, se corrige con el mismo número.",
     "confirmDetail": "{buyer}: {total}",
-    "issued": "Factura {number} emitida."
+    "issued": "Factura {number} emitida.",
+    "correct": {
+      "title": "Corregir {number}",
+      "description": "Corrige lo que el SRI rechazó y vuelve a enviarla con el mismo número.",
+      "back": "Volver a la factura",
+      "submit": "Corregir y enviar",
+      "confirmTitle": "¿Corregir y reenviar la factura?",
+      "confirmDescription": "Se firma de nuevo y se envía al SRI con el mismo número. Si ya pasó su día de emisión, toma la fecha de hoy y una clave nueva."
+    }
   },
   "documentsError": {
     "FORBIDDEN": "Tu rol no permite esta acción.",
@@ -1222,6 +1266,17 @@
     "XML_INVALID": "El comprobante no cumple el esquema del SRI. Revisa los textos y valores.",
     "DOCUMENT_TOO_LARGE": "El comprobante supera el tamaño que acepta el SRI. Divídelo en dos.",
     "SEQUENCE_EXHAUSTED": "El punto de emisión llegó al último número posible.",
-    "IDEMPOTENCY_CONFLICT": "Esta factura ya se emitió. Recarga la página para ver la nueva."
+    "IDEMPOTENCY_CONFLICT": "Esta factura ya se emitió. Recarga la página para ver la nueva.",
+    "NOT_CORRECTABLE": "Este comprobante no se puede corregir ahora.",
+    "MAY_BE_AT_SRI": "El SRI todavía no confirmó que no lo tiene. Espera al final del día de emisión.",
+    "NOT_REISSUABLE": "Solo se re-emite un comprobante sin enviar de un día anterior.",
+    "REISSUE_DATE_CHANGED": "Cambió el día. Confirma de nuevo con la fecha de hoy.",
+    "NOT_VOIDABLE": "Solo se anula un comprobante autorizado.",
+    "VOID_CONSUMER_FINAL": "Una factura a consumidor final no se puede anular.",
+    "NOT_VOIDED_AT_SRI": "El SRI todavía no la muestra como anulada. Anúlala primero en su portal.",
+    "SRI_UNAVAILABLE": "El SRI no responde ahora.",
+    "NOT_AUTHORIZED": "El comprobante todavía no está autorizado.",
+    "NO_BUYER_EMAIL": "El comprador no tiene correo en este comprobante.",
+    "FEATURE_NOT_ENABLED": "Tu plan no incluye esta acción."
   }
 }

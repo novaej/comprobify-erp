@@ -4,6 +4,8 @@ import { createLogger, type Logger } from '@comprobify/config/logger';
 import {
   createAuth,
   createKeyCipher,
+  createMockSri,
+  createSriClient,
   createIdentity,
   createJobs,
   createRateLimiter,
@@ -14,6 +16,7 @@ import {
   type Identity,
   type IssueDeps,
   type Jobs,
+  type SriClient,
   type KeyCipher,
 } from '@comprobify/core';
 import { createDatabase, type Database } from '@comprobify/db';
@@ -29,6 +32,8 @@ export type Runtime = {
   keyCipher: KeyCipher;
   // What createInvoice and correctInvoice need from config (FR-DOC-2, FR-DOC-9).
   issueDeps: IssueDeps;
+  // For voiding: Consulta de validez (FR-DOC-8).
+  sri: SriClient;
   // Null while the legal texts are under review (AGREEMENTS_ENABLED=false).
   agreementParties: AgreementParties | null;
 };
@@ -93,6 +98,16 @@ async function start(): Promise<Runtime> {
     identity,
     auth,
     keyCipher,
+    // ADR-014. The web's mock never sent anything, so it reads unknown keys as voided.
+    sri: env.SRI_MOCK_MODE
+      ? createSriClient({ transport: createMockSri({ unknownKeys: 'VOIDED' }).transport })
+      : createSriClient({
+          baseUrls: {
+            ...(env.SRI_TEST_URL ? { '1': env.SRI_TEST_URL } : {}),
+            ...(env.SRI_PRODUCTION_URL ? { '2': env.SRI_PRODUCTION_URL } : {}),
+          },
+          timeoutMs: env.SRI_TIMEOUT_MS,
+        }),
     issueDeps: {
       jobs,
       keyCipher,

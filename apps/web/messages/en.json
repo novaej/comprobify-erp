@@ -635,7 +635,9 @@
     "settings": "Company",
     "documents": "Documents",
     "newInvoice": "New invoice",
-    "document": "Document"
+    "document": "Document",
+    "pendingDocuments": "Pending",
+    "correctInvoice": "Correct invoice"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -1129,6 +1131,40 @@
         "xml": "Download XML",
         "rideLater": "The RIDE will be available once SRI authorizes the document."
       }
+    },
+    "pendingLink": "Pending",
+    "pending": {
+      "title": "Pending",
+      "description": "What doesn't have a final answer from SRI yet. What needs you comes first.",
+      "back": "Documents",
+      "emptyTitle": "Nothing pending",
+      "empty": "Every document already has a final answer from SRI.",
+      "groups": {
+        "action": "Need you to correct or re-issue them",
+        "sri": "Waiting for SRI"
+      },
+      "unreachable": "SRI couldn't be asked"
+    },
+    "actions": {
+      "correct": "Correct",
+      "reissue": "Re-issue",
+      "void": "Void",
+      "resend": "Resend to the buyer",
+      "reissueTitle": "Re-issue with today’s date?",
+      "reissueDescription": "It's signed again dated {date} with a new key and the same number, and sent to SRI. SRI is asked first, in case it already has it.",
+      "reissueConfirm": "Re-issue dated {date}",
+      "reissued": "Re-issue under way. The status updates in a few seconds.",
+      "voidTitle": "Mark the invoice as voided?",
+      "voidDescription": "SRI doesn't void through its services: void it on SRI's portal first, until {deadline}. Here we check with SRI that it shows as voided.",
+      "voidConfirm": "Mark as voided",
+      "voided": "Invoice voided.",
+      "attestTitle": "SRI isn't answering now",
+      "attestDescription": "The void couldn't be checked with SRI. If you already voided it on the portal, you can confirm it yourself. It's recorded in the history.",
+      "attestConfirm": "I confirm I voided it on the portal",
+      "resendTitle": "Resend to the buyer?",
+      "resendDescription": "The RIDE and the authorized XML are sent again to:",
+      "resendConfirm": "Resend",
+      "resent": "Sending."
     }
   },
   "invoiceForm": {
@@ -1201,7 +1237,15 @@
     "confirmTitle": "Issue the invoice?",
     "confirmDescription": "It's signed and sent to SRI. It can't be deleted afterwards: if SRI returns it, it's corrected with the same number.",
     "confirmDetail": "{buyer}: {total}",
-    "issued": "Invoice {number} issued."
+    "issued": "Invoice {number} issued.",
+    "correct": {
+      "title": "Correct {number}",
+      "description": "Fix what SRI refused and send it again with the same number.",
+      "back": "Back to the invoice",
+      "submit": "Correct and send",
+      "confirmTitle": "Correct and resend the invoice?",
+      "confirmDescription": "It's signed again and sent to SRI with the same number. If its issue day has passed, it takes today's date and a new key."
+    }
   },
   "documentsError": {
     "FORBIDDEN": "Your role doesn't allow this.",
@@ -1222,6 +1266,17 @@
     "XML_INVALID": "The document doesn't meet SRI's schema. Check the text and values.",
     "DOCUMENT_TOO_LARGE": "The document is larger than SRI accepts. Split it in two.",
     "SEQUENCE_EXHAUSTED": "The issue point reached its last possible number.",
-    "IDEMPOTENCY_CONFLICT": "This invoice was already issued. Reload the page to see it."
+    "IDEMPOTENCY_CONFLICT": "This invoice was already issued. Reload the page to see it.",
+    "NOT_CORRECTABLE": "This document can't be corrected now.",
+    "MAY_BE_AT_SRI": "SRI hasn't confirmed it lacks it yet. Wait until the end of the issue day.",
+    "NOT_REISSUABLE": "Only an unsent document from an earlier day is re-issued.",
+    "REISSUE_DATE_CHANGED": "The day changed. Confirm again with today's date.",
+    "NOT_VOIDABLE": "Only an authorized document is voided.",
+    "VOID_CONSUMER_FINAL": "A consumidor final invoice can't be voided.",
+    "NOT_VOIDED_AT_SRI": "SRI doesn't show it as voided yet. Void it on SRI's portal first.",
+    "SRI_UNAVAILABLE": "SRI isn't answering now.",
+    "NOT_AUTHORIZED": "The document isn't authorized yet.",
+    "NO_BUYER_EMAIL": "The buyer has no email on this document.",
+    "FEATURE_NOT_ENABLED": "Your plan doesn't include this."
   }
 }

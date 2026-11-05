@@ -52,7 +52,12 @@ export default defineConfig({
         url: `${baseURL}/health`,
         reuseExistingServer: !process.env.CI,
         timeout: 60_000,
-        // The server Playwright starts has the legal texts on, so CI covers acceptance.
-        env: { ...(process.env as Record<string, string>), ...AGREEMENTS_ON },
+        // The server Playwright starts has the legal texts on, so CI covers acceptance. It
+        // never calls SRI, whatever .env says (ADR-014).
+        env: {
+          ...(process.env as Record<string, string>),
+          ...AGREEMENTS_ON,
+          SRI_MOCK_MODE: 'true',
+        },
       },
 });
