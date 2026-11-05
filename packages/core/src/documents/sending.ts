@@ -49,7 +49,6 @@ export async function transition(
   event: {
     type?: 'STATUS_CHANGED' | 'REISSUED' | 'CORRECTED' | 'VOIDED';
     details?: Record<string, unknown>;
-    sriResponse?: string;
     actorUserId?: string | null;
   } = {},
 ): Promise<Row> {
@@ -66,7 +65,6 @@ export async function transition(
     fromStatus: row.status,
     toStatus: to,
     details: event.details ?? {},
-    sriResponse: event.sriResponse ?? null,
     actorUserId: event.actorUserId ?? null,
   });
   return updated!;
@@ -94,16 +92,10 @@ async function scheduleAuthorization(deps: SendingDeps, tx: Tx, row: Row, checks
 }
 
 // To RECEIVED from wherever a send can be, through the machine's own steps.
-async function toReceived(
-  tx: Tx,
-  row: Row,
-  now: Date,
-  details: Record<string, unknown>,
-  raw: string,
-) {
+async function toReceived(tx: Tx, row: Row, now: Date, details: Record<string, unknown>) {
   let current = row;
   if (current.status === 'SIGNED') current = await transition(tx, current, 'PENDING_SEND');
-  return transition(tx, current, 'RECEIVED', { receivedAt: now }, { details, sriResponse: raw });
+  return transition(tx, current, 'RECEIVED', { receivedAt: now }, { details });
 }
 
 export async function sendDocument(deps: SendingDeps, ref: DocumentRef): Promise<void> {
@@ -142,6 +134,7 @@ export async function sendDocument(deps: SendingDeps, ref: DocumentRef): Promise
         {
           details: {
             operation: 'reception',
+            source: outcome.source,
             error: outcome.message,
             httpStatus: outcome.httpStatus,
           },
@@ -153,9 +146,13 @@ export async function sendDocument(deps: SendingDeps, ref: DocumentRef): Promise
       });
       return;
     }
-    const details = { operation: 'reception', messages: summary(outcome.messages) };
+    const details = {
+      operation: 'reception',
+      source: outcome.source,
+      messages: summary(outcome.messages),
+    };
     if (outcome.status === 'RECEIVED') {
-      const received = await toReceived(tx, row, now, details, outcome.raw);
+      const received = await toReceived(tx, row, now, details);
       await scheduleAuthorization(deps, tx, received, 0);
       return;
     }
@@ -167,7 +164,6 @@ export async function sendDocument(deps: SendingDeps, ref: DocumentRef): Promise
       {},
       {
         details: { ...details, sequentialTaken: taken },
-        sriResponse: outcome.raw,
       },
     );
     // FR-DOC-6: another key holds this number; a person must look before anything else.
@@ -191,10 +187,10 @@ export async function applyFinalAnswer(
   now: Date,
   operation: string,
 ): Promise<Row> {
-  const details = { operation, messages: summary(answer.messages) };
-  const received = await toReceived(tx, row, now, details, answer.raw);
+  const details = { operation, source: answer.source, messages: summary(answer.messages) };
+  const received = await toReceived(tx, row, now, details);
   if (answer.status === 'AUTHORIZED') return authorize(jobs, tx, received, answer, details);
-  return transition(tx, received, 'NOT_AUTHORIZED', {}, { details, sriResponse: answer.raw });
+  return transition(tx, received, 'NOT_AUTHORIZED', {}, { details });
 }
 
 // FR-DOC-11: the buyer's copy goes out in the same transaction as the authorization.
@@ -214,7 +210,7 @@ async function authorize(
       authorizedAt: answer.authorizedAt,
       authorizationXml: answer.authorizationXml,
     },
-    { details, sriResponse: answer.raw },
+    { details },
   );
   await jobs.enqueue(tx, 'documents.email', {
     tenantId: row.tenantId,
@@ -260,7 +256,11 @@ export async function checkAfterDeadline(deps: SendingDeps, ref: DocumentRef): P
         'SEND_FAILED',
         {},
         {
-          details: { operation: 'deadline-check', sriUnreachable: answer === null },
+          details: {
+            operation: 'deadline-check',
+            source: (answer ?? failure)?.source,
+            sriUnreachable: answer === null,
+          },
         },
       );
     await update(tx, current, checked);
@@ -289,6 +289,7 @@ export async function checkAuthorization(deps: SendingDeps, ref: DocumentRef): P
     if (answer?.status === 'AUTHORIZED') {
       await authorize(deps.jobs, tx, current, answer, {
         operation: 'authorization',
+        source: answer.source,
         messages: summary(answer.messages),
       });
       return;
@@ -300,8 +301,11 @@ export async function checkAuthorization(deps: SendingDeps, ref: DocumentRef): P
         'NOT_AUTHORIZED',
         {},
         {
-          details: { operation: 'authorization', messages: summary(answer.messages) },
-          sriResponse: answer.raw,
+          details: {
+            operation: 'authorization',
+            source: answer.source,
+            messages: summary(answer.messages),
+          },
         },
       );
       return;

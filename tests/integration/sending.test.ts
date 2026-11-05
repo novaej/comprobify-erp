@@ -163,7 +163,12 @@ describe('sending to SRI', () => {
       ['STATUS_CHANGED', 'PENDING_SEND', 'RECEIVED'],
       ['STATUS_CHANGED', 'RECEIVED', 'AUTHORIZED'],
     ]);
-    expect((await timeline(document))[2]!.sriResponse).toContain('RECIBIDA');
+    // The history keeps what changed and who answered; SRI's raw answer is in sri_exchanges.
+    expect((await timeline(document))[2]!.sriResponse).toBeNull();
+    expect((await timeline(document)).slice(2).map((event) => event.details.source)).toEqual([
+      'mock',
+      'mock',
+    ]);
 
     // Idempotent: a repeated job finds nothing to do.
     await sendDocument(deps, ref(document));
@@ -325,6 +330,10 @@ describe('sending to SRI', () => {
     ]);
     expect(exchanges[0]).toMatchObject({ error: 'SRI reception unreachable', raw: null });
     expect(exchanges[1]).toMatchObject({ httpStatus: 200, error: null });
+    // Who answered is recorded, never guessed: here the mock, as for every call in tests.
+    expect(
+      exchanges.every((row) => row.source === 'mock' && row.host === 'celcer.sri.gob.ec'),
+    ).toBe(true);
     expect(exchanges[1]!.raw).toContain('RECIBIDA');
     expect(exchanges.every((row) => row.durationMs >= 0)).toBe(true);
   });

@@ -69,6 +69,10 @@ export const AMBIENTES = ['1', '2'] as const;
 
 // Every call to SRI, whatever it answered (FR-DOC-13): what support reads, not the user.
 export const SRI_OPERATIONS = ['reception', 'authorization', 'validity'] as const;
+// Who answered: SRI itself, or the mock that answers like it (ADR-014).
+export const SRI_SOURCES = ['sri', 'mock'] as const;
+// Why a document was signed again (FR-DOC-6, FR-DOC-7).
+export const VERSION_REASONS = ['CREATED', 'CORRECTED', 'REISSUED'] as const;
 export const SRI_EXCHANGE_OUTCOMES = [
   'RECEIVED',
   'RETURNED',
@@ -332,6 +336,10 @@ export const sriExchanges = pgTable(
     documentId: uuid('document_id').notNull(),
     operation: text('operation', { enum: SRI_OPERATIONS }).notNull(),
     outcome: text('outcome', { enum: SRI_EXCHANGE_OUTCOMES }).notNull(),
+    // Null only on calls recorded before the source was (migration 0032).
+    source: text('source', { enum: SRI_SOURCES }),
+    // The host called: celcer or cel, or an override.
+    host: text('host'),
     httpStatus: integer('http_status'),
     messages: jsonb('messages')
       .$type<{ identifier: string; message: string; additionalInfo: string | null }[]>()
@@ -352,6 +360,34 @@ export const sriExchanges = pgTable(
     index('sri_exchanges_document_idx').on(table.documentId, table.occurredAt),
     check('sri_exchanges_operation_check', oneOf('operation', SRI_OPERATIONS)),
     check('sri_exchanges_outcome_check', oneOf('outcome', SRI_EXCHANGE_OUTCOMES)),
+    check('sri_exchanges_source_check', oneOf('source', SRI_SOURCES)),
+  ],
+);
+
+// Every signed version of a document, so a correction never loses what was sent before.
+// Append-only; the document row holds the current one.
+export const documentVersions = pgTable(
+  'document_versions',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id').notNull(),
+    documentId: uuid('document_id').notNull(),
+    reason: text('reason', { enum: VERSION_REASONS }).notNull(),
+    revision: integer('revision').notNull(),
+    accessKey: text('access_key').notNull(),
+    issueDate: date('issue_date').notNull(),
+    signedXml: text('signed_xml').notNull(),
+    actorUserId: uuid('actor_user_id').references(() => users.id),
+    createdAt: createdAt(),
+  },
+  (table) => [
+    foreignKey({
+      name: 'document_versions_document_fk',
+      columns: [table.tenantId, table.documentId],
+      foreignColumns: [documents.tenantId, documents.id],
+    }),
+    index('document_versions_document_idx').on(table.documentId, table.createdAt),
+    check('document_versions_reason_check', oneOf('reason', VERSION_REASONS)),
   ],
 );
 

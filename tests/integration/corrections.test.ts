@@ -210,6 +210,22 @@ describe('correcting, re-issuing by hand and voiding', () => {
     });
     await sendDocument(deps, ref(document));
     expect((await row(document)).status).toBe('RECEIVED');
+
+    // Both signed versions stay: the one SRI returned and the correction, same key.
+    const versions = await db.withTenant({ tenantId: twinId }, ({ db: tx }) =>
+      tx
+        .select()
+        .from(schema.documentVersions)
+        .where(eq(schema.documentVersions.documentId, document.id))
+        .orderBy(asc(schema.documentVersions.createdAt)),
+    );
+    expect(
+      versions.map((version) => [version.reason, version.revision, version.accessKey]),
+    ).toEqual([
+      ['CREATED', 1, document.accessKey],
+      ['CORRECTED', 2, document.accessKey],
+    ]);
+    expect(versions[0]!.signedXml).not.toBe(versions[1]!.signedXml);
   });
 
   it('re-dates a correction made after the issue day, keeping the old key findable', async () => {

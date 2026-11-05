@@ -1119,7 +1119,8 @@
           "SIGNED": "Signed again",
           "VOIDED": "Voided"
         },
-        "messages": "SRI messages"
+        "messages": "SRI messages",
+        "mock": "(SRI simulator)"
       },
       "sriMessages": {
         "RETURNED": "Why SRI returned it",
@@ -1143,7 +1144,10 @@
         "current": "(in progress)",
         "done": "(done)",
         "stopped": "(stopped here)"
-      }
+      },
+      "mockTitle": "Authorized by the SRI simulator",
+      "mockDescription": "This document never reached SRI: the local simulator answered it (SRI_MOCK_MODE). It has no validity and SRI doesn't know it.",
+      "mockHelp": "Authorized by the SRI simulator. It has no tax validity."
     },
     "pendingLink": "Pending",
     "pending": {

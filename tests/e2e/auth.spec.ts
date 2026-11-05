@@ -459,7 +459,14 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     });
     await expect(page.getByRole('main')).toContainText('Av. Amazonas N24-03, Quito');
     await expect(page.getByRole('main')).toContainText('Autorizado por el SRI');
+    // The mock answered, and the page says so: this invoice never reached SRI.
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Autorizado por el simulador del SRI' }),
+    ).toBeVisible();
     await look(page, 'document-authorized');
+    // The history marks each step done.
+    await page.getByRole('heading', { name: 'Historial' }).scrollIntoViewIfNeeded();
+    await look(page, 'document-history');
 
     // The RIDE from the authorized XML, and SRI's <autorizacion> file.
     const ride = await page.request.get(`/es/documents/${documentId}/ride`);

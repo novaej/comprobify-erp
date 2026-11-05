@@ -57,11 +57,14 @@ export type ValidityResult = {
 };
 
 // What the HTTP layer returns. A thrown error is a transport failure.
-export type SriTransport = (request: {
+export type SriTransport = ((request: {
   url: string;
   body: string;
   timeoutMs: number;
-}) => Promise<{ status: number; body: string }>;
+}) => Promise<{ status: number; body: string }>) & {
+  // The mock sets 'mock'; anything else talks to SRI.
+  source?: 'sri' | 'mock';
+};
 
 // The only error the send and authorize jobs retry (SRI rule: transport errors only):
 // no connection, a timeout, a 5xx or anything that isn't SRI's answer.
@@ -70,19 +73,30 @@ export class SriTransportError extends Error {
   // What came back, if anything: kept for support (sri_exchanges).
   readonly raw: string | null;
   readonly durationMs: number;
+  readonly source: SriSource;
+  readonly host: string | null;
   constructor(
     message: string,
     readonly httpStatus: number | null = null,
-    options?: ErrorOptions & { raw?: string | null; durationMs?: number },
+    options?: ErrorOptions & {
+      raw?: string | null;
+      durationMs?: number;
+      source?: SriSource;
+      host?: string | null;
+    },
   ) {
     super(message, options);
     this.raw = options?.raw ?? null;
     this.durationMs = options?.durationMs ?? 0;
+    this.source = options?.source ?? 'sri';
+    this.host = options?.host ?? null;
   }
 }
 
 // Every answer also says how it came: for the record of each call (sri_exchanges).
-export type CallFacts = { httpStatus: number; durationMs: number };
+// The mock answers in SRI's own format, so who answered is said, never guessed (ADR-014).
+export type SriSource = 'sri' | 'mock';
+export type CallFacts = { httpStatus: number; durationMs: number; source: SriSource; host: string };
 
 export const fetchTransport: SriTransport = async ({ url, body, timeoutMs }) => {
   const response = await fetch(url, {
@@ -104,6 +118,8 @@ export type SriClient = {
 };
 
 export type SriClientOptions = {
+  // 'mock' when the transport is the mock SRI.
+  source?: SriSource;
   baseUrls?: Partial<Record<Ambiente, string>>;
   timeoutMs?: number;
   transport?: SriTransport;
@@ -174,6 +190,7 @@ export function parseValidity(raw: string): ValidityResult {
 export function createSriClient(options: SriClientOptions = {}): SriClient {
   const transport = options.transport ?? fetchTransport;
   const timeoutMs = options.timeoutMs ?? 20_000;
+  const source = options.source ?? transport.source ?? 'sri';
   const baseUrls = { ...SRI_BASE_URLS, ...options.baseUrls };
 
   async function call<T>(
@@ -183,6 +200,7 @@ export function createSriClient(options: SriClientOptions = {}): SriClient {
     parse: (raw: string) => T,
   ): Promise<T & CallFacts> {
     const url = `${baseUrls[ambiente]}/${SERVICES[service]}?wsdl`;
+    const host = new URL(url).host;
     const started = performance.now();
     const elapsed = () => Math.round(performance.now() - started);
     let response: { status: number; body: string };
@@ -192,6 +210,8 @@ export function createSriClient(options: SriClientOptions = {}): SriClient {
       throw new SriTransportError(`SRI ${service} unreachable`, null, {
         cause: error,
         durationMs: elapsed(),
+        source,
+        host,
       });
     }
     const durationMs = elapsed();
@@ -199,18 +219,17 @@ export function createSriClient(options: SriClientOptions = {}): SriClient {
       throw new SriTransportError(
         `SRI ${service} answered HTTP ${response.status}`,
         response.status,
-        {
-          raw: response.body,
-          durationMs,
-        },
+        { raw: response.body, durationMs, source, host },
       );
     try {
-      return { ...parse(response.body), httpStatus: response.status, durationMs };
+      return { ...parse(response.body), httpStatus: response.status, durationMs, source, host };
     } catch (error) {
       throw new SriTransportError(`SRI ${service} answer was not understood`, response.status, {
         cause: error,
         raw: response.body,
         durationMs,
+        source,
+        host,
       });
     }
   }

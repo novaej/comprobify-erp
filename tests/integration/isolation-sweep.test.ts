@@ -155,6 +155,18 @@ describe('isolation sweep over every tenant table', () => {
           httpStatus: 200,
           raw: '<RespuestaRecepcionComprobante/>',
           durationMs: 12,
+          source: 'mock',
+        }),
+      );
+      await db.withSystem('test: keep a signed version', ({ db: tx }) =>
+        tx.insert(schema.documentVersions).values({
+          tenantId,
+          documentId: document.id,
+          reason: 'CREATED',
+          revision: 1,
+          accessKey: document.accessKey,
+          issueDate: '2026-11-10',
+          signedXml: '<factura/>',
         }),
       );
       await createProduct(actor, db, {
@@ -212,6 +224,7 @@ describe('isolation sweep over every tenant table', () => {
         'document_payments',
         'document_reissues',
         'document_sequences',
+        'document_versions',
         'documents',
         'invitations',
         'issue_point_document_types',

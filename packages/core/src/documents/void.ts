@@ -100,12 +100,11 @@ export async function voidDocument(
       {
         type: 'VOIDED',
         details: validity
-          ? { sriStatus: validity.status }
+          ? { sriStatus: validity.status, source: validity.source }
           : {
               attested: true,
               reason: outOfRange ? 'outside the dates SRI checks' : 'SRI unavailable',
             },
-        sriResponse: validity?.raw,
         actorUserId: ctx.userId ?? null,
       },
     );

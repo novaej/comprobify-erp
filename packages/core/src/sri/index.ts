@@ -36,6 +36,7 @@ export {
 export type {
   AuthorizationResult,
   CallFacts,
+  SriSource,
   ReceptionResult,
   SriClient,
   SriClientOptions,

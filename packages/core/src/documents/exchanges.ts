@@ -29,5 +29,24 @@ export async function recordExchange(
     raw: answer.raw,
     error: failed ? answer.message : null,
     durationMs: answer.durationMs,
+    source: answer.source,
+    host: answer.host,
   });
+}
+
+// FR-DOC-7: each signed version, so a correction never loses what was sent before.
+export async function recordVersion(
+  tx: Tx,
+  version: {
+    tenantId: string;
+    documentId: string;
+    reason: 'CREATED' | 'CORRECTED' | 'REISSUED';
+    revision: number;
+    accessKey: string;
+    issueDate: string;
+    signedXml: string;
+    actorUserId: string | null;
+  },
+): Promise<void> {
+  await tx.db.insert(schema.documentVersions).values(version);
 }

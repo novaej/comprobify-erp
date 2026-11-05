@@ -155,7 +155,7 @@ While SRI hasn't answered, the detail page refreshes itself. It refreshes quickl
 
 `/documents/pending` groups what isn't final yet, putting what needs a person before what waits for SRI.
 
-Every transition writes an event with SRI's raw answer, and every call to SRI also writes a row to `sri_exchanges`, including the ones that changed nothing (ADR-014). CI and the local stack always run the mock.
+Every transition writes an event with SRI's messages, and every call to SRI writes a row to `sri_exchanges`, including the ones that changed nothing, with who answered: SRI or the mock (ADR-014). Every signed version of a document is kept in `document_versions`, so a correction never loses what was sent before. CI and the local stack always run the mock.
 
 ## Audit log
 

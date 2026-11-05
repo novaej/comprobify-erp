@@ -225,6 +225,13 @@
       "when": 1793899616822,
       "tag": "0031_sri_exchanges",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793903647384,
+      "tag": "0032_document_versions",
+      "breakpoints": true
     }
   ]
 }

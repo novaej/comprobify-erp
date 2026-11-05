@@ -1119,7 +1119,8 @@
           "SIGNED": "Firmado de nuevo",
           "VOIDED": "Anulado"
         },
-        "messages": "Mensajes del SRI"
+        "messages": "Mensajes del SRI",
+        "mock": "(simulador del SRI)"
       },
       "sriMessages": {
         "RETURNED": "Por qué el SRI lo devolvió",
@@ -1143,7 +1144,10 @@
         "current": "(en curso)",
         "done": "(hecho)",
         "stopped": "(detenido aquí)"
-      }
+      },
+      "mockTitle": "Autorizado por el simulador del SRI",
+      "mockDescription": "Este comprobante no llegó al SRI: lo respondió el simulador local (SRI_MOCK_MODE). No tiene validez y el SRI no lo conoce.",
+      "mockHelp": "Autorizado por el simulador del SRI. No tiene validez tributaria."
     },
     "pendingLink": "Pendientes",
     "pending": {

@@ -7,8 +7,7 @@ import {
   type DocumentDetail,
 } from '@comprobify/core';
 import { buttonVariants } from '@comprobify/ui/components/button';
-import { cn } from '@comprobify/ui/lib/utils';
-import { AlertCircle, Download, FileText } from 'lucide-react';
+import { AlertCircle, Download, FileText, FlaskConical } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
 import { Banner } from '@/components/banner';
@@ -33,6 +32,7 @@ import { STATUS_TONE } from '../document-status';
 import { CopyButton } from './copy-button';
 import { DocumentActions } from './document-actions';
 import { DocumentProgress } from './document-progress';
+import { EventMark } from './event-mark';
 import { LiveStatus } from './live-status';
 
 export const generateMetadata = pageTitle('document');
@@ -84,6 +84,10 @@ export default async function DocumentPage({
   const authorized = document.status === 'AUTHORIZED' || document.status === 'VOIDED';
   const base = `/${locale}/documents/${document.id}`;
   const today = ecuadorDate(systemClock.now());
+  // The mock answers like SRI; only the recorded source tells them apart (ADR-014).
+  const authorizedByMock = document.events.some(
+    (event) => event.toStatus === 'AUTHORIZED' && event.details.source === 'mock',
+  );
 
   return (
     <div className="max-w-6xl space-y-6">
@@ -99,7 +103,7 @@ export default async function DocumentPage({
             </ToneBadge>
           </span>
         }
-        description={t(`statusHelp.${document.status}`)}
+        description={authorizedByMock ? t('detail.mockHelp') : t(`statusHelp.${document.status}`)}
         backHref="/documents"
         backLabel={t('detail.back')}
         action={
@@ -140,6 +144,12 @@ export default async function DocumentPage({
         voidDeadline={date(voidDeadline(document.issueDate))}
         buyerEmail={document.buyer.email}
       />
+
+      {authorizedByMock && (
+        <Banner tone="warning" icon={FlaskConical} title={t('detail.mockTitle')} className="mb-0">
+          {t('detail.mockDescription')}
+        </Banner>
+      )}
 
       {messages.length > 0 && (
         <Banner
@@ -305,21 +315,17 @@ export default async function DocumentPage({
                       : t(`detail.timeline.events.${event.type as 'CREATED'}`);
                 return (
                   <li key={event.id} className="flex gap-3">
-                    <span
-                      aria-hidden
-                      className={cn(
-                        'mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full border-2',
-                        event.toStatus === 'AUTHORIZED'
-                          ? 'border-success bg-success'
-                          : event.toStatus === 'RETURNED' || event.toStatus === 'NOT_AUTHORIZED'
-                            ? 'border-destructive bg-destructive'
-                            : event.toStatus === 'SEND_FAILED'
-                              ? 'border-warning bg-warning'
-                              : 'border-border bg-card',
-                      )}
-                    />
+                    <EventMark event={event} />
                     <div className="min-w-0 text-sm">
-                      <p className="font-medium">{label}</p>
+                      <p className="font-medium">
+                        {label}
+                        {event.details.source === 'mock' && (
+                          <span className="font-normal text-muted-foreground">
+                            {' '}
+                            {t('detail.timeline.mock')}
+                          </span>
+                        )}
+                      </p>
                       <p className="text-xs text-muted-foreground">{when(event.occurredAt)}</p>
                       {event.type === 'EMAILED' && typeof event.details.to === 'string' && (
                         <p className="text-xs break-all text-muted-foreground">

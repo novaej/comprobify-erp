@@ -37,6 +37,7 @@ import {
   type AppEnv,
   type IssuingContext,
 } from '../tenancy';
+import { recordVersion } from './exchanges';
 import { locked, transition } from './sending';
 import { takeSequential } from './sequence';
 
@@ -392,6 +393,16 @@ export async function createInvoice(
       })
       .returning();
     await insertParts(document!.id, 1);
+    await recordVersion(tx, {
+      tenantId: ctx.tenantId,
+      documentId: document!.id,
+      reason: 'CREATED',
+      revision: 1,
+      accessKey: document!.accessKey,
+      issueDate: document!.issueDate,
+      signedXml: document!.signedXml!,
+      actorUserId: ctx.userId ?? null,
+    });
     await tx.db.insert(schema.documentEvents).values({
       tenantId: ctx.tenantId,
       documentId: document!.id,
@@ -500,6 +511,16 @@ export async function correctInvoice(
       },
     );
     await insertParts(row.id, revision);
+    await recordVersion(tx, {
+      tenantId: row.tenantId,
+      documentId: row.id,
+      reason: 'CORRECTED',
+      revision,
+      accessKey: updated.accessKey,
+      issueDate: updated.issueDate,
+      signedXml: updated.signedXml!,
+      actorUserId: ctx.userId ?? null,
+    });
     await deps.jobs.enqueue(tx, 'sri.send', { tenantId: ctx.tenantId, documentId: row.id });
     return issued(updated, false);
   });

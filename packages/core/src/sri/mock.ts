@@ -171,7 +171,12 @@ export function createMockSri(
   };
 
   // A throw inside the executor rejects, as a dropped connection would.
-  const transport: SriTransport = (request) => new Promise((resolve) => resolve(answer(request)));
+  // Tagged, so every answer it gives is recorded as the mock's (ADR-014).
+  const transport: SriTransport = Object.assign(
+    (request: Parameters<SriTransport>[0]) =>
+      new Promise<Awaited<ReturnType<SriTransport>>>((resolve) => resolve(answer(request))),
+    { source: 'mock' as const },
+  );
 
   return {
     transport,

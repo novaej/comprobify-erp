@@ -18,7 +18,7 @@ import {
   validateXml,
 } from '../sri';
 import { activeCertificate } from '../tenancy';
-import { recordExchange } from './exchanges';
+import { recordExchange, recordVersion } from './exchanges';
 import { applyFinalAnswer, locked, transition, type SendingDeps } from './sending';
 import type { Jobs } from '../jobs';
 
@@ -198,6 +198,16 @@ export async function reissueDocument(
         },
       },
     );
+    await recordVersion(tx, {
+      tenantId: current.tenantId,
+      documentId: current.id,
+      reason: 'REISSUED',
+      revision: current.revision,
+      accessKey: key,
+      issueDate: today,
+      signedXml,
+      actorUserId: job.actorUserId ?? null,
+    });
     await deps.jobs.enqueue(tx, 'sri.send', ref);
   });
   logger.info('Re-issued with today’s date', {
