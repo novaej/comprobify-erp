@@ -35,6 +35,7 @@ export {
 } from './client';
 export type {
   AuthorizationResult,
+  CallFacts,
   ReceptionResult,
   SriClient,
   SriClientOptions,

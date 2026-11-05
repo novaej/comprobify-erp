@@ -146,6 +146,17 @@ describe('isolation sweep over every tenant table', () => {
           issueDate: '2026-11-10',
         }),
       );
+      await db.withSystem('test: record a call to SRI', ({ db: tx }) =>
+        tx.insert(schema.sriExchanges).values({
+          tenantId,
+          documentId: document.id,
+          operation: 'reception',
+          outcome: 'RECEIVED',
+          httpStatus: 200,
+          raw: '<RespuestaRecepcionComprobante/>',
+          durationMs: 12,
+        }),
+      );
       await createProduct(actor, db, {
         code: 'P-1',
         name: 'Producto',
@@ -208,6 +219,7 @@ describe('isolation sweep over every tenant table', () => {
         'issue_points',
         'memberships',
         'products',
+        'sri_exchanges',
         'subscription_items',
         'subscriptions',
         'tenant_feature_overrides',

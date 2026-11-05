@@ -18,6 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: { template: '%s · Comprobify', default: 'Comprobify' },
     description: t('description'),
+    icons: { icon: { url: '/icon.svg', type: 'image/svg+xml' } },
   };
 }
 

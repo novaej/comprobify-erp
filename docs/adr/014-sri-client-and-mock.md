@@ -48,6 +48,8 @@ The job retries those and nothing else. A clean SRI answer is returned as data a
 
 Every result keeps the raw response, for the document's timeline (FR-DOC-13).
 
+**Every call is recorded.** Each call to SRI writes a row to `sri_exchanges` with the operation, the outcome (`TRANSPORT_ERROR` included), the HTTP status, SRI's messages, the raw answer or the failed reply's body, the transport error's message, and how long it took. That includes checks that changed nothing, such as "still processing", which the timeline leaves out. Like the old system's `sri_responses`, it's what support reads when SRI misbehaves. It's append-only, under tenant RLS, and written in the transaction that acts on the answer. The user's timeline shows only what changed.
+
 Consulta de validez only checks documents within a date range. Outside it, SRI answers RECHAZADA with error 99, "fecha de emision esta fuera del rango permitido". Voiding treats that answer as "SRI can't confirm", the same as SRI being down, and offers the user's attestation instead of calling the document not voided.
 
 **Responses are parsed as XML.** `@xmldom/xmldom` reads them, matching elements by local name under SRI's prefixed wrappers. It reads the authorized XML whether it comes as CDATA or escaped. It already sits in the dependency tree for the signer's tests, and it doesn't resolve external entities.

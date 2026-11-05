@@ -170,8 +170,13 @@ describe('the SRI client against the mock', () => {
       { kind: 'http', status: 503 },
       { kind: 'garbage' },
     );
-    for (let i = 0; i < 3; i++)
-      await expect(client.send(signed(), '1')).rejects.toBeInstanceOf(SriTransportError);
+    await expect(client.send(signed(), '1')).rejects.toBeInstanceOf(SriTransportError);
+    // A 503 keeps SRI's body and the time it took, for the record of the call.
+    const failure = await client.send(signed(), '1').catch((error: unknown) => error);
+    expect(failure).toBeInstanceOf(SriTransportError);
+    expect(failure).toMatchObject({ httpStatus: 503, raw: 'Service Unavailable' });
+    expect((failure as SriTransportError).durationMs).toBeGreaterThanOrEqual(0);
+    await expect(client.send(signed(), '1')).rejects.toBeInstanceOf(SriTransportError);
     mock.queue('reception', { kind: 'returned', code: '35', message: 'DOCUMENTO INVÁLIDO' });
     await expect(client.send(signed(), '1')).resolves.toMatchObject({ status: 'RETURNED' });
 

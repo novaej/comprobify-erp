@@ -67,6 +67,20 @@ export const DOCUMENT_EVENT_TYPES = [
 
 export const AMBIENTES = ['1', '2'] as const;
 
+// Every call to SRI, whatever it answered (FR-DOC-13): what support reads, not the user.
+export const SRI_OPERATIONS = ['reception', 'authorization', 'validity'] as const;
+export const SRI_EXCHANGE_OUTCOMES = [
+  'RECEIVED',
+  'RETURNED',
+  'AUTHORIZED',
+  'NOT_AUTHORIZED',
+  'PENDING',
+  'PENDING_VOID',
+  'VOIDED',
+  'NOT_FOUND',
+  'TRANSPORT_ERROR',
+] as const;
+
 // FR-DOC-6: why a document got a new date and key while keeping its number.
 export const REISSUE_REASONS = ['AUTO_NEXT_DAY', 'MANUAL', 'CORRECTED'] as const;
 
@@ -306,6 +320,38 @@ export const documentReissues = pgTable(
     unique('document_reissues_previous_key_unique').on(table.previousAccessKey),
     index('document_reissues_document_idx').on(table.documentId),
     check('document_reissues_reason_check', oneOf('reason', REISSUE_REASONS)),
+  ],
+);
+
+// Append-only. The raw answer is kept for support; SRI's messages are what a person reads.
+export const sriExchanges = pgTable(
+  'sri_exchanges',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id').notNull(),
+    documentId: uuid('document_id').notNull(),
+    operation: text('operation', { enum: SRI_OPERATIONS }).notNull(),
+    outcome: text('outcome', { enum: SRI_EXCHANGE_OUTCOMES }).notNull(),
+    httpStatus: integer('http_status'),
+    messages: jsonb('messages')
+      .$type<{ identifier: string; message: string; additionalInfo: string | null }[]>()
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    raw: text('raw'),
+    // A transport failure's own message: no connection, a timeout, junk.
+    error: text('error'),
+    durationMs: integer('duration_ms').notNull(),
+    occurredAt: timestamp('occurred_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      name: 'sri_exchanges_document_fk',
+      columns: [table.tenantId, table.documentId],
+      foreignColumns: [documents.tenantId, documents.id],
+    }),
+    index('sri_exchanges_document_idx').on(table.documentId, table.occurredAt),
+    check('sri_exchanges_operation_check', oneOf('operation', SRI_OPERATIONS)),
+    check('sri_exchanges_outcome_check', oneOf('outcome', SRI_EXCHANGE_OUTCOMES)),
   ],
 );
 

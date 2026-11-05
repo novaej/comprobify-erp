@@ -300,4 +300,32 @@ describe('sending to SRI', () => {
     await alertOverdueAuthorizations(deps);
     expect((await row(document)).overdueAlertedAt).toEqual(new Date('2026-11-11T15:00:01Z'));
   });
+
+  it('records every call to SRI, the ones that changed nothing included (FR-DOC-13)', async () => {
+    const document = await issue();
+    mock.queue('reception', { kind: 'transport' });
+    await sendDocument(deps, ref(document));
+    at('2026-11-10T15:05:00Z');
+    await sendDocument(deps, ref(document));
+    mock.queue('authorization', { kind: 'pending' });
+    await checkAuthorization(deps, ref(document));
+    await checkAuthorization(deps, ref(document));
+    const exchanges = await db.withTenant({ tenantId: twinId }, ({ db: tx }) =>
+      tx
+        .select()
+        .from(schema.sriExchanges)
+        .where(eq(schema.sriExchanges.documentId, document.id))
+        .orderBy(asc(schema.sriExchanges.occurredAt), asc(schema.sriExchanges.id)),
+    );
+    expect(exchanges.map((row) => [row.operation, row.outcome])).toEqual([
+      ['reception', 'TRANSPORT_ERROR'],
+      ['reception', 'RECEIVED'],
+      ['authorization', 'PENDING'],
+      ['authorization', 'AUTHORIZED'],
+    ]);
+    expect(exchanges[0]).toMatchObject({ error: 'SRI reception unreachable', raw: null });
+    expect(exchanges[1]).toMatchObject({ httpStatus: 200, error: null });
+    expect(exchanges[1]!.raw).toContain('RECIBIDA');
+    expect(exchanges.every((row) => row.durationMs >= 0)).toBe(true);
+  });
 });

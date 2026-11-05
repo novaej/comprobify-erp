@@ -810,6 +810,7 @@ export function InvoiceForm({
                           <Input
                             {...a11y}
                             maxLength={300}
+                            placeholder={t(`additional.${part}Placeholder`)}
                             value={field[part]}
                             onChange={(event) =>
                               setFields((current) =>

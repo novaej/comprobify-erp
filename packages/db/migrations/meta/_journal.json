@@ -218,6 +218,13 @@
       "when": 1793834425323,
       "tag": "0030_document_reissues",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1793899616822,
+      "tag": "0031_sri_exchanges",
+      "breakpoints": true
     }
   ]
 }

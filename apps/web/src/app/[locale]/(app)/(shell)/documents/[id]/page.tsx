@@ -32,6 +32,7 @@ import { loadShell } from '@/server/shell';
 import { STATUS_TONE } from '../document-status';
 import { CopyButton } from './copy-button';
 import { DocumentActions } from './document-actions';
+import { DocumentProgress } from './document-progress';
 import { LiveStatus } from './live-status';
 
 export const generateMetadata = pageTitle('document');
@@ -126,7 +127,10 @@ export default async function DocumentPage({
         }
       />
 
-      <LiveStatus waiting={['SIGNED', 'PENDING_SEND', 'RECEIVED'].includes(document.status)} />
+      <div className="space-y-2">
+        <DocumentProgress status={document.status} />
+        <LiveStatus waiting={['SIGNED', 'PENDING_SEND', 'RECEIVED'].includes(document.status)} />
+      </div>
 
       <DocumentActions
         id={document.id}

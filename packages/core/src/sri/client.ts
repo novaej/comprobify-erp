@@ -67,14 +67,22 @@ export type SriTransport = (request: {
 // no connection, a timeout, a 5xx or anything that isn't SRI's answer.
 export class SriTransportError extends Error {
   override readonly name = 'SriTransportError';
+  // What came back, if anything: kept for support (sri_exchanges).
+  readonly raw: string | null;
+  readonly durationMs: number;
   constructor(
     message: string,
     readonly httpStatus: number | null = null,
-    options?: ErrorOptions,
+    options?: ErrorOptions & { raw?: string | null; durationMs?: number },
   ) {
     super(message, options);
+    this.raw = options?.raw ?? null;
+    this.durationMs = options?.durationMs ?? 0;
   }
 }
+
+// Every answer also says how it came: for the record of each call (sri_exchanges).
+export type CallFacts = { httpStatus: number; durationMs: number };
 
 export const fetchTransport: SriTransport = async ({ url, body, timeoutMs }) => {
   const response = await fetch(url, {
@@ -87,9 +95,12 @@ export const fetchTransport: SriTransport = async ({ url, body, timeoutMs }) => 
 };
 
 export type SriClient = {
-  send: (signedXml: string, ambiente: Ambiente) => Promise<ReceptionResult>;
-  authorization: (accessKey: string, ambiente: Ambiente) => Promise<AuthorizationResult>;
-  validity: (accessKey: string, ambiente: Ambiente) => Promise<ValidityResult>;
+  send: (signedXml: string, ambiente: Ambiente) => Promise<ReceptionResult & CallFacts>;
+  authorization: (
+    accessKey: string,
+    ambiente: Ambiente,
+  ) => Promise<AuthorizationResult & CallFacts>;
+  validity: (accessKey: string, ambiente: Ambiente) => Promise<ValidityResult & CallFacts>;
 };
 
 export type SriClientOptions = {
@@ -170,24 +181,36 @@ export function createSriClient(options: SriClientOptions = {}): SriClient {
     ambiente: Ambiente,
     body: string,
     parse: (raw: string) => T,
-  ): Promise<T> {
+  ): Promise<T & CallFacts> {
     const url = `${baseUrls[ambiente]}/${SERVICES[service]}?wsdl`;
+    const started = performance.now();
+    const elapsed = () => Math.round(performance.now() - started);
     let response: { status: number; body: string };
     try {
       response = await transport({ url, body, timeoutMs });
     } catch (error) {
-      throw new SriTransportError(`SRI ${service} unreachable`, null, { cause: error });
+      throw new SriTransportError(`SRI ${service} unreachable`, null, {
+        cause: error,
+        durationMs: elapsed(),
+      });
     }
+    const durationMs = elapsed();
     if (response.status < 200 || response.status >= 300)
       throw new SriTransportError(
         `SRI ${service} answered HTTP ${response.status}`,
         response.status,
+        {
+          raw: response.body,
+          durationMs,
+        },
       );
     try {
-      return parse(response.body);
+      return { ...parse(response.body), httpStatus: response.status, durationMs };
     } catch (error) {
       throw new SriTransportError(`SRI ${service} answer was not understood`, response.status, {
         cause: error,
+        raw: response.body,
+        durationMs,
       });
     }
   }

@@ -1131,7 +1131,19 @@
         "xml": "Download XML",
         "rideLater": "The RIDE will be available once SRI authorizes the document."
       },
-      "waiting": "Waiting for SRI's answer. This page updates itself."
+      "waiting": "Waiting for SRI: it usually takes seconds, and can take up to 24 hours. This page updates itself.",
+      "progress": {
+        "label": "Progress with SRI",
+        "steps": {
+          "signed": "Signed",
+          "sent": "Sent to SRI",
+          "received": "Received by SRI",
+          "authorized": "Authorized"
+        },
+        "current": "(in progress)",
+        "done": "(done)",
+        "stopped": "(stopped here)"
+      }
     },
     "pendingLink": "Pending",
     "pending": {
@@ -1227,11 +1239,13 @@
     },
     "additional": {
       "title": "Additional information",
-      "description": "Optional. Printed on the RIDE, such as an order number.",
+      "description": "Extra details for the buyer, such as the purchase order or the order number. Printed on the RIDE. Optional.",
       "name": "Name",
       "value": "Value",
       "add": "Add field",
-      "remove": "Remove field {number}"
+      "remove": "Remove field {number}",
+      "namePlaceholder": "Purchase order",
+      "valuePlaceholder": "PO-123"
     },
     "totals": {
       "title": "Totals",

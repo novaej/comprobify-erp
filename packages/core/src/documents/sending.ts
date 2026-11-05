@@ -4,6 +4,7 @@ import type { Jobs } from '../jobs';
 import { endOfEcuadorDay, type Clock } from '../kernel';
 import { SRI_SEQUENTIAL_TAKEN, SriTransportError, type SriClient, type SriMessage } from '../sri';
 import { AUTHORIZATION_OVERDUE_AFTER, nextAuthorizationCheck, nextSendAttempt } from './calendar';
+import { recordExchange } from './exchanges';
 import { assertTransition, type DocumentStatus } from './status';
 
 // FR-DOC-4 and FR-DOC-5. Each handler re-reads the document under a row lock, acts only
@@ -128,6 +129,8 @@ export async function sendDocument(deps: SendingDeps, ref: DocumentRef): Promise
 
   await db.withTenant({ tenantId: ref.tenantId }, async (tx) => {
     const row = await locked(tx, ref);
+    // Recorded whatever happens next, even if another job already moved the document on.
+    await recordExchange(tx, ref, 'reception', outcome);
     if (row?.status !== 'PENDING_SEND') return;
     if (outcome instanceof SriTransportError) {
       const failures = row.sendAttempts + 1;
@@ -229,14 +232,17 @@ export async function checkAfterDeadline(deps: SendingDeps, ref: DocumentRef): P
   if (!row || !SENDABLE.includes(row.status) || row.deadlineCheckedAt) return;
 
   let answer: Awaited<ReturnType<SriClient['authorization']>> | null;
+  let failure: SriTransportError | null = null;
   try {
     answer = await sri.authorization(row.accessKey, row.ambiente);
   } catch (error) {
     if (!(error instanceof SriTransportError)) throw error;
     answer = null;
+    failure = error;
   }
 
   await db.withTenant({ tenantId: ref.tenantId }, async (tx) => {
+    await recordExchange(tx, ref, 'authorization', answer ?? failure!);
     let current = await locked(tx, ref);
     if (!current || !SENDABLE.includes(current.status) || current.deadlineCheckedAt) return;
     const checked = { deadlineCheckedAt: now, sriUnreachable: answer === null };
@@ -267,14 +273,17 @@ export async function checkAuthorization(deps: SendingDeps, ref: DocumentRef): P
   if (row?.status !== 'RECEIVED') return;
 
   let answer: Awaited<ReturnType<SriClient['authorization']>> | null;
+  let failure: SriTransportError | null = null;
   try {
     answer = await sri.authorization(row.accessKey, row.ambiente);
   } catch (error) {
     if (!(error instanceof SriTransportError)) throw error;
     answer = null;
+    failure = error;
   }
 
   await db.withTenant({ tenantId: ref.tenantId }, async (tx) => {
+    await recordExchange(tx, ref, 'authorization', answer ?? failure!);
     const current = await locked(tx, ref);
     if (current?.status !== 'RECEIVED') return;
     if (answer?.status === 'AUTHORIZED') {

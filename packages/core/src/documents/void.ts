@@ -1,7 +1,14 @@
 import { eq, schema, type Database } from '@comprobify/db';
 import { z } from 'zod';
 import { DomainError, requireFeature, requirePermission, type ActorContext } from '../kernel';
-import { CONSUMER_FINAL_ID, SriTransportError, type SriClient, type ValidityResult } from '../sri';
+import {
+  CONSUMER_FINAL_ID,
+  SriTransportError,
+  type CallFacts,
+  type SriClient,
+  type ValidityResult,
+} from '../sri';
+import { recordExchange } from './exchanges';
 import { locked, transition } from './sending';
 
 // FR-DOC-8: SRI has no service to void; the company voids on SRI's portal, and the
@@ -44,12 +51,21 @@ export async function voidDocument(
   if (row.buyerIdentification === CONSUMER_FINAL_ID)
     throw new DomainError('VOID_CONSUMER_FINAL', 'A consumidor final invoice can not be voided');
 
-  let validity: ValidityResult | null;
+  let validity: (ValidityResult & CallFacts) | null;
   try {
     validity = await deps.sri.validity(row.accessKey, row.ambiente);
   } catch (error) {
     if (!(error instanceof SriTransportError)) throw error;
+    await db.withTenant({ tenantId: ctx.tenantId }, (tx) =>
+      recordExchange(tx, { tenantId: ctx.tenantId, documentId: id }, 'validity', error),
+    );
     validity = null;
+  }
+  if (validity) {
+    const answer = validity;
+    await db.withTenant({ tenantId: ctx.tenantId }, (tx) =>
+      recordExchange(tx, { tenantId: ctx.tenantId, documentId: id }, 'validity', answer),
+    );
   }
   const deadline = voidDeadline(row.issueDate);
   // SRI only checks recent documents; older ones it can't confirm either way (Ficha 8.2.3).

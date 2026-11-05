@@ -1131,7 +1131,19 @@
         "xml": "Descargar XML",
         "rideLater": "El RIDE estará disponible cuando el SRI autorice el comprobante."
       },
-      "waiting": "Esperando la respuesta del SRI. Esta página se actualiza sola."
+      "waiting": "Esperando al SRI: suele tardar segundos, y puede tardar hasta 24 horas. Esta página se actualiza sola.",
+      "progress": {
+        "label": "Avance ante el SRI",
+        "steps": {
+          "signed": "Firmado",
+          "sent": "Enviado al SRI",
+          "received": "Recibido por el SRI",
+          "authorized": "Autorizado"
+        },
+        "current": "(en curso)",
+        "done": "(hecho)",
+        "stopped": "(detenido aquí)"
+      }
     },
     "pendingLink": "Pendientes",
     "pending": {
@@ -1227,11 +1239,13 @@
     },
     "additional": {
       "title": "Información adicional",
-      "description": "Opcional. Aparece en el RIDE, como un número de orden.",
+      "description": "Datos extra para el comprador, como la orden de compra o el número de pedido. Se imprimen en el RIDE. Es opcional.",
       "name": "Nombre",
       "value": "Valor",
       "add": "Agregar campo",
-      "remove": "Quitar el campo {number}"
+      "remove": "Quitar el campo {number}",
+      "namePlaceholder": "Orden de compra",
+      "valuePlaceholder": "OC-123"
     },
     "totals": {
       "title": "Totales",

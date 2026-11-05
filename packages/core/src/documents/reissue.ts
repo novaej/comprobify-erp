@@ -9,8 +9,16 @@ import {
   requirePermission,
   type ActorContext,
 } from '../kernel';
-import { accessKey, randomNumericCode, redateSignedXml, signXml, validateXml } from '../sri';
+import {
+  accessKey,
+  randomNumericCode,
+  redateSignedXml,
+  signXml,
+  SriTransportError,
+  validateXml,
+} from '../sri';
 import { activeCertificate } from '../tenancy';
+import { recordExchange } from './exchanges';
 import { applyFinalAnswer, locked, transition, type SendingDeps } from './sending';
 import type { Jobs } from '../jobs';
 
@@ -107,7 +115,19 @@ export async function reissueDocument(
   }
 
   // SRI may have it after all. A transport error throws, so the job retries later.
-  const answer = await sri.authorization(row.accessKey, row.ambiente);
+  let answer: Awaited<ReturnType<typeof sri.authorization>>;
+  try {
+    answer = await sri.authorization(row.accessKey, row.ambiente);
+  } catch (error) {
+    if (error instanceof SriTransportError)
+      await db.withTenant({ tenantId: ref.tenantId }, (tx) =>
+        recordExchange(tx, ref, 'authorization', error),
+      );
+    throw error;
+  }
+  await db.withTenant({ tenantId: ref.tenantId }, (tx) =>
+    recordExchange(tx, ref, 'authorization', answer),
+  );
   if (answer.status !== 'PENDING') {
     await db.withTenant({ tenantId: ref.tenantId }, async (tx) => {
       const current = await locked(tx, ref);
