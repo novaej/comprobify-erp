@@ -389,6 +389,8 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
       .getByRole('button', { name: 'Reactivar' })
       .click();
     await expect(page.getByText('Producto reactivado.')).toBeVisible();
+    // A fading toast fails axe's contrast check: let it go before the screens below.
+    await expect(page.getByText('Producto reactivado.')).toBeHidden({ timeout: 10_000 });
 
     await nav.getByRole('link', { name: 'Comprobantes' }).click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Comprobantes');
