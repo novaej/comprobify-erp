@@ -47,6 +47,8 @@ It also left out the legends the Ficha requires on the RIDE: agente de retenció
 
 **The test twin emails too, marked as a test.** A document in SRI's test environment (ambiente 1) sends the same email, with `[PRUEBAS]` in the subject and a line saying it has no tax validity. A company can then see its buyers' email before going live, and nobody mistakes it for a real invoice.
 
+**The email's layout comes from the old system.** It opens "Estimado/a `<buyer>`,", says the document was authorized by SRI, and lists the number, issue date, total and authorization number in a table. Then it names the two attachments and what each is, and closes with a thank-you, the issuer's name and RUC, and a note not to reply. The subject is "Factura Electrónica N° `<number>` — `<issuer>`", with `[PRUEBAS]` and a no-validity line in SRI's test environment.
+
 **Senders, the test recipient and the off switch.** These carry over the old system's settings:
 
 - **Two senders.** Buyers' copies come from `EMAIL_FROM_DOCUMENTS`, falling back to `EMAIL_FROM`; account emails come from `EMAIL_FROM`.

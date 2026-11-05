@@ -15,6 +15,7 @@ import { FormField } from '@/components/form-field';
 import { SectionCard } from '@/components/section-card';
 import { formatCents, formTotals, normalizeDecimal, parseDecimal } from '@/lib/invoice-totals';
 import { correctInvoiceAction, createInvoiceAction } from './actions';
+import { TemplateMenu, type TemplateOption } from './template-menu';
 
 export type ProductOption = {
   id: string;
@@ -66,6 +67,9 @@ type Line = {
 type Payment = { key: string; method: string; amount: string; term: string; termUnit: string };
 type Field = { key: string; name: string; value: string };
 
+// What a template holds: the form minus where and when it's issued (FR-MD-5).
+export type TemplateContent = Omit<InvoiceDraft, 'documentId'>;
+
 // A correction starts from the document as last signed (FR-DOC-7).
 export type InvoiceDraft = {
   documentId: string;
@@ -106,6 +110,7 @@ export function InvoiceForm({
   defaultIvaRate,
   draft,
   canEditClient,
+  templates,
 }: {
   issuePoints: Choice[];
   ivaRates: (Choice & { percent: string })[];
@@ -119,6 +124,8 @@ export function InvoiceForm({
   draft?: InvoiceDraft;
   // clients.manage: edits to the client are saved with the invoice.
   canEditClient: boolean;
+  // Null when the plan has no templates (FR-MD-5).
+  templates: TemplateOption<TemplateContent>[] | null;
 }) {
   const t = useTranslations('invoiceForm');
   const tError = useTranslations('documentsError');
@@ -153,6 +160,37 @@ export function InvoiceForm({
   });
 
   const [issuePointId, setIssuePointId] = useState(issuePoints[0]?.value ?? '');
+  const linesFrom = (source: Omit<Line, 'key'>[]): Line[] =>
+    source.length > 0
+      ? source.map((line) => ({
+          ...line,
+          key: newKey(),
+          quantity: typed(line.quantity, mark),
+          unitPrice: priceText(line.unitPrice, mark),
+          discount: Number(line.discount) === 0 ? '' : typed(line.discount, mark),
+        }))
+      : [blankLine()];
+  const paymentsFrom = (source: InvoiceDraft['payments']): Payment[] =>
+    source.length > 0
+      ? source.map((payment) => ({
+          key: newKey(),
+          method: payment.method,
+          amount: typed(payment.amount, mark),
+          term: payment.term === null ? '' : String(payment.term),
+          termUnit: payment.termUnit ?? '',
+        }))
+      : [
+          {
+            key: newKey(),
+            method: paymentMethods[0]?.value ?? '01',
+            amount: '',
+            term: '',
+            termUnit: '',
+          },
+        ];
+  const fieldsFrom = (source: InvoiceDraft['additionalInfo']): Field[] =>
+    source.map((field) => ({ key: newKey(), ...field }));
+
   const [client, setClient] = useState<ClientOption | null>(
     () => clients.find((option) => option.id === draft?.clientId) ?? null,
   );
@@ -168,39 +206,20 @@ export function InvoiceForm({
     client !== null &&
     clientEdit !== null &&
     JSON.stringify(clientEdit) !== JSON.stringify(editOf(client));
-  const [lines, setLines] = useState<Line[]>(() =>
-    draft
-      ? draft.lines.map((line) => ({
-          ...line,
-          key: newKey(),
-          quantity: typed(line.quantity, mark),
-          unitPrice: priceText(line.unitPrice, mark),
-          discount: Number(line.discount) === 0 ? '' : typed(line.discount, mark),
-        }))
-      : [blankLine()],
-  );
-  const [payments, setPayments] = useState<Payment[]>(() =>
-    draft && draft.payments.length > 0
-      ? draft.payments.map((payment) => ({
-          key: newKey(),
-          method: payment.method,
-          amount: typed(payment.amount, mark),
-          term: payment.term === null ? '' : String(payment.term),
-          termUnit: payment.termUnit ?? '',
-        }))
-      : [
-          {
-            key: newKey(),
-            method: paymentMethods[0]?.value ?? '01',
-            amount: '',
-            term: '',
-            termUnit: '',
-          },
-        ],
-  );
-  const [fields, setFields] = useState<Field[]>(() =>
-    (draft?.additionalInfo ?? []).map((field) => ({ key: newKey(), ...field })),
-  );
+  const [lines, setLines] = useState<Line[]>(() => linesFrom(draft?.lines ?? []));
+  const [payments, setPayments] = useState<Payment[]>(() => paymentsFrom(draft?.payments ?? []));
+  const [fields, setFields] = useState<Field[]>(() => fieldsFrom(draft?.additionalInfo ?? []));
+  // A loaded template whose client is gone says so, instead of silently dropping it.
+  const [templateNote, setTemplateNote] = useState<string>();
+  const loadTemplate = (content: TemplateContent) => {
+    const next = clients.find((option) => option.id === content.clientId) ?? null;
+    chooseClient(next);
+    setClientQuery('');
+    setLines(linesFrom(content.lines));
+    setPayments(paymentsFrom(content.payments));
+    setFields(fieldsFrom(content.additionalInfo));
+    setTemplateNote(content.clientId && !next ? t('templates.clientGone') : undefined);
+  };
   const copy = draft
     ? {
         submit: t('correct.submit'),
@@ -382,6 +401,36 @@ export function InvoiceForm({
         if (canIssue) setConfirming(true);
       }}
     >
+      {templates && !draft && (
+        <TemplateMenu
+          templates={templates}
+          canSave={!totals.incomplete && lines.length > 0 && difference === 0n}
+          current={() => {
+            const full = payload();
+            return {
+              clientId: full.clientId,
+              lines: full.lines,
+              payments: full.payments,
+              additionalInfo: full.additionalInfo,
+            };
+          }}
+          describe={(content) => {
+            const owner = clients.find((option) => option.id === content.clientId);
+            const total = formTotals(content.lines, percents).total;
+            return [
+              owner?.name ?? t('buyer.consumerFinal'),
+              t('templates.lines', { count: content.lines.length }),
+              show(total),
+            ].join(', ');
+          }}
+          onLoad={(template) => loadTemplate(template.content)}
+        />
+      )}
+      {templateNote && (
+        <Banner tone="warning" icon={AlertCircle} role="note">
+          {templateNote}
+        </Banner>
+      )}
       <div className="grid items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_19rem]">
         <div className="min-w-0 space-y-6">
           <SectionCard title={t('issuing.title')}>

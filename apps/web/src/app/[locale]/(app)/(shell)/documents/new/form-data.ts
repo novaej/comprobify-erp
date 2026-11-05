@@ -4,6 +4,7 @@ import {
   issuingOptions,
   listClients,
   listProducts,
+  listTemplates,
   SRI_PAYMENT_METHODS,
   SRI_TERM_UNITS,
   type ActorContext,
@@ -18,9 +19,13 @@ export async function invoiceFormData(actor: ActorContext) {
   const options = await issuingOptions(actor, db);
   const canProducts = hasFeature(actor, 'CATALOG') && actor.permissions.includes('catalog.read');
   const canClients = hasFeature(actor, 'CLIENTS') && actor.permissions.includes('clients.read');
-  const [products, clients] = await Promise.all([
+  // FR-MD-5: only on a plan with templates; null hides the buttons.
+  const canTemplates =
+    hasFeature(actor, 'DOCUMENT_TEMPLATES') && actor.permissions.includes('documents.issue');
+  const [products, clients, templates] = await Promise.all([
     canProducts ? listProducts(actor, db) : [],
     canClients ? listClients(actor, db) : [],
+    canTemplates ? listTemplates(actor, db) : null,
   ]);
   const tSri = await getTranslations('sri');
   return {
@@ -61,5 +66,11 @@ export async function invoiceFormData(actor: ActorContext) {
     termUnits: SRI_TERM_UNITS.map((code) => ({ value: code, label: tSri(`termUnits.${code}`) })),
     consumerFinalMax: env.CONSUMER_FINAL_MAX_AMOUNT,
     canEditClient: canClients && actor.permissions.includes('clients.manage'),
+    templates:
+      templates?.map((template) => ({
+        id: template.id,
+        name: template.name,
+        content: template.content,
+      })) ?? null,
   };
 }

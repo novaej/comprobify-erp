@@ -146,11 +146,13 @@ describe('the RIDE and the buyer’s copy', () => {
     const [message] = sent;
     expect(message).toMatchObject({
       to: 'maria@example.com,pagos@example.com',
-      subject: `[PRUEBAS] Factura ${document.number} de Phi S.A.`,
+      subject: `[PRUEBAS] Factura Electrónica N° ${document.number} — Phi S.A.`,
       fromName: 'Phi S.A. via Comprobify',
       variables: { 'document-id': document.id },
     });
     expect(message!.text).toContain('no tiene validez tributaria');
+    expect(message!.text).toContain('Estimado/a María López,');
+    expect(message!.text).toContain(`Número de autorización:  ${document.accessKey}`);
     const [pdf, xml] = message!.attachments!;
     expect(pdf!.filename).toBe(`RIDE ${document.number}.pdf`);
     expect(pdf!.content.subarray(0, 5).toString()).toBe('%PDF-');

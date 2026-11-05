@@ -29,20 +29,29 @@ for name in "${names[@]}"; do
   fi
 done
 
+# One value from .env, read as text: .env isn't shell syntax (EMAIL_FROM=Name <address>
+# can't be sourced), and only the owner URLs are needed here.
+env_value() {
+  [[ -f "$root/.env" ]] || return 0
+  local line
+  line="$(grep -E "^$1=" "$root/.env" | tail -n 1)" || return 0
+  line="${line#*=}"
+  line="${line%\"}" && line="${line#\"}"
+  line="${line%\'}" && line="${line#\'}"
+  printf '%s' "$line"
+}
+
 # Each database's owner URL: from the environment or .env, else the .env.example default.
-if [[ -f "$root/.env" ]]; then
-  set -a
-  # shellcheck disable=SC1091
-  . "$root/.env"
-  set +a
-fi
 owner_url() {
   local fallback="postgres://comprobify_erp_owner:changeme@localhost:5432/comprobify_erp_$1"
+  local key
   case "$1" in
-    local) echo "${MIGRATION_DATABASE_URL:-$fallback}" ;;
-    test) echo "${TEST_MIGRATION_DATABASE_URL:-$fallback}" ;;
-    e2e) echo "${E2E_MIGRATION_DATABASE_URL:-$fallback}" ;;
+    local) key=MIGRATION_DATABASE_URL ;;
+    test) key=TEST_MIGRATION_DATABASE_URL ;;
+    e2e) key=E2E_MIGRATION_DATABASE_URL ;;
   esac
+  local value="${!key:-$(env_value "$key")}"
+  echo "${value:-$fallback}"
 }
 
 for name in "${names[@]}"; do

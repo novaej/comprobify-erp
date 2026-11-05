@@ -98,32 +98,78 @@ export function renderEmail(
 
 export type DocumentEmailParams = {
   organization: string;
+  ruc: string;
+  buyerName: string;
   documentLabel: string;
   number: string;
   issueDate: string;
   total: string;
+  authorizationNumber: string;
+  attachments: { ride: string; xml: string };
   // SRI test environment: the buyer is told it has no tax validity.
   test: boolean;
 };
 
-// FR-DOC-11: the buyer's copy, RIDE and XML attached. Spanish: the document is.
+// FR-DOC-11: the buyer's copy, RIDE and XML attached, in the old app's layout: greeting,
+// the document's facts, the attachments, the issuer. Spanish: the document is.
 export function renderDocumentEmail(to: string, params: DocumentEmailParams): EmailMessage {
-  const subject = `${params.test ? '[PRUEBAS] ' : ''}${params.documentLabel} ${params.number} de ${params.organization}`;
-  const lines = [
-    `${params.organization} le envía su ${params.documentLabel.toLowerCase()} electrónica ${params.number}, autorizada por el SRI.`,
-    `Fecha de emisión: ${params.issueDate}. Valor total: $${params.total}.`,
-    'Adjuntamos la representación impresa (RIDE) en PDF y el archivo XML autorizado.',
-    ...(params.test
-      ? ['Este es un documento de pruebas del SRI y no tiene validez tributaria.']
-      : []),
+  const subject = `${params.test ? '[PRUEBAS] ' : ''}${params.documentLabel} Electrónica N° ${params.number} — ${params.organization}`;
+  const greeting = `Estimado/a ${params.buyerName},`;
+  const intro =
+    'Nos complacemos en informarle que su comprobante electrónico ha sido autorizado por el SRI.';
+  const test = params.test
+    ? 'Este es un comprobante del ambiente de pruebas del SRI y no tiene validez tributaria.'
+    : null;
+  const facts: [string, string][] = [
+    [`${params.documentLabel} N°`, params.number],
+    ['Fecha de emisión', params.issueDate],
+    ['Total', `$${params.total}`],
+    ['Número de autorización', params.authorizationNumber],
   ];
-  const footer =
-    'Este correo se envió a través de Comprobify en nombre del emisor. Para cualquier consulta, comuníquese con el emisor.';
-  const text = `${lines.join('\n\n')}\n\n${footer}`;
-  const html = `<!doctype html><html lang="es"><body style="font-family:system-ui,sans-serif;color:#232b36">
-<h1 style="font-size:20px">${escapeHtml(subject)}</h1>
-${lines.map((line) => `<p>${escapeHtml(line)}</p>`).join('\n')}
-<p style="font-size:12px;color:#5b6573">${escapeHtml(footer)}</p>
+  const attachments: [string, string][] = [
+    [params.attachments.ride, 'Representación impresa del comprobante (RIDE)'],
+    [params.attachments.xml, 'Comprobante electrónico (XML autorizado)'],
+  ];
+  const thanks = 'Gracias por su preferencia.';
+  const disclaimer =
+    'No responda a este correo: es un mensaje automático enviado por Comprobify en nombre del emisor.';
+
+  const text = [
+    greeting,
+    '',
+    intro,
+    ...(test ? ['', test] : []),
+    '',
+    ...facts.map(([label, value]) => `  ${label}:  ${value}`),
+    '',
+    'Adjunto encontrará los siguientes documentos:',
+    ...attachments.map(([file, what]) => `  • ${file}: ${what}`),
+    '',
+    thanks,
+    '',
+    params.organization,
+    `RUC: ${params.ruc}`,
+    '',
+    disclaimer,
+  ].join('\n');
+
+  const cell = 'padding:6px 12px;border-bottom:1px solid #eee';
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:20px">
+<p>${escapeHtml(greeting)}</p>
+<p>${escapeHtml(intro)}</p>
+${test ? `<p style="background:#fff3cd;padding:10px 12px;border-radius:6px">${escapeHtml(test)}</p>` : ''}
+<table style="border-collapse:collapse;width:100%;margin:16px 0">
+${facts.map(([label, value]) => `<tr><td style="${cell};background:#f5f5f5;font-weight:bold;width:45%">${escapeHtml(label)}</td><td style="${cell}">${escapeHtml(value)}</td></tr>`).join('\n')}
+</table>
+<p>Adjunto encontrará los siguientes documentos:</p>
+<ul>
+${attachments.map(([file, what]) => `<li><strong>${escapeHtml(file)}</strong>: ${escapeHtml(what)}</li>`).join('\n')}
+</ul>
+<p>${escapeHtml(thanks)}</p>
+<hr style="border:none;border-top:1px solid #ddd;margin:20px 0">
+<p style="font-size:12px;color:#666"><strong>${escapeHtml(params.organization)}</strong><br>RUC: ${escapeHtml(params.ruc)}</p>
+<p style="font-size:11px;color:#999">${escapeHtml(disclaimer)}</p>
 </body></html>`;
   return {
     to,

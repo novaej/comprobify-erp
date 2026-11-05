@@ -232,6 +232,13 @@
       "when": 1793903647384,
       "tag": "0032_document_versions",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1793906807436,
+      "tag": "0033_document_templates",
+      "breakpoints": true
     }
   ]
 }

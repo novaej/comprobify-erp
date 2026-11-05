@@ -1270,6 +1270,25 @@
       "submit": "Corregir y enviar",
       "confirmTitle": "¿Corregir y reenviar la factura?",
       "confirmDescription": "Se firma de nuevo y se envía al SRI con el mismo número. Si ya pasó su día de emisión, toma la fecha de hoy y una clave nueva."
+    },
+    "templates": {
+      "load": "Cargar plantilla",
+      "save": "Guardar como plantilla",
+      "loadTitle": "Cargar una plantilla",
+      "loadDescription": "Llena la factura con el cliente, las líneas y los pagos guardados. Después puedes cambiar lo que quieras.",
+      "saveTitle": "Guardar como plantilla",
+      "saveDescription": "Guarda el cliente, las líneas, los pagos y la información adicional para la próxima vez.",
+      "name": "Nombre de la plantilla",
+      "replaceWarning": "Ya existe una plantilla con ese nombre: se reemplazará.",
+      "saved": "Plantilla guardada.",
+      "remove": "Quitar la plantilla {name}",
+      "removeTitle": "¿Quitar la plantilla?",
+      "removeDescription": "Ya no aparecerá al cargar plantillas. Las facturas emitidas con ella no cambian.",
+      "removeConfirm": "Quitar",
+      "removed": "Plantilla quitada.",
+      "loaded": "Plantilla cargada.",
+      "lines": "{count, plural, one {# línea} other {# líneas}}",
+      "clientGone": "El cliente de esta plantilla ya no está activo: elige otro, o queda como consumidor final."
     }
   },
   "documentsError": {

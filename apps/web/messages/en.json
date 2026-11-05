@@ -1270,6 +1270,25 @@
       "submit": "Correct and send",
       "confirmTitle": "Correct and resend the invoice?",
       "confirmDescription": "It's signed again and sent to SRI with the same number. If its issue day has passed, it takes today's date and a new key."
+    },
+    "templates": {
+      "load": "Load template",
+      "save": "Save as template",
+      "loadTitle": "Load a template",
+      "loadDescription": "Fills the invoice with the saved client, lines and payments. You can change anything afterwards.",
+      "saveTitle": "Save as template",
+      "saveDescription": "Saves the client, lines, payments and additional information for next time.",
+      "name": "Template name",
+      "replaceWarning": "A template with that name exists: it will be replaced.",
+      "saved": "Template saved.",
+      "remove": "Remove the template {name}",
+      "removeTitle": "Remove the template?",
+      "removeDescription": "It won't show when loading templates. Invoices issued from it don't change.",
+      "removeConfirm": "Remove",
+      "removed": "Template removed.",
+      "loaded": "Template loaded.",
+      "lines": "{count, plural, one {# line} other {# lines}}",
+      "clientGone": "This template's client is no longer active: choose another, or it stays consumidor final."
     }
   },
   "documentsError": {

@@ -53,6 +53,27 @@ async function grantSeats(ownerEmail: string): Promise<void> {
   }
 }
 
+// Gratis has no templates (the Branding module brings them): an exception, as above.
+async function grantTemplates(ownerEmail: string): Promise<void> {
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(`SET LOCAL app.rls_system = 'on'`);
+    await client.query(
+      `INSERT INTO tenant_feature_overrides
+         (tenant_id, feature_key, feature_kind, effect, limit_value, reason, created_by)
+       SELECT m.tenant_id, 'DOCUMENT_TEMPLATES', 'BOOLEAN', 'GRANT', NULL, 'e2e templates', u.id
+       FROM memberships m JOIN users u ON u.id = m.user_id
+       WHERE u.email = $1 AND m.role = 'OWNER'`,
+      [ownerEmail],
+    );
+    await client.query('COMMIT');
+  } finally {
+    await client.end();
+  }
+}
+
 // The operator script's job, done directly: the flag is never set from the app.
 async function setSuperAdmin(userEmail: string): Promise<void> {
   const client = new Client({ connectionString: process.env.DATABASE_URL });
@@ -71,9 +92,10 @@ async function runSri(documentId: string, answer: 'authorize' | 'return'): Promi
   const db = createDatabase({ connectionString: process.env.DATABASE_URL!, logger: silent });
   try {
     const [row] = await db.withSystem('e2e: find the document to send', ({ executeSql }) =>
-      executeSql<{ tenant_id: string }>('SELECT tenant_id FROM documents WHERE id = $1', [
-        documentId,
-      ]).then((result) => result.rows),
+      executeSql<{ tenant_id: string; signed_xml: string; ambiente: '1' | '2' }>(
+        'SELECT tenant_id, signed_xml, ambiente FROM documents WHERE id = $1',
+        [documentId],
+      ).then((result) => result.rows),
     );
     const ref = { tenantId: row!.tenant_id, documentId };
     const mock = createMockSri();
@@ -87,7 +109,12 @@ async function runSri(documentId: string, answer: 'authorize' | 'return'): Promi
       logger: silent,
     };
     await sendDocument(deps, ref);
-    if (answer === 'authorize') await checkAuthorization(deps, ref);
+    if (answer === 'authorize') {
+      // On the stack the worker may have sent it already, to its own mock: this one learns
+      // the document too, so it can authorize it.
+      await deps.sri.send(row!.signed_xml, row!.ambiente);
+      await checkAuthorization(deps, ref);
+    }
   } finally {
     await db.close();
   }
@@ -378,6 +405,8 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
   test('issues an invoice from the keyboard and shows what SRI answered (FR-DOC-2, FR-DOC-12, FR-UX-4)', async ({
     page,
   }) => {
+    // The longest flow here: two invoices' worth of typing and the templates.
+    test.setTimeout(90_000);
     await signIn(page, email, newPassword);
     const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
 
@@ -441,6 +470,50 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     const totals = page.getByRole('complementary');
     await expect(totals).toContainText('$76,48');
     await look(page, 'invoice-filled');
+
+    // Saved as a template, it fills a fresh form the same way (FR-MD-5).
+    await grantTemplates(email);
+    await page.reload();
+    await client.fill('María');
+    await client.press('Enter');
+    await line(1).getByRole('combobox', { name: 'Código' }).fill('P-1');
+    await line(1).getByRole('textbox', { name: 'Descripción' }).fill('Consultoría');
+    await line(1).getByRole('textbox', { name: 'Cantidad' }).fill('2');
+    await line(1).getByRole('textbox', { name: 'Precio unitario' }).fill('10,50');
+    await page.getByRole('button', { name: 'Guardar como plantilla' }).click();
+    const save = page.getByRole('dialog', { name: 'Guardar como plantilla' });
+    await save.getByRole('textbox', { name: 'Nombre de la plantilla' }).fill('Consultoría mensual');
+    await look(page, 'template-save');
+    await save.getByRole('button', { name: 'Guardar como plantilla' }).click();
+    await expect(page.getByText('Plantilla guardada.')).toBeVisible();
+    await page.goto('/es/documents/new');
+    await page.getByRole('button', { name: 'Cargar plantilla' }).click();
+    const templates = page.getByRole('dialog', { name: 'Cargar una plantilla' });
+    await expect(templates).toContainText('María López, 1 línea, $24,15');
+    await look(page, 'template-load');
+    await templates.getByRole('button', { name: /^Consultoría mensual/ }).click();
+    await expect(line(1).getByRole('textbox', { name: 'Descripción' })).toHaveValue('Consultoría');
+    await expect(page.getByRole('textbox', { name: 'Nombre o razón social' })).toHaveValue(
+      'María López',
+    );
+    await expect(page.getByText('Plantilla guardada.')).toBeHidden({ timeout: 10_000 });
+    await expect(page.getByText('Plantilla cargada.')).toBeHidden({ timeout: 10_000 });
+
+    // Back to the two-line invoice this test issues.
+    await page.reload();
+    await client.fill('María');
+    await client.press('Enter');
+    await page
+      .getByRole('textbox', { name: 'Dirección', exact: true })
+      .fill('Av. Amazonas N24-03, Quito');
+    await line(1).getByRole('combobox', { name: 'Código' }).fill('P-1');
+    await line(1).getByRole('textbox', { name: 'Descripción' }).fill('Consultoría');
+    await line(1).getByRole('textbox', { name: 'Cantidad' }).fill('2');
+    await line(1).getByRole('textbox', { name: 'Precio unitario' }).fill('10,50');
+    await page.getByRole('button', { name: 'Agregar línea' }).click();
+    await line(2).getByRole('combobox', { name: 'Código' }).fill('asesor');
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('complementary')).toContainText('$76,48');
     await page.getByRole('button', { name: 'Emitir factura' }).click();
     const confirm = page.getByRole('dialog', { name: '¿Emitir la factura?' });
     await expect(confirm).toContainText('María López: $76,48');

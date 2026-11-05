@@ -45,3 +45,11 @@ export type {
   DocumentListRow,
   IssuingOptions,
 } from './queries';
+export {
+  listTemplates,
+  removeTemplate,
+  saveTemplate,
+  saveTemplateInput,
+  templateContentInput,
+} from './templates';
+export type { DocumentTemplate, TemplateContent } from './templates';

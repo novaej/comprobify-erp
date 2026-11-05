@@ -158,6 +158,9 @@ describe('isolation sweep over every tenant table', () => {
           source: 'mock',
         }),
       );
+      await db.withSystem('test: save a template', ({ db: tx }) =>
+        tx.insert(schema.documentTemplates).values({ tenantId, name: 'Plantilla', content: {} }),
+      );
       await db.withSystem('test: keep a signed version', ({ db: tx }) =>
         tx.insert(schema.documentVersions).values({
           tenantId,
@@ -224,6 +227,7 @@ describe('isolation sweep over every tenant table', () => {
         'document_payments',
         'document_reissues',
         'document_sequences',
+        'document_templates',
         'document_versions',
         'documents',
         'invitations',

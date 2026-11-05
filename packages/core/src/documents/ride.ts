@@ -102,20 +102,26 @@ export async function emailDocument(
   const { row, logo } = prepared;
 
   const { data, pdf, xml, name } = await files(row, logo);
+  const rideFile = `RIDE ${name}.pdf`;
+  const xmlFile = `${row.accessKey}.xml`;
   const message = renderDocumentEmail(row.buyerEmail!, {
     organization: data.legalName,
+    ruc: data.ruc,
+    buyerName: data.buyer.name,
     documentLabel: 'Factura',
     number: name,
     issueDate: data.issueDate,
     total: data.total,
+    authorizationNumber: row.authorizationNumber!,
+    attachments: { ride: rideFile, xml: xmlFile },
     test: row.ambiente !== '2',
   });
   const result = await provider.send({
     ...message,
     attachments: [
-      { filename: `RIDE ${name}.pdf`, content: pdf, contentType: 'application/pdf' },
+      { filename: rideFile, content: pdf, contentType: 'application/pdf' },
       {
-        filename: `${row.accessKey}.xml`,
+        filename: xmlFile,
         content: Buffer.from(xml, 'utf8'),
         contentType: 'application/xml',
       },

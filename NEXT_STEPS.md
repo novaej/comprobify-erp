@@ -33,7 +33,7 @@ Read PRD sections 5.8 and 6 and the Ficha Técnica v2.32 in `docs/reference/` be
 - **Milestone 9 (also):** the alerts that are only logged today become notifications: no SRI answer 24 hours after RECEIVED, code 45, a re-issue skipped at a month boundary, and "Factura … re-emitida con fecha …" (FR-DOC-5, FR-DOC-6, FR-NOT-2).
 - **Milestone 9 (also):** email the companies on a plan when a module or a lower limit is scheduled to leave it, as with price changes (FR-BILL-6, FR-NOT-2); a page for the platform activity log (`platform_audit_events`).
 - **Milestones 5 and 6:** go-live offers to copy master data from the twin (FR-ONB-5) once products, clients and suppliers exist.
-- **Not scheduled:** CSV import and export of clients and products (FR-MD-1); saved invoice templates (FR-MD-5).
+- **Not scheduled:** CSV import and export of clients and products (FR-MD-1).
 - **Not scheduled:** ownership transfer (PRD section 3). Today nobody can change or remove the owner.
 
 ## Upcoming milestones

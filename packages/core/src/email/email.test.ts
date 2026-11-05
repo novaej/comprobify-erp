@@ -96,14 +96,28 @@ describe('the buyer’s copy (FR-DOC-11)', () => {
   it('comes from the issuer via Comprobify, with the attachments as multipart', async () => {
     const message = renderDocumentEmail('maria@example.com', {
       organization: 'Alfa <S.A.>',
+      ruc: '1790000000001',
+      buyerName: 'María López',
       documentLabel: 'Factura',
       number: '001-001-000000001',
       issueDate: '10/11/2026',
       total: '127.00',
+      authorizationNumber: '1011202601179000000100110010010000000011234567813',
+      attachments: { ride: 'RIDE 001-001-000000001.pdf', xml: '1011202601.xml' },
       test: false,
     });
-    expect(message.subject).toBe('Factura 001-001-000000001 de Alfa <S.A.>');
+    expect(message.subject).toBe('Factura Electrónica N° 001-001-000000001 — Alfa <S.A.>');
     expect(message.html).toContain('Alfa &lt;S.A.&gt;');
+    // The old app's layout: greeting, the facts, the attachments, the issuer.
+    expect(message.text).toContain('Estimado/a María López,');
+    expect(message.text).toContain(
+      '  Número de autorización:  1011202601179000000100110010010000000011234567813',
+    );
+    expect(message.text).toContain(
+      '  • RIDE 001-001-000000001.pdf: Representación impresa del comprobante (RIDE)',
+    );
+    expect(message.text).toContain('RUC: 1790000000001');
+    expect(message.text).not.toContain('pruebas');
     const fetch = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
     const provider = createMailgunProvider({
       apiKey: 'key',

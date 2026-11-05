@@ -391,6 +391,36 @@ export const documentVersions = pgTable(
   ],
 );
 
+// FR-MD-5: a saved starting point for an invoice: client, lines, payments, additional
+// information. Not a document: it holds no number or key, and changes freely.
+export const documentTemplates = pgTable(
+  'document_templates',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id').notNull(),
+    documentType: text('document_type', { enum: SRI_DOCUMENT_TYPES }).default('01').notNull(),
+    name: text('name').notNull(),
+    content: jsonb('content').$type<Record<string, unknown>>().notNull(),
+    // No hard deletes (rule 12): a removed template is inactive.
+    active: boolean('active').default(true).notNull(),
+    createdBy: uuid('created_by').references(() => users.id),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    foreignKey({
+      name: 'document_templates_tenant_fk',
+      columns: [table.tenantId],
+      foreignColumns: [tenants.id],
+    }),
+    // One active template per name; saving under a taken name replaces it.
+    uniqueIndex('document_templates_name')
+      .on(table.tenantId, table.documentType, sql`lower(${table.name})`)
+      .where(sql`active`),
+    check('document_templates_type_check', oneOf('document_type', SRI_DOCUMENT_TYPES)),
+  ],
+);
+
 // The trigger that enforces DOCUMENT_TRANSITIONS in the database, generated from it so the
 // two can't drift (rule 17). A migration holds its output; a test compares the live one.
 export function documentStatusTriggerBody(): string {
