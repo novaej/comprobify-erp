@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createMailgunProvider, renderEmail, sendEmailHandler } from '.';
+import { createMailgunProvider, renderDocumentEmail, renderEmail, sendEmailHandler } from '.';
 
 describe('renderEmail', () => {
   it('renders each template in both languages, with the link', () => {
@@ -80,5 +80,41 @@ describe('email.send handler', () => {
       },
     });
     expect(send).toHaveBeenCalledWith(expect.objectContaining({ to: 'a@example.com' }));
+  });
+});
+
+describe('the buyer’s copy (FR-DOC-11)', () => {
+  it('comes from the issuer via Comprobify, with the attachments as multipart', async () => {
+    const message = renderDocumentEmail('maria@example.com', {
+      organization: 'Alfa <S.A.>',
+      documentLabel: 'Factura',
+      number: '001-001-000000001',
+      issueDate: '10/11/2026',
+      total: '127.00',
+      test: false,
+    });
+    expect(message.subject).toBe('Factura 001-001-000000001 de Alfa <S.A.>');
+    expect(message.html).toContain('Alfa &lt;S.A.&gt;');
+    const fetch = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
+    const provider = createMailgunProvider({
+      apiKey: 'key',
+      domain: 'mg.example.com',
+      region: 'us',
+      from: 'Comprobify <no-reply@comprobify.com>',
+      fetch,
+    });
+    await provider.send({
+      ...message,
+      attachments: [
+        { filename: 'RIDE.pdf', content: Buffer.from('%PDF-'), contentType: 'application/pdf' },
+      ],
+      variables: { 'document-id': 'doc-1' },
+    });
+    const [, init] = fetch.mock.calls[0] as [string, RequestInit];
+    const body = init.body as FormData;
+    expect(body).toBeInstanceOf(FormData);
+    expect(body.get('from')).toBe('"Alfa <S.A.> via Comprobify" <no-reply@comprobify.com>');
+    expect(body.get('v:document-id')).toBe('doc-1');
+    expect((body.get('attachment') as File).name).toBe('RIDE.pdf');
   });
 });

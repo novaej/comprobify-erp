@@ -16,6 +16,7 @@
     "@comprobify/config": "workspace:*",
     "@types/node": "24.19.2",
     "@types/node-forge": "1.3.14",
+    "@types/pdfkit": "0.17.7",
     "typescript": "6.0.3",
     "vitest": "5.0.5",
     "xml-crypto": "6.4.0"
@@ -24,8 +25,10 @@
     "@comprobify/db": "workspace:*",
     "@xmldom/xmldom": "0.8.15",
     "better-auth": "1.7.15",
+    "bwip-js": "4.11.4",
     "decimal.js": "10.6.0",
     "node-forge": "1.4.2",
+    "pdfkit": "0.20.2",
     "pg-boss": "12.38.0",
     "zod": "4.6.7"
   }

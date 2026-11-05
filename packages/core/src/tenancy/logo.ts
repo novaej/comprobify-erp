@@ -1,4 +1,4 @@
-import { eq, schema, type Database } from '@comprobify/db';
+import { eq, schema, type Database, type Tx } from '@comprobify/db';
 import { DomainError, hasFeature, type ActorContext } from '../kernel';
 
 export const LOGO_MAX_BYTES = 500 * 1024;
@@ -32,4 +32,18 @@ export async function companyLogo(ctx: ActorContext, db: Database): Promise<Logo
       ? { content: row.content, contentType: row.contentType as Logo['contentType'] }
       : null;
   });
+}
+
+// The worker's read, by tenant: the logo for a RIDE while the plan has RIDE_LOGO.
+export async function documentLogo(
+  tx: Tx,
+  tenantId: string,
+  features: readonly string[],
+): Promise<Buffer | null> {
+  if (!features.includes('RIDE_LOGO')) return null;
+  const [row] = await tx.db
+    .select({ content: schema.tenantLogos.content })
+    .from(schema.tenantLogos)
+    .where(eq(schema.tenantLogos.tenantId, tenantId));
+  return row?.content ?? null;
 }

@@ -4,6 +4,7 @@ export { DomainError, isDomainError, type DomainErrorDetails } from './errors';
 export {
   ecuadorDate,
   ecuadorDateTime,
+  ecuadorDateTimeDisplay,
   endOfEcuadorDay,
   startOfEcuadorMonth,
   startOfNextEcuadorMonth,

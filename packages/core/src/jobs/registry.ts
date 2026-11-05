@@ -57,6 +57,12 @@ export const queues = {
     options: { retryLimit: 5, retryDelay: 300, retryBackoff: true, expireInSeconds: 120 },
     concurrency: 2,
   },
+  // FR-DOC-11: the RIDE and XML to the buyer, on authorization or a manual resend.
+  'documents.email': {
+    payload: documentRef.extend({ resend: z.boolean() }),
+    options: { retryLimit: 5, retryDelay: 60, retryBackoff: true, expireInSeconds: 120 },
+    concurrency: 3,
+  },
   'sri.overdue': {
     payload: z.object({}),
     options: { retryLimit: 1, expireInSeconds: 300 },

@@ -29,3 +29,10 @@ export function endOfEcuadorDay(date: string): Date {
   const [year, month, day] = date.split('-').map(Number) as [number, number, number];
   return new Date(Date.UTC(year, month - 1, day + 1) + OFFSET_MS - 1);
 }
+
+// As printed on a RIDE: 10/11/2026 10:00:00, Quito wall time.
+export function ecuadorDateTimeDisplay(at: Date): string {
+  const [date, time] = ecuadorDateTime(at).split('T') as [string, string];
+  const [year, month, day] = date.split('-');
+  return `${day}/${month}/${year} ${time.slice(0, 8)}`;
+}

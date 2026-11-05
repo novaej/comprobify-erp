@@ -50,7 +50,7 @@ export const sampleFactura = (overrides: Partial<FacturaInput> = {}): FacturaInp
       additionalDetails: [],
     },
   ],
-  payments: [{ method: '20', amount: '127.33', term: 30, termUnit: 'dias' }],
+  payments: [{ method: '20', amount: '127.00', term: 30, termUnit: 'dias' }],
   additionalInfo: [{ name: 'Orden', value: 'OC-77' }],
   providerRuc: '1712345678001',
   ...overrides,

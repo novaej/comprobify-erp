@@ -129,6 +129,12 @@ A document is never moved into another month automatically; a person decides, an
 
 `findByAccessKey` resolves an old key to its document.
 
+**RIDE and buyer's copy** (FR-DOC-10, FR-DOC-11).
+
+- **RIDE:** `rideData` reads everything on the RIDE from the authorized XML. Only the logo is live. `renderRide` draws the A4 PDF with pdfkit and the access key's Code 128 barcode.
+- **Buyer's copy:** becoming `AUTHORIZED` enqueues `documents.email` in the same transaction. It sends the RIDE and SRI's `<autorizacion>` XML from "`<company>` via Comprobify", once, while the plan has `BUYER_EMAIL` and the buyer has an email. A person can resend it.
+- **Test environment:** in ambiente 1 the email says it is a test document (ADR-015).
+
 Every transition writes an event with SRI's raw answer. CI and the local stack always run the mock.
 
 ## Audit log

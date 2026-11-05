@@ -112,7 +112,7 @@ export async function reissueDocument(
     await db.withTenant({ tenantId: ref.tenantId }, async (tx) => {
       const current = await locked(tx, ref);
       if (current?.status === 'SEND_FAILED')
-        await applyFinalAnswer(tx, current, answer, now, 'reissue-check');
+        await applyFinalAnswer(deps.jobs, tx, current, answer, now, 'reissue-check');
     });
     return;
   }

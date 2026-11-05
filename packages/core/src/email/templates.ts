@@ -95,3 +95,35 @@ export function renderEmail(
 </body></html>`;
   return { to, subject: copy.subject, text, html };
 }
+
+export type DocumentEmailParams = {
+  organization: string;
+  documentLabel: string;
+  number: string;
+  issueDate: string;
+  total: string;
+  // SRI test environment: the buyer is told it has no tax validity.
+  test: boolean;
+};
+
+// FR-DOC-11: the buyer's copy, RIDE and XML attached. Spanish: the document is.
+export function renderDocumentEmail(to: string, params: DocumentEmailParams): EmailMessage {
+  const subject = `${params.test ? '[PRUEBAS] ' : ''}${params.documentLabel} ${params.number} de ${params.organization}`;
+  const lines = [
+    `${params.organization} le envía su ${params.documentLabel.toLowerCase()} electrónica ${params.number}, autorizada por el SRI.`,
+    `Fecha de emisión: ${params.issueDate}. Valor total: $${params.total}.`,
+    'Adjuntamos la representación impresa (RIDE) en PDF y el archivo XML autorizado.',
+    ...(params.test
+      ? ['Este es un documento de pruebas del SRI y no tiene validez tributaria.']
+      : []),
+  ];
+  const footer =
+    'Este correo se envió a través de Comprobify en nombre del emisor. Para cualquier consulta, comuníquese con el emisor.';
+  const text = `${lines.join('\n\n')}\n\n${footer}`;
+  const html = `<!doctype html><html lang="es"><body style="font-family:system-ui,sans-serif;color:#232b36">
+<h1 style="font-size:20px">${escapeHtml(subject)}</h1>
+${lines.map((line) => `<p>${escapeHtml(line)}</p>`).join('\n')}
+<p style="font-size:12px;color:#5b6573">${escapeHtml(footer)}</p>
+</body></html>`;
+  return { to, subject, text, html, fromName: `${params.organization} via Comprobify` };
+}

@@ -13,8 +13,10 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const nextConfig: NextConfig = {
   // Workspace packages ship TypeScript source.
   transpilePackages: ['@comprobify/config', '@comprobify/core', '@comprobify/db', '@comprobify/ui'],
-  // Loaded by Node at runtime; pino transports run in worker threads (ADR-008).
+  // Loaded by Node at runtime; pino transports run in worker threads (ADR-008), and pdfkit
+  // reads its font files from its own folder (the RIDE, FR-DOC-10).
   serverExternalPackages: [
+    'pdfkit',
     'pg',
     'pg-boss',
     'pino',

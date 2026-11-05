@@ -16,3 +16,5 @@ export type { ReissueDeps } from './reissue';
 export { voidDeadline, voidDocument, voidInput } from './void';
 export type { VoidInput } from './void';
 export { findByAccessKey } from './lookup';
+export { documentRide, emailDocument, resendDocumentEmail } from './ride';
+export type { DocumentEmailDeps } from './ride';

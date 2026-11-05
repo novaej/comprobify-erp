@@ -4,6 +4,7 @@ import {
   alertOverdueAuthorizations,
   checkAfterDeadline,
   checkAuthorization,
+  emailDocument,
   enqueueReissues,
   reissueDocument,
   sendDocument,
@@ -47,6 +48,9 @@ export async function registerHandlers(jobs: Jobs, deps: HandlerDeps): Promise<v
   });
   await jobs.work('sri.reissue', (job) =>
     reissueDocument({ ...sending, keyCipher: deps.keyCipher }, job.data),
+  );
+  await jobs.work('documents.email', (job) =>
+    emailDocument({ db: deps.db, provider: emailProvider, clock, logger }, job.data),
   );
   await jobs.work('sri.overdue', async () => {
     await alertOverdueAuthorizations(sending);

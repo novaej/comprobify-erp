@@ -181,6 +181,7 @@ type AuthorizationAnswer = Awaited<ReturnType<SriClient['authorization']>>;
 
 // SRI has the document after all: on to RECEIVED and its answer, through the machine.
 export async function applyFinalAnswer(
+  jobs: SendingDeps['jobs'],
   tx: Tx,
   row: Row,
   answer: Exclude<AuthorizationAnswer, { status: 'PENDING' }>,
@@ -189,19 +190,35 @@ export async function applyFinalAnswer(
 ): Promise<Row> {
   const details = { operation, messages: summary(answer.messages) };
   const received = await toReceived(tx, row, now, details, answer.raw);
-  if (answer.status === 'AUTHORIZED')
-    return transition(
-      tx,
-      received,
-      'AUTHORIZED',
-      {
-        authorizationNumber: answer.authorizationNumber,
-        authorizedAt: answer.authorizedAt,
-        authorizationXml: answer.authorizationXml,
-      },
-      { details, sriResponse: answer.raw },
-    );
+  if (answer.status === 'AUTHORIZED') return authorize(jobs, tx, received, answer, details);
   return transition(tx, received, 'NOT_AUTHORIZED', {}, { details, sriResponse: answer.raw });
+}
+
+// FR-DOC-11: the buyer's copy goes out in the same transaction as the authorization.
+async function authorize(
+  jobs: SendingDeps['jobs'],
+  tx: Tx,
+  row: Row,
+  answer: Extract<AuthorizationAnswer, { status: 'AUTHORIZED' }>,
+  details: Record<string, unknown>,
+): Promise<Row> {
+  const authorized = await transition(
+    tx,
+    row,
+    'AUTHORIZED',
+    {
+      authorizationNumber: answer.authorizationNumber,
+      authorizedAt: answer.authorizedAt,
+      authorizationXml: answer.authorizationXml,
+    },
+    { details, sriResponse: answer.raw },
+  );
+  await jobs.enqueue(tx, 'documents.email', {
+    tenantId: row.tenantId,
+    documentId: row.id,
+    resend: false,
+  });
+  return authorized;
 }
 
 // FR-DOC-4: once the issue day is over, one read-only question to SRI.
@@ -224,7 +241,7 @@ export async function checkAfterDeadline(deps: SendingDeps, ref: DocumentRef): P
     if (!current || !SENDABLE.includes(current.status) || current.deadlineCheckedAt) return;
     const checked = { deadlineCheckedAt: now, sriUnreachable: answer === null };
     if (answer && answer.status !== 'PENDING') {
-      current = await applyFinalAnswer(tx, current, answer, now, 'deadline-check');
+      current = await applyFinalAnswer(deps.jobs, tx, current, answer, now, 'deadline-check');
       await update(tx, current, checked);
       return;
     }
@@ -261,20 +278,10 @@ export async function checkAuthorization(deps: SendingDeps, ref: DocumentRef): P
     const current = await locked(tx, ref);
     if (current?.status !== 'RECEIVED') return;
     if (answer?.status === 'AUTHORIZED') {
-      await transition(
-        tx,
-        current,
-        'AUTHORIZED',
-        {
-          authorizationNumber: answer.authorizationNumber,
-          authorizedAt: answer.authorizedAt,
-          authorizationXml: answer.authorizationXml,
-        },
-        {
-          details: { operation: 'authorization', messages: summary(answer.messages) },
-          sriResponse: answer.raw,
-        },
-      );
+      await authorize(deps.jobs, tx, current, answer, {
+        operation: 'authorization',
+        messages: summary(answer.messages),
+      });
       return;
     }
     if (answer?.status === 'NOT_AUTHORIZED') {

@@ -3,9 +3,9 @@ import type { EmailProvider } from './provider';
 import { emailLocale, emailTemplate, renderEmail } from './templates';
 
 export { createLogProvider, createMailgunProvider } from './provider';
-export type { EmailMessage, EmailProvider, MailgunOptions } from './provider';
-export { emailLocale, emailTemplate, renderEmail } from './templates';
-export type { EmailLocale, EmailParams, EmailTemplate } from './templates';
+export type { EmailAttachment, EmailMessage, EmailProvider, MailgunOptions } from './provider';
+export { emailLocale, emailTemplate, renderDocumentEmail, renderEmail } from './templates';
+export type { DocumentEmailParams, EmailLocale, EmailParams, EmailTemplate } from './templates';
 
 // The email.send job payload. The URL may hold a token; jobs are purged by pg-boss retention.
 export const sendEmailPayload = z.object({
