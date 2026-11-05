@@ -118,6 +118,8 @@ jobs:
       # Playwright migrates the E2E database before it starts the app.
       - run: pnpm build
       - run: pnpm --filter @comprobify/e2e-tests exec playwright install --with-deps chromium
+      # The app validates SRI XML with xmllint when an invoice is issued (ADR-013).
+      - run: command -v xmllint || (sudo apt-get update && sudo apt-get install -y libxml2-utils)
       - run: pnpm test:e2e
       - if: failure()
         uses: actions/upload-artifact@v7
