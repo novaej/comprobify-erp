@@ -1,4 +1,4 @@
-import { loadWorkerEnv } from '@comprobify/config/env';
+import { emailProviderOf, loadWorkerEnv } from '@comprobify/config/env';
 import { createLogger } from '@comprobify/config/logger';
 import {
   createJobs,
@@ -6,9 +6,12 @@ import {
   createKeyCipher,
   createMailgunProvider,
   createMockSri,
+  createNoEmailProvider,
   createSriClient,
   registerHandlers,
   systemClock,
+  withRedirect,
+  withTestBanner,
 } from '@comprobify/core';
 import { createDatabase } from '@comprobify/db';
 import * as Sentry from '@sentry/node';
@@ -28,16 +31,26 @@ if (env.SENTRY_DSN) {
 const db = createDatabase({ connectionString: env.DATABASE_URL, logger });
 await db.assertSafeConnection();
 
-// Env validation allows the log provider only when APP_ENV is local.
-const emailProvider =
-  env.MAILGUN_API_KEY && env.MAILGUN_DOMAIN
+// ADR-015. The env allows log only locally and the redirect never in production.
+const provider = emailProviderOf(env);
+let emailProvider =
+  provider === 'mailgun'
     ? createMailgunProvider({
-        apiKey: env.MAILGUN_API_KEY,
-        domain: env.MAILGUN_DOMAIN,
+        apiKey: env.MAILGUN_API_KEY!,
+        domain: env.MAILGUN_DOMAIN!,
         region: env.MAILGUN_REGION,
         from: env.EMAIL_FROM,
+        documentsFrom: env.EMAIL_FROM_DOCUMENTS,
       })
-    : createLogProvider(logger);
+    : provider === 'log'
+      ? createLogProvider(logger)
+      : createNoEmailProvider();
+if (provider === 'none') logger.warn('Email is off: nothing is sent', { event: 'email.off' });
+if (env.EMAIL_REDIRECT_TO) {
+  emailProvider = withRedirect(emailProvider, env.EMAIL_REDIRECT_TO);
+  logger.warn('Every email goes to the test recipient', { event: 'email.redirected' });
+}
+if (env.APP_ENV === 'staging') emailProvider = withTestBanner(emailProvider);
 
 // ADR-014: the mock answers like SRI; the env refuses it in production.
 const sri = env.SRI_MOCK_MODE

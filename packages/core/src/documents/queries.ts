@@ -286,34 +286,35 @@ export async function getDocument(
       .where(and(eq(documents.id, id), restricted(ctx)));
     if (!row) throw new DomainError('NOT_FOUND', 'Document not found');
     const current = and(eq(documentLines.documentId, id), eq(documentLines.revision, row.revision));
-    const [lines, payments, events, reissues] = await Promise.all([
-      tx.select().from(documentLines).where(current).orderBy(asc(documentLines.position)),
-      tx
-        .select()
-        .from(documentPayments)
-        .where(
-          and(eq(documentPayments.documentId, id), eq(documentPayments.revision, row.revision)),
-        )
-        .orderBy(asc(documentPayments.position)),
-      // The raw SRI answers stay out: kept for support, never shown (FR-DOC-13).
-      tx
-        .select({
-          id: documentEvents.id,
-          type: documentEvents.type,
-          fromStatus: documentEvents.fromStatus,
-          toStatus: documentEvents.toStatus,
-          details: documentEvents.details,
-          occurredAt: documentEvents.occurredAt,
-        })
-        .from(documentEvents)
-        .where(eq(documentEvents.documentId, id))
-        .orderBy(asc(documentEvents.occurredAt), asc(documentEvents.id)),
-      tx
-        .select()
-        .from(documentReissues)
-        .where(eq(documentReissues.documentId, id))
-        .orderBy(asc(documentReissues.createdAt)),
-    ]);
+    // One connection per transaction: one query at a time.
+    const lines = await tx
+      .select()
+      .from(documentLines)
+      .where(current)
+      .orderBy(asc(documentLines.position));
+    const payments = await tx
+      .select()
+      .from(documentPayments)
+      .where(and(eq(documentPayments.documentId, id), eq(documentPayments.revision, row.revision)))
+      .orderBy(asc(documentPayments.position));
+    // The raw SRI answers stay out: kept for support, never shown (FR-DOC-13).
+    const events = await tx
+      .select({
+        id: documentEvents.id,
+        type: documentEvents.type,
+        fromStatus: documentEvents.fromStatus,
+        toStatus: documentEvents.toStatus,
+        details: documentEvents.details,
+        occurredAt: documentEvents.occurredAt,
+      })
+      .from(documentEvents)
+      .where(eq(documentEvents.documentId, id))
+      .orderBy(asc(documentEvents.occurredAt), asc(documentEvents.id));
+    const reissues = await tx
+      .select()
+      .from(documentReissues)
+      .where(eq(documentReissues.documentId, id))
+      .orderBy(asc(documentReissues.createdAt));
     return {
       id: row.id,
       number: documentNumber(row.series, row.sequential),
@@ -471,20 +472,16 @@ export async function correctionDraft(
     if (!row) throw new DomainError('NOT_FOUND', 'Document not found');
     if (!documentActions(ctx, row).correct)
       throw new DomainError('NOT_CORRECTABLE', 'This document can not be corrected now');
-    const [lines, payments] = await Promise.all([
-      tx
-        .select()
-        .from(documentLines)
-        .where(and(eq(documentLines.documentId, id), eq(documentLines.revision, row.revision)))
-        .orderBy(asc(documentLines.position)),
-      tx
-        .select()
-        .from(documentPayments)
-        .where(
-          and(eq(documentPayments.documentId, id), eq(documentPayments.revision, row.revision)),
-        )
-        .orderBy(asc(documentPayments.position)),
-    ]);
+    const lines = await tx
+      .select()
+      .from(documentLines)
+      .where(and(eq(documentLines.documentId, id), eq(documentLines.revision, row.revision)))
+      .orderBy(asc(documentLines.position));
+    const payments = await tx
+      .select()
+      .from(documentPayments)
+      .where(and(eq(documentPayments.documentId, id), eq(documentPayments.revision, row.revision)))
+      .orderBy(asc(documentPayments.position));
     // The fields the company typed, without the ones issuing adds again.
     const added = new Set(['Email', 'RUC Proveedor']);
     const additionalInfo = row.signedXml

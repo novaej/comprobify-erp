@@ -47,6 +47,13 @@ It also left out the legends the Ficha requires on the RIDE: agente de retenció
 
 **The test twin emails too, marked as a test.** A document in SRI's test environment (ambiente 1) sends the same email, with `[PRUEBAS]` in the subject and a line saying it has no tax validity. A company can then see its buyers' email before going live, and nobody mistakes it for a real invoice.
 
+**Senders, the test recipient and the off switch.** These carry over the old system's settings:
+
+- **Two senders.** Buyers' copies come from `EMAIL_FROM_DOCUMENTS`, falling back to `EMAIL_FROM`; account emails come from `EMAIL_FROM`.
+- **The test recipient.** `EMAIL_REDIRECT_TO` sends every email to one address instead. The subject gets `[REDIRIGIDO]`, and a note at the top names who the email was for. It's for a restored copy of real data, where it keeps real buyers from getting emails (CLAUDE.md mistake 13). Unlike the old system, which only warned, the env refuses it in production, so a leftover setting can't divert real invoices.
+- **The staging banner.** On `APP_ENV=staging` every email opens with a banner saying it comes from a test system.
+- **The off switch.** `EMAIL_PROVIDER=none` sends nothing. The provider reports what happened (`sent`, `logged`, `skipped`), so a skipped buyer's copy gets no `EMAILED` event, and the timeline never claims an email that didn't go out. `log` writes emails to the log and is allowed locally only, since links carry tokens.
+
 ## Consequences
 
 ### Positive

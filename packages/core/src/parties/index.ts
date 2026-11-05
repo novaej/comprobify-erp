@@ -95,6 +95,33 @@ export async function listClients(
   );
 }
 
+// What an invoice may change on its client, from the form (FR-MD-2): never the
+// identification, which would make it another client.
+export const buyerChangesInput = z.object({
+  name: line(300),
+  emails: z.array(z.email().max(254).toLowerCase()).max(5),
+  phone: line(30).nullable(),
+  address: line(300).nullable(),
+});
+export type BuyerChanges = z.input<typeof buyerChangesInput>;
+
+// Inside the invoice's transaction, so the client and the document change together.
+export async function updateBuyerDetails(
+  ctx: ActorContext,
+  tx: Tx,
+  id: string,
+  raw: BuyerChanges,
+): Promise<void> {
+  canManage(ctx);
+  const changes = buyerChangesInput.parse(raw);
+  const [row] = await tx.db
+    .update(schema.clients)
+    .set({ ...changes, updatedAt: sql`now()` })
+    .where(and(eq(schema.clients.id, id), eq(schema.clients.tenantId, ctx.tenantId)))
+    .returning({ id: schema.clients.id });
+  if (!row) throw new DomainError('NOT_FOUND', 'Client not found');
+}
+
 // The buyer of a new document, read inside its transaction. Issuing needs only
 // documents.issue: the plan losing CLIENTS keeps existing clients usable (FR-PLAN-3).
 export async function buyerForDocument(

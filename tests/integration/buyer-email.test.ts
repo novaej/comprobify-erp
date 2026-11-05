@@ -7,6 +7,7 @@ import {
   createJobs,
   createKeyCipher,
   createMockSri,
+  createNoEmailProvider,
   createSriClient,
   documentRide,
   emailDocument,
@@ -35,7 +36,7 @@ describe('the RIDE and the buyer’s copy', () => {
   const provider = {
     send: (message: EmailMessage) => {
       sent.push(message);
-      return Promise.resolve();
+      return Promise.resolve('sent' as const);
     },
   };
   let db: Database;
@@ -226,5 +227,27 @@ describe('the RIDE and the buyer’s copy', () => {
     ).rejects.toMatchObject({
       code: 'FEATURE_NOT_ENABLED',
     });
+  });
+
+  it('writes no EMAILED event when email is off (EMAIL_PROVIDER=none)', async () => {
+    await setOverride(await superAdmin(db), db, {
+      realTenantId: org.realTenantId,
+      featureKey: 'BUYER_EMAIL',
+      effect: 'GRANT',
+      limitValue: null,
+      reason: 'test',
+    });
+    const document = await authorized(clientId);
+    await emailDocument(
+      { db, provider: createNoEmailProvider(), clock, logger: testLogger() },
+      { ...ref(document), resend: false },
+    );
+    const events = await db.withTenant({ tenantId: org.twinTenantId }, ({ db: tx }) =>
+      tx
+        .select()
+        .from(schema.documentEvents)
+        .where(eq(schema.documentEvents.documentId, document.id)),
+    );
+    expect(events.map((event) => event.type)).not.toContain('EMAILED');
   });
 });

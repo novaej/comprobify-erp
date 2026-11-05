@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   e2eEnvSchema,
+  emailProviderOf,
   InvalidEnvError,
   loadE2eEnv,
   loadMigrateEnv,
@@ -93,10 +94,44 @@ describe('auth and email', () => {
     expect(loadWorkerEnv(worker)).toMatchObject({ MAILGUN_REGION: 'us' });
   });
 
-  it('requires Mailgun outside local', () => {
-    const message = failure(() => loadWorkerEnv({ ...worker, APP_ENV: 'staging' }));
-    expect(message).toMatch(/MAILGUN_API_KEY: is required outside local/);
-    expect(message).toMatch(/MAILGUN_DOMAIN: is required outside local/);
+  it('requires Mailgun outside local, unless sending is off', () => {
+    expect(failure(() => loadWorkerEnv({ ...worker, APP_ENV: 'staging' }))).toMatch(
+      /MAILGUN_API_KEY: is required outside local/,
+    );
+    expect(
+      emailProviderOf(loadWorkerEnv({ ...worker, APP_ENV: 'staging', EMAIL_PROVIDER: 'none' })),
+    ).toBe('none');
+    expect(
+      failure(() =>
+        loadWorkerEnv({ ...worker, EMAIL_PROVIDER: 'mailgun', MAILGUN_DOMAIN: 'mg.example.com' }),
+      ),
+    ).toMatch(/MAILGUN_API_KEY: is required to send through Mailgun/);
+    // Links with tokens never reach a shared log.
+    expect(
+      failure(() => loadWorkerEnv({ ...worker, APP_ENV: 'staging', EMAIL_PROVIDER: 'log' })),
+    ).toMatch(/EMAIL_PROVIDER: log is local only/);
+  });
+
+  it('chooses Mailgun when its keys are set, and the log otherwise, locally', () => {
+    const keys = { MAILGUN_API_KEY: 'key', MAILGUN_DOMAIN: 'mg.example.com' };
+    expect(emailProviderOf(loadWorkerEnv({ ...worker, ...keys }))).toBe('mailgun');
+    expect(emailProviderOf(loadWorkerEnv(worker))).toBe('log');
+  });
+
+  it('refuses the test recipient in production', () => {
+    const production = {
+      ...worker,
+      APP_ENV: 'production',
+      MAILGUN_API_KEY: 'key',
+      MAILGUN_DOMAIN: 'mg.example.com',
+      EMAIL_REDIRECT_TO: 'owner@example.com',
+    };
+    expect(failure(() => loadWorkerEnv(production))).toMatch(
+      /EMAIL_REDIRECT_TO: must be unset in production/,
+    );
+    expect(loadWorkerEnv({ ...production, APP_ENV: 'staging' })).toMatchObject({
+      EMAIL_REDIRECT_TO: 'owner@example.com',
+    });
   });
 });
 
@@ -168,13 +203,15 @@ describe('.env.example', () => {
 
 // ADR-014: only the owner sends to SRI, from the gate checklist. Everything automated
 // answers from the mock.
-describe('the SRI mock', () => {
+describe('the SRI mock and email in automated runs', () => {
   const read = (path: string) => readFileSync(new URL(`../../../${path}`, import.meta.url), 'utf8');
 
   it('is on in CI, in the local stack and in the example env', () => {
     expect(read('.github/workflows/ci.yml')).toMatch(/^ {2}SRI_MOCK_MODE: 'true'$/m);
     const stack = read('infra/compose.yaml');
     expect(stack.match(/SRI_MOCK_MODE: 'true'/g)).toHaveLength(2);
+    // Nor does the stack's worker email anyone (ADR-015).
+    expect(stack).toMatch(/^ {6}EMAIL_PROVIDER: log$/m);
     expect(read('.env.example')).toMatch(/^SRI_MOCK_MODE=true$/m);
     expect(read('.github/workflows/ci.yml')).not.toMatch(/SRI_(TEST|PRODUCTION)_URL/);
   });

@@ -15,7 +15,9 @@ export type MockOutcome =
   | { kind: 'returned'; code: string; message: string }
   | { kind: 'pending' }
   | { kind: 'notAuthorized'; code: string; message: string }
-  | { kind: 'voided' };
+  | { kind: 'voided' }
+  // Consulta de validez for a document older than SRI checks (Ficha 8.2.3).
+  | { kind: 'outOfRange' };
 
 type Service = 'reception' | 'authorization' | 'validity';
 type Held = { xml: string; number: string; state: 'PROCESSING' | 'AUTHORIZED' | 'VOIDED' };
@@ -121,6 +123,11 @@ export function createMockSri(
 
   const onValidity = (key: string, outcome?: MockOutcome) => {
     const known = held.get(key);
+    if (outcome?.kind === 'outOfRange')
+      return validity(
+        key,
+        `<estadoConsulta>RECHAZADA</estadoConsulta>${messages([{ ...message('99', 'ERROR AL CONSULTAR DATOS DEL SERVICIO WEB'), additionalInfo: 'No es posible validar la clave de acceso ya que la fecha de emision esta fuera del rango permitido.' }])}`,
+      );
     if (outcome?.kind === 'voided' && known) known.state = 'VOIDED';
     if (!known && options.unknownKeys === 'VOIDED')
       return validity(key, '<mensajes/><estadoAutorizacion>ANULADO</estadoAutorizacion>');

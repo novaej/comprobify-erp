@@ -20,12 +20,18 @@ const runtimeShape = {
   SRI_MOCK_MODE: flag.default(false),
 };
 
-// Mailgun is optional only locally, where emails are logged instead (ADR-009).
+// Email (ADR-015). mailgun sends, log writes to the log (local only: links carry tokens),
+// none sends nothing. Unset: mailgun with keys, log locally without them.
 const mailShape = {
+  EMAIL_PROVIDER: z.enum(['mailgun', 'log', 'none']).optional(),
   MAILGUN_API_KEY: z.string().optional(),
   MAILGUN_DOMAIN: z.string().optional(),
   MAILGUN_REGION: z.enum(['us', 'eu']).default('us'),
   EMAIL_FROM: z.string().default('Comprobify <no-reply@comprobify.com>'),
+  // The buyer's copy of a document; EMAIL_FROM when unset.
+  EMAIL_FROM_DOCUMENTS: z.string().optional(),
+  // Every email to this one address instead, for a copy of real data. Refused in production.
+  EMAIL_REDIRECT_TO: z.email().optional(),
 };
 
 function refuseMockInProduction(
@@ -41,19 +47,45 @@ function refuseMockInProduction(
   }
 }
 
-function requireMailOutsideLocal(
-  env: {
-    APP_ENV: string;
-    MAILGUN_API_KEY?: string | undefined;
-    MAILGUN_DOMAIN?: string | undefined;
-  },
-  ctx: z.RefinementCtx,
-): void {
-  if (env.APP_ENV === 'local') return;
-  for (const name of ['MAILGUN_API_KEY', 'MAILGUN_DOMAIN'] as const) {
-    if (!env[name])
-      ctx.addIssue({ code: 'custom', path: [name], message: 'is required outside local' });
-  }
+type MailEnv = {
+  APP_ENV: string;
+  EMAIL_PROVIDER?: 'mailgun' | 'log' | 'none' | undefined;
+  MAILGUN_API_KEY?: string | undefined;
+  MAILGUN_DOMAIN?: string | undefined;
+  EMAIL_REDIRECT_TO?: string | undefined;
+};
+
+// The provider the worker uses, once the env is valid.
+export function emailProviderOf(env: MailEnv): 'mailgun' | 'log' | 'none' {
+  if (env.EMAIL_PROVIDER) return env.EMAIL_PROVIDER;
+  return env.MAILGUN_API_KEY && env.MAILGUN_DOMAIN ? 'mailgun' : 'log';
+}
+
+function checkMail(env: MailEnv, ctx: z.RefinementCtx): void {
+  const provider = emailProviderOf(env);
+  if (provider === 'mailgun')
+    for (const name of ['MAILGUN_API_KEY', 'MAILGUN_DOMAIN'] as const) {
+      if (!env[name])
+        ctx.addIssue({
+          code: 'custom',
+          path: [name],
+          message: 'is required to send through Mailgun',
+        });
+    }
+  if (provider === 'log' && env.APP_ENV !== 'local')
+    ctx.addIssue({
+      code: 'custom',
+      path: env.EMAIL_PROVIDER ? ['EMAIL_PROVIDER'] : ['MAILGUN_API_KEY'],
+      message: env.EMAIL_PROVIDER
+        ? 'log is local only: it writes links with tokens to the log'
+        : 'is required outside local (or set EMAIL_PROVIDER=none)',
+    });
+  if (env.EMAIL_REDIRECT_TO && env.APP_ENV === 'production')
+    ctx.addIssue({
+      code: 'custom',
+      path: ['EMAIL_REDIRECT_TO'],
+      message: "must be unset in production: it would divert real buyers' invoices",
+    });
 }
 
 // AES-256-GCM key for each company's stored certificate private key (FR-ONB-3); it never
@@ -113,7 +145,7 @@ export const workerEnvSchema = z
   .object({ ...runtimeShape, ...mailShape, ...sriShape, CERT_ENCRYPTION_KEY: certificateKey })
   .superRefine((env, ctx) => {
     refuseMockInProduction(env, ctx);
-    requireMailOutsideLocal(env, ctx);
+    checkMail(env, ctx);
   });
 
 export const migrateEnvSchema = z.object({

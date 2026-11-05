@@ -402,7 +402,16 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     });
     await client.fill('María');
     await client.press('Enter');
-    await expect(page.getByText('María López')).toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'Nombre o razón social' })).toHaveValue(
+      'María López',
+    );
+    // An edit to the client is saved with the invoice.
+    await page
+      .getByRole('textbox', { name: 'Dirección', exact: true })
+      .fill('Av. Amazonas N24-03, Quito');
+    await expect(
+      page.getByText('Los cambios se guardan en el cliente al emitir la factura.'),
+    ).toBeVisible();
 
     // A free-text line, typed field by field with Enter, which opens the next line.
     const line = (number: number) => page.getByRole('group', { name: `Línea ${number}` });
@@ -440,13 +449,13 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     const documentId = page.url().split('/').at(-1)!;
     await look(page, 'document');
 
+    await expect(page.getByRole('status').filter({ hasText: 'se actualiza sola' })).toBeVisible();
     await runSri(documentId, 'authorize');
-    await expect(async () => {
-      await page.reload();
-      await expect(page.getByRole('heading', { level: 1 })).toContainText('Autorizado', {
-        timeout: 1000,
-      });
-    }).toPass({ timeout: 30_000 });
+    // No reload: the page follows SRI's answer by itself.
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Autorizado', {
+      timeout: 30_000,
+    });
+    await expect(page.getByRole('main')).toContainText('Av. Amazonas N24-03, Quito');
     await expect(page.getByRole('main')).toContainText('Autorizado por el SRI');
     await look(page, 'document-authorized');
 

@@ -78,6 +78,9 @@ The area also requires two-step verification, so set it up on that account befor
 | `AUTH_SECRET` | web | At least 32 characters. Signs session cookies and tokens; rotating it signs everyone out. |
 | `MAILGUN_API_KEY`, `MAILGUN_DOMAIN` | worker | Required outside `local`. Locally, emails are logged instead. |
 | `MAILGUN_REGION` | worker | `us` (default) or `eu` |
+| `EMAIL_PROVIDER` | worker | `mailgun` sends, `log` writes each email to the log (local only), `none` sends nothing. Unset: `mailgun` with the keys, `log` locally without them (ADR-015) |
+| `EMAIL_FROM_DOCUMENTS` | worker | The address buyers' copies come from, as "`<company>` via Comprobify". Unset: `EMAIL_FROM` |
+| `EMAIL_REDIRECT_TO` | worker | Every email to this address instead, marked with who it was for: for a copy of real data or a demo. Refused in production. Staging also marks every email as a test |
 | `EMAIL_FROM` | worker | Sender address |
 | `SRI_MOCK_MODE` | web, worker | Answers like SRI without calling it (ADR-014). Refused when `APP_ENV=production`; forced on in the local stack and CI |
 | `SRI_TEST_URL`, `SRI_PRODUCTION_URL` | web, worker | Base URLs of SRI's services; unset means SRI's own |

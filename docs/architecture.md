@@ -143,6 +143,10 @@ The form's live totals use exact integer arithmetic with ADR-012's rounding (`ap
 - Enter moves along the line and selects what's in the next field.
 - Enter in the discount opens a new line.
 
+The client's name, emails, phone and address can be edited in the form. A user with `clients.manage` saves those edits with the invoice: `createInvoice` updates the client through `parties` in the same transaction. The identification never changes there, since a different one is a different client.
+
+While SRI hasn't answered, the detail page refreshes itself. It refreshes quickly at first, then every half minute, and never while the tab is hidden. Refreshing isn't user activity, so it never keeps an idle session alive (FR-USR-2).
+
 **Actions** (FR-DOC-6 to FR-DOC-8, FR-DOC-11). `documentActions` decides what a document offers: correct, re-issue, void, resend. It applies the same rules as the actions themselves, plus the user's role and plan, and the detail page shows only those.
 
 - **Correct:** opens the invoice form filled from `correctionDraft` (the lines, payments, client and additional information as last signed).

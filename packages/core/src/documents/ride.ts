@@ -110,7 +110,7 @@ export async function emailDocument(
     total: data.total,
     test: row.ambiente !== '2',
   });
-  await provider.send({
+  const result = await provider.send({
     ...message,
     attachments: [
       { filename: `RIDE ${name}.pdf`, content: pdf, contentType: 'application/pdf' },
@@ -123,12 +123,26 @@ export async function emailDocument(
     variables: { 'document-id': row.id, 'tenant-id': row.tenantId },
   });
 
+  // EMAIL_PROVIDER=none: nothing went out, so the timeline says nothing.
+  if (result === 'skipped') {
+    logger.info("The buyer's copy was not sent: email is off", {
+      event: 'documents.email_skipped',
+      tenantId: row.tenantId,
+      accessKey: row.accessKey,
+    });
+    return;
+  }
   await db.withTenant({ tenantId: job.tenantId }, ({ db: tx }) =>
     tx.insert(schema.documentEvents).values({
       tenantId: row.tenantId,
       documentId: row.id,
       type: 'EMAILED',
-      details: { to: row.buyerEmail, resend: job.resend },
+      details: {
+        to: row.buyerEmail,
+        resend: job.resend,
+        // Written to the log, not sent: local only.
+        ...(result === 'logged' ? { logged: true } : {}),
+      },
     }),
   );
   logger.info('Sent the document to the buyer', {

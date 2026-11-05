@@ -50,7 +50,9 @@ export async function invoiceFormData(actor: ActorContext) {
       idTypeLabel: tSri(`idTypes.${client.idType as '04'}`),
       identification: client.identification,
       name: client.name,
-      email: client.emails[0] ?? null,
+      emails: client.emails,
+      phone: client.phone,
+      address: client.address,
     })),
     paymentMethods: SRI_PAYMENT_METHODS.map((code) => ({
       value: code,
@@ -58,5 +60,6 @@ export async function invoiceFormData(actor: ActorContext) {
     })),
     termUnits: SRI_TERM_UNITS.map((code) => ({ value: code, label: tSri(`termUnits.${code}`) })),
     consumerFinalMax: env.CONSUMER_FINAL_MAX_AMOUNT,
+    canEditClient: canClients && actor.permissions.includes('clients.manage'),
   };
 }

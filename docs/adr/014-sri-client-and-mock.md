@@ -48,6 +48,8 @@ The job retries those and nothing else. A clean SRI answer is returned as data a
 
 Every result keeps the raw response, for the document's timeline (FR-DOC-13).
 
+Consulta de validez only checks documents within a date range. Outside it, SRI answers RECHAZADA with error 99, "fecha de emision esta fuera del rango permitido". Voiding treats that answer as "SRI can't confirm", the same as SRI being down, and offers the user's attestation instead of calling the document not voided.
+
 **Responses are parsed as XML.** `@xmldom/xmldom` reads them, matching elements by local name under SRI's prefixed wrappers. It reads the authorized XML whether it comes as CDATA or escaped. It already sits in the dependency tree for the signer's tests, and it doesn't resolve external entities.
 
 **The endpoint comes from the document's ambiente.** `1` goes to SRI test, `2` to production. The ambiente is decided once, when the document is created (FR-ONB-6), so the client never decides it again. Both base URLs default to SRI's and can be overridden, for the mock or a proxy.

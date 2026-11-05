@@ -1130,7 +1130,8 @@
         "rideView": "View RIDE",
         "xml": "Download XML",
         "rideLater": "The RIDE will be available once SRI authorizes the document."
-      }
+      },
+      "waiting": "Waiting for SRI's answer. This page updates itself."
     },
     "pendingLink": "Pending",
     "pending": {
@@ -1155,11 +1156,11 @@
       "reissueConfirm": "Re-issue dated {date}",
       "reissued": "Re-issue under way. The status updates in a few seconds.",
       "voidTitle": "Mark the invoice as voided?",
-      "voidDescription": "SRI doesn't void through its services: void it on SRI's portal first, until {deadline}. Here we check with SRI that it shows as voided.",
+      "voidDescription": "First void the invoice on SRI's portal (SRI en línea), by {deadline} at the latest. Then confirm here: we'll ask SRI and, if it already shows as voided, it's voided in Comprobify too.",
       "voidConfirm": "Mark as voided",
       "voided": "Invoice voided.",
-      "attestTitle": "SRI isn't answering now",
-      "attestDescription": "The void couldn't be checked with SRI. If you already voided it on the portal, you can confirm it yourself. It's recorded in the history.",
+      "attestTitle": "SRI can't confirm it now",
+      "attestDescription": "The void couldn't be checked with SRI: it isn't answering, or it no longer checks documents from that date. If you already voided it on the portal, you can confirm it yourself. It's recorded in the history.",
       "attestConfirm": "I confirm I voided it on the portal",
       "resendTitle": "Resend to the buyer?",
       "resendDescription": "The RIDE and the authorized XML are sent again to:",
@@ -1186,7 +1187,13 @@
       "consumerFinalHint": "No buyer details. Up to {max} per invoice.",
       "change": "Change client",
       "noClients": "No matching clients.",
-      "noEmail": "No email: they won't get the invoice by email."
+      "identification": "Identification",
+      "name": "Name or legal name",
+      "emails": "Emails",
+      "emailsHint": "Separated by commas. All of them get the invoice.",
+      "phone": "Phone",
+      "address": "Address",
+      "savedOnIssue": "The changes are saved on the client when the invoice is issued."
     },
     "lines": {
       "title": "Lines",
@@ -1235,7 +1242,7 @@
     },
     "submit": "Issue invoice",
     "confirmTitle": "Issue the invoice?",
-    "confirmDescription": "It's signed and sent to SRI. It can't be deleted afterwards: if SRI returns it, it's corrected with the same number.",
+    "confirmDescription": "It will be signed with the company's certificate and sent to SRI. An issued invoice isn't deleted: if SRI returns it, you can correct it and send it again with the same number.",
     "confirmDetail": "{buyer}: {total}",
     "issued": "Invoice {number} issued.",
     "correct": {

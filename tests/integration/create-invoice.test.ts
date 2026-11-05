@@ -330,4 +330,51 @@ describe('creating an invoice', () => {
     );
     expect(row!.ambiente).toBe('2');
   });
+
+  it('saves edits to the client with the invoice, and neither without the permission', async () => {
+    const owner = await actor(org.twinTenantId);
+    const point = await pointOf(owner);
+    const client = await createClient(owner, db, {
+      idType: '05',
+      identification: '0912345675',
+      name: 'Pedro Ruiz',
+      emails: ['pedro@example.com'],
+    });
+    const changes = {
+      name: 'Pedro Ruiz Vera',
+      emails: ['pedro@example.com', 'compras@example.com'],
+      phone: '0991234567',
+      address: 'Guayaquil',
+    };
+    const issued = await createInvoice(
+      owner,
+      db,
+      invoice(point, { clientId: client.id, clientChanges: changes }),
+      deps,
+    );
+    const { document } = await rowsOf(org.twinTenantId, issued.id);
+    expect(document).toMatchObject({
+      buyerName: 'Pedro Ruiz Vera',
+      buyerAddress: 'Guayaquil',
+      buyerEmail: 'pedro@example.com,compras@example.com',
+    });
+    const [saved] = await db.withTenant({ tenantId: org.twinTenantId }, ({ db: tx }) =>
+      tx.select().from(schema.clients).where(eq(schema.clients.id, client.id)),
+    );
+    expect(saved).toMatchObject(changes);
+
+    // A seller who can't manage clients: refused, and nothing is issued.
+    const seller = { ...owner, permissions: ['documents.issue', 'clients.read'] };
+    const before = (await rowsOf(org.twinTenantId, issued.id)).document.sequential;
+    await expect(
+      createInvoice(
+        seller,
+        db,
+        invoice(point, { clientId: client.id, clientChanges: { ...changes, name: 'Otro' } }),
+        deps,
+      ),
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    const next = await createInvoice(owner, db, invoice(point), deps);
+    expect(next.sequential).toBe(before + 1);
+  });
 });

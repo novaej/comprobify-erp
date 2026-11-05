@@ -342,6 +342,14 @@ describe('correcting, re-issuing by hand and voiding', () => {
       voidDocument(actor, db, down.id, { attestedVoidedAtSri: true }, { sri }),
     ).resolves.toEqual({ status: 'VOIDED', attested: true });
     expect((await lastEvent(down)).details).toMatchObject({ attested: true });
+
+    // Older than SRI checks: it can't confirm either way, so the attestation is offered.
+    const old = await authorized(clientId);
+    mock.queue('validity', { kind: 'outOfRange' });
+    await expect(voidDocument(actor, db, old.id, {}, { sri })).rejects.toMatchObject({
+      code: 'SRI_UNAVAILABLE',
+      details: { canAttest: true, reason: 'OUT_OF_RANGE' },
+    });
   });
 
   it('offers each action only when its rule allows it, and lists what is pending', async () => {

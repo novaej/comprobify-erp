@@ -2,8 +2,20 @@ import { z } from 'zod';
 import type { EmailProvider } from './provider';
 import { emailLocale, emailTemplate, renderEmail } from './templates';
 
-export { createLogProvider, createMailgunProvider } from './provider';
-export type { EmailAttachment, EmailMessage, EmailProvider, MailgunOptions } from './provider';
+export {
+  createLogProvider,
+  createMailgunProvider,
+  createNoEmailProvider,
+  withRedirect,
+  withTestBanner,
+} from './provider';
+export type {
+  EmailAttachment,
+  EmailMessage,
+  EmailProvider,
+  MailgunOptions,
+  SendResult,
+} from './provider';
 export { emailLocale, emailTemplate, renderDocumentEmail, renderEmail } from './templates';
 export type { DocumentEmailParams, EmailLocale, EmailParams, EmailTemplate } from './templates';
 

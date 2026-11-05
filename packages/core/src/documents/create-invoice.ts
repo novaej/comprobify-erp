@@ -16,7 +16,7 @@ import {
   toSriAmount,
   type ActorContext,
 } from '../kernel';
-import { buyerForDocument } from '../parties';
+import { buyerChangesInput, buyerForDocument, updateBuyerDetails } from '../parties';
 import {
   accessKey,
   buildFactura,
@@ -83,6 +83,8 @@ export const invoiceInput = z.object({
     .min(1)
     .max(10),
   additionalInfo: z.array(nameValue).max(10).default([]),
+  // Edits to the client made in the form, saved with the invoice (FR-MD-2).
+  clientChanges: buyerChangesInput.nullable().default(null),
   // FR-DOC-2: the same key and payload return the same document.
   idempotencyKey: z.string().trim().min(1).max(100).nullable().default(null),
 });
@@ -154,7 +156,10 @@ async function consumeQuota(ctx: ActorContext, tx: Tx) {
 }
 
 type ParsedInvoice = z.output<typeof invoiceInput>;
-type Content = Pick<ParsedInvoice, 'clientId' | 'lines' | 'payments' | 'additionalInfo'>;
+type Content = Pick<
+  ParsedInvoice,
+  'clientId' | 'clientChanges' | 'lines' | 'payments' | 'additionalInfo'
+>;
 
 // What a creation and a correction share: the buyer, the FR-DOC-9 checks, the XML in the
 // XSD's order, the XSD check, the signature, and the rows to store. The caller decides
@@ -174,6 +179,8 @@ async function composeInvoice(
       });
   });
 
+  if (input.clientId && input.clientChanges)
+    await updateBuyerDetails(ctx, tx, input.clientId, input.clientChanges);
   const client = input.clientId ? await buyerForDocument(ctx, tx, input.clientId) : null;
   const buyer = client
     ? {

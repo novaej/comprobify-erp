@@ -93,7 +93,7 @@ export function renderEmail(
 <p><a href="${url}" style="display:inline-block;background:#0f766e;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none">${escapeHtml(copy.button)}</a></p>
 <p style="font-size:12px;color:#5b6573">${escapeHtml(copy.footer)}</p>
 </body></html>`;
-  return { to, subject: copy.subject, text, html };
+  return { to, subject: copy.subject, text, html, locale };
 }
 
 export type DocumentEmailParams = {
@@ -125,5 +125,13 @@ export function renderDocumentEmail(to: string, params: DocumentEmailParams): Em
 ${lines.map((line) => `<p>${escapeHtml(line)}</p>`).join('\n')}
 <p style="font-size:12px;color:#5b6573">${escapeHtml(footer)}</p>
 </body></html>`;
-  return { to, subject, text, html, fromName: `${params.organization} via Comprobify` };
+  return {
+    to,
+    subject,
+    text,
+    html,
+    fromName: `${params.organization} via Comprobify`,
+    sender: 'documents',
+    locale: 'es',
+  };
 }

@@ -60,6 +60,8 @@ services:
       APP_ENV: ${APP_ENV:-local}
       LOG_FORMAT: json
       SRI_MOCK_MODE: 'true'
+      # The stack never emails anyone, whatever ../.env says: E2E addresses are made up.
+      EMAIL_PROVIDER: log
       DATABASE_URL: ${STACK_DATABASE_URL:-postgres://comprobify_erp_app:changeme@host.docker.internal:5432/comprobify_erp_e2e}
     depends_on:
       migrate:

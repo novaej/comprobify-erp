@@ -1130,7 +1130,8 @@
         "rideView": "Ver RIDE",
         "xml": "Descargar XML",
         "rideLater": "El RIDE estará disponible cuando el SRI autorice el comprobante."
-      }
+      },
+      "waiting": "Esperando la respuesta del SRI. Esta página se actualiza sola."
     },
     "pendingLink": "Pendientes",
     "pending": {
@@ -1155,11 +1156,11 @@
       "reissueConfirm": "Re-emitir con fecha {date}",
       "reissued": "Re-emisión en curso. El estado se actualiza en unos segundos.",
       "voidTitle": "¿Marcar la factura como anulada?",
-      "voidDescription": "El SRI no anula por sistema: anúlala primero en su portal, hasta el {deadline}. Aquí se comprueba con el SRI que ya figura anulada.",
+      "voidDescription": "Primero anula la factura en el portal del SRI (SRI en línea), a más tardar el {deadline}. Después confirma aquí: consultaremos al SRI y, si ya figura anulada, quedará anulada también en Comprobify.",
       "voidConfirm": "Marcar como anulada",
       "voided": "Factura anulada.",
-      "attestTitle": "El SRI no responde ahora",
-      "attestDescription": "No se pudo comprobar la anulación con el SRI. Si ya la anulaste en su portal, puedes confirmarlo tú. Queda registrado en el historial.",
+      "attestTitle": "El SRI no puede confirmarlo ahora",
+      "attestDescription": "No se pudo comprobar la anulación con el SRI: no responde, o ya no consulta comprobantes de esa fecha. Si ya la anulaste en su portal, puedes confirmarlo tú. Queda registrado en el historial.",
       "attestConfirm": "Confirmo que la anulé en el portal",
       "resendTitle": "¿Reenviar al comprador?",
       "resendDescription": "Se envían otra vez el RIDE y el XML autorizado a:",
@@ -1186,7 +1187,13 @@
       "consumerFinalHint": "Sin datos del comprador. Hasta {max} por factura.",
       "change": "Cambiar cliente",
       "noClients": "Sin clientes que coincidan.",
-      "noEmail": "Sin correo: no recibirá la factura por email."
+      "identification": "Identificación",
+      "name": "Nombre o razón social",
+      "emails": "Correos",
+      "emailsHint": "Separados por coma. Todos reciben la factura.",
+      "phone": "Teléfono",
+      "address": "Dirección",
+      "savedOnIssue": "Los cambios se guardan en el cliente al emitir la factura."
     },
     "lines": {
       "title": "Detalle",
@@ -1235,7 +1242,7 @@
     },
     "submit": "Emitir factura",
     "confirmTitle": "¿Emitir la factura?",
-    "confirmDescription": "Se firma y se envía al SRI. Después no se puede borrar: si el SRI la devuelve, se corrige con el mismo número.",
+    "confirmDescription": "Se firmará con el certificado de la empresa y se enviará al SRI. Una factura emitida no se elimina: si el SRI la devuelve, podrás corregirla y reenviarla con el mismo número.",
     "confirmDetail": "{buyer}: {total}",
     "issued": "Factura {number} emitida.",
     "correct": {

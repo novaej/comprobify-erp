@@ -52,10 +52,19 @@ export async function voidDocument(
     validity = null;
   }
   const deadline = voidDeadline(row.issueDate);
+  // SRI only checks recent documents; older ones it can't confirm either way (Ficha 8.2.3).
+  const outOfRange =
+    validity?.status === 'NOT_FOUND' &&
+    validity.messages.some(
+      (message) =>
+        message.identifier === '99' && /fuera del rango/i.test(message.additionalInfo ?? ''),
+    );
+  if (outOfRange) validity = null;
   if (validity === null && !input.attestedVoidedAtSri)
     throw new DomainError('SRI_UNAVAILABLE', 'SRI can not confirm the void right now', {
       canAttest: true,
       deadline,
+      reason: outOfRange ? 'OUT_OF_RANGE' : 'UNREACHABLE',
     });
   if (validity && validity.status !== 'VOIDED' && validity.status !== 'PENDING_VOID')
     throw new DomainError('NOT_VOIDED_AT_SRI', 'SRI does not show this document as voided', {
@@ -76,7 +85,10 @@ export async function voidDocument(
         type: 'VOIDED',
         details: validity
           ? { sriStatus: validity.status }
-          : { attested: true, reason: 'SRI unavailable' },
+          : {
+              attested: true,
+              reason: outOfRange ? 'outside the dates SRI checks' : 'SRI unavailable',
+            },
         sriResponse: validity?.raw,
         actorUserId: ctx.userId ?? null,
       },

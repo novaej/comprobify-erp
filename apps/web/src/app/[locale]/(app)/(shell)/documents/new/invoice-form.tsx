@@ -31,8 +31,24 @@ export type ClientOption = {
   idTypeLabel: string;
   identification: string;
   name: string;
-  email: string | null;
+  emails: string[];
+  phone: string | null;
+  address: string | null;
 };
+
+// The client's details as the form edits them; the identification stays.
+type ClientEdit = { name: string; emails: string; phone: string; address: string };
+const editOf = (client: ClientOption): ClientEdit => ({
+  name: client.name,
+  emails: client.emails.join(', '),
+  phone: client.phone ?? '',
+  address: client.address ?? '',
+});
+const emailList = (value: string) =>
+  value
+    .split(/[,;\s]+/)
+    .map((email) => email.trim())
+    .filter(Boolean);
 
 type Line = {
   key: string;
@@ -89,6 +105,7 @@ export function InvoiceForm({
   today,
   defaultIvaRate,
   draft,
+  canEditClient,
 }: {
   issuePoints: Choice[];
   ivaRates: (Choice & { percent: string })[];
@@ -100,6 +117,8 @@ export function InvoiceForm({
   today: string;
   defaultIvaRate: string;
   draft?: InvoiceDraft;
+  // clients.manage: edits to the client are saved with the invoice.
+  canEditClient: boolean;
 }) {
   const t = useTranslations('invoiceForm');
   const tError = useTranslations('documentsError');
@@ -138,6 +157,17 @@ export function InvoiceForm({
     () => clients.find((option) => option.id === draft?.clientId) ?? null,
   );
   const [clientQuery, setClientQuery] = useState('');
+  const [clientEdit, setClientEdit] = useState<ClientEdit | null>(() =>
+    client ? editOf(client) : null,
+  );
+  const chooseClient = (next: ClientOption | null) => {
+    setClient(next);
+    setClientEdit(next ? editOf(next) : null);
+  };
+  const clientChanged =
+    client !== null &&
+    clientEdit !== null &&
+    JSON.stringify(clientEdit) !== JSON.stringify(editOf(client));
   const [lines, setLines] = useState<Line[]>(() =>
     draft
       ? draft.lines.map((line) => ({
@@ -287,6 +317,15 @@ export function InvoiceForm({
   const payload = () => ({
     issuePointId,
     clientId: client?.id ?? null,
+    clientChanges:
+      clientChanged && clientEdit && canEditClient
+        ? {
+            name: clientEdit.name.trim(),
+            emails: emailList(clientEdit.emails),
+            phone: clientEdit.phone.trim() || null,
+            address: clientEdit.address.trim() || null,
+          }
+        : null,
     idempotencyKey,
     lines: lines.map((line) => ({
       productId: line.productId,
@@ -317,6 +356,7 @@ export function InvoiceForm({
     // A correction keeps its issue point and number, and has no idempotency key.
     const content = {
       clientId: full.clientId,
+      clientChanges: full.clientChanges,
       lines: full.lines,
       payments: full.payments,
       additionalInfo: full.additionalInfo,
@@ -372,7 +412,7 @@ export function InvoiceForm({
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    setClient(null);
+                    chooseClient(null);
                     setClientQuery('');
                   }}
                 >
@@ -382,16 +422,52 @@ export function InvoiceForm({
               )
             }
           >
-            {client ? (
-              <div className="flex items-start gap-3 rounded-lg bg-muted/40 px-4 py-3">
-                <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-                <div className="min-w-0 text-sm">
-                  <p className="font-medium break-words">{client.name}</p>
-                  <p className="text-muted-foreground tabular-nums">
+            {client && clientEdit ? (
+              <div className="space-y-4">
+                <p className="flex items-center gap-2 text-sm">
+                  <UserRound className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                  <span className="text-muted-foreground">{t('buyer.identification')}</span>
+                  <span className="font-medium tabular-nums">
                     {client.idTypeLabel} {client.identification}
-                  </p>
-                  <p className="text-muted-foreground">{client.email ?? t('buyer.noEmail')}</p>
+                  </span>
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {(['name', 'emails', 'phone', 'address'] as const).map((field) => (
+                    <FormField
+                      key={field}
+                      label={t(`buyer.${field}`)}
+                      required={field === 'name'}
+                      hint={field === 'emails' ? t('buyer.emailsHint') : undefined}
+                      className={
+                        field === 'name' || field === 'address' ? 'sm:col-span-2' : undefined
+                      }
+                    >
+                      {(a11y) => (
+                        <Input
+                          {...a11y}
+                          value={clientEdit[field]}
+                          readOnly={!canEditClient}
+                          className={canEditClient ? undefined : 'bg-muted/40'}
+                          type={field === 'emails' ? 'text' : undefined}
+                          inputMode={
+                            field === 'emails' ? 'email' : field === 'phone' ? 'tel' : undefined
+                          }
+                          maxLength={field === 'phone' ? 30 : 300}
+                          onChange={(event) =>
+                            setClientEdit(
+                              (current) => current && { ...current, [field]: event.target.value },
+                            )
+                          }
+                        />
+                      )}
+                    </FormField>
+                  ))}
                 </div>
+                {clientChanged && (
+                  <p role="status" className="text-xs text-muted-foreground">
+                    {t('buyer.savedOnIssue')}
+                  </p>
+                )}
               </div>
             ) : (
               <div className="space-y-3">
@@ -404,7 +480,7 @@ export function InvoiceForm({
                   emptyText={t('buyer.noClients')}
                   listLabel={t('buyer.title')}
                   onPick={(option) =>
-                    setClient(clients.find((item) => item.id === option.value) ?? null)
+                    chooseClient(clients.find((item) => item.id === option.value) ?? null)
                   }
                 />
                 <p className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -595,7 +671,7 @@ export function InvoiceForm({
               {payments.map((payment, index) => (
                 <li
                   key={payment.key}
-                  className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_5rem_7rem_2.25rem] sm:items-end"
+                  className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_5rem_7rem_2.25rem] sm:items-start"
                 >
                   <FormField label={t('payment.method')}>
                     {(a11y) => (
@@ -675,6 +751,8 @@ export function InvoiceForm({
                     variant="ghost"
                     size="icon"
                     disabled={single}
+                    // Level with the fields, under their labels.
+                    className="sm:mt-6"
                     aria-label={t('payment.remove', { number: index + 1 })}
                     title={t('payment.remove', { number: index + 1 })}
                     onClick={() =>

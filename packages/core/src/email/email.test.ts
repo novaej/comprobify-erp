@@ -1,5 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createMailgunProvider, renderDocumentEmail, renderEmail, sendEmailHandler } from '.';
+import {
+  createMailgunProvider,
+  createNoEmailProvider,
+  renderDocumentEmail,
+  renderEmail,
+  sendEmailHandler,
+  withRedirect,
+  withTestBanner,
+  type EmailMessage,
+} from '.';
 
 describe('renderEmail', () => {
   it('renders each template in both languages, with the link', () => {
@@ -116,5 +125,67 @@ describe('the buyer’s copy (FR-DOC-11)', () => {
     expect(body.get('from')).toBe('"Alfa <S.A.> via Comprobify" <no-reply@comprobify.com>');
     expect(body.get('v:document-id')).toBe('doc-1');
     expect((body.get('attachment') as File).name).toBe('RIDE.pdf');
+  });
+
+  it('sends a document from EMAIL_FROM_DOCUMENTS, and the rest from EMAIL_FROM', async () => {
+    const fetch = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
+    const provider = createMailgunProvider({
+      apiKey: 'key',
+      domain: 'mg.example.com',
+      region: 'us',
+      from: 'Comprobify <no-reply@comprobify.com>',
+      documentsFrom: 'Comprobify <facturas@comprobify.com>',
+      fetch,
+    });
+    await provider.send({
+      ...renderEmail('verifyEmail', 'es', 'a@example.com', { url: 'https://x.test' }),
+    });
+    await provider.send({
+      to: 'b@example.com',
+      subject: 's',
+      text: 't',
+      html: 'h',
+      fromName: 'Alfa',
+      sender: 'documents',
+    });
+    const from = (call: number) =>
+      new URLSearchParams(
+        (fetch.mock.calls[call] as [string, RequestInit])[1].body as URLSearchParams,
+      ).get('from');
+    expect(from(0)).toBe('Comprobify <no-reply@comprobify.com>');
+    expect(from(1)).toBe('"Alfa" <facturas@comprobify.com>');
+  });
+});
+
+describe('test recipient, banner and off switch (ADR-015)', () => {
+  const capture = () => {
+    const sent: EmailMessage[] = [];
+    return {
+      sent,
+      provider: {
+        send: (message: EmailMessage) => (sent.push(message), Promise.resolve('sent' as const)),
+      },
+    };
+  };
+
+  it('redirects every email to one address, saying who it was for', async () => {
+    const { sent, provider } = capture();
+    const result = await withRedirect(provider, 'owner@example.com').send(
+      renderEmail('verifyEmail', 'es', 'maria@example.com', { url: 'https://x.test' }),
+    );
+    expect(result).toBe('sent');
+    expect(sent[0]).toMatchObject({ to: 'owner@example.com' });
+    expect(sent[0]!.subject).toMatch(/^\[REDIRIGIDO\] /);
+    expect(sent[0]!.text).toContain('Este correo habría sido enviado a: maria@example.com');
+    expect(sent[0]!.html).toContain('maria@example.com');
+  });
+
+  it('marks staging emails, and sends nothing when off', async () => {
+    const { sent, provider } = capture();
+    await withTestBanner(provider).send(
+      renderEmail('verifyEmail', 'en', 'a@example.com', { url: 'https://x.test' }),
+    );
+    expect(sent[0]!.text).toMatch(/^TEST ENVIRONMENT/);
+    await expect(createNoEmailProvider().send(sent[0]!)).resolves.toBe('skipped');
   });
 });

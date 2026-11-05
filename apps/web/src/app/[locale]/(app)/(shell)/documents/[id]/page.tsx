@@ -32,6 +32,7 @@ import { loadShell } from '@/server/shell';
 import { STATUS_TONE } from '../document-status';
 import { CopyButton } from './copy-button';
 import { DocumentActions } from './document-actions';
+import { LiveStatus } from './live-status';
 
 export const generateMetadata = pageTitle('document');
 
@@ -125,6 +126,8 @@ export default async function DocumentPage({
         }
       />
 
+      <LiveStatus waiting={['SIGNED', 'PENDING_SEND', 'RECEIVED'].includes(document.status)} />
+
       <DocumentActions
         id={document.id}
         allowed={document.allowed}
@@ -174,6 +177,9 @@ export default async function DocumentPage({
             value={<span className="tabular-nums">{document.buyer.identification}</span>}
             detail={tSri(`idTypes.${document.buyer.idType as '04'}`)}
           />
+          {document.buyer.address && (
+            <DetailTile label={t('detail.address')} value={document.buyer.address} />
+          )}
           {document.buyer.email && (
             <DetailTile
               label={t('detail.email')}
