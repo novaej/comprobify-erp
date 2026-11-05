@@ -71,7 +71,7 @@ The area also requires two-step verification, so set it up on that account befor
 | `DATABASE_URL` | web, worker | `comprobify_erp_app` |
 | `MIGRATION_DATABASE_URL` | migrate | `comprobify_erp_owner` |
 | `APP_URL` | web | Public URL. Email links point here. |
-| `CERT_ENCRYPTION_KEY` | web | 64 hex characters (`openssl rand -hex 32`). Encrypts certificate private keys; losing it makes every stored key unusable, so back it up with the database credentials. |
+| `CERT_ENCRYPTION_KEY` | web, worker | 64 hex characters (`openssl rand -hex 32`). Encrypts each company's stored certificate private key; never signs anything itself. The worker decrypts a company's key with it to sign that company's re-issues; losing it makes every stored key unusable, so back it up with the database credentials. |
 | `AGREEMENTS_ENABLED` | web | `false` until the owner approves the legal texts (`docs/legal/review-notes.md`). When `true`, go-live requires acceptance. |
 | `OPERATOR_NAME`, `OPERATOR_RUC`, `OPERATOR_ADDRESS`, `SUPPORT_EMAIL` | web | The operator named in the legal texts. Required when `AGREEMENTS_ENABLED` is `true`. |
 | `AUTH_SECRET` | web | At least 32 characters. Signs session cookies and tokens; rotating it signs everyone out. |

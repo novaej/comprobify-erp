@@ -40,7 +40,7 @@ export type {
   IssuePointOption,
   MemberRow,
 } from './members';
-export { issuingContext } from './issuing';
+export { activeCertificate, issuingContext } from './issuing';
 export type { IssuingContext } from './issuing';
 export { onboardOrganization, onboardOrganizationInput } from './onboarding';
 export { isValidRucStructure } from './ruc';

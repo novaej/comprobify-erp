@@ -21,14 +21,14 @@ export type SendingDeps = {
 
 export type DocumentRef = { tenantId: string; documentId: string };
 
-type Row = typeof schema.documents.$inferSelect;
+export type Row = typeof schema.documents.$inferSelect;
 type Changes = Partial<typeof schema.documents.$inferInsert>;
 
-const SENDABLE: readonly DocumentStatus[] = ['SIGNED', 'PENDING_SEND', 'SEND_FAILED'];
+export const SENDABLE: readonly DocumentStatus[] = ['SIGNED', 'PENDING_SEND', 'SEND_FAILED'];
 
 const deadlineOf = (row: Row) => row.retryUntil ?? endOfEcuadorDay(row.issueDate);
 
-async function locked(tx: Tx, ref: DocumentRef): Promise<Row | undefined> {
+export async function locked(tx: Tx, ref: DocumentRef): Promise<Row | undefined> {
   const [row] = await tx.db
     .select()
     .from(schema.documents)
@@ -40,12 +40,17 @@ async function locked(tx: Tx, ref: DocumentRef): Promise<Row | undefined> {
 }
 
 // FR-DOC-13: every transition writes an event, with SRI's raw answer when there is one.
-async function transition(
+export async function transition(
   tx: Tx,
   row: Row,
   to: DocumentStatus,
   changes: Changes = {},
-  event: { details?: Record<string, unknown>; sriResponse?: string } = {},
+  event: {
+    type?: 'STATUS_CHANGED' | 'REISSUED';
+    details?: Record<string, unknown>;
+    sriResponse?: string;
+    actorUserId?: string | null;
+  } = {},
 ): Promise<Row> {
   assertTransition(row.status, to);
   const [updated] = await tx.db
@@ -56,11 +61,12 @@ async function transition(
   await tx.db.insert(schema.documentEvents).values({
     tenantId: row.tenantId,
     documentId: row.id,
-    type: 'STATUS_CHANGED',
+    type: event.type ?? 'STATUS_CHANGED',
     fromStatus: row.status,
     toStatus: to,
     details: event.details ?? {},
     sriResponse: event.sriResponse ?? null,
+    actorUserId: event.actorUserId ?? null,
   });
   return updated!;
 }
@@ -171,6 +177,33 @@ export async function sendDocument(deps: SendingDeps, ref: DocumentRef): Promise
   });
 }
 
+type AuthorizationAnswer = Awaited<ReturnType<SriClient['authorization']>>;
+
+// SRI has the document after all: on to RECEIVED and its answer, through the machine.
+export async function applyFinalAnswer(
+  tx: Tx,
+  row: Row,
+  answer: Exclude<AuthorizationAnswer, { status: 'PENDING' }>,
+  now: Date,
+  operation: string,
+): Promise<Row> {
+  const details = { operation, messages: summary(answer.messages) };
+  const received = await toReceived(tx, row, now, details, answer.raw);
+  if (answer.status === 'AUTHORIZED')
+    return transition(
+      tx,
+      received,
+      'AUTHORIZED',
+      {
+        authorizationNumber: answer.authorizationNumber,
+        authorizedAt: answer.authorizedAt,
+        authorizationXml: answer.authorizationXml,
+      },
+      { details, sriResponse: answer.raw },
+    );
+  return transition(tx, received, 'NOT_AUTHORIZED', {}, { details, sriResponse: answer.raw });
+}
+
 // FR-DOC-4: once the issue day is over, one read-only question to SRI.
 export async function checkAfterDeadline(deps: SendingDeps, ref: DocumentRef): Promise<void> {
   const { db, sri, clock } = deps;
@@ -191,24 +224,8 @@ export async function checkAfterDeadline(deps: SendingDeps, ref: DocumentRef): P
     if (!current || !SENDABLE.includes(current.status) || current.deadlineCheckedAt) return;
     const checked = { deadlineCheckedAt: now, sriUnreachable: answer === null };
     if (answer && answer.status !== 'PENDING') {
-      // SRI has it after all.
-      const details = { operation: 'deadline-check', messages: summary(answer.messages) };
-      current = await toReceived(tx, current, now, details, answer.raw);
+      current = await applyFinalAnswer(tx, current, answer, now, 'deadline-check');
       await update(tx, current, checked);
-      if (answer.status === 'AUTHORIZED')
-        await transition(
-          tx,
-          current,
-          'AUTHORIZED',
-          {
-            authorizationNumber: answer.authorizationNumber,
-            authorizedAt: answer.authorizedAt,
-            authorizationXml: answer.authorizationXml,
-          },
-          { details, sriResponse: answer.raw },
-        );
-      else
-        await transition(tx, current, 'NOT_AUTHORIZED', {}, { details, sriResponse: answer.raw });
       return;
     }
     // Not at SRI, or SRI couldn't be asked: SEND_FAILED, for the next-day re-issue.

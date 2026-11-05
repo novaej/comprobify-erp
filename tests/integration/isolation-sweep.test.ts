@@ -20,7 +20,7 @@ import {
   type Jobs,
 } from '@comprobify/core';
 import { createTestP12, testRuc } from '@comprobify/core/testing';
-import type { Database } from '@comprobify/db';
+import { schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   appDatabase,
@@ -132,8 +132,20 @@ describe('isolation sweep over every tenant table', () => {
         identification: '1710034065',
         name: 'Cliente',
       });
-      // Documents, lines, payments and events (FR-DOC-13).
-      await insertTestDocument(db, tenantId);
+      // Documents, lines, payments, events and a re-issue (FR-DOC-6, FR-DOC-13).
+      const document = await insertTestDocument(db, tenantId);
+      await db.withSystem('test: record a re-issue', ({ db: tx }) =>
+        tx.insert(schema.documentReissues).values({
+          tenantId,
+          documentId: document.id,
+          reason: 'MANUAL',
+          previousAccessKey: `${document.accessKey.slice(0, 48)}9`,
+          previousIssueDate: '2026-11-09',
+          previousSignedXml: '<factura/>',
+          accessKey: document.accessKey,
+          issueDate: '2026-11-10',
+        }),
+      );
       await createProduct(actor, db, {
         code: 'P-1',
         name: 'Producto',
@@ -187,6 +199,7 @@ describe('isolation sweep over every tenant table', () => {
         'document_events',
         'document_lines',
         'document_payments',
+        'document_reissues',
         'document_sequences',
         'documents',
         'invitations',

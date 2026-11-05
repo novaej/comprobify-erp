@@ -11,3 +11,5 @@ export {
 } from './sending';
 export type { DocumentRef, SendingDeps } from './sending';
 export { nextAuthorizationCheck, nextSendAttempt } from './calendar';
+export { enqueueReissues, reissueDocument } from './reissue';
+export type { ReissueDeps } from './reissue';

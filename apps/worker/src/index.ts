@@ -3,6 +3,7 @@ import { createLogger } from '@comprobify/config/logger';
 import {
   createJobs,
   createLogProvider,
+  createKeyCipher,
   createMailgunProvider,
   createMockSri,
   createSriClient,
@@ -65,6 +66,7 @@ await registerHandlers(jobs, {
   identityDb: db.identity,
   db,
   sri,
+  keyCipher: createKeyCipher(env.CERT_ENCRYPTION_KEY),
   clock: systemClock,
 });
 logger.info('Worker started', { event: 'worker.started' });

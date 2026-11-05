@@ -44,3 +44,4 @@ export type {
 export { createMockSri } from './mock';
 export type { MockOutcome, MockSri } from './mock';
 export type { SriMessage } from './soap';
+export { redateSignedXml } from './redate';

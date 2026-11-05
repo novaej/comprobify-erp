@@ -40,6 +40,18 @@ export const queues = {
     options: { retryLimit: 3, retryDelay: 30, retryBackoff: true, expireInSeconds: 120 },
     concurrency: 2,
   },
+  // FR-DOC-6: the daily sweep, then one job per document. A transport error during the
+  // re-check throws, so pg-boss retries it.
+  'sri.reissue-sweep': {
+    payload: z.object({}),
+    options: { retryLimit: 2, retryDelay: 300, expireInSeconds: 300 },
+    concurrency: 1,
+  },
+  'sri.reissue': {
+    payload: documentRef,
+    options: { retryLimit: 5, retryDelay: 300, retryBackoff: true, expireInSeconds: 120 },
+    concurrency: 2,
+  },
   'sri.overdue': {
     payload: z.object({}),
     options: { retryLimit: 1, expireInSeconds: 300 },
@@ -67,4 +79,6 @@ export const schedules: readonly {
   { queue: 'system.heartbeat', cron: '*/5 * * * *', tz: JOB_TIME_ZONE, data: {} },
   { queue: 'identity.prune', cron: '15 3 * * *', tz: JOB_TIME_ZONE, data: {} },
   { queue: 'sri.overdue', cron: '*/15 * * * *', tz: JOB_TIME_ZONE, data: {} },
+  // After midnight in Quito, once yesterday's deadline checks have run.
+  { queue: 'sri.reissue-sweep', cron: '30 0 * * *', tz: JOB_TIME_ZONE, data: {} },
 ];

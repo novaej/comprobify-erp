@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { parseP12 } from '../certificates';
 import { createTestP12, sampleFactura } from '../testing';
 import { buildFactura } from './factura';
+import { redateSignedXml } from './redate';
 import { signXml } from './signer';
 import { validateXml } from './xsd';
 
@@ -72,5 +73,26 @@ describe('the XAdES-BES signer', () => {
     expect(() => signXml(buildFactura(sampleFactura()).xml, expired, now)).toThrow(
       expect.objectContaining({ code: 'CERTIFICATE_EXPIRED' }),
     );
+  });
+
+  it('re-dates a signed document: only the key and date change, and the new signature verifies', async () => {
+    const certificate = key();
+    const signed = signXml(buildFactura(sampleFactura()).xml, certificate, now);
+    const newKey = '1111202601179000000100110010010000000011234567811';
+    const redated = redateSignedXml(signed, { accessKey: newKey, issueDate: '2026-11-11' });
+    expect(redated).not.toContain('ds:Signature');
+    expect(redated).toContain(`<claveAcceso>${newKey}</claveAcceso>`);
+    expect(redated).toContain('<fechaEmision>11/11/2026</fechaEmision>');
+    // Everything else as first built.
+    const original = buildFactura(sampleFactura()).xml;
+    expect(
+      redated.replace(newKey, sampleFactura().accessKey).replace('11/11/2026', '10/11/2026'),
+    ).toBe(original);
+    await expect(validateXml(redated, '01')).resolves.toEqual({ valid: true });
+    const resigned = signXml(redated, certificate, now);
+    expect(verify(resigned, certificate.certificatePem)).toEqual({ valid: true, references: 2 });
+    expect(() =>
+      redateSignedXml(redated, { accessKey: newKey, issueDate: '2026-11-11' }),
+    ).toThrow();
   });
 });

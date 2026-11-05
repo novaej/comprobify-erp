@@ -112,6 +112,15 @@ Creating a document enqueues `sri.send`. The worker's handlers (`documents/sendi
 - **Authorization** (FR-DOC-5): checked quickly, then hourly for three days, then daily, never capped.
 - **Overdue sweep:** `sri.overdue` runs every 15 minutes and flags, once, any document still `RECEIVED` 24 hours later.
 
+**Next-day re-issue** (FR-DOC-6). At 00:30 in Quito, `sri.reissue-sweep` enqueues one `sri.reissue` job per document left `SEND_FAILED` the day before. Each job:
+
+1. Asks SRI again. A document SRI got after all moves on to its answer.
+2. If SRI still lacks it, rebuilds it from its own signed XML with today's date and a new key (`redateSignedXml`), keeping the same sequential and every other byte.
+3. Validates and signs it again with the company's active certificate.
+4. Records the old key, date and XML in `document_reissues`, and sends it.
+
+A document is never moved into another month automatically; a person decides, and older ones too. A transport error during the check fails the job, so pg-boss retries it.
+
 Every transition writes an event with SRI's raw answer. CI and the local stack always run the mock.
 
 ## Audit log

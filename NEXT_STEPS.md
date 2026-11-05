@@ -16,8 +16,8 @@ Read PRD sections 5.8 and 6 and the Ficha Técnica v2.32 in `docs/reference/` be
 - [x] 6. Creating an invoice: the FR-DOC-2 pipeline in one transaction (idempotency, entitlements, `DOCUMENT_QUOTA` never for the twin, totals and taxes, consumidor final cap, FR-DOC-9 validation) with the send job enqueued in it.
 - [x] 7. SRI client and mock SRI: reception, authorization and Consulta de validez over SOAP; a mock server answering like SRI (RECIBIDA, DEVUELTA, codes 43, 45, 70) for tests and local work.
 - [x] 8a. Send and authorize jobs: the retry calendar in Ecuador time, the deadline check, the 24-hour alert, fixed-clock tests at 23:59 and month end; the worker's SRI client from config, the mock always on in CI and the stack (FR-DOC-4, FR-DOC-5).
-- [ ] 8b. D+1 re-issue: yesterday's `SEND_FAILED` documents re-checked and, if SRI still lacks them, rebuilt with today's date, a new key and the same sequential, with `document_reissues`; month-crossing ones skipped and the company told; 45 stops it; fixed-clock tests on D+1 and at month end (FR-DOC-6).
-- [ ] 9. Correction, void, RIDE and buyer email: same row and sequential; void checked against SRI; the RIDE from the authorized XML; RIDE and XML emailed (FR-DOC-7, FR-DOC-8, FR-DOC-10, FR-DOC-11).
+- [x] 8b. D+1 re-issue: yesterday's `SEND_FAILED` documents re-checked and, if SRI still lacks them, rebuilt with today's date, a new key and the same sequential, with `document_reissues`; month-crossing ones skipped and the company told; 45 stops it; fixed-clock tests on D+1 and at month end (FR-DOC-6).
+- [ ] 9. Correction, void, RIDE and buyer email: same row and sequential; manual re-issue from D+2 with a confirmation naming the new date (FR-DOC-6), reusing `redateSignedXml` and `document_reissues`; an old key resolves to its document; void checked against SRI; the RIDE from the authorized XML; RIDE and XML emailed (FR-DOC-7, FR-DOC-8, FR-DOC-10, FR-DOC-11).
 - [ ] 10. Document screens: the invoice form with keyboard line entry, list with filters, detail with timeline, pending documents, XML download (FR-DOC-12, FR-UX-4). The web action passes `createInvoice` its deps from config: `CONSUMER_FINAL_MAX_AMOUNT` (new, default 50) and `OPERATOR_RUC` for RUC Proveedor.
 - [ ] 11. Gate, **run by the owner**: an invoice authorized by SRI's test environment with a real certificate, following a checklist prepared here; the fixed-clock and 43/70 tests in CI. The checklist includes the negocio popular RIMPE legend: the published factura XSD 2.1.0 refuses it, so send one to the test environment and settle it as ADR-013 says.
 
@@ -25,7 +25,7 @@ Read PRD sections 5.8 and 6 and the Ficha Técnica v2.32 in `docs/reference/` be
 
 - **Milestone 3:** certificate renewal (FR-ONB-3); twin reset; issue-point restrictions applied as query filters once documents exist (FR-ROLE-2: the actor already carries them).
 - **Milestone 8:** `DOCUMENT_QUOTA` counts the Ecuador calendar month for now; count it per billing period instead, with packs (FR-BILL-7).
-- **Milestone 9:** the alerts that are only logged today become notifications: no SRI answer 24 hours after RECEIVED, and code 45 (FR-DOC-5, FR-DOC-6, FR-NOT-2).
+- **Milestone 9:** the alerts that are only logged today become notifications: no SRI answer 24 hours after RECEIVED, code 45, a re-issue skipped at a month boundary, and "Factura … re-emitida con fecha …" (FR-DOC-5, FR-DOC-6, FR-NOT-2).
 - **Milestone 9 (also):** email the companies on a plan when a module or a lower limit is scheduled to leave it, as with price changes (FR-BILL-6, FR-NOT-2); a page for the platform activity log (`platform_audit_events`).
 - **Milestones 5 and 6:** go-live offers to copy master data from the twin (FR-ONB-5) once products, clients and suppliers exist.
 - **Not scheduled:** CSV import and export of clients and products (FR-MD-1); saved invoice templates (FR-MD-5).

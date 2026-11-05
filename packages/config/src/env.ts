@@ -56,14 +56,17 @@ function requireMailOutsideLocal(
   }
 }
 
+// AES-256-GCM key for each company's stored certificate private key (FR-ONB-3); it never
+// signs. The worker decrypts a company's key with it for that company's re-issues (FR-DOC-6).
+const certificateKey = z.string().regex(/^[0-9a-fA-F]{64}$/, 'must be 64 hex characters');
+
 export const webEnvSchema = z
   .object({
     ...runtimeShape,
     APP_URL: z.url(),
     // Signs session cookies and tokens. Rotating it signs everyone out.
     AUTH_SECRET: z.string().min(32),
-    // AES-256-GCM key for certificate private keys (FR-ONB-3). Losing it loses every key.
-    CERT_ENCRYPTION_KEY: z.string().regex(/^[0-9a-fA-F]{64}$/, 'must be 64 hex characters'),
+    CERT_ENCRYPTION_KEY: certificateKey,
     // Off until the owner approves the legal texts (docs/legal/review-notes.md).
     AGREEMENTS_ENABLED: flag.default(false),
     // The operator named in the legal texts; required once agreements are on.
@@ -101,7 +104,7 @@ const sriShape = {
 };
 
 export const workerEnvSchema = z
-  .object({ ...runtimeShape, ...mailShape, ...sriShape })
+  .object({ ...runtimeShape, ...mailShape, ...sriShape, CERT_ENCRYPTION_KEY: certificateKey })
   .superRefine((env, ctx) => {
     refuseMockInProduction(env, ctx);
     requireMailOutsideLocal(env, ctx);

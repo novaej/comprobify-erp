@@ -4,11 +4,14 @@ import {
   alertOverdueAuthorizations,
   checkAfterDeadline,
   checkAuthorization,
+  enqueueReissues,
+  reissueDocument,
   sendDocument,
 } from './documents';
 import { sendEmailHandler, type EmailProvider } from './email';
 import { createRateLimiter, pruneIdentityTables } from './identity';
 import { heartbeatHandler, type Jobs } from './jobs';
+import type { KeyCipher } from './certificates';
 import type { Clock } from './kernel';
 import type { SriClient } from './sri';
 
@@ -18,6 +21,7 @@ export type HandlerDeps = {
   identityDb: IdentityDb;
   db: Database;
   sri: SriClient;
+  keyCipher: KeyCipher;
   clock: Clock;
 };
 
@@ -38,6 +42,12 @@ export async function registerHandlers(jobs: Jobs, deps: HandlerDeps): Promise<v
   await jobs.work('sri.send', (job) => sendDocument(sending, job.data));
   await jobs.work('sri.authorize', (job) => checkAuthorization(sending, job.data));
   await jobs.work('sri.deadline', (job) => checkAfterDeadline(sending, job.data));
+  await jobs.work('sri.reissue-sweep', async () => {
+    await enqueueReissues(sending);
+  });
+  await jobs.work('sri.reissue', (job) =>
+    reissueDocument({ ...sending, keyCipher: deps.keyCipher }, job.data),
+  );
   await jobs.work('sri.overdue', async () => {
     await alertOverdueAuthorizations(sending);
   });

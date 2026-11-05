@@ -82,3 +82,22 @@ export async function issuingContext(
     certificate,
   };
 }
+
+// The worker's read for a re-issue (FR-DOC-6): no actor, the company's active certificate.
+export async function activeCertificate(
+  tx: Tx,
+  tenantId: string,
+): Promise<{ encryptedPrivateKey: string; certificatePem: string; ruc: string }> {
+  const { certificates, tenants } = schema;
+  const [row] = await tx.db
+    .select({
+      encryptedPrivateKey: certificates.encryptedPrivateKey,
+      certificatePem: certificates.certificatePem,
+      ruc: tenants.ruc,
+    })
+    .from(certificates)
+    .innerJoin(tenants, eq(tenants.id, certificates.tenantId))
+    .where(and(eq(certificates.tenantId, tenantId), eq(certificates.active, true)));
+  if (!row) throw new DomainError('CERTIFICATE_MISSING', 'The company has no signing certificate');
+  return row;
+}

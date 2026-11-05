@@ -67,6 +67,9 @@ export const DOCUMENT_EVENT_TYPES = [
 
 export const AMBIENTES = ['1', '2'] as const;
 
+// FR-DOC-6: why a document got a new date and key while keeping its number.
+export const REISSUE_REASONS = ['AUTO_NEXT_DAY', 'MANUAL', 'CORRECTED'] as const;
+
 const id = () =>
   uuid('id')
     .primaryKey()
@@ -274,6 +277,35 @@ export const documentEvents = pgTable(
     check('document_events_type_check', oneOf('type', DOCUMENT_EVENT_TYPES)),
     check('document_events_from_check', oneOf('from_status', DOCUMENT_STATUSES)),
     check('document_events_to_check', oneOf('to_status', DOCUMENT_STATUSES)),
+  ],
+);
+
+// FR-DOC-6: the key, date and XML a document had before a re-issue, so an old key still
+// resolves. Append-only.
+export const documentReissues = pgTable(
+  'document_reissues',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id').notNull(),
+    documentId: uuid('document_id').notNull(),
+    reason: text('reason', { enum: REISSUE_REASONS }).notNull(),
+    previousAccessKey: text('previous_access_key').notNull(),
+    previousIssueDate: date('previous_issue_date').notNull(),
+    previousSignedXml: text('previous_signed_xml').notNull(),
+    accessKey: text('access_key').notNull(),
+    issueDate: date('issue_date').notNull(),
+    actorUserId: uuid('actor_user_id').references(() => users.id),
+    createdAt: createdAt(),
+  },
+  (table) => [
+    foreignKey({
+      name: 'document_reissues_document_fk',
+      columns: [table.tenantId, table.documentId],
+      foreignColumns: [documents.tenantId, documents.id],
+    }),
+    unique('document_reissues_previous_key_unique').on(table.previousAccessKey),
+    index('document_reissues_document_idx').on(table.documentId),
+    check('document_reissues_reason_check', oneOf('reason', REISSUE_REASONS)),
   ],
 );
 
