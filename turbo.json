@@ -9,7 +9,14 @@
       "cache": false,
       "persistent": true
     },
-    "test": {},
-    "typecheck": {}
+    "transit": {
+      "dependsOn": ["^transit"]
+    },
+    "test": {
+      "dependsOn": ["transit"]
+    },
+    "typecheck": {
+      "dependsOn": ["transit"]
+    }
   }
 }

@@ -39,6 +39,10 @@ describe('the next-day re-issue', () => {
 
   const at = (iso: string) => clock.set(iso);
   const ref = (document: IssuedDocument) => ({ tenantId: twinId, documentId: document.id });
+  const auto = (document: IssuedDocument) => ({
+    ...ref(document),
+    reason: 'AUTO_NEXT_DAY' as const,
+  });
   const row = (document: IssuedDocument) =>
     db.withTenant({ tenantId: twinId }, async ({ db: tx }) => {
       const [found] = await tx
@@ -138,7 +142,7 @@ describe('the next-day re-issue', () => {
     // 00:30 in Quito on the 11th.
     at('2026-11-11T05:30:00Z');
     await expect(enqueueReissues(deps)).resolves.toBeGreaterThanOrEqual(1);
-    await reissueDocument(deps, ref(document));
+    await reissueDocument(deps, auto(document));
 
     const after = await row(document);
     expect(after).toMatchObject({
@@ -185,7 +189,7 @@ describe('the next-day re-issue', () => {
     // Sent like any new document; a second run finds nothing to do.
     await sendDocument(deps, ref(document));
     expect((await row(document)).status).toBe('RECEIVED');
-    await reissueDocument(deps, ref(document));
+    await reissueDocument(deps, auto(document));
     expect(await reissues(document)).toHaveLength(1);
   });
 
@@ -194,7 +198,7 @@ describe('the next-day re-issue', () => {
     // It reached SRI, late.
     await deps.sri.send((await row(document)).signedXml!, '1');
     at('2026-11-11T05:30:00Z');
-    await reissueDocument(deps, ref(document));
+    await reissueDocument(deps, auto(document));
     expect((await row(document)).status).toBe('AUTHORIZED');
     expect(await reissues(document)).toEqual([]);
   });
@@ -202,7 +206,7 @@ describe('the next-day re-issue', () => {
   it('never crosses a month: the 30th’s document stays for a person', async () => {
     const document = await failedOn('2026-11-30T15:00:00Z');
     at('2026-12-01T05:30:00Z');
-    await reissueDocument(deps, ref(document));
+    await reissueDocument(deps, auto(document));
     expect(await row(document)).toMatchObject({ status: 'SEND_FAILED', issueDate: '2026-11-30' });
     expect(deps.logger.warn).toHaveBeenCalledWith(
       expect.any(String),
@@ -213,15 +217,17 @@ describe('the next-day re-issue', () => {
   it('leaves D+2 to a person, and retries the job when SRI can’t be asked', async () => {
     const late = await failedOn('2026-11-10T15:00:00Z');
     at('2026-11-12T05:30:00Z');
-    await reissueDocument(deps, ref(late));
+    await reissueDocument(deps, auto(late));
     expect((await row(late)).issueDate).toBe('2026-11-10');
 
     const unreachable = await failedOn('2026-11-10T15:00:00Z');
     at('2026-11-11T05:30:00Z');
     mock.queue('authorization', { kind: 'transport' });
-    await expect(reissueDocument(deps, ref(unreachable))).rejects.toBeInstanceOf(SriTransportError);
+    await expect(reissueDocument(deps, auto(unreachable))).rejects.toBeInstanceOf(
+      SriTransportError,
+    );
     expect((await row(unreachable)).status).toBe('SEND_FAILED');
-    await reissueDocument(deps, ref(unreachable));
+    await reissueDocument(deps, auto(unreachable));
     expect((await row(unreachable)).status).toBe('SIGNED');
   });
 });

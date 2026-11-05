@@ -48,7 +48,12 @@ export const queues = {
     concurrency: 1,
   },
   'sri.reissue': {
-    payload: documentRef,
+    payload: documentRef.extend({
+      reason: z.enum(['AUTO_NEXT_DAY', 'MANUAL']),
+      // MANUAL: the date the person confirmed, and who.
+      issueDate: z.iso.date().optional(),
+      actorUserId: z.uuid().nullable().optional(),
+    }),
     options: { retryLimit: 5, retryDelay: 300, retryBackoff: true, expireInSeconds: 120 },
     concurrency: 2,
   },

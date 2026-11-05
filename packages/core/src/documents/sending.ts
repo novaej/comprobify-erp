@@ -46,7 +46,7 @@ export async function transition(
   to: DocumentStatus,
   changes: Changes = {},
   event: {
-    type?: 'STATUS_CHANGED' | 'REISSUED';
+    type?: 'STATUS_CHANGED' | 'REISSUED' | 'CORRECTED' | 'VOIDED';
     details?: Record<string, unknown>;
     sriResponse?: string;
     actorUserId?: string | null;

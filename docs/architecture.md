@@ -121,6 +121,14 @@ Creating a document enqueues `sri.send`. The worker's handlers (`documents/sendi
 
 A document is never moved into another month automatically; a person decides, and older ones too. A transport error during the check fails the job, so pg-boss retries it.
 
+**Correction** (FR-DOC-7). `correctInvoice` takes a document SRI returned or rejected, or never got, and resends it as the same row and sequential with new content. It keeps the same key on the issue day, and takes today's date and a new key after it; the old key, date and XML go to `document_reissues` as `CORRECTED`. Lines and payments get a new revision, and the old ones stay. A `SEND_FAILED` document can be corrected only once the deadline check confirmed SRI didn't have it. Before that, it may still be at SRI.
+
+**Manual re-issue** (FR-DOC-6). From D+2, or for a document the automatic run left at a month boundary, a person confirms the new date and `requestReissue` queues the same `sri.reissue` job, reason `MANUAL`. If the confirmed date is no longer today, it asks again.
+
+**Void** (FR-DOC-8). The company voids on SRI's portal. `voidDocument` marks a document `VOIDED` only once Consulta de validez shows it voided or pending a void. It refuses consumidor final, and takes the user's attestation only when SRI can't be asked.
+
+`findByAccessKey` resolves an old key to its document.
+
 Every transition writes an event with SRI's raw answer. CI and the local stack always run the mock.
 
 ## Audit log

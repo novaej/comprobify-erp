@@ -1,15 +1,18 @@
-import { and, eq, schema } from '@comprobify/db';
+import { and, eq, schema, type Database } from '@comprobify/db';
+import { z } from 'zod';
 import type { KeyCipher } from '../certificates';
-import { ecuadorDate, endOfEcuadorDay } from '../kernel';
+import type { QueuePayload } from '../jobs';
+import {
+  DomainError,
+  ecuadorDate,
+  endOfEcuadorDay,
+  requirePermission,
+  type ActorContext,
+} from '../kernel';
 import { accessKey, randomNumericCode, redateSignedXml, signXml, validateXml } from '../sri';
 import { activeCertificate } from '../tenancy';
-import {
-  applyFinalAnswer,
-  locked,
-  transition,
-  type DocumentRef,
-  type SendingDeps,
-} from './sending';
+import { applyFinalAnswer, locked, transition, type SendingDeps } from './sending';
+import type { Jobs } from '../jobs';
 
 // FR-DOC-6: on the day after, each document SRI never got is re-checked and, if SRI still
 // lacks it, re-issued: today's date, a new key, the same sequential. The old key, date and
@@ -30,19 +33,71 @@ export async function enqueueReissues(deps: SendingDeps): Promise<number> {
       .where(
         and(eq(schema.documents.status, 'SEND_FAILED'), eq(schema.documents.issueDate, yesterday)),
       );
-    for (const ref of rows) await deps.jobs.enqueue(tx, 'sri.reissue', ref);
+    for (const ref of rows)
+      await deps.jobs.enqueue(tx, 'sri.reissue', { ...ref, reason: 'AUTO_NEXT_DAY' });
     return rows.length;
   });
 }
 
-export async function reissueDocument(deps: ReissueDeps, ref: DocumentRef): Promise<void> {
+// FR-DOC-6: from D+2, or a document the automatic run left at a month boundary, a person
+// re-issues it after confirming the new date. The worker re-checks SRI first, as always.
+export async function requestReissue(
+  ctx: ActorContext,
+  db: Database,
+  documentId: string,
+  raw: { issueDate: string },
+  deps: { jobs: Pick<Jobs, 'enqueue'> },
+): Promise<void> {
+  requirePermission(ctx, 'documents.issue');
+  const id = z.uuid().parse(documentId);
+  const { issueDate } = z.object({ issueDate: z.iso.date() }).parse(raw);
+  const today = ecuadorDate(ctx.clock.now());
+  // The confirmation named a date that's no longer today: ask again.
+  if (issueDate !== today)
+    throw new DomainError('REISSUE_DATE_CHANGED', 'The new issue date is no longer today', {
+      issueDate: today,
+    });
+  await db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
+    const row = await locked(tx, { tenantId: ctx.tenantId, documentId: id });
+    if (!row) throw new DomainError('NOT_FOUND', 'Document not found');
+    if (row.status !== 'SEND_FAILED' || row.issueDate >= today)
+      throw new DomainError(
+        'NOT_REISSUABLE',
+        'Only an unsent document from an earlier day can be re-issued',
+      );
+    await deps.jobs.enqueue(tx, 'sri.reissue', {
+      tenantId: ctx.tenantId,
+      documentId: id,
+      reason: 'MANUAL',
+      issueDate: today,
+      actorUserId: ctx.userId ?? null,
+    });
+  });
+}
+
+export async function reissueDocument(
+  deps: ReissueDeps,
+  job: QueuePayload<'sri.reissue'>,
+): Promise<void> {
   const { db, sri, clock, logger } = deps;
+  const ref = { tenantId: job.tenantId, documentId: job.documentId };
   const now = clock.now();
   const today = ecuadorDate(now);
+  const manual = job.reason === 'MANUAL';
   const row = await db.withTenant({ tenantId: ref.tenantId }, (tx) => locked(tx, ref));
-  // Only yesterday's: from the day after, re-issuing is a person's decision.
-  if (row?.status !== 'SEND_FAILED' || row.issueDate !== yesterdayOf(now)) return;
-  if (row.issueDate.slice(0, 7) !== today.slice(0, 7)) {
+  if (row?.status !== 'SEND_FAILED') return;
+  // A person confirmed a date: if it's no longer today, they confirm again.
+  if (manual && (job.issueDate !== today || row.issueDate >= today)) {
+    logger.warn('Not re-issued: the confirmed date is no longer today', {
+      event: 'documents.reissue_date_changed',
+      tenantId: row.tenantId,
+      accessKey: row.accessKey,
+    });
+    return;
+  }
+  // Automatic: only yesterday's; from the day after, it's a person's decision.
+  if (!manual && row.issueDate !== yesterdayOf(now)) return;
+  if (!manual && row.issueDate.slice(0, 7) !== today.slice(0, 7)) {
     logger.warn('Not re-issued: it would move the document into another month', {
       event: 'documents.reissue_skipped_month',
       tenantId: row.tenantId,
@@ -93,12 +148,13 @@ export async function reissueDocument(deps: ReissueDeps, ref: DocumentRef): Prom
     await tx.db.insert(schema.documentReissues).values({
       tenantId: current.tenantId,
       documentId: current.id,
-      reason: 'AUTO_NEXT_DAY',
+      reason: job.reason,
       previousAccessKey: current.accessKey,
       previousIssueDate: current.issueDate,
       previousSignedXml: current.signedXml!,
       accessKey: key,
       issueDate: today,
+      actorUserId: job.actorUserId ?? null,
     });
     await transition(
       tx,
