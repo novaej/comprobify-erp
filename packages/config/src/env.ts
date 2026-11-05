@@ -77,6 +77,11 @@ export const webEnvSchema = z
       .optional(),
     OPERATOR_ADDRESS: z.string().optional(),
     SUPPORT_EMAIL: z.email().optional(),
+    // FR-DOC-9: the most a consumidor final invoice may total, in dollars.
+    CONSUMER_FINAL_MAX_AMOUNT: z
+      .string()
+      .regex(/^\d{1,9}(\.\d{1,2})?$/, 'must be an amount such as 50.00')
+      .default('50.00'),
   })
   .superRefine((env, ctx) => {
     refuseMockInProduction(env, ctx);

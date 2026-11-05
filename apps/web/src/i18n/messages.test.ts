@@ -1,5 +1,7 @@
 import {
   AUDIT_ACTIONS,
+  DOCUMENT_EVENT_TYPES,
+  DOCUMENT_STATUSES,
   SRI_DOCUMENT_TYPES,
   SRI_ID_TYPES,
   SRI_IVA_RATES,
@@ -41,6 +43,17 @@ describe('message files', () => {
     for (const messages of [es, en]) {
       const labels = keys(messages.audit.actions).sort();
       expect(labels).toEqual([...AUDIT_ACTIONS].sort());
+    }
+  });
+
+  // Every document status and timeline event has its words (FR-DOC-12, FR-DOC-13).
+  it('label every document status and event', () => {
+    for (const messages of [es, en]) {
+      expect(keys(messages.documents.statuses).sort()).toEqual([...DOCUMENT_STATUSES].sort());
+      expect(keys(messages.documents.statusHelp).sort()).toEqual([...DOCUMENT_STATUSES].sort());
+      expect(keys(messages.documents.detail.timeline.events).sort()).toEqual(
+        [...DOCUMENT_EVENT_TYPES].sort(),
+      );
     }
   });
 

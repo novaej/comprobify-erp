@@ -1,7 +1,12 @@
-import { DOCUMENT_STATUSES, DOCUMENT_TRANSITIONS, type DocumentStatus } from '@comprobify/db';
+import {
+  DOCUMENT_EVENT_TYPES,
+  DOCUMENT_STATUSES,
+  DOCUMENT_TRANSITIONS,
+  type DocumentStatus,
+} from '@comprobify/db';
 import { DomainError } from '../kernel';
 
-export { DOCUMENT_STATUSES, DOCUMENT_TRANSITIONS, type DocumentStatus };
+export { DOCUMENT_EVENT_TYPES, DOCUMENT_STATUSES, DOCUMENT_TRANSITIONS, type DocumentStatus };
 
 // FR-DOC-3, from the same definition the database trigger is generated from (rule 17).
 export const canTransition = (from: DocumentStatus, to: DocumentStatus): boolean =>

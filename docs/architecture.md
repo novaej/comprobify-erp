@@ -135,6 +135,14 @@ A document is never moved into another month automatically; a person decides, an
 - **Buyer's copy:** becoming `AUTHORIZED` enqueues `documents.email` in the same transaction. It sends the RIDE and SRI's `<autorizacion>` XML from "`<company>` via Comprobify", once, while the plan has `BUYER_EMAIL` and the buyer has an email. A person can resend it.
 - **Test environment:** in ambiente 1 the email says it is a test document (ADR-015).
 
+**Screens** (FR-DOC-12). `/documents` lists, filters and pages documents. `/documents/new` is the invoice form. `/documents/[id]` shows one document with its timeline, and its `ride` and `xml` routes serve the files. The reads are in `documents/queries.ts`, and a user restricted to issue points sees only theirs (FR-ROLE-2).
+
+The form's live totals use exact integer arithmetic with ADR-012's rounding (`apps/web/src/lib/invoice-totals.ts`), and a test holds them to core's `documentTotals`, so the screen never disagrees with the stored document by a cent. Keyboard entry (FR-UX-4):
+
+- The code field searches products by code or name, through the shared `Combobox` block.
+- Enter moves along the line and selects what's in the next field.
+- Enter in the discount opens a new line.
+
 Every transition writes an event with SRI's raw answer. CI and the local stack always run the mock.
 
 ## Audit log

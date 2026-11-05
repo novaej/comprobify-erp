@@ -92,7 +92,7 @@ Both processes run from one Docker image. Postgres holds data, sessions and the 
 16. **Migrations are forward-only**, set `lock_timeout`, and never get edited once merged.
 17. **Status CHECKs and triggers are generated from the TypeScript definition** (FR-DOC-3). Never keep two hand-written copies.
 18. **Every UI string is in the message files.** Spanish is the default, English secondary.
-19. **Every screen looks and behaves like the others** (FR-UX-2). Build it from the shared blocks in `apps/web/src/components/` (page header, stack table, section card, form and confirm dialogs, toned badges, empty state, banner, `ChoiceSelect`), copying the structure of an existing screen of the same kind. No hand-rolled headers, lists or native selects; anything destructive or immediate asks first. `look()` in the E2E suite runs axe on every screen it reaches.
+19. **Every screen looks and behaves like the others** (FR-UX-2). Build it from the shared blocks in `apps/web/src/components/` (page header, stack table, section card, form and confirm dialogs, toned badges, empty state, banner, `ChoiceSelect`, `Combobox`), copying the structure of an existing screen of the same kind. No hand-rolled headers, lists or native selects; anything destructive or immediate asks first. `look()` in the E2E suite runs axe on every screen it reaches.
 20. **English for identifiers, tables and columns.** Spanish only where SRI mandates it (XML element names).
 21. **Log fields are an explicit allow-list.** Never log headers, query strings, tokens or P12 data.
 
@@ -180,6 +180,8 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `apps/web/src/app/[locale]/(admin)/` | The platform area, outside any company (`loadPlatform`) |
 | `packages/core/src/sri/` | SRI catalogues (from `packages/db/src/schema/sri.ts`), totals and rounding (ADR-012), access keys, the factura builder, XSD validation and the XAdES-BES signer (ADR-013), the SOAP client and the mock SRI (ADR-014) |
 | `packages/core/src/documents/` | `createInvoice` (the FR-DOC-2 pipeline), the send and authorize handlers and their calendar (`sending.ts`, `calendar.ts`), the next-day and manual re-issue (`reissue.ts`), correction (in `create-invoice.ts`), void (`void.ts`), the RIDE and buyer's copy (`ride.ts`; drawing in `sri/ride-*.ts`), status machine checks and sequentials; the table, transitions and trigger generator are in `packages/db/src/schema/documents.ts` (FR-DOC-3) |
+| `apps/web/src/app/[locale]/(app)/(shell)/documents/` | The document list, invoice form and detail, with the RIDE and XML routes |
+| `apps/web/src/lib/invoice-totals.ts` | The form's exact totals, held to core's by a test |
 | `packages/core/src/parties/`, `packages/core/src/catalog/` | Clients with identification checks; products and services (FR-MD-1, FR-MD-2) |
 | `packages/core/src/agreements/` | Legal texts (`texts/*.md`, published by the migrate step), personalization, acceptance |
 | `docs/legal/review-notes.md` | What changed in the legal texts and the open legal questions |

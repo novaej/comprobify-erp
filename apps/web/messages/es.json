@@ -199,7 +199,8 @@
     "platformAdmin": "Administración de la plataforma",
     "clients": "Clientes",
     "products": "Productos",
-    "company": "Empresa"
+    "company": "Empresa",
+    "documents": "Comprobantes"
   },
   "shell": {
     "sandboxTitle": "Estás en el ambiente de pruebas",
@@ -631,7 +632,10 @@
     "adminModule": "Módulo · Plataforma",
     "clients": "Clientes",
     "products": "Productos y servicios",
-    "settings": "Empresa"
+    "settings": "Empresa",
+    "documents": "Comprobantes",
+    "newInvoice": "Nueva factura",
+    "document": "Comprobante"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -991,5 +995,233 @@
     "NOT_FOUND": "No se encontró.",
     "INVALID_INPUT": "Revisa los datos: los códigos son de tres dígitos y las resoluciones siguen el formato del SRI.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+  },
+  "documents": {
+    "title": "Comprobantes",
+    "description": "Las facturas que emite tu empresa y lo que el SRI respondió a cada una.",
+    "newInvoice": "Nueva factura",
+    "search": "Número, comprador o identificación",
+    "searchButton": "Buscar",
+    "filters": {
+      "status": "Estado",
+      "allStatuses": "Todos los estados",
+      "issuePoint": "Punto de emisión",
+      "allIssuePoints": "Todos los puntos",
+      "from": "Desde",
+      "to": "Hasta",
+      "apply": "Filtrar",
+      "clear": "Quitar filtros"
+    },
+    "table": {
+      "number": "Número",
+      "date": "Fecha",
+      "buyer": "Comprador",
+      "total": "Total",
+      "status": "Estado",
+      "open": "Ver {number}"
+    },
+    "emptyTitle": "Todavía no hay comprobantes",
+    "empty": "Emite tu primera factura y aquí verás lo que responde el SRI.",
+    "noMatchesTitle": "Sin resultados",
+    "noMatches": "Ningún comprobante coincide con los filtros.",
+    "pagination": {
+      "label": "Páginas de comprobantes",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page": "Página {page} de {pages}"
+    },
+    "types": {
+      "01": "Factura"
+    },
+    "statuses": {
+      "SIGNED": "Firmado",
+      "PENDING_SEND": "Enviando",
+      "RECEIVED": "Recibido por el SRI",
+      "RETURNED": "Devuelto",
+      "SEND_FAILED": "Sin enviar",
+      "AUTHORIZED": "Autorizado",
+      "NOT_AUTHORIZED": "No autorizado",
+      "VOIDED": "Anulado"
+    },
+    "statusHelp": {
+      "SIGNED": "Firmado y en cola para enviarlo al SRI.",
+      "PENDING_SEND": "Se está enviando al SRI.",
+      "RECEIVED": "El SRI lo recibió y está por autorizarlo. Puede tardar hasta 24 horas.",
+      "RETURNED": "El SRI lo devolvió por un error. Corrígelo y vuelve a enviarlo con el mismo número.",
+      "SEND_FAILED": "No se pudo enviar al SRI. Se reintenta solo hasta el final del día de emisión.",
+      "AUTHORIZED": "Autorizado por el SRI. Ya tiene validez tributaria.",
+      "NOT_AUTHORIZED": "El SRI no lo autorizó. Corrígelo y vuelve a enviarlo con el mismo número.",
+      "VOIDED": "Anulado en el SRI."
+    },
+    "detail": {
+      "back": "Comprobantes",
+      "title": "{type} {number}",
+      "summary": "Resumen",
+      "total": "Total",
+      "issueDate": "Fecha de emisión",
+      "issuePoint": "Punto de emisión",
+      "buyer": "Comprador",
+      "identification": "Identificación",
+      "email": "Correo",
+      "address": "Dirección",
+      "accessKey": "Clave de acceso",
+      "authorizedAt": "Autorizado el",
+      "ambiente": "Ambiente del SRI",
+      "ambientes": {
+        "1": "Pruebas",
+        "2": "Producción"
+      },
+      "copy": "Copiar la clave de acceso",
+      "copied": "Clave de acceso copiada",
+      "previousKeys": "Claves anteriores",
+      "previousKeysDescription": "Este comprobante tuvo otra fecha y clave antes de corregirse o re-emitirse. Esas claves siguen llevando aquí.",
+      "lines": {
+        "title": "Detalle",
+        "code": "Código",
+        "description": "Descripción",
+        "quantity": "Cantidad",
+        "unitPrice": "Precio unitario",
+        "discount": "Descuento",
+        "iva": "IVA",
+        "total": "Subtotal"
+      },
+      "totals": {
+        "title": "Totales",
+        "subtotal": "Subtotal {rate}",
+        "withoutTaxes": "Subtotal sin impuestos",
+        "discount": "Descuento",
+        "total": "Total"
+      },
+      "payments": {
+        "title": "Forma de pago",
+        "term": "{term} {unit}"
+      },
+      "timeline": {
+        "title": "Historial",
+        "events": {
+          "CREATED": "Creado y firmado",
+          "STATUS_CHANGED": "Cambió de estado",
+          "SRI_RESPONSE": "Respuesta del SRI",
+          "CORRECTED": "Corregido y firmado de nuevo",
+          "REISSUED": "Re-emitido con fecha {date}",
+          "VOIDED": "Anulado",
+          "EMAILED": "Enviado al comprador"
+        },
+        "reached": {
+          "PENDING_SEND": "Enviado al SRI",
+          "RECEIVED": "Recibido por el SRI",
+          "RETURNED": "Devuelto por el SRI",
+          "SEND_FAILED": "No se pudo enviar al SRI",
+          "AUTHORIZED": "Autorizado por el SRI",
+          "NOT_AUTHORIZED": "No autorizado por el SRI",
+          "SIGNED": "Firmado de nuevo",
+          "VOIDED": "Anulado"
+        },
+        "messages": "Mensajes del SRI"
+      },
+      "sriMessages": {
+        "RETURNED": "Por qué el SRI lo devolvió",
+        "NOT_AUTHORIZED": "Por qué el SRI no lo autorizó"
+      },
+      "downloads": {
+        "ride": "Descargar RIDE",
+        "rideView": "Ver RIDE",
+        "xml": "Descargar XML",
+        "rideLater": "El RIDE estará disponible cuando el SRI autorice el comprobante."
+      }
+    }
+  },
+  "invoiceForm": {
+    "title": "Nueva factura",
+    "description": "Se firma al emitirla y se envía al SRI de inmediato.",
+    "back": "Comprobantes",
+    "issuing": {
+      "title": "Emisión",
+      "issuePoint": "Punto de emisión",
+      "issueDate": "Fecha de emisión",
+      "issueDateHint": "Hoy. El SRI exige la fecha del día en que se envía.",
+      "none": "No tienes un punto de emisión habilitado para facturas.",
+      "noneAction": "Revisa la empresa"
+    },
+    "buyer": {
+      "title": "Cliente",
+      "search": "Buscar cliente por nombre o identificación",
+      "consumerFinal": "Consumidor final",
+      "consumerFinalHint": "Sin datos del comprador. Hasta {max} por factura.",
+      "change": "Cambiar cliente",
+      "noClients": "Sin clientes que coincidan.",
+      "noEmail": "Sin correo: no recibirá la factura por email."
+    },
+    "lines": {
+      "title": "Detalle",
+      "description": "Busca un producto por código o nombre y pulsa Enter. Enter en el descuento agrega otra línea.",
+      "line": "Línea {number}",
+      "code": "Código",
+      "name": "Descripción",
+      "quantity": "Cantidad",
+      "unitPrice": "Precio unitario",
+      "discount": "Descuento",
+      "iva": "IVA",
+      "total": "Subtotal",
+      "add": "Agregar línea",
+      "remove": "Quitar la línea {number}",
+      "added": "Línea {number} agregada.",
+      "removed": "Línea {number} quitada.",
+      "noProducts": "Sin productos que coincidan. Escribe la descripción a mano.",
+      "products": "Productos"
+    },
+    "payment": {
+      "title": "Forma de pago",
+      "method": "Forma de pago",
+      "amount": "Valor",
+      "term": "Plazo",
+      "termUnit": "Unidad",
+      "add": "Agregar forma de pago",
+      "remove": "Quitar la forma de pago {number}",
+      "remaining": "Falta asignar {amount}.",
+      "over": "Los pagos superan el total por {amount}.",
+      "matched": "Los pagos cubren el total."
+    },
+    "additional": {
+      "title": "Información adicional",
+      "description": "Opcional. Aparece en el RIDE, como un número de orden.",
+      "name": "Nombre",
+      "value": "Valor",
+      "add": "Agregar campo",
+      "remove": "Quitar el campo {number}"
+    },
+    "totals": {
+      "title": "Totales",
+      "subtotal": "Subtotal {rate}",
+      "discount": "Descuento",
+      "total": "Total",
+      "incomplete": "Completa las líneas para ver el total."
+    },
+    "submit": "Emitir factura",
+    "confirmTitle": "¿Emitir la factura?",
+    "confirmDescription": "Se firma y se envía al SRI. Después no se puede borrar: si el SRI la devuelve, se corrige con el mismo número.",
+    "confirmDetail": "{buyer}: {total}",
+    "issued": "Factura {number} emitida."
+  },
+  "documentsError": {
+    "FORBIDDEN": "Tu rol no permite esta acción.",
+    "NOT_FOUND": "No se encontró el comprobante.",
+    "INVALID_INPUT": "Revisa los datos: las cantidades y precios admiten hasta 6 decimales, y los textos no pueden tener saltos de línea.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "NOT_LIVE": "Tu empresa todavía no pasó a producción. Emite en el ambiente de pruebas o pasa a producción primero.",
+    "ISSUE_POINT_PAUSED": "Este punto de emisión está pausado.",
+    "ISSUE_POINT_NOT_ALLOWED": "No tienes asignado este punto de emisión.",
+    "DOCUMENT_TYPE_NOT_ENABLED": "Este punto de emisión no emite facturas.",
+    "CERTIFICATE_MISSING": "Tu empresa no tiene un certificado de firma.",
+    "CERTIFICATE_EXPIRED": "El certificado de firma venció. Renuévalo para emitir.",
+    "QUOTA_EXCEEDED": "Usaste todos los comprobantes de tu plan en este período.",
+    "CONSUMER_FINAL_LIMIT": "Una factura a consumidor final no puede superar el límite. Identifica al comprador.",
+    "PAYMENTS_TOTAL_MISMATCH": "Las formas de pago deben sumar el total de la factura.",
+    "LINE_DISCOUNT_TOO_LARGE": "Un descuento es mayor que el valor de su línea.",
+    "CLIENT_INACTIVE": "Ese cliente está inactivo.",
+    "XML_INVALID": "El comprobante no cumple el esquema del SRI. Revisa los textos y valores.",
+    "DOCUMENT_TOO_LARGE": "El comprobante supera el tamaño que acepta el SRI. Divídelo en dos.",
+    "SEQUENCE_EXHAUSTED": "El punto de emisión llegó al último número posible.",
+    "IDEMPOTENCY_CONFLICT": "Esta factura ya se emitió. Recarga la página para ver la nueva."
   }
 }

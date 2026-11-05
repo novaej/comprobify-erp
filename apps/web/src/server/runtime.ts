@@ -12,6 +12,7 @@ import {
   type Auth,
   type EmailLocale,
   type Identity,
+  type IssueDeps,
   type Jobs,
   type KeyCipher,
 } from '@comprobify/core';
@@ -26,6 +27,8 @@ export type Runtime = {
   identity: Identity;
   auth: Auth;
   keyCipher: KeyCipher;
+  // What createInvoice and correctInvoice need from config (FR-DOC-2, FR-DOC-9).
+  issueDeps: IssueDeps;
   // Null while the legal texts are under review (AGREEMENTS_ENABLED=false).
   agreementParties: AgreementParties | null;
 };
@@ -81,6 +84,7 @@ async function start(): Promise<Runtime> {
   });
 
   logger.info('Web started', { event: 'web.started' });
+  const keyCipher = createKeyCipher(env.CERT_ENCRYPTION_KEY);
   return {
     env,
     logger,
@@ -88,7 +92,14 @@ async function start(): Promise<Runtime> {
     jobs,
     identity,
     auth,
-    keyCipher: createKeyCipher(env.CERT_ENCRYPTION_KEY),
+    keyCipher,
+    issueDeps: {
+      jobs,
+      keyCipher,
+      appEnv: env.APP_ENV,
+      providerRuc: env.OPERATOR_RUC ?? null,
+      consumerFinalMaxAmount: env.CONSUMER_FINAL_MAX_AMOUNT,
+    },
     // Env validation guarantees these when agreements are on.
     agreementParties: env.AGREEMENTS_ENABLED
       ? {

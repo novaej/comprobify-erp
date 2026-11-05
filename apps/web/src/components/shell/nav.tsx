@@ -13,6 +13,7 @@ import {
   LogOut,
   Menu,
   Package,
+  Receipt,
   ScrollText,
   ShieldCheck,
   UserRound,
@@ -31,7 +32,15 @@ type NavItem = {
   href: string;
   icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
   labelKey:
-    'dashboard' | 'clients' | 'products' | 'company' | 'users' | 'activity' | 'plan' | 'legal';
+    | 'dashboard'
+    | 'documents'
+    | 'clients'
+    | 'products'
+    | 'company'
+    | 'users'
+    | 'activity'
+    | 'plan'
+    | 'legal';
   group: 'operate' | 'manage';
   // Core still enforces both; these only hide the link (FR-ROLE-3, FR-PLAN-4).
   permission: string | null;
@@ -46,6 +55,13 @@ const NAV_ITEMS: NavItem[] = [
     labelKey: 'dashboard',
     group: 'operate',
     permission: null,
+  },
+  {
+    href: '/documents',
+    icon: Receipt,
+    labelKey: 'documents',
+    group: 'operate',
+    permission: 'documents.read',
   },
   {
     href: '/clients',

@@ -14,9 +14,9 @@ let folder: Promise<string> | undefined;
 
 function schemaFolder(): Promise<string> {
   folder ??= (async () => {
-    const path = await mkdtemp(join(tmpdir(), 'comprobify-xsd-'));
-    await writeFile(join(path, 'factura_V2.1.0.xsd'), factura210);
-    await writeFile(join(path, 'xmldsig-core-schema.xsd'), xmldsigCore);
+    const path = await mkdtemp(join(/*turbopackIgnore: true*/ tmpdir(), 'comprobify-xsd-'));
+    await writeFile(join(/*turbopackIgnore: true*/ path, 'factura_V2.1.0.xsd'), factura210);
+    await writeFile(join(/*turbopackIgnore: true*/ path, 'xmldsig-core-schema.xsd'), xmldsigCore);
     return path;
   })().catch((error: unknown) => {
     folder = undefined;
@@ -33,7 +33,8 @@ export async function validateXml(
   xml: string,
   documentType: ValidatedDocumentType,
 ): Promise<XsdResult> {
-  const schema = join(await schemaFolder(), SCHEMAS[documentType]);
+  // A temporary folder, not a project file: nothing for Next to trace.
+  const schema = join(/*turbopackIgnore: true*/ await schemaFolder(), SCHEMAS[documentType]);
   return new Promise((resolve, reject) => {
     const child = spawn('xmllint', ['--noout', '--nonet', '--schema', schema, '-'], {
       stdio: ['pipe', 'ignore', 'pipe'],

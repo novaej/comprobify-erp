@@ -199,7 +199,8 @@
     "platformAdmin": "Platform administration",
     "clients": "Clients",
     "products": "Products",
-    "company": "Company"
+    "company": "Company",
+    "documents": "Documents"
   },
   "shell": {
     "sandboxTitle": "You're in the test environment",
@@ -631,7 +632,10 @@
     "adminModule": "Module · Platform",
     "clients": "Clients",
     "products": "Products and services",
-    "settings": "Company"
+    "settings": "Company",
+    "documents": "Documents",
+    "newInvoice": "New invoice",
+    "document": "Document"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -991,5 +995,233 @@
     "NOT_FOUND": "Not found.",
     "INVALID_INPUT": "Check the details: codes are three digits and resolutions follow SRI's format.",
     "UNKNOWN": "An unexpected error occurred. Please try again."
+  },
+  "documents": {
+    "title": "Documents",
+    "description": "The invoices your company issues and what SRI answered for each.",
+    "newInvoice": "New invoice",
+    "search": "Number, buyer or identification",
+    "searchButton": "Search",
+    "filters": {
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "issuePoint": "Issue point",
+      "allIssuePoints": "All issue points",
+      "from": "From",
+      "to": "To",
+      "apply": "Filter",
+      "clear": "Clear filters"
+    },
+    "table": {
+      "number": "Number",
+      "date": "Date",
+      "buyer": "Buyer",
+      "total": "Total",
+      "status": "Status",
+      "open": "Open {number}"
+    },
+    "emptyTitle": "No documents yet",
+    "empty": "Issue your first invoice and you'll see SRI's answer here.",
+    "noMatchesTitle": "No results",
+    "noMatches": "No document matches the filters.",
+    "pagination": {
+      "label": "Document pages",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page} of {pages}"
+    },
+    "types": {
+      "01": "Invoice"
+    },
+    "statuses": {
+      "SIGNED": "Signed",
+      "PENDING_SEND": "Sending",
+      "RECEIVED": "Received by SRI",
+      "RETURNED": "Returned",
+      "SEND_FAILED": "Not sent",
+      "AUTHORIZED": "Authorized",
+      "NOT_AUTHORIZED": "Not authorized",
+      "VOIDED": "Voided"
+    },
+    "statusHelp": {
+      "SIGNED": "Signed and queued to send to SRI.",
+      "PENDING_SEND": "Being sent to SRI.",
+      "RECEIVED": "SRI received it and is about to authorize it. This can take up to 24 hours.",
+      "RETURNED": "SRI returned it because of an error. Correct it and send it again with the same number.",
+      "SEND_FAILED": "It couldn't be sent to SRI. It's retried automatically until the end of the issue day.",
+      "AUTHORIZED": "Authorized by SRI. It now has tax validity.",
+      "NOT_AUTHORIZED": "SRI didn't authorize it. Correct it and send it again with the same number.",
+      "VOIDED": "Voided at SRI."
+    },
+    "detail": {
+      "back": "Documents",
+      "title": "{type} {number}",
+      "summary": "Summary",
+      "total": "Total",
+      "issueDate": "Issue date",
+      "issuePoint": "Issue point",
+      "buyer": "Buyer",
+      "identification": "Identification",
+      "email": "Email",
+      "address": "Address",
+      "accessKey": "Access key",
+      "authorizedAt": "Authorized on",
+      "ambiente": "SRI environment",
+      "ambientes": {
+        "1": "Test",
+        "2": "Production"
+      },
+      "copy": "Copy the access key",
+      "copied": "Access key copied",
+      "previousKeys": "Earlier keys",
+      "previousKeysDescription": "This document had another date and key before it was corrected or re-issued. Those keys still lead here.",
+      "lines": {
+        "title": "Lines",
+        "code": "Code",
+        "description": "Description",
+        "quantity": "Quantity",
+        "unitPrice": "Unit price",
+        "discount": "Discount",
+        "iva": "IVA",
+        "total": "Subtotal"
+      },
+      "totals": {
+        "title": "Totals",
+        "subtotal": "Subtotal {rate}",
+        "withoutTaxes": "Subtotal before taxes",
+        "discount": "Discount",
+        "total": "Total"
+      },
+      "payments": {
+        "title": "Payment",
+        "term": "{term} {unit}"
+      },
+      "timeline": {
+        "title": "History",
+        "events": {
+          "CREATED": "Created and signed",
+          "STATUS_CHANGED": "Status changed",
+          "SRI_RESPONSE": "SRI answered",
+          "CORRECTED": "Corrected and signed again",
+          "REISSUED": "Re-issued dated {date}",
+          "VOIDED": "Voided",
+          "EMAILED": "Sent to the buyer"
+        },
+        "reached": {
+          "PENDING_SEND": "Sent to SRI",
+          "RECEIVED": "Received by SRI",
+          "RETURNED": "Returned by SRI",
+          "SEND_FAILED": "Couldn't be sent to SRI",
+          "AUTHORIZED": "Authorized by SRI",
+          "NOT_AUTHORIZED": "Not authorized by SRI",
+          "SIGNED": "Signed again",
+          "VOIDED": "Voided"
+        },
+        "messages": "SRI messages"
+      },
+      "sriMessages": {
+        "RETURNED": "Why SRI returned it",
+        "NOT_AUTHORIZED": "Why SRI didn't authorize it"
+      },
+      "downloads": {
+        "ride": "Download RIDE",
+        "rideView": "View RIDE",
+        "xml": "Download XML",
+        "rideLater": "The RIDE will be available once SRI authorizes the document."
+      }
+    }
+  },
+  "invoiceForm": {
+    "title": "New invoice",
+    "description": "It's signed when you issue it and sent to SRI right away.",
+    "back": "Documents",
+    "issuing": {
+      "title": "Issuing",
+      "issuePoint": "Issue point",
+      "issueDate": "Issue date",
+      "issueDateHint": "Today. SRI requires the date it is sent.",
+      "none": "You don't have an issue point enabled for invoices.",
+      "noneAction": "Check the company"
+    },
+    "buyer": {
+      "title": "Client",
+      "search": "Search a client by name or identification",
+      "consumerFinal": "Consumidor final",
+      "consumerFinalHint": "No buyer details. Up to {max} per invoice.",
+      "change": "Change client",
+      "noClients": "No matching clients.",
+      "noEmail": "No email: they won't get the invoice by email."
+    },
+    "lines": {
+      "title": "Lines",
+      "description": "Search a product by code or name and press Enter. Enter in the discount adds another line.",
+      "line": "Line {number}",
+      "code": "Code",
+      "name": "Description",
+      "quantity": "Quantity",
+      "unitPrice": "Unit price",
+      "discount": "Discount",
+      "iva": "IVA",
+      "total": "Subtotal",
+      "add": "Add line",
+      "remove": "Remove line {number}",
+      "added": "Line {number} added.",
+      "removed": "Line {number} removed.",
+      "noProducts": "No matching products. Type the description yourself.",
+      "products": "Products"
+    },
+    "payment": {
+      "title": "Payment",
+      "method": "Payment method",
+      "amount": "Amount",
+      "term": "Term",
+      "termUnit": "Unit",
+      "add": "Add payment method",
+      "remove": "Remove payment method {number}",
+      "remaining": "{amount} left to assign.",
+      "over": "Payments exceed the total by {amount}.",
+      "matched": "Payments cover the total."
+    },
+    "additional": {
+      "title": "Additional information",
+      "description": "Optional. Printed on the RIDE, such as an order number.",
+      "name": "Name",
+      "value": "Value",
+      "add": "Add field",
+      "remove": "Remove field {number}"
+    },
+    "totals": {
+      "title": "Totals",
+      "subtotal": "Subtotal {rate}",
+      "discount": "Discount",
+      "total": "Total",
+      "incomplete": "Complete the lines to see the total."
+    },
+    "submit": "Issue invoice",
+    "confirmTitle": "Issue the invoice?",
+    "confirmDescription": "It's signed and sent to SRI. It can't be deleted afterwards: if SRI returns it, it's corrected with the same number.",
+    "confirmDetail": "{buyer}: {total}",
+    "issued": "Invoice {number} issued."
+  },
+  "documentsError": {
+    "FORBIDDEN": "Your role doesn't allow this.",
+    "NOT_FOUND": "The document wasn't found.",
+    "INVALID_INPUT": "Check the details: quantities and prices take up to 6 decimals, and text can't have line breaks.",
+    "UNKNOWN": "Something unexpected went wrong. Try again.",
+    "NOT_LIVE": "Your company hasn't gone live yet. Issue in the test environment, or go live first.",
+    "ISSUE_POINT_PAUSED": "This issue point is paused.",
+    "ISSUE_POINT_NOT_ALLOWED": "You aren't assigned this issue point.",
+    "DOCUMENT_TYPE_NOT_ENABLED": "This issue point doesn't issue invoices.",
+    "CERTIFICATE_MISSING": "Your company has no signing certificate.",
+    "CERTIFICATE_EXPIRED": "The signing certificate expired. Renew it to issue.",
+    "QUOTA_EXCEEDED": "You've used all your plan's documents for this period.",
+    "CONSUMER_FINAL_LIMIT": "A consumidor final invoice can't go over the limit. Identify the buyer.",
+    "PAYMENTS_TOTAL_MISMATCH": "The payment methods must add up to the invoice total.",
+    "LINE_DISCOUNT_TOO_LARGE": "A discount is larger than its line.",
+    "CLIENT_INACTIVE": "That client is inactive.",
+    "XML_INVALID": "The document doesn't meet SRI's schema. Check the text and values.",
+    "DOCUMENT_TOO_LARGE": "The document is larger than SRI accepts. Split it in two.",
+    "SEQUENCE_EXHAUSTED": "The issue point reached its last possible number.",
+    "IDEMPOTENCY_CONFLICT": "This invoice was already issued. Reload the page to see it."
   }
 }

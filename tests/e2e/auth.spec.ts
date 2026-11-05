@@ -2,7 +2,9 @@ import { randomUUID } from 'node:crypto';
 import { expect, test, type Page } from '@playwright/test';
 import { base32 } from '@better-auth/utils/base32';
 import { createOTP } from '@better-auth/utils/otp';
+import { checkAuthorization, createMockSri, createSriClient, sendDocument } from '@comprobify/core';
 import { createTestP12, testRuc } from '@comprobify/core/testing';
+import { createDatabase } from '@comprobify/db';
 import { Client } from 'pg';
 import { look } from './look';
 
@@ -59,6 +61,32 @@ async function setSuperAdmin(userEmail: string): Promise<void> {
     await client.query('UPDATE users SET is_super_admin = true WHERE email = $1', [userEmail]);
   } finally {
     await client.end();
+  }
+}
+
+// What the worker does, run here against the mock SRI: the app Playwright starts has no
+// worker. On the stack the worker may get there first; the handlers don't mind.
+async function sendAndAuthorize(documentId: string): Promise<void> {
+  const silent = { debug() {}, info() {}, warn() {}, error() {}, child: () => silent };
+  const db = createDatabase({ connectionString: process.env.DATABASE_URL!, logger: silent });
+  try {
+    const [row] = await db.withSystem('e2e: find the document to send', ({ executeSql }) =>
+      executeSql<{ tenant_id: string }>('SELECT tenant_id FROM documents WHERE id = $1', [
+        documentId,
+      ]).then((result) => result.rows),
+    );
+    const ref = { tenantId: row!.tenant_id, documentId };
+    const deps = {
+      db,
+      sri: createSriClient({ transport: createMockSri().transport }),
+      jobs: { enqueue: () => Promise.resolve(null) },
+      clock: { now: () => new Date() },
+      logger: silent,
+    };
+    await sendDocument(deps, ref);
+    await checkAuthorization(deps, ref);
+  } finally {
+    await db.close();
   }
 }
 
@@ -323,6 +351,95 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page.getByText('Punto de emisión en pausa.')).toBeVisible();
     await issues.click();
     await expect(page.getByText('Punto de emisión activo.')).toBeVisible();
+  });
+
+  test('issues an invoice from the keyboard and shows what SRI answered (FR-DOC-2, FR-DOC-12, FR-UX-4)', async ({
+    page,
+  }) => {
+    await signIn(page, email, newPassword);
+    const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
+
+    // The product deactivated earlier comes back, for the search.
+    await nav.getByRole('link', { name: 'Productos' }).click();
+    await page.getByRole('button', { name: 'Reactivar Asesoría contable' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Reactivar el producto?' })
+      .getByRole('button', { name: 'Reactivar' })
+      .click();
+    await expect(page.getByText('Producto reactivado.')).toBeVisible();
+
+    await nav.getByRole('link', { name: 'Comprobantes' }).click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Comprobantes');
+    await look(page, 'documents-empty');
+    await page.getByRole('link', { name: 'Nueva factura' }).first().click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Nueva factura');
+    await look(page, 'invoice-new');
+
+    const client = page.getByRole('combobox', {
+      name: 'Buscar cliente por nombre o identificación',
+    });
+    await client.fill('María');
+    await client.press('Enter');
+    await expect(page.getByText('María López')).toBeVisible();
+
+    // A free-text line, typed field by field with Enter, which opens the next line.
+    const line = (number: number) => page.getByRole('group', { name: `Línea ${number}` });
+    await line(1).getByRole('combobox', { name: 'Código' }).fill('P-1');
+    await page.keyboard.press('Enter');
+    await expect(line(1).getByRole('textbox', { name: 'Descripción' })).toBeFocused();
+    await page.keyboard.type('Consultoría');
+    // Arriving by Enter selects the quantity's 1, so typing replaces it.
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('2');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('10,50');
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Enter');
+    // A product found by name fills the line and moves to the quantity.
+    await expect(line(2).getByRole('combobox', { name: 'Código' })).toBeFocused();
+    await page.keyboard.type('asesor');
+    await page.keyboard.press('Enter');
+    await expect(line(2).getByRole('textbox', { name: 'Descripción' })).toHaveValue(
+      'Asesoría contable',
+    );
+    await expect(line(2).getByRole('textbox', { name: 'Cantidad' })).toBeFocused();
+
+    // 21.00 + 45.50, with IVA 15 % rounded per line: 3.15 + 6.83.
+    const totals = page.getByRole('complementary');
+    await expect(totals).toContainText('$76,48');
+    await look(page, 'invoice-filled');
+    await page.getByRole('button', { name: 'Emitir factura' }).click();
+    const confirm = page.getByRole('dialog', { name: '¿Emitir la factura?' });
+    await expect(confirm).toContainText('María López: $76,48');
+    await look(page, 'invoice-confirm');
+    await confirm.getByRole('button', { name: 'Emitir factura' }).click();
+
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Factura 001-001-');
+    const documentId = page.url().split('/').at(-1)!;
+    await look(page, 'document');
+
+    await sendAndAuthorize(documentId);
+    await expect(async () => {
+      await page.reload();
+      await expect(page.getByRole('heading', { level: 1 })).toContainText('Autorizado', {
+        timeout: 1000,
+      });
+    }).toPass({ timeout: 30_000 });
+    await expect(page.getByRole('main')).toContainText('Autorizado por el SRI');
+    await look(page, 'document-authorized');
+
+    // The RIDE from the authorized XML, and SRI's <autorizacion> file.
+    const ride = await page.request.get(`/es/documents/${documentId}/ride`);
+    expect(ride.headers()['content-type']).toBe('application/pdf');
+    expect((await ride.body()).subarray(0, 5).toString()).toBe('%PDF-');
+    const xml = await page.request.get(`/es/documents/${documentId}/xml`);
+    expect(await xml.text()).toContain('<estado>AUTORIZADO</estado>');
+
+    await page.getByRole('link', { name: 'Comprobantes' }).first().click();
+    const list = page.getByRole('table', { name: 'Comprobantes' });
+    await expect(list).toContainText('María López');
+    await expect(list).toContainText('Autorizado');
+    await look(page, 'documents');
   });
 
   test('invites a read-only member who joins and sees only what the role allows (FR-USR-1, FR-ROLE-3)', async ({

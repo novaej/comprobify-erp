@@ -13,6 +13,7 @@
     "@better-auth/utils": "0.5.1",
     "@comprobify/config": "workspace:*",
     "@comprobify/core": "workspace:*",
+    "@comprobify/db": "workspace:*",
     "@playwright/test": "1.64.1",
     "@types/node": "24.19.2",
     "@types/pg": "8.23.1",

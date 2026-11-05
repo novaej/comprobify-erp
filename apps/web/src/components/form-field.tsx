@@ -19,6 +19,7 @@ export function FormField({
   error,
   aside,
   className,
+  labelClassName,
   children,
 }: {
   label: ReactNode;
@@ -29,6 +30,8 @@ export function FormField({
   // Shown next to the label, such as a "forgot password" link.
   aside?: ReactNode;
   className?: string;
+  // Such as `sr-only` at a width where a shared header names the column.
+  labelClassName?: string;
   children: (props: FieldA11yProps) => ReactNode;
 }) {
   const uid = useId();
@@ -39,7 +42,7 @@ export function FormField({
 
   return (
     <div className={cn('min-w-0 space-y-1.5', className)}>
-      <div className="flex items-center justify-between">
+      <div className={cn('flex items-center justify-between', labelClassName)}>
         <Label htmlFor={id}>
           {label}
           {required && (
