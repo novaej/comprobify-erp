@@ -37,6 +37,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [014](014-sri-client-and-mock.md) | The SRI client and the mock SRI | Accepted |
 | [015](015-ride-and-buyer-email.md) | The RIDE and the buyer's copy | Accepted |
 | [016](016-credit-notes-and-the-balance.md) | Credit notes and the balance of an invoice | Accepted |
+| [017](017-delivery-guides.md) | Delivery guides | Accepted |
 
 ## Old ADRs to read before each milestone
 

@@ -60,7 +60,7 @@ export const STARTING_MODULES = [
     key: 'DELIVERY_GUIDES',
     nameEs: 'Guías de remisión',
     nameEn: 'Delivery guides',
-    status: 'COMING_SOON',
+    status: 'AVAILABLE',
     features: ['DOC_TYPE_06'],
   },
   {

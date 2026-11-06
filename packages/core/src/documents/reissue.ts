@@ -69,7 +69,7 @@ export async function requestReissue(
   await db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
     const row = await locked(tx, { tenantId: ctx.tenantId, documentId: id });
     if (!row) throw new DomainError('NOT_FOUND', 'Document not found');
-    if (row.status !== 'SEND_FAILED' || row.issueDate >= today)
+    if (row.documentType === '06' || row.status !== 'SEND_FAILED' || row.issueDate >= today)
       throw new DomainError(
         'NOT_REISSUABLE',
         'Only an unsent document from an earlier day can be re-issued',
@@ -94,7 +94,8 @@ export async function reissueDocument(
   const today = ecuadorDate(now);
   const manual = job.reason === 'MANUAL';
   const row = await db.withTenant({ tenantId: ref.tenantId }, (tx) => locked(tx, ref));
-  if (row?.status !== 'SEND_FAILED') return;
+  // A guía is corrected, never re-dated: its transport dates must hold against the new day.
+  if (row?.status !== 'SEND_FAILED' || row.documentType === '06') return;
   // A person confirmed a date: if it's no longer today, they confirm again.
   if (manual && (job.issueDate !== today || row.issueDate >= today)) {
     logger.warn('Not re-issued: the confirmed date is no longer today', {

@@ -1,13 +1,14 @@
 import {
   DOCUMENT_STATUSES,
   documentFilters,
+  hasFeature,
   isDomainError,
   issuingOptions,
   listDocuments,
   type DocumentFilters as Filters,
 } from '@comprobify/core';
 import { buttonVariants } from '@comprobify/ui/components/button';
-import { ChevronRight, Clock, FileText, Plus } from 'lucide-react';
+import { ChevronRight, Clock, FileText, Plus, Truck } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { EmptyState } from '@/components/empty-state';
 import { NoAccess } from '@/components/no-access';
@@ -102,6 +103,15 @@ export default async function DocumentsPage({
               <Clock className="mr-1.5 h-4 w-4" aria-hidden />
               {t('pendingLink')}
             </Link>
+            {canIssue && hasFeature(actor, 'DOC_TYPE_06') && (
+              <Link
+                href="/documents/guide/new"
+                className={buttonVariants({ variant: 'outline', size: 'sm' })}
+              >
+                <Truck className="mr-1.5 h-4 w-4" aria-hidden />
+                {t('newGuide')}
+              </Link>
+            )}
             {canIssue && (
               <Link href="/documents/new" className={buttonVariants({ size: 'sm' })}>
                 <Plus className="mr-1.5 h-4 w-4" aria-hidden />

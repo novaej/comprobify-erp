@@ -2,7 +2,9 @@ import {
   correctionDraft,
   creditNoteDraft,
   ecuadorDate,
+  CARRIER_ID_TYPES,
   getDocument,
+  guideDraft,
   isDomainError,
   systemClock,
   type CorrectionDraft,
@@ -15,6 +17,7 @@ import { redirect } from '@/i18n/navigation';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
+import { GuideForm } from '../../guide/guide-form';
 import { CreditNoteForm } from '../../credit-note/credit-note-form';
 import { creditFormData } from '../../credit-note/form-data';
 import { invoiceFormData } from '../../new/form-data';
@@ -43,6 +46,7 @@ export default async function CorrectInvoicePage({
     throw error;
   }
   if (kind === '04') return <CorrectCreditNote locale={locale} id={id} />;
+  if (kind === '06') return <CorrectGuide locale={locale} id={id} />;
 
   let draft: CorrectionDraft;
   try {
@@ -120,6 +124,53 @@ async function CorrectCreditNote({ locale, id }: { locale: string; id: string })
           reason: draft.reason,
           lines: draft.lines,
         }}
+      />
+    </div>
+  );
+}
+
+// FR-DOC-7: the guía form, filled with the guía as last signed. A later day needs new dates.
+async function CorrectGuide({ locale, id }: { locale: string; id: string }) {
+  const { actor } = await loadShell(locale);
+  const { db } = await getRuntime();
+  let draft: Awaited<ReturnType<typeof guideDraft>>;
+  try {
+    draft = await guideDraft(actor, db, id);
+  } catch (error) {
+    if (isDomainError(error, 'NOT_CORRECTABLE'))
+      return redirect({ href: `/documents/${id}`, locale });
+    if (isDomainError(error, 'NOT_FOUND') || (error instanceof Error && error.name === 'ZodError'))
+      notFound();
+    throw error;
+  }
+  const t = await getTranslations('guideForm');
+  const tSri = await getTranslations('sri');
+  const today = ecuadorDate(systemClock.now());
+  return (
+    <div className="max-w-5xl">
+      <PageHeader
+        title={t('correct.title', { number: draft.number })}
+        description={t('correct.description')}
+        backHref={`/documents/${draft.id}`}
+        backLabel={t('correct.back')}
+      />
+      <GuideForm
+        issuePoints={[{ value: draft.issuePointId, label: draft.issuePoint }]}
+        carrierTypes={CARRIER_ID_TYPES.map((code) => ({
+          value: code,
+          label: tSri(`idTypes.${code}`),
+        }))}
+        today={today}
+        originId={draft.originId}
+        originNumber={null}
+        initial={{
+          ...draft.content,
+          // A date in the past can't be sent today: the person moves it.
+          transportStart:
+            draft.content.transportStart < today ? today : draft.content.transportStart,
+          transportEnd: draft.content.transportEnd < today ? today : draft.content.transportEnd,
+        }}
+        draft={{ documentId: draft.id }}
       />
     </div>
   );

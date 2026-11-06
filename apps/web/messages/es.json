@@ -640,7 +640,8 @@
     "document": "Comprobante",
     "pendingDocuments": "Pendientes",
     "correctInvoice": "Corregir factura",
-    "newCreditNote": "Nueva nota de crédito"
+    "newCreditNote": "Nueva nota de crédito",
+    "newGuide": "Nueva guía de remisión"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -1037,7 +1038,8 @@
     },
     "types": {
       "01": "Factura",
-      "04": "Nota de crédito"
+      "04": "Nota de crédito",
+      "06": "Guía de remisión"
     },
     "statuses": {
       "SIGNED": "Firmado",
@@ -1156,6 +1158,17 @@
         "title": "Documentos relacionados",
         "origin": "Modifica a",
         "derived": "Nota de crédito"
+      },
+      "transport": {
+        "title": "Transporte",
+        "carrier": "Transportista",
+        "plate": "Placa",
+        "departure": "Punto de partida",
+        "start": "Inicio del transporte",
+        "end": "Fin del transporte",
+        "recipient": "Destinatario {number}",
+        "support": "Factura {number}",
+        "firstRecipient": "Primer destinatario"
       }
     },
     "pendingLink": "Pendientes",
@@ -1191,8 +1204,10 @@
       "resendDescription": "Se envían otra vez el RIDE y el XML autorizado a:",
       "resendConfirm": "Reenviar",
       "resent": "Envío en curso.",
-      "credit": "Nota de crédito"
-    }
+      "credit": "Nota de crédito",
+      "guide": "Guía de remisión"
+    },
+    "newGuide": "Nueva guía"
   },
   "invoiceForm": {
     "title": "Nueva factura",
@@ -1336,7 +1351,9 @@
     "ORIGIN_NOT_AUTHORIZED": "Solo se puede acreditar una factura autorizada por el SRI.",
     "CREDIT_NOTE_NEEDS_BUYER": "Una factura a consumidor final no puede acreditarse con nota de crédito.",
     "CREDIT_LINE_UNKNOWN": "Una línea no pertenece a la factura.",
-    "CREDIT_EXCEEDS_BALANCE": "Una línea supera lo que queda por acreditar de la factura."
+    "CREDIT_EXCEEDS_BALANCE": "Una línea supera lo que queda por acreditar de la factura.",
+    "TRANSPORT_START_BEFORE_ISSUE": "El transporte no puede empezar antes del día de emisión. Usa la fecha de hoy o una posterior.",
+    "TRANSPORT_END_BEFORE_START": "El transporte no puede terminar antes de empezar."
   },
   "creditNoteForm": {
     "title": "Nota de crédito de {number}",
@@ -1385,6 +1402,70 @@
       "back": "Volver a la nota de crédito",
       "submit": "Corregir y enviar",
       "confirmTitle": "¿Corregir y reenviar la nota de crédito?",
+      "confirmDescription": "Se firma de nuevo y se envía al SRI con el mismo número."
+    }
+  },
+  "guideForm": {
+    "title": "Nueva guía de remisión",
+    "titleFrom": "Guía de remisión de {number}",
+    "description": "Traslado de mercadería: de dónde sale, quién la lleva y a quién se entrega. El transporte empieza el día de emisión o después.",
+    "back": "Volver a comprobantes",
+    "backInvoice": "Volver a la factura",
+    "issuing": {
+      "title": "Emisión",
+      "issuePoint": "Punto de emisión",
+      "origin": "Factura",
+      "none": "No tienes un punto de emisión habilitado para guías de remisión.",
+      "noneAction": "Revisa la empresa"
+    },
+    "transport": {
+      "title": "Transporte",
+      "departure": "Punto de partida",
+      "carrierType": "Tipo de identificación del transportista",
+      "carrierId": "Identificación del transportista",
+      "carrierName": "Razón social o nombres del transportista",
+      "plate": "Placa",
+      "start": "Inicio del transporte",
+      "startHint": "No antes de hoy.",
+      "end": "Fin del transporte",
+      "endBefore": "No puede ser antes del inicio."
+    },
+    "recipient": {
+      "title": "Destinatario {number}",
+      "identification": "Identificación",
+      "name": "Razón social o nombres",
+      "address": "Dirección de destino",
+      "reason": "Motivo del traslado",
+      "route": "Ruta",
+      "add": "Agregar destinatario",
+      "remove": "Quitar el destinatario {number}"
+    },
+    "support": {
+      "title": "Comprobante de venta (opcional)",
+      "number": "Número",
+      "numberHint": "Por ejemplo 001-001-000000123.",
+      "authorization": "Número de autorización",
+      "issueDate": "Fecha de emisión"
+    },
+    "goods": {
+      "title": "Mercadería",
+      "line": "Ítem {number}",
+      "code": "Código",
+      "name": "Descripción",
+      "quantity": "Cantidad",
+      "add": "Agregar ítem",
+      "remove": "Quitar el ítem {number}"
+    },
+    "submit": "Emitir guía de remisión",
+    "confirmTitle": "¿Emitir la guía de remisión?",
+    "confirmDescription": "Se firma y se envía al SRI. Una vez autorizada no se puede modificar.",
+    "confirmDetail": "Placa {plate}, {count, plural, one {# destinatario} other {# destinatarios}}",
+    "correct": {
+      "title": "Corregir {number}",
+      "description": "Corrige lo que el SRI rechazó y vuelve a enviarla con el mismo número. Si ya pasó el día de emisión, las fechas de transporte deben ser de hoy en adelante.",
+      "back": "Volver a la guía",
+      "submit": "Corregir y enviar",
+      "confirmTitle": "¿Corregir y reenviar la guía?",
       "confirmDescription": "Se firma de nuevo y se envía al SRI con el mismo número."
     }
   }

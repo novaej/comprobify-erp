@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { parseP12 } from '../certificates';
 import { ecuadorDateTimeDisplay } from '../kernel';
-import { createTestP12, sampleFactura, sampleNotaCredito } from '../testing';
+import { createTestP12, sampleFactura, sampleGuiaRemision, sampleNotaCredito } from '../testing';
+import { buildGuiaRemision } from './guia-remision';
 import { buildNotaCredito } from './nota-credito';
 import { authorizedXmlFile } from './authorized-file';
 import { buildFactura } from './factura';
@@ -112,6 +113,34 @@ describe('the RIDE (FR-DOC-10)', () => {
     expect(data.total).toMatch(/^\d+\.\d{2}$/);
     const pdf = await renderRide(data, {
       authorizationNumber: sampleNotaCredito().accessKey,
+      authorizedAt: now,
+      logo: null,
+      compress: false,
+    });
+    expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+    expect(pdf.toString('latin1').match(/\/Type \/Page\b/g)).toHaveLength(1);
+  });
+
+  it('reads a guía de remisión from its XML and draws it', async () => {
+    const xml = signXml(buildGuiaRemision(sampleGuiaRemision()).xml, certificate, now);
+    const data = rideData(xml);
+    expect(data.documentType).toBe('06');
+    // No date element: it comes from the access key.
+    expect(data.issueDate).toBe('10/11/2026');
+    expect(data.transport).toMatchObject({
+      plate: 'PCQ-1234',
+      start: '2026-11-10',
+      end: '2026-11-11',
+      carrier: { identification: '1790012345001' },
+      recipients: [
+        {
+          support: { number: '001-001-000000001', issueDate: '2026-11-03' },
+          lines: [{ name: 'Café molido', quantity: '2.500000' }],
+        },
+      ],
+    });
+    const pdf = await renderRide(data, {
+      authorizationNumber: sampleGuiaRemision().accessKey,
       authorizedAt: now,
       logo: null,
       compress: false,

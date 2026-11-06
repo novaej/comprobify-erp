@@ -22,7 +22,7 @@ import {
   type ActorContext,
 } from '../kernel';
 import { authorizedXmlFile, CONSUMER_FINAL_ID, SELECTABLE_IVA_RATES, SRI_IVA_RATES } from '../sri';
-import { rideData } from '../sri';
+import { rideData, type Transport } from '../sri';
 import { DOCUMENT_STATUSES, type DocumentStatus } from './status';
 
 // FR-DOC-12 reads. A user restricted to issue points sees only theirs (FR-ROLE-2).
@@ -47,7 +47,7 @@ export type IssuingOptions = {
 export async function issuingOptions(
   ctx: ActorContext,
   db: Database,
-  documentType: '01' | '04' = '01',
+  documentType: '01' | '04' | '06' = '01',
 ): Promise<IssuingOptions> {
   requirePermission(ctx, 'documents.issue');
   const { branches, issuePoints, issuePointDocumentTypes, tenants } = schema;
@@ -240,6 +240,8 @@ export type DocumentDetail = {
   // What it comes from, and what came from it, among the documents this user may see.
   origin: DocumentLink | null;
   derived: DocumentLink[];
+  // A guía de remisión: the carrier, dates and recipients, read from its signed XML.
+  transport: Transport | null;
   // What this user may do with it now (FR-DOC-6 to FR-DOC-8, FR-DOC-11). Core still checks
   // each when it's done; this only decides what the screen offers.
   allowed: DocumentActions;
@@ -252,6 +254,8 @@ export type DocumentActions = {
   resend: boolean;
   // A nota de crédito from this invoice (FR-DOC-9).
   credit: boolean;
+  // A guía de remisión for this invoice (FR-SAL-9).
+  guide: boolean;
 };
 
 // The same rules the actions enforce: correctInvoice, requestReissue, voidDocument and
@@ -277,7 +281,12 @@ export function documentActions(
     correct:
       can('documents.issue') &&
       (row.status === 'RETURNED' || row.status === 'NOT_AUTHORIZED' || unsentChecked),
-    reissue: can('documents.issue') && row.status === 'SEND_FAILED' && row.issueDate < today,
+    // A guía has no issue date to move: its transport dates must hold, so a person corrects it.
+    reissue:
+      can('documents.issue') &&
+      row.documentType !== '06' &&
+      row.status === 'SEND_FAILED' &&
+      row.issueDate < today,
     void:
       can('documents.void') &&
       hasFeature(ctx, 'DOCUMENT_VOID') &&
@@ -294,6 +303,11 @@ export function documentActions(
       row.documentType === '01' &&
       row.status === 'AUTHORIZED' &&
       row.buyerIdentification !== CONSUMER_FINAL_ID,
+    guide:
+      can('documents.issue') &&
+      hasFeature(ctx, 'DOC_TYPE_06') &&
+      row.documentType === '01' &&
+      row.status !== 'VOIDED',
   };
 }
 
@@ -411,6 +425,8 @@ export async function getDocument(
       })),
       origin: origin ? link(origin) : null,
       derived: derived.map(link),
+      transport:
+        row.documentType === '06' && row.signedXml ? rideData(row.signedXml).transport : null,
       allowed: documentActions(ctx, row),
     };
   });

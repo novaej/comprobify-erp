@@ -38,19 +38,19 @@ describe('starting catalog', () => {
     ]);
   });
 
-  it('keeps plans built on a coming-soon module as drafts, except where it rides along', () => {
+  it('keeps plans built on a coming-soon module as drafts', () => {
     const comingSoon = new Set<string>(
       STARTING_MODULES.filter((module) => module.status === 'COMING_SOON').map(
         (module) => module.key,
       ),
     );
     const published = STARTING_PLANS.filter((plan) => plan.status === 'PUBLISHED');
-    // Empresa lists guías de remisión, which reach it once they ship.
+    // Guías de remisión shipped, so no published plan rides on a module that hasn't.
     expect(
       published
         .filter((plan) => plan.modules.some((key) => comingSoon.has(key)))
         .map((plan) => plan.key),
-    ).toEqual(['ENTERPRISE']);
+    ).toEqual([]);
     expect(
       STARTING_PLANS.filter((plan) => plan.modules.includes('API_INTEGRATION')).every(
         (plan) => plan.status === 'DRAFT',

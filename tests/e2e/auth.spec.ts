@@ -675,6 +675,65 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await look(page, 'document-credited');
   });
 
+  test('issues a guía de remisión from an invoice and shows its transport (FR-SAL-9, FR-DOC-12)', async ({
+    page,
+  }) => {
+    await grantFeature(email, 'DOC_TYPE_06', 'e2e delivery guides');
+    await signIn(page, email, newPassword);
+    await expect(
+      page.getByRole('navigation', { name: 'Navegación principal' }).last(),
+    ).toBeVisible();
+    const heading = page.getByRole('heading', { level: 1 });
+
+    await page.goto('/es/settings');
+    await page.getByRole('button', { name: 'Tipos de comprobante de 001-001' }).click();
+    const types = page.getByRole('dialog', { name: 'Tipos de comprobante de 001-001' });
+    await types.getByRole('checkbox', { name: 'Guía de remisión' }).check();
+    await types.getByRole('button', { name: 'Guardar' }).click();
+    await expect(page.getByText('Cambios guardados.')).toBeVisible();
+
+    const invoice = await issueInvoice(page, '50');
+    await runSri(invoice, 'authorize');
+    await page.reload();
+    await expect(heading).toContainText('Autorizado');
+    await page.getByRole('link', { name: 'Guía de remisión' }).click();
+    await expect(heading).toContainText('Guía de remisión de 001-001-');
+    // The buyer and the goods come from the invoice.
+    await expect(
+      page.getByRole('textbox', { name: 'Razón social o nombres', exact: true }),
+    ).toHaveValue('María López');
+    await expect(page.getByRole('textbox', { name: 'Descripción' })).toHaveValue('Mantenimiento');
+    await page
+      .getByRole('textbox', { name: 'Punto de partida' })
+      .fill('Av. Amazonas N24-03, Quito');
+    await page
+      .getByRole('textbox', { name: 'Identificación del transportista' })
+      .fill('1790012345001');
+    await page
+      .getByRole('textbox', { name: 'Razón social o nombres del transportista' })
+      .fill('Transportes Andes S.A.');
+    await page.getByRole('textbox', { name: 'Placa' }).fill('PCQ-1234');
+    await look(page, 'guide-new');
+    await page.getByRole('button', { name: 'Emitir guía de remisión' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Emitir la guía de remisión?' })
+      .getByRole('button', { name: 'Emitir guía de remisión' })
+      .click();
+
+    await expect(heading).toContainText('Guía de remisión 001-001-');
+    const guide = page.url().split('/').at(-1)!;
+    await expect(page.getByRole('main')).toContainText('PCQ-1234');
+    await expect(page.getByRole('main')).toContainText('Mantenimiento');
+    await look(page, 'guide');
+    await runSri(guide, 'authorize');
+    await page.reload();
+    await expect(heading).toContainText('Autorizado');
+    const ride = await page.request.get(`/es/documents/${guide}/ride`);
+    expect((await ride.body()).subarray(0, 5).toString()).toBe('%PDF-');
+    await page.goto(`/es/documents/${invoice}`);
+    await expect(page.getByRole('main')).toContainText('Guía de remisión 001-001-');
+  });
+
   test('invites a read-only member who joins and sees only what the role allows (FR-USR-1, FR-ROLE-3)', async ({
     page,
     browser,

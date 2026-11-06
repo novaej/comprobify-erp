@@ -65,7 +65,7 @@ export type { MockOutcome, MockSri } from './mock';
 export type { SriMessage } from './soap';
 export { redateSignedXml } from './redate';
 export { rideData, totalRows } from './ride-data';
-export type { RideData, RideLine } from './ride-data';
+export type { RideData, RideLine, Transport } from './ride-data';
 export { renderRide } from './ride-pdf';
 export type { RideExtras } from './ride-pdf';
 export { authorizedXmlFile } from './authorized-file';

@@ -150,11 +150,11 @@ describe('company settings', () => {
     const org = await company();
     const owner = await actor(org.realTenantId);
     const [point] = (await companySettings(owner, db)).branches[0]!.issuePoints;
-    // 06 has no builder yet; 04 has one, but this plan lacks its feature.
+    // 07 has no builder yet; 04 has one, but this plan lacks its feature.
     await expect(
       setIssuePointDocumentType(owner, db, {
         issuePointId: point!.id,
-        documentType: '06',
+        documentType: '07',
         enabled: true,
       }),
     ).rejects.toMatchObject({ name: 'ZodError' });

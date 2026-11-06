@@ -640,7 +640,8 @@
     "document": "Document",
     "pendingDocuments": "Pending",
     "correctInvoice": "Correct invoice",
-    "newCreditNote": "New credit note"
+    "newCreditNote": "New credit note",
+    "newGuide": "New delivery guide"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -1037,7 +1038,8 @@
     },
     "types": {
       "01": "Invoice",
-      "04": "Credit note"
+      "04": "Credit note",
+      "06": "Delivery guide"
     },
     "statuses": {
       "SIGNED": "Signed",
@@ -1156,6 +1158,17 @@
         "title": "Related documents",
         "origin": "Modifies",
         "derived": "Credit note"
+      },
+      "transport": {
+        "title": "Transport",
+        "carrier": "Carrier",
+        "plate": "Plate",
+        "departure": "Departure point",
+        "start": "Transport start",
+        "end": "Transport end",
+        "recipient": "Recipient {number}",
+        "support": "Invoice {number}",
+        "firstRecipient": "First recipient"
       }
     },
     "pendingLink": "Pending",
@@ -1191,8 +1204,10 @@
       "resendDescription": "The RIDE and the authorized XML are sent again to:",
       "resendConfirm": "Resend",
       "resent": "Sending.",
-      "credit": "Credit note"
-    }
+      "credit": "Credit note",
+      "guide": "Delivery guide"
+    },
+    "newGuide": "New guide"
   },
   "invoiceForm": {
     "title": "New invoice",
@@ -1336,7 +1351,9 @@
     "ORIGIN_NOT_AUTHORIZED": "Only an invoice SRI has authorized can be credited.",
     "CREDIT_NOTE_NEEDS_BUYER": "A consumidor final invoice cannot be credited with a credit note.",
     "CREDIT_LINE_UNKNOWN": "A line does not belong to the invoice.",
-    "CREDIT_EXCEEDS_BALANCE": "A line is more than what is left to credit on the invoice."
+    "CREDIT_EXCEEDS_BALANCE": "A line is more than what is left to credit on the invoice.",
+    "TRANSPORT_START_BEFORE_ISSUE": "The transport cannot start before the issue day. Use today or a later date.",
+    "TRANSPORT_END_BEFORE_START": "The transport cannot end before it starts."
   },
   "creditNoteForm": {
     "title": "Credit note for {number}",
@@ -1385,6 +1402,70 @@
       "back": "Back to the credit note",
       "submit": "Correct and send",
       "confirmTitle": "Correct and resend the credit note?",
+      "confirmDescription": "It is signed again and sent to SRI with the same number."
+    }
+  },
+  "guideForm": {
+    "title": "New delivery guide",
+    "titleFrom": "Delivery guide for {number}",
+    "description": "Moving goods: where they leave from, who carries them and who receives them. The transport starts on the issue day or later.",
+    "back": "Back to documents",
+    "backInvoice": "Back to the invoice",
+    "issuing": {
+      "title": "Issuing",
+      "issuePoint": "Issue point",
+      "origin": "Invoice",
+      "none": "You have no issue point enabled for delivery guides.",
+      "noneAction": "Review the company"
+    },
+    "transport": {
+      "title": "Transport",
+      "departure": "Departure point",
+      "carrierType": "Carrier ID type",
+      "carrierId": "Carrier identification",
+      "carrierName": "Carrier name",
+      "plate": "Plate",
+      "start": "Transport start",
+      "startHint": "Not before today.",
+      "end": "Transport end",
+      "endBefore": "It cannot be before the start."
+    },
+    "recipient": {
+      "title": "Recipient {number}",
+      "identification": "Identification",
+      "name": "Name",
+      "address": "Destination address",
+      "reason": "Reason for the move",
+      "route": "Route",
+      "add": "Add recipient",
+      "remove": "Remove recipient {number}"
+    },
+    "support": {
+      "title": "Sales document (optional)",
+      "number": "Number",
+      "numberHint": "For example 001-001-000000123.",
+      "authorization": "Authorization number",
+      "issueDate": "Issue date"
+    },
+    "goods": {
+      "title": "Goods",
+      "line": "Item {number}",
+      "code": "Code",
+      "name": "Description",
+      "quantity": "Quantity",
+      "add": "Add item",
+      "remove": "Remove item {number}"
+    },
+    "submit": "Issue delivery guide",
+    "confirmTitle": "Issue the delivery guide?",
+    "confirmDescription": "It is signed and sent to SRI. Once authorized it cannot be changed.",
+    "confirmDetail": "Plate {plate}, {count, plural, one {# recipient} other {# recipients}}",
+    "correct": {
+      "title": "Correct {number}",
+      "description": "Fix what SRI rejected and send it again with the same number. If the issue day has passed, the transport dates must be today or later.",
+      "back": "Back to the guide",
+      "submit": "Correct and send",
+      "confirmTitle": "Correct and resend the guide?",
       "confirmDescription": "It is signed again and sent to SRI with the same number."
     }
   }

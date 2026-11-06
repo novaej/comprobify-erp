@@ -454,6 +454,174 @@ function bottom(doc: Doc, data: RideData, y: number): number {
   return y + h;
 }
 
+// A guía de remisión: who carries what, when, and to whom.
+function transport(doc: Doc, data: RideData, y: number): number {
+  const t = data.transport!;
+  const P = 4;
+  const rows: [string, string][] = [
+    ['Identificación (Transportista):', t.carrier.identification],
+    ['Razón Social / Nombres y Apellidos:', t.carrier.name],
+    ['Placa:', t.plate],
+    ['Punto de partida:', t.departureAddress],
+    [
+      'Fecha inicio Transporte:',
+      t.start.split('-').reverse().join('/') +
+        '     Fecha fin Transporte: ' +
+        t.end.split('-').reverse().join('/'),
+    ],
+  ];
+  const labelW = 150;
+  const heights = rows.map(([, value]) =>
+    Math.max(14, height(doc, value, CW - labelW - P * 2, { size: 8 }) + 6),
+  );
+  const total = heights.reduce((a, b) => a + b, 0);
+  box(doc, M, y, CW, total);
+  let ry = y;
+  rows.forEach(([label, value], index) => {
+    if (index > 0) hline(doc, M, ry, CW, DARK);
+    write(doc, label, M + P, ry + 4, labelW - P, { size: 7, color: GREY });
+    write(doc, value, M + labelW, ry + 3, CW - labelW - P, { size: 8 });
+    ry += heights[index]!;
+  });
+  return y + total + 4;
+}
+
+const GOODS: { label: string; width: number; align: 'left' | 'right' }[] = [
+  { label: 'Cantidad', width: 58, align: 'right' },
+  { label: 'Descripción', width: 0, align: 'left' },
+  { label: 'Cod.\nPrincipal', width: 70, align: 'left' },
+  { label: 'Cod.\nAuxiliar', width: 60, align: 'left' },
+];
+
+function recipients(doc: Doc, data: RideData, y: number): number {
+  const P = 4;
+  const fixed = GOODS.reduce((sum, column) => sum + column.width, 0);
+  for (const one of data.transport!.recipients) {
+    const facts: [string, string][] = [
+      ['Comprobante de venta:', one.support ? `FACTURA ${one.support.number}` : ''],
+      [
+        'Fecha de emisión / Autorización:',
+        one.support
+          ? `${one.support.issueDate.split('-').reverse().join('/')}   ${one.support.authorization ?? ''}`
+          : '',
+      ],
+      ['Motivo traslado:', one.reason],
+      ['Destino (Punto de llegada):', one.address],
+      ['Identificación (Destinatario):', one.identification],
+      ['Razón Social / Nombres y Apellidos:', one.name],
+      ...(one.route ? ([['Ruta:', one.route]] as [string, string][]) : []),
+      ...(one.destinationEstablishment
+        ? ([['Cód. Establecimiento Destino:', one.destinationEstablishment]] as [string, string][])
+        : []),
+      ...(one.customsDocument
+        ? ([['Documento Aduanero:', one.customsDocument]] as [string, string][])
+        : []),
+    ];
+    const labelW = 150;
+    const factH = facts.map(([, value]) =>
+      Math.max(13, height(doc, value, CW - labelW - P * 2, { size: 8 }) + 5),
+    );
+    const headH = factH.reduce((a, b) => a + b, 0);
+    if (y + headH + 40 > BOTTOM) {
+      doc.addPage();
+      y = M;
+    }
+    box(doc, M, y, CW, headH);
+    let fy = y;
+    facts.forEach(([label, value], index) => {
+      if (index > 0) hline(doc, M, fy, CW);
+      write(doc, label, M + P, fy + 3, labelW - P, { size: 7, color: GREY });
+      write(doc, value, M + labelW, fy + 3, CW - labelW - P, { size: 8 });
+      fy += factH[index]!;
+    });
+    y += headH;
+
+    let x = M;
+    const columns = GOODS.map((column) => {
+      const width = column.width || CW - fixed;
+      const placed = { ...column, width, x };
+      x += width;
+      return placed;
+    });
+    const drawHeader = (top: number) => {
+      filled(doc, M, top, CW, 22, HEADER_BG);
+      for (const column of columns) {
+        if (column.x > M) vline(doc, column.x, top, 22);
+        write(doc, column.label, column.x + P, top + 3, column.width - P * 2, {
+          size: 6.5,
+          bold: true,
+          align: column.align,
+        });
+      }
+      return top + 22;
+    };
+    y = drawHeader(y);
+    for (const line of one.lines) {
+      const description = [
+        line.name,
+        ...line.additionalDetails.map((detail) => `${detail.name}: ${detail.value}`),
+      ].join('\n');
+      const values = [line.quantity, description, line.code ?? '', line.auxiliaryCode ?? ''];
+      const rowH = Math.max(
+        14,
+        ...columns.map(
+          (column, i) => height(doc, values[i]!, column.width - P * 2, { size: 7.5 }) + 6,
+        ),
+      );
+      if (y + rowH > BOTTOM) {
+        doc.addPage();
+        y = drawHeader(M);
+      }
+      box(doc, M, y, CW, rowH);
+      columns.forEach((column, i) => {
+        if (column.x > M) vline(doc, column.x, y, rowH);
+        write(doc, values[i]!, column.x + P, y + 3, column.width - P * 2, {
+          size: 7.5,
+          align: column.align,
+        });
+      });
+      y += rowH;
+    }
+    y += 6;
+  }
+  return y;
+}
+
+// The guía's closing box: only the company's additional information.
+function notes(doc: Doc, data: RideData, y: number): number {
+  if (data.additionalInfo.length === 0) return y;
+  const P = 4;
+  const keyW = 150;
+  const heights = data.additionalInfo.map(
+    (field) =>
+      Math.max(
+        13,
+        height(doc, `${field.name}:`, keyW - P, { size: 7, bold: true }),
+        height(doc, field.value, CW - keyW - P * 2, { size: 7 }),
+      ) + 4,
+  );
+  const total = 14 + heights.reduce((a, b) => a + b, 0);
+  if (y + total > BOTTOM) {
+    doc.addPage();
+    y = M;
+  }
+  box(doc, M, y, CW, total);
+  filled(doc, M, y, CW, 14, HEADER_BG);
+  write(doc, 'Información Adicional', M + P, y + 3, CW - P * 2, {
+    size: 7.5,
+    bold: true,
+    align: 'center',
+  });
+  let ry = y + 14;
+  data.additionalInfo.forEach((field, i) => {
+    hline(doc, M, ry, CW);
+    write(doc, `${field.name}:`, M + P, ry + 3, keyW - P, { size: 7, bold: true });
+    write(doc, field.value, M + keyW + P, ry + 3, CW - keyW - P * 2, { size: 7 });
+    ry += heights[i]!;
+  });
+  return y + total;
+}
+
 export async function renderRide(data: RideData, extras: RideExtras): Promise<Buffer> {
   const doc = new PDFDocument({
     size: 'A4',
@@ -472,6 +640,13 @@ export async function renderRide(data: RideData, extras: RideExtras): Promise<Bu
     doc.on('error', reject);
   });
   let y = await header(doc, data, extras, M);
+  if (data.transport) {
+    y = transport(doc, data, y);
+    y = recipients(doc, data, y);
+    notes(doc, data, y);
+    doc.end();
+    return done;
+  }
   y = buyer(doc, data, y);
   y = modification(doc, data, y);
   y = items(doc, data, y);

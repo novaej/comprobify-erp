@@ -44,7 +44,37 @@ export type RideData = {
   additionalInfo: { name: string; value: string }[];
   // A nota de crédito: the document it modifies and why. Null on a factura.
   modification: { number: string; issueDate: string; reason: string } | null;
+  // A guía de remisión: the move itself. Null on the other types.
+  transport: Transport | null;
 };
+
+// Dates are as the XML prints them in `RideData`, and ISO here, where a form reads them back.
+export type Transport = {
+  departureAddress: string;
+  carrier: { idType: string; identification: string; name: string; rise: string | null };
+  start: string;
+  end: string;
+  plate: string;
+  recipients: {
+    identification: string;
+    name: string;
+    address: string;
+    reason: string;
+    customsDocument: string | null;
+    destinationEstablishment: string | null;
+    route: string | null;
+    support: { number: string; authorization: string | null; issueDate: string } | null;
+    lines: {
+      code: string | null;
+      auxiliaryCode: string | null;
+      name: string;
+      quantity: string;
+      additionalDetails: { name: string; value: string }[];
+    }[];
+  }[];
+};
+
+const isoDate = (value: string) => value.split('/').reverse().join('-');
 
 const childElements = (parent: Element | undefined): Element[] =>
   parent
@@ -64,8 +94,100 @@ const required = (parent: Element | undefined, name: string): string => {
   return value;
 };
 
+// A guía has no issue date element: SRI takes it from the access key's first eight digits.
+function guideData(root: Element): RideData {
+  const info = child(root, 'infoTributaria');
+  const guide = child(root, 'infoGuiaRemision');
+  const key = required(info, 'claveAcceso');
+  const recipients = all(child(root, 'destinatarios'), 'destinatario').map((one) => {
+    const supportNumber = text(one, 'numDocSustento');
+    const supportDate = text(one, 'fechaEmisionDocSustento');
+    return {
+      identification: required(one, 'identificacionDestinatario'),
+      name: required(one, 'razonSocialDestinatario'),
+      address: required(one, 'dirDestinatario'),
+      reason: required(one, 'motivoTraslado'),
+      customsDocument: text(one, 'docAduaneroUnico'),
+      destinationEstablishment: text(one, 'codEstabDestino'),
+      route: text(one, 'ruta'),
+      support:
+        supportNumber && supportDate
+          ? {
+              number: supportNumber,
+              authorization: text(one, 'numAutDocSustento'),
+              issueDate: isoDate(supportDate),
+            }
+          : null,
+      lines: all(child(one, 'detalles'), 'detalle').map((line) => ({
+        code: text(line, 'codigoInterno'),
+        auxiliaryCode: text(line, 'codigoAdicional'),
+        name: required(line, 'descripcion'),
+        quantity: required(line, 'cantidad'),
+        additionalDetails: all(child(line, 'detallesAdicionales'), 'detAdicional').map(
+          (detail) => ({
+            name: detail.getAttribute('nombre') ?? '',
+            value: detail.getAttribute('valor') ?? '',
+          }),
+        ),
+      })),
+    };
+  });
+  const first = recipients[0];
+  return {
+    ambiente: required(info, 'ambiente'),
+    emissionType: required(info, 'tipoEmision'),
+    legalName: required(info, 'razonSocial'),
+    tradeName: text(info, 'nombreComercial'),
+    ruc: required(info, 'ruc'),
+    accessKey: key,
+    documentType: required(info, 'codDoc'),
+    establishment: required(info, 'estab'),
+    issuePoint: required(info, 'ptoEmi'),
+    sequential: required(info, 'secuencial'),
+    mainAddress: required(info, 'dirMatriz'),
+    branchAddress: text(guide, 'dirEstablecimiento'),
+    specialTaxpayer: text(guide, 'contribuyenteEspecial'),
+    requiredAccounting: text(guide, 'obligadoContabilidad'),
+    withholdingAgent: text(info, 'agenteRetencion'),
+    rimpe: text(info, 'contribuyenteRimpe'),
+    issueDate: `${key.slice(0, 2)}/${key.slice(2, 4)}/${key.slice(4, 8)}`,
+    buyer: {
+      idType: '',
+      name: first?.name ?? '',
+      identification: first?.identification ?? '',
+      address: first?.address ?? null,
+    },
+    lines: [],
+    taxes: [],
+    subtotal: '0.00',
+    discount: '0.00',
+    tip: '0.00',
+    total: '0.00',
+    payments: [],
+    additionalInfo: all(child(root, 'infoAdicional'), 'campoAdicional').map((field) => ({
+      name: field.getAttribute('nombre') ?? '',
+      value: field.textContent?.trim() ?? '',
+    })),
+    modification: null,
+    transport: {
+      departureAddress: required(guide, 'dirPartida'),
+      carrier: {
+        idType: required(guide, 'tipoIdentificacionTransportista'),
+        identification: required(guide, 'rucTransportista'),
+        name: required(guide, 'razonSocialTransportista'),
+        rise: text(guide, 'rise'),
+      },
+      start: isoDate(required(guide, 'fechaIniTransporte')),
+      end: isoDate(required(guide, 'fechaFinTransporte')),
+      plate: required(guide, 'placa'),
+      recipients,
+    },
+  };
+}
+
 export function rideData(authorizedXml: string): RideData {
   const root = new DOMParser().parseFromString(authorizedXml, 'text/xml').documentElement;
+  if (root?.localName === 'guiaRemision') return guideData(root);
   const credit = root?.localName === 'notaCredito';
   if (root?.localName !== 'factura' && !credit) throw new Error('Not a factura or nota de crédito');
   const info = child(root, 'infoTributaria');
@@ -138,6 +260,7 @@ export function rideData(authorizedXml: string): RideData {
           reason: required(invoice, 'motivo'),
         }
       : null,
+    transport: null,
     additionalInfo: all(child(root, 'infoAdicional'), 'campoAdicional').map((field) => ({
       name: field.getAttribute('nombre') ?? '',
       value: field.textContent?.trim() ?? '',

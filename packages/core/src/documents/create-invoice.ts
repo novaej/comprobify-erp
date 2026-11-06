@@ -323,7 +323,7 @@ export async function correctDocument(
   ctx: ActorContext,
   db: Database,
   documentId: string,
-  documentType: '01' | '04',
+  documentType: '01' | '04' | '06',
   compose: Composer,
   deps: Pick<IssueDeps, 'jobs'>,
 ): Promise<IssuedDocument> {

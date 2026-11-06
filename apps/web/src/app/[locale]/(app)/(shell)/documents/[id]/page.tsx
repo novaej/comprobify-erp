@@ -26,6 +26,7 @@ import {
 } from '@/components/stack-table';
 import { ToneBadge } from '@/components/tone-badge';
 import { Link } from '@/i18n/navigation';
+import { TransportCard } from './transport-card';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
@@ -82,6 +83,7 @@ export default async function DocumentPage({
   const messages = ['RETURNED', 'NOT_AUTHORIZED'].includes(document.status)
     ? latestMessages(document)
     : [];
+  const isGuide = document.documentType === '06';
   const authorized = document.status === 'AUTHORIZED' || document.status === 'VOIDED';
   const base = `/${locale}/documents/${document.id}`;
   const today = ecuadorDate(systemClock.now());
@@ -174,10 +176,12 @@ export default async function DocumentPage({
 
       <SectionCard title={t('detail.summary')}>
         <dl className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          <DetailTile
-            label={t('detail.total')}
-            value={<span className="text-base tabular-nums">{amount(document.total)}</span>}
-          />
+          {!isGuide && (
+            <DetailTile
+              label={t('detail.total')}
+              value={<span className="text-base tabular-nums">{amount(document.total)}</span>}
+            />
+          )}
           <DetailTile
             label={t('detail.issueDate')}
             value={<span className="tabular-nums">{date(document.issueDate)}</span>}
@@ -186,7 +190,10 @@ export default async function DocumentPage({
             label={t('detail.issuePoint')}
             value={<span className="tabular-nums">{document.issuePoint}</span>}
           />
-          <DetailTile label={t('detail.buyer')} value={document.buyer.name} />
+          <DetailTile
+            label={isGuide ? t('detail.transport.firstRecipient') : t('detail.buyer')}
+            value={document.buyer.name}
+          />
           <DetailTile
             label={t('detail.identification')}
             value={<span className="tabular-nums">{document.buyer.identification}</span>}
@@ -237,63 +244,69 @@ export default async function DocumentPage({
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_19rem]">
         <div className="min-w-0 space-y-6">
-          <section aria-labelledby="lines-title">
-            <h2 id="lines-title" className="mb-3 text-sm font-semibold">
-              {t('detail.lines.title')}
-            </h2>
-            <TableCard>
-              <StackTable aria-labelledby="lines-title">
-                <StackHeader>
-                  <StackRow className="bg-muted/40">
-                    <StackHead className="pl-4">{t('detail.lines.description')}</StackHead>
-                    <StackHead className="text-right">{t('detail.lines.quantity')}</StackHead>
-                    <StackHead className="text-right">{t('detail.lines.unitPrice')}</StackHead>
-                    <StackHead className="text-right">{t('detail.lines.discount')}</StackHead>
-                    <StackHead>{t('detail.lines.iva')}</StackHead>
-                    <StackHead className="pr-4 text-right">{t('detail.lines.total')}</StackHead>
-                  </StackRow>
-                </StackHeader>
-                <StackBody>
-                  {document.lines.map((line, index) => (
-                    <StackRow key={index}>
-                      <StackCell heading className="pl-4">
-                        <p className="font-medium">{line.name}</p>
-                        <p className="font-mono text-xs text-muted-foreground">{line.code}</p>
-                      </StackCell>
-                      <StackCell
-                        label={t('detail.lines.quantity')}
-                        className="text-right tabular-nums"
-                      >
-                        {format.number(Number(line.quantity), { maximumFractionDigits: 6 })}
-                      </StackCell>
-                      <StackCell
-                        label={t('detail.lines.unitPrice')}
-                        className="text-right tabular-nums"
-                      >
-                        {format.number(Number(line.unitPrice), {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 6,
-                        })}
-                      </StackCell>
-                      <StackCell
-                        label={t('detail.lines.discount')}
-                        className="text-right tabular-nums"
-                      >
-                        {amount(line.discount)}
-                      </StackCell>
-                      <StackCell label={t('detail.lines.iva')}>{rate(line.ivaRateCode)}</StackCell>
-                      <StackCell
-                        label={t('detail.lines.total')}
-                        className="pr-4 text-right tabular-nums"
-                      >
-                        {amount(line.base)}
-                      </StackCell>
+          {!isGuide && (
+            <section aria-labelledby="lines-title">
+              <h2 id="lines-title" className="mb-3 text-sm font-semibold">
+                {t('detail.lines.title')}
+              </h2>
+              <TableCard>
+                <StackTable aria-labelledby="lines-title">
+                  <StackHeader>
+                    <StackRow className="bg-muted/40">
+                      <StackHead className="pl-4">{t('detail.lines.description')}</StackHead>
+                      <StackHead className="text-right">{t('detail.lines.quantity')}</StackHead>
+                      <StackHead className="text-right">{t('detail.lines.unitPrice')}</StackHead>
+                      <StackHead className="text-right">{t('detail.lines.discount')}</StackHead>
+                      <StackHead>{t('detail.lines.iva')}</StackHead>
+                      <StackHead className="pr-4 text-right">{t('detail.lines.total')}</StackHead>
                     </StackRow>
-                  ))}
-                </StackBody>
-              </StackTable>
-            </TableCard>
-          </section>
+                  </StackHeader>
+                  <StackBody>
+                    {document.lines.map((line, index) => (
+                      <StackRow key={index}>
+                        <StackCell heading className="pl-4">
+                          <p className="font-medium">{line.name}</p>
+                          <p className="font-mono text-xs text-muted-foreground">{line.code}</p>
+                        </StackCell>
+                        <StackCell
+                          label={t('detail.lines.quantity')}
+                          className="text-right tabular-nums"
+                        >
+                          {format.number(Number(line.quantity), { maximumFractionDigits: 6 })}
+                        </StackCell>
+                        <StackCell
+                          label={t('detail.lines.unitPrice')}
+                          className="text-right tabular-nums"
+                        >
+                          {format.number(Number(line.unitPrice), {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 6,
+                          })}
+                        </StackCell>
+                        <StackCell
+                          label={t('detail.lines.discount')}
+                          className="text-right tabular-nums"
+                        >
+                          {amount(line.discount)}
+                        </StackCell>
+                        <StackCell label={t('detail.lines.iva')}>
+                          {rate(line.ivaRateCode)}
+                        </StackCell>
+                        <StackCell
+                          label={t('detail.lines.total')}
+                          className="pr-4 text-right tabular-nums"
+                        >
+                          {amount(line.base)}
+                        </StackCell>
+                      </StackRow>
+                    ))}
+                  </StackBody>
+                </StackTable>
+              </TableCard>
+            </section>
+          )}
+
+          {document.transport && <TransportCard transport={document.transport} />}
 
           {(document.origin || document.derived.length > 0) && (
             <SectionCard title={t('detail.related.title')}>
@@ -384,65 +397,69 @@ export default async function DocumentPage({
         </div>
 
         <aside className="space-y-6 lg:sticky lg:top-6">
-          <section
-            aria-labelledby="totals-title"
-            className="rounded-xl border border-border bg-card p-6 shadow-sm"
-          >
-            <h2 id="totals-title" className="text-sm font-semibold">
-              {t('detail.totals.title')}
-            </h2>
-            <dl className="mt-4 space-y-2 text-sm">
-              {document.taxTotals.map((tax) => (
-                <div key={`base-${tax.rateCode}`} className="flex justify-between gap-3">
-                  <dt className="text-muted-foreground">
-                    {t('detail.totals.subtotal', { rate: rate(tax.rateCode) })}
-                  </dt>
-                  <dd className="tabular-nums">{amount(tax.base)}</dd>
+          {!isGuide && (
+            <>
+              <section
+                aria-labelledby="totals-title"
+                className="rounded-xl border border-border bg-card p-6 shadow-sm"
+              >
+                <h2 id="totals-title" className="text-sm font-semibold">
+                  {t('detail.totals.title')}
+                </h2>
+                <dl className="mt-4 space-y-2 text-sm">
+                  {document.taxTotals.map((tax) => (
+                    <div key={`base-${tax.rateCode}`} className="flex justify-between gap-3">
+                      <dt className="text-muted-foreground">
+                        {t('detail.totals.subtotal', { rate: rate(tax.rateCode) })}
+                      </dt>
+                      <dd className="tabular-nums">{amount(tax.base)}</dd>
+                    </div>
+                  ))}
+                  {Number(document.discount) > 0 && (
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-muted-foreground">{t('detail.totals.discount')}</dt>
+                      <dd className="tabular-nums">{amount(document.discount)}</dd>
+                    </div>
+                  )}
+                  {document.taxTotals
+                    .filter((tax) => Number(tax.value) > 0)
+                    .map((tax) => (
+                      <div key={`iva-${tax.rateCode}`} className="flex justify-between gap-3">
+                        <dt className="text-muted-foreground">{rate(tax.rateCode)}</dt>
+                        <dd className="tabular-nums">{amount(tax.value)}</dd>
+                      </div>
+                    ))}
+                </dl>
+                <div className="mt-4 flex items-baseline justify-between gap-3 border-t border-border pt-4">
+                  <span className="text-sm font-medium">{t('detail.totals.total')}</span>
+                  <span className="text-2xl font-semibold tracking-tight tabular-nums">
+                    {amount(document.total)}
+                  </span>
                 </div>
-              ))}
-              {Number(document.discount) > 0 && (
-                <div className="flex justify-between gap-3">
-                  <dt className="text-muted-foreground">{t('detail.totals.discount')}</dt>
-                  <dd className="tabular-nums">{amount(document.discount)}</dd>
-                </div>
-              )}
-              {document.taxTotals
-                .filter((tax) => Number(tax.value) > 0)
-                .map((tax) => (
-                  <div key={`iva-${tax.rateCode}`} className="flex justify-between gap-3">
-                    <dt className="text-muted-foreground">{rate(tax.rateCode)}</dt>
-                    <dd className="tabular-nums">{amount(tax.value)}</dd>
-                  </div>
-                ))}
-            </dl>
-            <div className="mt-4 flex items-baseline justify-between gap-3 border-t border-border pt-4">
-              <span className="text-sm font-medium">{t('detail.totals.total')}</span>
-              <span className="text-2xl font-semibold tracking-tight tabular-nums">
-                {amount(document.total)}
-              </span>
-            </div>
-          </section>
-          {document.payments.length > 0 && (
-            <SectionCard title={t('detail.payments.title')}>
-              <ul className="space-y-2 text-sm">
-                {document.payments.map((payment, index) => (
-                  <li key={index} className="flex justify-between gap-3">
-                    <span className="min-w-0">
-                      {tSri(`paymentMethods.${payment.method as '01'}`)}
-                      {payment.term !== null && payment.termUnit && (
-                        <span className="block text-xs text-muted-foreground">
-                          {t('detail.payments.term', {
-                            term: payment.term,
-                            unit: tSri(`termUnits.${payment.termUnit as 'dias'}`).toLowerCase(),
-                          })}
+              </section>
+              {document.payments.length > 0 && (
+                <SectionCard title={t('detail.payments.title')}>
+                  <ul className="space-y-2 text-sm">
+                    {document.payments.map((payment, index) => (
+                      <li key={index} className="flex justify-between gap-3">
+                        <span className="min-w-0">
+                          {tSri(`paymentMethods.${payment.method as '01'}`)}
+                          {payment.term !== null && payment.termUnit && (
+                            <span className="block text-xs text-muted-foreground">
+                              {t('detail.payments.term', {
+                                term: payment.term,
+                                unit: tSri(`termUnits.${payment.termUnit as 'dias'}`).toLowerCase(),
+                              })}
+                            </span>
+                          )}
                         </span>
-                      )}
-                    </span>
-                    <span className="tabular-nums">{amount(payment.amount)}</span>
-                  </li>
-                ))}
-              </ul>
-            </SectionCard>
+                        <span className="tabular-nums">{amount(payment.amount)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </SectionCard>
+              )}
+            </>
           )}
           {!authorized && (
             <p className="text-xs text-muted-foreground">{t('detail.downloads.rideLater')}</p>

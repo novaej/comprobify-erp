@@ -377,6 +377,7 @@ describe('correcting, re-issuing by hand and voiding', () => {
       void: false,
       resend: false,
       credit: false,
+      guide: false,
     });
     const done = await authorized(clientId);
     // Whether it can be credited depends on the plan; credit-notes.test.ts covers it.
@@ -394,6 +395,7 @@ describe('correcting, re-issuing by hand and voiding', () => {
     });
     const viewer: ActorContext = { ...actor, permissions: ['documents.read'] };
     expect(Object.values((await getDocument(viewer, db, returnedOne.id)).allowed)).toEqual([
+      false,
       false,
       false,
       false,
