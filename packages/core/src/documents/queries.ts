@@ -181,6 +181,16 @@ export async function listDocuments(
   });
 }
 
+// A document this one comes from or that came from it (a credit note and its invoice).
+export type DocumentLink = {
+  id: string;
+  documentType: string;
+  number: string;
+  issueDate: string;
+  status: DocumentStatus;
+  total: string;
+};
+
 export type DocumentDetail = {
   id: string;
   number: string;
@@ -223,6 +233,9 @@ export type DocumentDetail = {
     occurredAt: Date;
   }[];
   previousKeys: { accessKey: string; issueDate: string; reason: string }[];
+  // What it comes from, and what came from it, among the documents this user may see.
+  origin: DocumentLink | null;
+  derived: DocumentLink[];
   // What this user may do with it now (FR-DOC-6 to FR-DOC-8, FR-DOC-11). Core still checks
   // each when it's done; this only decides what the screen offers.
   allowed: DocumentActions;
@@ -315,6 +328,25 @@ export async function getDocument(
       .from(documentReissues)
       .where(eq(documentReissues.documentId, id))
       .orderBy(asc(documentReissues.createdAt));
+    const link = (other: typeof row): DocumentLink => ({
+      id: other.id,
+      documentType: other.documentType,
+      number: documentNumber(other.series, other.sequential),
+      issueDate: other.issueDate,
+      status: other.status,
+      total: other.total,
+    });
+    const [origin] = row.relatedDocumentId
+      ? await tx
+          .select()
+          .from(documents)
+          .where(and(eq(documents.id, row.relatedDocumentId), restricted(ctx)))
+      : [];
+    const derived = await tx
+      .select()
+      .from(documents)
+      .where(and(eq(documents.relatedDocumentId, id), restricted(ctx)))
+      .orderBy(asc(documents.createdAt));
     return {
       id: row.id,
       number: documentNumber(row.series, row.sequential),
@@ -364,6 +396,8 @@ export async function getDocument(
         issueDate: reissue.previousIssueDate,
         reason: reissue.reason,
       })),
+      origin: origin ? link(origin) : null,
+      derived: derived.map(link),
       allowed: documentActions(ctx, row),
     };
   });

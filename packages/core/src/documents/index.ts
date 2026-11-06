@@ -42,6 +42,7 @@ export type {
   DocumentActions,
   DocumentDetail,
   DocumentFilters,
+  DocumentLink,
   DocumentListRow,
   IssuingOptions,
 } from './queries';

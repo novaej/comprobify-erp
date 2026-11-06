@@ -119,6 +119,9 @@ export const documents = pgTable(
     // The line set in force; a correction adds a new one (rows are never deleted).
     revision: integer('revision').default(1).notNull(),
     clientId: uuid('client_id'),
+    // The document this one comes from: a credit note's invoice, a guía's optional invoice.
+    // Set when it's created and never changed; the XML carries the origin's number and date.
+    relatedDocumentId: uuid('related_document_id'),
     buyerIdType: text('buyer_id_type', { enum: SRI_ID_TYPES }).notNull(),
     buyerIdentification: text('buyer_identification').notNull(),
     buyerName: text('buyer_name').notNull(),
@@ -167,6 +170,14 @@ export const documents = pgTable(
       columns: [table.tenantId, table.clientId],
       foreignColumns: [clients.tenantId, clients.id],
     }),
+    foreignKey({
+      name: 'documents_related_fk',
+      columns: [table.tenantId, table.relatedDocumentId],
+      foreignColumns: [table.tenantId, table.id],
+    }),
+    index('documents_related_idx')
+      .on(table.tenantId, table.relatedDocumentId)
+      .where(sql`related_document_id IS NOT NULL`),
     // SRI rule 5: no duplicate sequentials or keys.
     unique('documents_sequential_unique').on(
       table.issuePointId,
@@ -191,6 +202,13 @@ export const documents = pgTable(
     check('documents_sequential_check', sql`sequential BETWEEN 1 AND 999999999`),
     check('documents_access_key_check', sql`access_key ~ '^[0-9]{49}$'`),
     check('documents_amounts_check', sql`subtotal >= 0 AND discount >= 0 AND total >= 0`),
+    // A factura comes from nothing, a credit note always from an invoice (FR-SAL-8).
+    check(
+      'documents_related_check',
+      sql`related_document_id IS DISTINCT FROM id
+        AND (document_type <> '01' OR related_document_id IS NULL)
+        AND (document_type <> '04' OR related_document_id IS NOT NULL)`,
+    ),
   ],
 );
 
