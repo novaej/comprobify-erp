@@ -149,7 +149,7 @@ describe('super admin: companies and their plans', () => {
     const org = await newCompany();
     const id = { realTenantId: org.realTenantId };
     for (const [moduleKey, code] of [
-      ['DELIVERY_GUIDES', 'MODULE_NOT_AVAILABLE'],
+      ['WITHHOLDINGS', 'MODULE_NOT_AVAILABLE'],
       ['INVOICING', 'MODULE_NOT_AVAILABLE'],
       ['NOPE', 'MODULE_NOT_FOUND'],
     ] as const)
