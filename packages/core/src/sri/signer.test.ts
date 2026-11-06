@@ -2,8 +2,9 @@ import { DOMParser } from '@xmldom/xmldom';
 import { SignedXml } from 'xml-crypto';
 import { describe, expect, it } from 'vitest';
 import { parseP12 } from '../certificates';
-import { createTestP12, sampleFactura, sampleNotaCredito } from '../testing';
+import { createTestP12, sampleFactura, sampleGuiaRemision, sampleNotaCredito } from '../testing';
 import { buildFactura } from './factura';
+import { buildGuiaRemision } from './guia-remision';
 import { buildNotaCredito } from './nota-credito';
 import { redateSignedXml } from './redate';
 import { signXml } from './signer';
@@ -53,6 +54,14 @@ describe('the XAdES-BES signer', () => {
     expect(verify(signed, certificate.certificatePem)).toEqual({ valid: true, references: 2 });
     await expect(validateXml(signed, '04')).resolves.toEqual({ valid: true });
     expect(signed).toMatch(/<\/ds:Signature><\/notaCredito>$/);
+  });
+
+  it('signs a guía de remisión the same way', async () => {
+    const certificate = key();
+    const signed = signXml(buildGuiaRemision(sampleGuiaRemision()).xml, certificate, now);
+    expect(verify(signed, certificate.certificatePem)).toEqual({ valid: true, references: 2 });
+    await expect(validateXml(signed, '06')).resolves.toEqual({ valid: true });
+    expect(signed).toMatch(/<\/ds:Signature><\/guiaRemision>$/);
   });
 
   it("re-dates a signed credit note without touching the original's date", async () => {
