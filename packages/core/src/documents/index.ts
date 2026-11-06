@@ -8,6 +8,14 @@ export {
 export type { DocumentStatus } from './status';
 export { takeSequential } from './sequence';
 export { correctInvoice, correctionInput, createInvoice, invoiceInput } from './create-invoice';
+export {
+  correctCreditNote,
+  createCreditNote,
+  creditBalance,
+  creditNoteCorrectionInput,
+  creditNoteInput,
+} from './credit-note';
+export type { CreditBalanceLine, CreditNoteCorrectionInput, CreditNoteInput } from './credit-note';
 export type { CorrectionInput, InvoiceInput, IssueDeps, IssuedDocument } from './create-invoice';
 export {
   alertOverdueAuthorizations,

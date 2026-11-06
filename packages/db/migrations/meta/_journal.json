@@ -246,6 +246,13 @@
       "when": 1793983813536,
       "tag": "0034_document_links",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1793985451346,
+      "tag": "0035_credit_note_lines",
+      "breakpoints": true
     }
   ]
 }

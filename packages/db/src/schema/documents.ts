@@ -221,6 +221,9 @@ export const documentLines = pgTable(
     revision: integer('revision').notNull(),
     position: integer('position').notNull(),
     productId: uuid('product_id'),
+    // A credit note's line: the position of the line it credits on the origin invoice. The
+    // credited quantity and base per invoice line is the balance (FR-SAL-8).
+    sourcePosition: integer('source_position'),
     code: text('code').notNull(),
     auxiliaryCode: text('auxiliary_code'),
     name: text('name').notNull(),
@@ -250,6 +253,10 @@ export const documentLines = pgTable(
     }),
     unique('document_lines_position_unique').on(table.documentId, table.revision, table.position),
     check('document_lines_iva_rate_check', oneOf('iva_rate_code', SRI_IVA_RATE_CODES)),
+    check(
+      'document_lines_source_position_check',
+      sql`source_position IS NULL OR source_position >= 1`,
+    ),
     check(
       'document_lines_amounts_check',
       sql`quantity > 0 AND unit_price >= 0 AND discount >= 0 AND base >= 0 AND iva >= 0`,

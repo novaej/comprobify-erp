@@ -1,18 +1,13 @@
 import { createHash } from 'node:crypto';
-import { and, eq, gte, schema, sql, type Database, type Tx } from '@comprobify/db';
+import { schema, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
-import type { KeyCipher } from '../certificates';
-import type { Jobs } from '../jobs';
 import {
   amountInput,
   Dec,
   DomainError,
   ecuadorDate,
-  endOfEcuadorDay,
-  limitOf,
   preciseInput,
   requirePermission,
-  startOfEcuadorMonth,
   toSriAmount,
   type ActorContext,
 } from '../kernel';
@@ -25,31 +20,27 @@ import {
   lineAmounts,
   randomNumericCode,
   SELECTABLE_IVA_RATES,
-  signXml,
   SRI_PAYMENT_METHODS,
   SRI_TERM_UNITS,
-  validateXml,
 } from '../sri';
+import { ambienteFor, issuingContext, type Ambiente, type IssuingContext } from '../tenancy';
 import {
-  ambienteFor,
-  issuingContext,
-  type Ambiente,
-  type AppEnv,
-  type IssuingContext,
-} from '../tenancy';
+  consumeQuota,
+  findIdempotent,
+  issued,
+  nameValue,
+  retryDeadline,
+  text,
+  totalsColumns,
+  validateAndSign,
+  type IssueDeps,
+  type IssuedDocument,
+} from './compose';
 import { recordVersion } from './exchanges';
 import { locked, transition } from './sending';
 import { takeSequential } from './sequence';
 
-// SRI's text fields refuse newlines and tabs (FR-DOC-9); lengths are the XSD's.
-const text = (max: number) =>
-  z
-    .string()
-    .trim()
-    .min(1)
-    .max(max)
-    .regex(/^[^\n\r\t]*$/);
-const nameValue = z.object({ name: text(300), value: text(300) });
+export type { IssueDeps, IssuedDocument };
 
 export const invoiceInput = z.object({
   issuePointId: z.uuid(),
@@ -90,71 +81,6 @@ export const invoiceInput = z.object({
   idempotencyKey: z.string().trim().min(1).max(100).nullable().default(null),
 });
 export type InvoiceInput = z.input<typeof invoiceInput>;
-
-export type IssueDeps = {
-  jobs: Pick<Jobs, 'enqueue'>;
-  keyCipher: KeyCipher;
-  appEnv: AppEnv;
-  // "RUC Proveedor" (ADR-013); null leaves it out.
-  providerRuc: string | null;
-  // FR-DOC-9: the most a consumidor final invoice may total.
-  consumerFinalMaxAmount: string;
-};
-
-export type IssuedDocument = {
-  id: string;
-  number: string;
-  sequential: number;
-  accessKey: string;
-  issueDate: string;
-  total: string;
-  status: string;
-  // False when an idempotent retry returned the existing document.
-  created: boolean;
-};
-
-// FR-DOC-9: SRI refuses a document over 320 KB.
-const MAX_XML_BYTES = 320 * 1024;
-const QUOTA_FEATURE = 'DOCUMENT_QUOTA';
-
-const lock = (tx: Tx, key: string) =>
-  tx.executeSql('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [key]);
-
-const numberOf = (series: string, sequential: number) =>
-  `${series.slice(0, 3)}-${series.slice(3)}-${String(sequential).padStart(9, '0')}`;
-
-const issued = (row: typeof schema.documents.$inferSelect, created: boolean): IssuedDocument => ({
-  id: row.id,
-  number: numberOf(row.series, row.sequential),
-  sequential: row.sequential,
-  accessKey: row.accessKey,
-  issueDate: row.issueDate,
-  total: row.total,
-  status: row.status,
-  created,
-});
-
-// Until billing periods exist (Milestone 8) a quota counts the Ecuador calendar month.
-// The twin and a company still in test never use quota (FR-ONB-6a, FR-BILL-7).
-async function consumeQuota(ctx: ActorContext, tx: Tx) {
-  if (ctx.tenantMode !== 'PRODUCTION') return;
-  const limit = limitOf(ctx.entitlements, QUOTA_FEATURE);
-  if (limit === null) return;
-  await lock(tx, `quota:${ctx.tenantId}`);
-  const [row] = await tx.db
-    .select({ used: sql<number>`count(*)::int` })
-    .from(schema.documents)
-    .where(
-      and(
-        eq(schema.documents.tenantId, ctx.tenantId),
-        gte(schema.documents.createdAt, startOfEcuadorMonth(ctx.clock.now())),
-      ),
-    );
-  if (row!.used >= limit)
-    throw new DomainError('QUOTA_EXCEEDED', 'The document quota for this period is used up', {
-      limit,
-    });
-}
 
 type ParsedInvoice = z.output<typeof invoiceInput>;
 type Content = Pick<
@@ -227,22 +153,7 @@ async function composeInvoice(
       paid: toSriAmount(paid),
     });
 
-  // SRI rule 8: never sign what the XSD refuses.
-  const check = await validateXml(xml, '01');
-  if (!check.valid)
-    throw new DomainError('XML_INVALID', 'The document does not match the SRI schema', {
-      errors: check.errors,
-    });
-  const signedXml = signXml(
-    xml,
-    {
-      privateKeyPem: deps.keyCipher.decrypt(issuer.certificate.encryptedPrivateKey),
-      certificatePem: issuer.certificate.certificatePem,
-    },
-    ctx.clock.now(),
-  );
-  if (Buffer.byteLength(signedXml, 'utf8') > MAX_XML_BYTES)
-    throw new DomainError('DOCUMENT_TOO_LARGE', 'The document is larger than SRI accepts');
+  const signedXml = await validateAndSign(ctx, xml, '01', issuer, deps);
 
   const columns = {
     accessKey: numbering.accessKey,
@@ -253,18 +164,9 @@ async function composeInvoice(
     buyerName: buyer.name,
     buyerAddress: buyer.address,
     buyerEmail: buyer.email,
-    subtotal: toSriAmount(totals.subtotal),
-    discount: toSriAmount(totals.discount),
-    taxTotals: totals.taxes.map((tax) => ({
-      taxCode: tax.taxCode,
-      rateCode: tax.rateCode,
-      percent: tax.percent.toString(),
-      base: toSriAmount(tax.base),
-      value: toSriAmount(tax.value),
-    })),
-    total: toSriAmount(totals.total),
+    ...totalsColumns(totals),
     signedXml,
-    retryUntil: endOfEcuadorDay(numbering.issueDate),
+    retryUntil: retryDeadline(numbering.issueDate),
   };
 
   // Lines and payments are never updated: each revision adds its own.
@@ -327,27 +229,8 @@ export async function createInvoice(
 
   return db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
     const { documents } = schema;
-    if (input.idempotencyKey) {
-      // Two requests with one key wait for each other here, so only one creates.
-      await lock(tx, `idempotency:${ctx.tenantId}:${input.idempotencyKey}`);
-      const [existing] = await tx.db
-        .select()
-        .from(documents)
-        .where(
-          and(
-            eq(documents.tenantId, ctx.tenantId),
-            eq(documents.idempotencyKey, input.idempotencyKey),
-          ),
-        );
-      if (existing) {
-        if (existing.payloadHash !== payloadHash)
-          throw new DomainError(
-            'IDEMPOTENCY_CONFLICT',
-            'This idempotency key was used for a different document',
-          );
-        return issued(existing, false);
-      }
-    }
+    const existing = await findIdempotent(tx, ctx, input.idempotencyKey, payloadHash);
+    if (existing) return existing;
 
     const issuer = await issuingContext(ctx, tx, input.issuePointId);
     await consumeQuota(ctx, tx);
@@ -421,25 +304,37 @@ export type CorrectionInput = z.input<typeof correctionInput>;
 
 const CORRECTABLE = ['RETURNED', 'NOT_AUTHORIZED', 'SEND_FAILED'] as const;
 
+// What a type's own file composes for a correction: the new content, numbered as decided here.
+export type Composer = (
+  tx: Tx,
+  row: typeof schema.documents.$inferSelect,
+  issuer: IssuingContext,
+  numbering: { sequential: number; issueDate: string; ambiente: Ambiente; accessKey: string },
+) => Promise<{
+  columns: Record<string, unknown>;
+  insertParts: (documentId: string, revision: number) => Promise<void>;
+}>;
+
 // FR-DOC-7: a document SRI returned or rejected, or never got, is corrected and resent as
 // the same row and sequential: the same key on its issue day, today's date and a new key
 // after it (the old ones kept, as for a re-issue). A SEND_FAILED one only once SRI was
-// asked and didn't have it: before that, it may still be at SRI.
-export async function correctInvoice(
+// asked and didn't have it: before that, it may still be at SRI. The type decides its content.
+export async function correctDocument(
   ctx: ActorContext,
   db: Database,
   documentId: string,
-  raw: CorrectionInput,
-  deps: IssueDeps,
+  documentType: '01' | '04',
+  compose: Composer,
+  deps: Pick<IssueDeps, 'jobs'>,
 ): Promise<IssuedDocument> {
   requirePermission(ctx, 'documents.issue');
   const id = z.uuid().parse(documentId);
-  const input = correctionInput.parse(raw);
   const now = ctx.clock.now();
 
   return db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
     const row = await locked(tx, { tenantId: ctx.tenantId, documentId: id });
-    if (!row) throw new DomainError('NOT_FOUND', 'Document not found');
+    if (!row || row.documentType !== documentType)
+      throw new DomainError('NOT_FOUND', 'Document not found');
     if (!(CORRECTABLE as readonly string[]).includes(row.status))
       throw new DomainError(
         'NOT_CORRECTABLE',
@@ -468,14 +363,12 @@ export async function correctInvoice(
             sequential: row.sequential,
             numericCode: randomNumericCode(),
           });
-    const { columns, insertParts } = await composeInvoice(
-      ctx,
-      tx,
-      input,
-      issuer,
-      { sequential: row.sequential, issueDate: today, ambiente: row.ambiente, accessKey: key },
-      deps,
-    );
+    const { columns, insertParts } = await compose(tx, row, issuer, {
+      sequential: row.sequential,
+      issueDate: today,
+      ambiente: row.ambiente,
+      accessKey: key,
+    });
 
     if (key !== row.accessKey)
       await tx.db.insert(schema.documentReissues).values({
@@ -524,4 +417,22 @@ export async function correctInvoice(
     await deps.jobs.enqueue(tx, 'sri.send', { tenantId: ctx.tenantId, documentId: row.id });
     return issued(updated, false);
   });
+}
+
+export async function correctInvoice(
+  ctx: ActorContext,
+  db: Database,
+  documentId: string,
+  raw: CorrectionInput,
+  deps: IssueDeps,
+): Promise<IssuedDocument> {
+  const input = correctionInput.parse(raw);
+  return correctDocument(
+    ctx,
+    db,
+    documentId,
+    '01',
+    (tx, row, issuer, numbering) => composeInvoice(ctx, tx, input, issuer, numbering, deps),
+    deps,
+  );
 }

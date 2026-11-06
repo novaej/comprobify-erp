@@ -150,13 +150,21 @@ describe('company settings', () => {
     const org = await company();
     const owner = await actor(org.realTenantId);
     const [point] = (await companySettings(owner, db)).branches[0]!.issuePoints;
+    // 06 has no builder yet; 04 has one, but this plan lacks its feature.
+    await expect(
+      setIssuePointDocumentType(owner, db, {
+        issuePointId: point!.id,
+        documentType: '06',
+        enabled: true,
+      }),
+    ).rejects.toMatchObject({ name: 'ZodError' });
     await expect(
       setIssuePointDocumentType(owner, db, {
         issuePointId: point!.id,
         documentType: '04',
         enabled: true,
       }),
-    ).rejects.toMatchObject({ name: 'ZodError' });
+    ).rejects.toMatchObject({ code: 'FEATURE_NOT_ENABLED' });
 
     await exception(org, 'DOC_TYPE_01', null, 'REVOKE');
     const withoutFacturas = await actor(org.realTenantId);

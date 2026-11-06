@@ -27,8 +27,8 @@ import { pairOf, type Pair } from './pair';
 
 export { TAX_REGIMES };
 
-// The types a builder exists for. 04 and 06 join in Milestone 4 (FR-DOC-1).
-export const ISSUABLE_DOCUMENT_TYPES = ['01'] as const;
+// The types a builder and its creation exist for. 06 joins with its builder (FR-DOC-1).
+export const ISSUABLE_DOCUMENT_TYPES = ['01', '04'] as const;
 
 const code = z.string().regex(/^[0-9]{3}$/);
 const line = (max: number) =>
