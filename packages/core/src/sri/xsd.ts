@@ -10,12 +10,29 @@ import xmldsigCore from './xsd/xmldsig-core';
 const SCHEMAS = { '01': 'factura_V2.1.0.xsd' } as const;
 export type ValidatedDocumentType = keyof typeof SCHEMAS;
 
+// ADR-013: the published pattern takes only the emprendedor legend, though Anexo 22
+// also requires the negocio popular one. Widened here so the published file stays as is.
+const PUBLISHED_RIMPE = '<xsd:pattern value="CONTRIBUYENTE RÉGIMEN RIMPE"/>';
+
+export function widenFactura(published: string): string {
+  if (!published.includes(PUBLISHED_RIMPE)) {
+    throw new Error('The factura XSD no longer has the RIMPE pattern to widen.');
+  }
+  return published.replace(
+    PUBLISHED_RIMPE,
+    `${PUBLISHED_RIMPE}<xsd:pattern value="CONTRIBUYENTE NEGOCIO POPULAR - RÉGIMEN RIMPE"/>`,
+  );
+}
+
 let folder: Promise<string> | undefined;
 
 function schemaFolder(): Promise<string> {
   folder ??= (async () => {
     const path = await mkdtemp(join(/*turbopackIgnore: true*/ tmpdir(), 'comprobify-xsd-'));
-    await writeFile(join(/*turbopackIgnore: true*/ path, 'factura_V2.1.0.xsd'), factura210);
+    await writeFile(
+      join(/*turbopackIgnore: true*/ path, 'factura_V2.1.0.xsd'),
+      widenFactura(factura210),
+    );
     await writeFile(join(/*turbopackIgnore: true*/ path, 'xmldsig-core-schema.xsd'), xmldsigCore);
     return path;
   })().catch((error: unknown) => {

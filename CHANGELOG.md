@@ -82,3 +82,5 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 ### Fixed
 
 - The RIDE draws a line under the last payment row (FR-DOC-10, ADR-015).
+- A RIMPE negocio popular company can issue invoices: its legend, `CONTRIBUYENTE NEGOCIO POPULAR - RÉGIMEN RIMPE`, is added to the bundled factura XSD's pattern, which SRI publishes with the emprendedor legend only (ADR-013).
+- Milestone 3's gate passed: an invoice authorized by SRI's test environment with a real certificate.

@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { sampleFactura } from '../testing';
 import { buildFactura } from './factura';
-import { validateXml } from './xsd';
+import { validateXml, widenFactura } from './xsd';
 import factura210 from './xsd/factura-2.1.0';
 import xmldsigCore from './xsd/xmldsig-core';
 
@@ -77,7 +77,7 @@ describe('the factura builder', () => {
     expect(result.valid || result.errors.join('\n')).toMatch(/ambiente/);
   });
 
-  it('prints the RIMPE legend; the published XSD refuses the negocio popular one (ADR-013)', async () => {
+  it('prints both RIMPE legends of Anexo 22, which the widened XSD accepts (ADR-013)', async () => {
     const issuer = sampleFactura().issuer;
     const emprendedor = buildFactura(
       sampleFactura({ issuer: { ...issuer, taxRegime: 'RIMPE_EMPRENDEDOR' } }),
@@ -89,6 +89,16 @@ describe('the factura builder', () => {
     const popular = buildFactura(
       sampleFactura({ issuer: { ...issuer, taxRegime: 'RIMPE_NEGOCIO_POPULAR' } }),
     );
-    await expect(validateXml(popular.xml, '01')).resolves.toMatchObject({ valid: false });
+    expect(popular.xml).toContain(
+      '<contribuyenteRimpe>CONTRIBUYENTE NEGOCIO POPULAR - RÉGIMEN RIMPE</contribuyenteRimpe>',
+    );
+    await expect(validateXml(popular.xml, '01')).resolves.toEqual({ valid: true });
+    // Still a closed list: any other text fails.
+    const other = popular.xml.replace('NEGOCIO POPULAR - RÉGIMEN RIMPE', 'RÉGIMEN GENERAL');
+    await expect(validateXml(other, '01')).resolves.toMatchObject({ valid: false });
+  });
+
+  it('refuses to widen an XSD whose RIMPE pattern changed', () => {
+    expect(() => widenFactura(factura210.replace('RÉGIMEN RIMPE"', 'RIMPE"'))).toThrow();
   });
 });
