@@ -2,8 +2,9 @@ import { DOMParser } from '@xmldom/xmldom';
 import { SignedXml } from 'xml-crypto';
 import { describe, expect, it } from 'vitest';
 import { parseP12 } from '../certificates';
-import { createTestP12, sampleFactura } from '../testing';
+import { createTestP12, sampleFactura, sampleNotaCredito } from '../testing';
 import { buildFactura } from './factura';
+import { buildNotaCredito } from './nota-credito';
 import { redateSignedXml } from './redate';
 import { signXml } from './signer';
 import { validateXml } from './xsd';
@@ -44,6 +45,26 @@ describe('the XAdES-BES signer', () => {
     expect(signed).toMatch(
       /<\/infoAdicional><ds:Signature [^>]+>[\s\S]*<\/ds:Signature><\/factura>$/,
     );
+  });
+
+  it('signs a credit note the same way: verified, and still valid for its XSD', async () => {
+    const certificate = key();
+    const signed = signXml(buildNotaCredito(sampleNotaCredito()).xml, certificate, now);
+    expect(verify(signed, certificate.certificatePem)).toEqual({ valid: true, references: 2 });
+    await expect(validateXml(signed, '04')).resolves.toEqual({ valid: true });
+    expect(signed).toMatch(/<\/ds:Signature><\/notaCredito>$/);
+  });
+
+  it("re-dates a signed credit note without touching the original's date", async () => {
+    const certificate = key();
+    const signed = signXml(buildNotaCredito(sampleNotaCredito()).xml, certificate, now);
+    const redated = redateSignedXml(signed, {
+      accessKey: '1111202604179000000100110010010000000021234567810',
+      issueDate: '2026-11-11',
+    });
+    expect(redated).toContain('<fechaEmision>11/11/2026</fechaEmision>');
+    expect(redated).toContain('<fechaEmisionDocSustento>03/11/2026</fechaEmisionDocSustento>');
+    await expect(validateXml(redated, '04')).resolves.toEqual({ valid: true });
   });
 
   it('fails verification when a byte of the document changes after signing', () => {

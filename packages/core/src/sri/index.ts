@@ -18,6 +18,8 @@ export { accessKey, module11, randomNumericCode } from './access-key';
 export type { AccessKeyParts } from './access-key';
 export { buildFactura, FACTURA_VERSION, RIMPE_LEGENDS } from './factura';
 export type { FacturaInput, NameValue } from './factura';
+export { buildNotaCredito, NOTA_CREDITO_VERSION } from './nota-credito';
+export type { NotaCreditoInput } from './nota-credito';
 export {
   DOCUMENT_TYPES,
   ISSUABLE_TYPES,
