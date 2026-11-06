@@ -141,6 +141,8 @@
     "mainAddress": "Dirección matriz",
     "requiredAccounting": "Obligado a llevar contabilidad",
     "requiredAccountingHint": "Aparece en tus comprobantes electrónicos.",
+    "taxRegime": "Régimen",
+    "taxRegimeHint": "Si estás en RIMPE, tus comprobantes llevan la leyenda que pide el SRI. Puedes cambiarlo después en Configuración.",
     "certificateSection": "Firma electrónica",
     "certificateHint": "Tu archivo .p12 y su contraseña. Debe pertenecer al RUC de arriba. Guardamos la clave privada cifrada.",
     "certificateFile": "Archivo de firma (.p12)",

@@ -27,6 +27,7 @@ describe('onboarding', () => {
     tradeName: 'Gamma',
     mainAddress: 'Av. 9 de Octubre, Guayaquil',
     requiredAccounting: true,
+    taxRegime: 'RIMPE_EMPRENDEDOR' as const,
     branch: { code: '001', name: 'Matriz', address: null },
     issuePointCode: '001',
     certificate: { file, password },
@@ -63,7 +64,12 @@ describe('onboarding', () => {
       );
     }
     for (const { tenant, certificates, logos } of stored) {
-      expect(tenant).toMatchObject({ ruc, requiredAccounting: true, tradeName: 'Gamma' });
+      expect(tenant).toMatchObject({
+        ruc,
+        requiredAccounting: true,
+        taxRegime: 'RIMPE_EMPRENDEDOR',
+        tradeName: 'Gamma',
+      });
       expect(certificates).toHaveLength(1);
       expect(certificates[0]).toMatchObject({
         active: true,

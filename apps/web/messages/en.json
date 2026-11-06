@@ -141,6 +141,8 @@
     "mainAddress": "Main address",
     "requiredAccounting": "Required to keep accounting records",
     "requiredAccountingHint": "Shown on your electronic documents.",
+    "taxRegime": "Tax regime",
+    "taxRegimeHint": "A RIMPE company's documents carry the legend SRI requires. You can change it later in Settings.",
     "certificateSection": "Electronic signature",
     "certificateHint": "Your .p12 file and its password. It must belong to the RUC above. We store the private key encrypted.",
     "certificateFile": "Signature file (.p12)",

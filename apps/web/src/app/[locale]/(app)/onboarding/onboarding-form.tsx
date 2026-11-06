@@ -3,24 +3,28 @@
 import { Button } from '@comprobify/ui/components/button';
 import { Input } from '@comprobify/ui/components/input';
 import { useLocale, useTranslations } from 'next-intl';
+import { useState } from 'react';
 
+import { ChoiceSelect, type Choice } from '@/components/choice-select';
 import { FormActionBar } from '@/components/form-action-bar';
 import { FormField } from '@/components/form-field';
 import { SectionCard } from '@/components/section-card';
 import { useFormAction } from '@/components/use-form-action';
 import { onboardAction } from './actions';
 
-export function OnboardingForm() {
+export function OnboardingForm({ regimes }: { regimes: Choice[] }) {
   const t = useTranslations('onboarding');
   const tError = useTranslations('onboardingError');
   const locale = useLocale();
   const { state, onSubmit, pending } = useFormAction(onboardAction);
+  const [regime, setRegime] = useState('GENERAL');
   const message =
     state.error && (tError.has(state.error) ? tError(state.error) : tError('UNKNOWN'));
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="taxRegime" value={regime} />
       <fieldset disabled={pending} className="space-y-6">
         <SectionCard title={t('companySection')}>
           <div className="space-y-4">
@@ -44,6 +48,11 @@ export function OnboardingForm() {
             </FormField>
             <FormField required label={t('mainAddress')}>
               {(props) => <Input {...props} name="mainAddress" required />}
+            </FormField>
+            <FormField required label={t('taxRegime')} hint={t('taxRegimeHint')}>
+              {(props) => (
+                <ChoiceSelect value={regime} onChange={setRegime} options={regimes} a11y={props} />
+              )}
             </FormField>
             <label className="flex items-start gap-3 text-sm">
               <input

@@ -1,4 +1,4 @@
-import { and, eq, schema, type Database, type Tx } from '@comprobify/db';
+import { and, eq, schema, TAX_REGIMES, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
 import { recordAudit } from '../audit';
 import { loadEntitlements, startDefaultSubscriptions } from '../entitlements';
@@ -23,6 +23,8 @@ export const createOrganizationInput = z.object({
   }),
   issuePointCode: code,
   requiredAccounting: z.boolean().default(false),
+  // Asked at onboarding so a RIMPE company's first invoice carries its legend.
+  taxRegime: z.enum(TAX_REGIMES).default('GENERAL'),
 });
 
 // Prepared by onboardOrganization: already parsed, matched and encrypted.
@@ -70,6 +72,7 @@ export async function createOrganization(
         tradeName: input.tradeName,
         mainAddress: input.mainAddress,
         requiredAccounting: input.requiredAccounting,
+        taxRegime: input.taxRegime,
       };
       const [real] = await tx
         .insert(tenants)
@@ -117,7 +120,7 @@ export async function createOrganization(
           tenantId: tenant.id,
           actorUserId: input.ownerUserId,
           action: 'organization.created',
-          details: { ruc: input.ruc, mode: tenant.mode },
+          details: { ruc: input.ruc, mode: tenant.mode, taxRegime: input.taxRegime },
         });
         if (extras.certificate) {
           await recordAudit(tx, {
