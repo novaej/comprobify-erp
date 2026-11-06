@@ -639,7 +639,8 @@
     "newInvoice": "New invoice",
     "document": "Document",
     "pendingDocuments": "Pending",
-    "correctInvoice": "Correct invoice"
+    "correctInvoice": "Correct invoice",
+    "newCreditNote": "New credit note"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -1035,7 +1036,8 @@
       "page": "Page {page} of {pages}"
     },
     "types": {
-      "01": "Invoice"
+      "01": "Invoice",
+      "04": "Credit note"
     },
     "statuses": {
       "SIGNED": "Signed",
@@ -1149,7 +1151,12 @@
       },
       "mockTitle": "Authorized by the SRI simulator",
       "mockDescription": "This document never reached SRI: the local simulator answered it (SRI_MOCK_MODE). It has no validity and SRI doesn't know it.",
-      "mockHelp": "Authorized by the SRI simulator. It has no tax validity."
+      "mockHelp": "Authorized by the SRI simulator. It has no tax validity.",
+      "related": {
+        "title": "Related documents",
+        "origin": "Modifies",
+        "derived": "Credit note"
+      }
     },
     "pendingLink": "Pending",
     "pending": {
@@ -1183,7 +1190,8 @@
       "resendTitle": "Resend to the buyer?",
       "resendDescription": "The RIDE and the authorized XML are sent again to:",
       "resendConfirm": "Resend",
-      "resent": "Sending."
+      "resent": "Sending.",
+      "credit": "Credit note"
     }
   },
   "invoiceForm": {
@@ -1323,6 +1331,61 @@
     "SRI_UNAVAILABLE": "SRI isn't answering now.",
     "NOT_AUTHORIZED": "The document isn't authorized yet.",
     "NO_BUYER_EMAIL": "The buyer has no email on this document.",
-    "FEATURE_NOT_ENABLED": "Your plan doesn't include this."
+    "FEATURE_NOT_ENABLED": "Your plan doesn't include this.",
+    "ORIGIN_NOT_INVOICE": "Only an invoice can be credited.",
+    "ORIGIN_NOT_AUTHORIZED": "Only an invoice SRI has authorized can be credited.",
+    "CREDIT_NOTE_NEEDS_BUYER": "A consumidor final invoice cannot be credited with a credit note.",
+    "CREDIT_LINE_UNKNOWN": "A line does not belong to the invoice.",
+    "CREDIT_EXCEEDS_BALANCE": "A line is more than what is left to credit on the invoice."
+  },
+  "creditNoteForm": {
+    "title": "Credit note for {number}",
+    "description": "Credit all or part of the invoice. Each line cannot exceed what is still left to credit.",
+    "back": "Back to the invoice",
+    "issuing": {
+      "title": "Issuing",
+      "issuePoint": "Issue point",
+      "origin": "Invoice being modified",
+      "none": "You have no issue point enabled for credit notes.",
+      "noneAction": "Review the company"
+    },
+    "reason": {
+      "label": "Reason",
+      "hint": "Printed on the credit note. For example: returned goods."
+    },
+    "lines": {
+      "title": "Invoice lines",
+      "description": "Enter the quantity to credit on each line that applies; leave the rest empty.",
+      "item": "Product or service",
+      "left": "Left to credit",
+      "leftBase": "{amount} before VAT",
+      "quantity": "Quantity",
+      "unitPrice": "Unit price",
+      "discount": "Discount",
+      "all": "All",
+      "over": "More than what is left.",
+      "quantityFor": "Quantity to credit of {name}",
+      "priceFor": "Unit price of {name}",
+      "discountFor": "Discount of {name}"
+    },
+    "totals": {
+      "title": "Total to credit",
+      "subtotal": "Subtotal",
+      "iva": "VAT {percent}%",
+      "total": "Total",
+      "incomplete": "Check the quantities and prices."
+    },
+    "submit": "Issue credit note",
+    "confirmTitle": "Issue the credit note?",
+    "confirmDescription": "It is signed and sent to SRI. Once authorized it cannot be changed.",
+    "confirmDetail": "Invoice {origin}, total {total}",
+    "correct": {
+      "title": "Correct {number}",
+      "description": "Fix what SRI rejected and send it again with the same number.",
+      "back": "Back to the credit note",
+      "submit": "Correct and send",
+      "confirmTitle": "Correct and resend the credit note?",
+      "confirmDescription": "It is signed again and sent to SRI with the same number."
+    }
   }
 }

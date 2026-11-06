@@ -376,9 +376,11 @@ describe('correcting, re-issuing by hand and voiding', () => {
       reissue: false,
       void: false,
       resend: false,
+      credit: false,
     });
     const done = await authorized(clientId);
-    expect((await getDocument(actor, db, done.id)).allowed).toEqual({
+    // Whether it can be credited depends on the plan; credit-notes.test.ts covers it.
+    expect((await getDocument(actor, db, done.id)).allowed).toMatchObject({
       correct: false,
       reissue: false,
       void: true,
@@ -392,6 +394,7 @@ describe('correcting, re-issuing by hand and voiding', () => {
     });
     const viewer: ActorContext = { ...actor, permissions: ['documents.read'] };
     expect(Object.values((await getDocument(viewer, db, returnedOne.id)).allowed)).toEqual([
+      false,
       false,
       false,
       false,

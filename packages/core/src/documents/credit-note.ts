@@ -18,6 +18,7 @@ import {
   CONSUMER_FINAL_ID,
   lineAmounts,
   randomNumericCode,
+  rideData,
 } from '../sri';
 import { ambienteFor, issuingContext, type Ambiente, type IssuingContext } from '../tenancy';
 import {
@@ -35,6 +36,7 @@ import {
 } from './compose';
 import { correctDocument } from './create-invoice';
 import { recordVersion } from './exchanges';
+import { documentActions, documentNumber } from './queries';
 import { locked } from './sending';
 import { takeSequential } from './sequence';
 
@@ -441,4 +443,73 @@ export async function correctCreditNote(
     },
     deps,
   );
+}
+
+export type CreditNoteDraft = {
+  id: string;
+  number: string;
+  issuePointId: string;
+  issuePoint: string;
+  originId: string;
+  originNumber: string;
+  reason: string;
+  // Only the lines that were credited, as the form starts from them.
+  lines: { sourcePosition: number; quantity: string; unitPrice: string; discount: string }[];
+  additionalInfo: { name: string; value: string }[];
+};
+
+// FR-DOC-7: what the correction form starts from: the credit note as last signed.
+export async function creditNoteDraft(
+  ctx: ActorContext,
+  db: Database,
+  documentId: string,
+): Promise<CreditNoteDraft> {
+  requirePermission(ctx, 'documents.issue');
+  const id = z.uuid().parse(documentId);
+  const { documents, documentLines } = schema;
+  return db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+    const [row] = await tx.select().from(documents).where(eq(documents.id, id));
+    if (
+      !row ||
+      row.documentType !== '04' ||
+      !row.relatedDocumentId ||
+      (ctx.issuePointIds !== null && !ctx.issuePointIds.includes(row.issuePointId))
+    )
+      throw new DomainError('NOT_FOUND', 'Document not found');
+    if (!documentActions(ctx, row).correct)
+      throw new DomainError('NOT_CORRECTABLE', 'This document can not be corrected now');
+    const [origin] = await tx
+      .select()
+      .from(documents)
+      .where(eq(documents.id, row.relatedDocumentId));
+    const lines = await tx
+      .select()
+      .from(documentLines)
+      .where(and(eq(documentLines.documentId, id), eq(documentLines.revision, row.revision)))
+      .orderBy(asc(documentLines.position));
+    const data = row.signedXml ? rideData(row.signedXml) : null;
+    const added = new Set(['Email', 'RUC Proveedor']);
+    return {
+      id: row.id,
+      number: documentNumber(row.series, row.sequential),
+      issuePointId: row.issuePointId,
+      issuePoint: `${row.series.slice(0, 3)}-${row.series.slice(3)}`,
+      originId: row.relatedDocumentId,
+      originNumber: origin ? documentNumber(origin.series, origin.sequential) : '',
+      reason: data?.modification?.reason ?? '',
+      lines: lines.flatMap((line) =>
+        line.sourcePosition === null
+          ? []
+          : [
+              {
+                sourcePosition: line.sourcePosition,
+                quantity: line.quantity,
+                unitPrice: line.unitPrice,
+                discount: line.discount,
+              },
+            ],
+      ),
+      additionalInfo: (data?.additionalInfo ?? []).filter((field) => !added.has(field.name)),
+    };
+  });
 }

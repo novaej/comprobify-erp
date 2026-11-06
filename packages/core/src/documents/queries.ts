@@ -43,8 +43,12 @@ export type IssuingOptions = {
   live: boolean;
 };
 
-// What the invoice form offers: the points this user can issue facturas from now.
-export async function issuingOptions(ctx: ActorContext, db: Database): Promise<IssuingOptions> {
+// What the document forms offer: the points this user can issue that type from now.
+export async function issuingOptions(
+  ctx: ActorContext,
+  db: Database,
+  documentType: '01' | '04' = '01',
+): Promise<IssuingOptions> {
   requirePermission(ctx, 'documents.issue');
   const { branches, issuePoints, issuePointDocumentTypes, tenants } = schema;
   return db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
@@ -61,7 +65,7 @@ export async function issuingOptions(ctx: ActorContext, db: Database): Promise<I
         issuePointDocumentTypes,
         and(
           eq(issuePointDocumentTypes.issuePointId, issuePoints.id),
-          eq(issuePointDocumentTypes.documentType, '01'),
+          eq(issuePointDocumentTypes.documentType, documentType),
           eq(issuePointDocumentTypes.active, true),
         ),
       )
@@ -246,6 +250,8 @@ export type DocumentActions = {
   reissue: boolean;
   void: boolean;
   resend: boolean;
+  // A nota de crédito from this invoice (FR-DOC-9).
+  credit: boolean;
 };
 
 // The same rules the actions enforce: correctInvoice, requestReissue, voidDocument and
@@ -255,6 +261,7 @@ export function documentActions(
   row: Pick<
     typeof schema.documents.$inferSelect,
     | 'status'
+    | 'documentType'
     | 'issueDate'
     | 'deadlineCheckedAt'
     | 'sriUnreachable'
@@ -281,6 +288,12 @@ export function documentActions(
       hasFeature(ctx, 'BUYER_EMAIL') &&
       row.status === 'AUTHORIZED' &&
       row.buyerEmail !== null,
+    credit:
+      can('documents.issue') &&
+      hasFeature(ctx, 'DOC_TYPE_04') &&
+      row.documentType === '01' &&
+      row.status === 'AUTHORIZED' &&
+      row.buyerIdentification !== CONSUMER_FINAL_ID,
   };
 }
 

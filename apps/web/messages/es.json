@@ -639,7 +639,8 @@
     "newInvoice": "Nueva factura",
     "document": "Comprobante",
     "pendingDocuments": "Pendientes",
-    "correctInvoice": "Corregir factura"
+    "correctInvoice": "Corregir factura",
+    "newCreditNote": "Nueva nota de crédito"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -1035,7 +1036,8 @@
       "page": "Página {page} de {pages}"
     },
     "types": {
-      "01": "Factura"
+      "01": "Factura",
+      "04": "Nota de crédito"
     },
     "statuses": {
       "SIGNED": "Firmado",
@@ -1149,7 +1151,12 @@
       },
       "mockTitle": "Autorizado por el simulador del SRI",
       "mockDescription": "Este comprobante no llegó al SRI: lo respondió el simulador local (SRI_MOCK_MODE). No tiene validez y el SRI no lo conoce.",
-      "mockHelp": "Autorizado por el simulador del SRI. No tiene validez tributaria."
+      "mockHelp": "Autorizado por el simulador del SRI. No tiene validez tributaria.",
+      "related": {
+        "title": "Documentos relacionados",
+        "origin": "Modifica a",
+        "derived": "Nota de crédito"
+      }
     },
     "pendingLink": "Pendientes",
     "pending": {
@@ -1183,7 +1190,8 @@
       "resendTitle": "¿Reenviar al comprador?",
       "resendDescription": "Se envían otra vez el RIDE y el XML autorizado a:",
       "resendConfirm": "Reenviar",
-      "resent": "Envío en curso."
+      "resent": "Envío en curso.",
+      "credit": "Nota de crédito"
     }
   },
   "invoiceForm": {
@@ -1323,6 +1331,61 @@
     "SRI_UNAVAILABLE": "El SRI no responde ahora.",
     "NOT_AUTHORIZED": "El comprobante todavía no está autorizado.",
     "NO_BUYER_EMAIL": "El comprador no tiene correo en este comprobante.",
-    "FEATURE_NOT_ENABLED": "Tu plan no incluye esta acción."
+    "FEATURE_NOT_ENABLED": "Tu plan no incluye esta acción.",
+    "ORIGIN_NOT_INVOICE": "Solo se puede acreditar una factura.",
+    "ORIGIN_NOT_AUTHORIZED": "Solo se puede acreditar una factura autorizada por el SRI.",
+    "CREDIT_NOTE_NEEDS_BUYER": "Una factura a consumidor final no puede acreditarse con nota de crédito.",
+    "CREDIT_LINE_UNKNOWN": "Una línea no pertenece a la factura.",
+    "CREDIT_EXCEEDS_BALANCE": "Una línea supera lo que queda por acreditar de la factura."
+  },
+  "creditNoteForm": {
+    "title": "Nota de crédito de {number}",
+    "description": "Acredita todo o parte de la factura. Cada línea no puede superar lo que aún queda por acreditar.",
+    "back": "Volver a la factura",
+    "issuing": {
+      "title": "Emisión",
+      "issuePoint": "Punto de emisión",
+      "origin": "Factura que se modifica",
+      "none": "No tienes un punto de emisión habilitado para notas de crédito.",
+      "noneAction": "Revisa la empresa"
+    },
+    "reason": {
+      "label": "Motivo",
+      "hint": "Se imprime en la nota de crédito. Por ejemplo: devolución de mercadería."
+    },
+    "lines": {
+      "title": "Líneas de la factura",
+      "description": "Escribe la cantidad a acreditar en cada línea que corresponda; deja vacías las demás.",
+      "item": "Producto o servicio",
+      "left": "Por acreditar",
+      "leftBase": "{amount} sin IVA",
+      "quantity": "Cantidad",
+      "unitPrice": "Precio unitario",
+      "discount": "Descuento",
+      "all": "Todo",
+      "over": "Supera lo que queda.",
+      "quantityFor": "Cantidad a acreditar de {name}",
+      "priceFor": "Precio unitario de {name}",
+      "discountFor": "Descuento de {name}"
+    },
+    "totals": {
+      "title": "Total a acreditar",
+      "subtotal": "Subtotal",
+      "iva": "IVA {percent}%",
+      "total": "Total",
+      "incomplete": "Revisa las cantidades y los precios."
+    },
+    "submit": "Emitir nota de crédito",
+    "confirmTitle": "¿Emitir la nota de crédito?",
+    "confirmDescription": "Se firma y se envía al SRI. Una vez autorizada no se puede modificar.",
+    "confirmDetail": "Factura {origin}, total {total}",
+    "correct": {
+      "title": "Corregir {number}",
+      "description": "Corrige lo que el SRI rechazó y vuelve a enviarla con el mismo número.",
+      "back": "Volver a la nota de crédito",
+      "submit": "Corregir y enviar",
+      "confirmTitle": "¿Corregir y reenviar la nota de crédito?",
+      "confirmDescription": "Se firma de nuevo y se envía al SRI con el mismo número."
+    }
   }
 }

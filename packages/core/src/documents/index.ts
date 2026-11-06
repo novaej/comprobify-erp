@@ -12,10 +12,16 @@ export {
   correctCreditNote,
   createCreditNote,
   creditBalance,
+  creditNoteDraft,
   creditNoteCorrectionInput,
   creditNoteInput,
 } from './credit-note';
-export type { CreditBalanceLine, CreditNoteCorrectionInput, CreditNoteInput } from './credit-note';
+export type {
+  CreditBalanceLine,
+  CreditNoteCorrectionInput,
+  CreditNoteDraft,
+  CreditNoteInput,
+} from './credit-note';
 export type { CorrectionInput, InvoiceInput, IssueDeps, IssuedDocument } from './create-invoice';
 export {
   alertOverdueAuthorizations,

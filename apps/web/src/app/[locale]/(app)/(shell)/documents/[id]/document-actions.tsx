@@ -2,7 +2,7 @@
 
 import { Button, buttonVariants } from '@comprobify/ui/components/button';
 import { toast } from '@comprobify/ui/components/sonner';
-import { Ban, Mail, PencilLine, RotateCcw } from 'lucide-react';
+import { Ban, FilePlus2, Mail, PencilLine, RotateCcw } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -10,7 +10,13 @@ import { useServerAction } from '@/components/use-server-action';
 import { Link } from '@/i18n/navigation';
 import { reissueAction, resendAction, voidAction } from './actions';
 
-type Allowed = { correct: boolean; reissue: boolean; void: boolean; resend: boolean };
+type Allowed = {
+  correct: boolean;
+  reissue: boolean;
+  void: boolean;
+  resend: boolean;
+  credit: boolean;
+};
 
 // FR-DOC-6 to FR-DOC-8, FR-DOC-11: what a document allows now, each asked first.
 export function DocumentActions({
@@ -76,6 +82,12 @@ export function DocumentActions({
         <Link href={`/documents/${id}/correct`} className={buttonVariants({ size: 'sm' })}>
           <PencilLine className="mr-1.5 h-4 w-4" aria-hidden />
           {t('correct')}
+        </Link>
+      )}
+      {allowed.credit && (
+        <Link href={`/documents/${id}/credit-note`} className={buttonVariants({ size: 'sm' })}>
+          <FilePlus2 className="mr-1.5 h-4 w-4" aria-hidden />
+          {t('credit')}
         </Link>
       )}
       {allowed.reissue && (

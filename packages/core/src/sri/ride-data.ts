@@ -42,6 +42,8 @@ export type RideData = {
   total: string;
   payments: { method: string; total: string; term: string | null; termUnit: string | null }[];
   additionalInfo: { name: string; value: string }[];
+  // A nota de crédito: the document it modifies and why. Null on a factura.
+  modification: { number: string; issueDate: string; reason: string } | null;
 };
 
 const childElements = (parent: Element | undefined): Element[] =>
@@ -64,9 +66,10 @@ const required = (parent: Element | undefined, name: string): string => {
 
 export function rideData(authorizedXml: string): RideData {
   const root = new DOMParser().parseFromString(authorizedXml, 'text/xml').documentElement;
-  if (root?.localName !== 'factura') throw new Error('Not a factura');
+  const credit = root?.localName === 'notaCredito';
+  if (root?.localName !== 'factura' && !credit) throw new Error('Not a factura or nota de crédito');
   const info = child(root, 'infoTributaria');
-  const invoice = child(root, 'infoFactura');
+  const invoice = child(root, credit ? 'infoNotaCredito' : 'infoFactura');
   return {
     ambiente: required(info, 'ambiente'),
     emissionType: required(info, 'tipoEmision'),
@@ -92,8 +95,8 @@ export function rideData(authorizedXml: string): RideData {
       address: text(invoice, 'direccionComprador'),
     },
     lines: all(child(root, 'detalles'), 'detalle').map((line) => ({
-      code: text(line, 'codigoPrincipal') ?? '',
-      auxiliaryCode: text(line, 'codigoAuxiliar'),
+      code: text(line, 'codigoPrincipal') ?? text(line, 'codigoInterno') ?? '',
+      auxiliaryCode: text(line, 'codigoAuxiliar') ?? text(line, 'codigoAdicional'),
       description: required(line, 'descripcion'),
       quantity: required(line, 'cantidad'),
       unitPrice: required(line, 'precioUnitario'),
@@ -111,15 +114,30 @@ export function rideData(authorizedXml: string): RideData {
       value: required(tax, 'valor'),
     })),
     subtotal: required(invoice, 'totalSinImpuestos'),
-    discount: required(invoice, 'totalDescuento'),
+    // The nota de crédito XML has no totalDescuento: its lines' discounts add up to it.
+    discount:
+      text(invoice, 'totalDescuento') ??
+      (
+        all(child(root, 'detalles'), 'detalle').reduce(
+          (sum, line) => sum + Math.round(Number(required(line, 'descuento')) * 100),
+          0,
+        ) / 100
+      ).toFixed(2),
     tip: text(invoice, 'propina') ?? '0.00',
-    total: required(invoice, 'importeTotal'),
+    total: credit ? required(invoice, 'valorModificacion') : required(invoice, 'importeTotal'),
     payments: all(child(invoice, 'pagos'), 'pago').map((payment) => ({
       method: required(payment, 'formaPago'),
       total: required(payment, 'total'),
       term: text(payment, 'plazo'),
       termUnit: text(payment, 'unidadTiempo'),
     })),
+    modification: credit
+      ? {
+          number: required(invoice, 'numDocModificado'),
+          issueDate: required(invoice, 'fechaEmisionDocSustento'),
+          reason: required(invoice, 'motivo'),
+        }
+      : null,
     additionalInfo: all(child(root, 'infoAdicional'), 'campoAdicional').map((field) => ({
       name: field.getAttribute('nombre') ?? '',
       value: field.textContent?.trim() ?? '',

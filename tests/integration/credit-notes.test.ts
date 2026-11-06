@@ -11,6 +11,8 @@ import {
   createMockSri,
   createSriClient,
   creditBalance,
+  creditNoteDraft,
+  documentRide,
   fixedClock,
   getDocument,
   onboardOrganization,
@@ -360,6 +362,31 @@ describe('credit notes', () => {
     );
     expect(corrected).toMatchObject({ id: note.id, number: note.number, status: 'SIGNED' });
     expect((await row(note)).signedXml).toContain('<motivo>Corregido</motivo>');
+  });
+
+  it('offers a credit note on an authorized invoice, a draft to correct, and the RIDE', async () => {
+    const origin = await authorized();
+    expect((await getDocument(await owner(), db, origin.id)).allowed.credit).toBe(true);
+    // Not on a credit note, nor on a consumidor final invoice.
+    const consumer = await authorized(null);
+    expect((await getDocument(await owner(), db, consumer.id)).allowed.credit).toBe(false);
+
+    const note = await issueCredit(origin, [{ sourcePosition: 1, quantity: '2' }]);
+    expect((await getDocument(await owner(), db, note.id)).allowed.credit).toBe(false);
+    mock.queue('reception', { kind: 'returned', code: '35', message: 'DOCUMENTO INVÁLIDO' });
+    await sendDocument(deps, ref(note));
+    const draft = await creditNoteDraft(await owner(), db, note.id);
+    expect(draft).toMatchObject({
+      originId: origin.id,
+      reason: 'Devolución de mercadería',
+      lines: [{ sourcePosition: 1, quantity: '2.000000' }],
+    });
+
+    const other = await issueCredit(origin, [{ sourcePosition: 2, quantity: '1' }]);
+    await sendDocument(deps, ref(other));
+    await checkAuthorization(deps, ref(other));
+    const ride = await documentRide(await owner(), db, other.id);
+    expect(ride.content.subarray(0, 5).toString()).toBe('%PDF-');
   });
 
   it('returns the same credit note for the same key and refuses another payload', async () => {

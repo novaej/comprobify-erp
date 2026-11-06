@@ -80,8 +80,7 @@ export async function emailDocument(
       .select()
       .from(schema.documents)
       .where(eq(schema.documents.id, job.documentId));
-    // Only the factura has its RIDE so far; the other types join with theirs (Milestone 4).
-    if (row?.status !== 'AUTHORIZED' || !row.buyerEmail || row.documentType !== '01') return null;
+    if (row?.status !== 'AUTHORIZED' || !row.buyerEmail) return null;
     const entitlements = await loadEntitlements(tx.db, job.tenantId, clock.now());
     if (!entitlements.features.includes('BUYER_EMAIL')) return null;
     if (!job.resend) {

@@ -25,6 +25,7 @@ import {
   TableCard,
 } from '@/components/stack-table';
 import { ToneBadge } from '@/components/tone-badge';
+import { Link } from '@/i18n/navigation';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
@@ -294,6 +295,36 @@ export default async function DocumentPage({
             </TableCard>
           </section>
 
+          {(document.origin || document.derived.length > 0) && (
+            <SectionCard title={t('detail.related.title')}>
+              <ul className="space-y-2 text-sm">
+                {[
+                  ...(document.origin
+                    ? [{ link: document.origin, label: t('detail.related.origin') }]
+                    : []),
+                  ...document.derived.map((link) => ({
+                    link,
+                    label: t('detail.related.derived'),
+                  })),
+                ].map(({ link, label }) => (
+                  <li key={link.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="text-muted-foreground">{label}</span>
+                    <Link
+                      href={`/documents/${link.id}`}
+                      className="font-medium tabular-nums underline-offset-4 hover:underline"
+                    >
+                      {t(`types.${link.documentType as '01'}`)} {link.number}
+                    </Link>
+                    <ToneBadge tone={STATUS_TONE[link.status]}>
+                      {t(`statuses.${link.status}`)}
+                    </ToneBadge>
+                    <span className="ml-auto tabular-nums">{amount(link.total)}</span>
+                  </li>
+                ))}
+              </ul>
+            </SectionCard>
+          )}
+
           <SectionCard title={t('detail.timeline.title')}>
             <ol className="space-y-4">
               {document.events.map((event) => {
@@ -391,26 +422,28 @@ export default async function DocumentPage({
               </span>
             </div>
           </section>
-          <SectionCard title={t('detail.payments.title')}>
-            <ul className="space-y-2 text-sm">
-              {document.payments.map((payment, index) => (
-                <li key={index} className="flex justify-between gap-3">
-                  <span className="min-w-0">
-                    {tSri(`paymentMethods.${payment.method as '01'}`)}
-                    {payment.term !== null && payment.termUnit && (
-                      <span className="block text-xs text-muted-foreground">
-                        {t('detail.payments.term', {
-                          term: payment.term,
-                          unit: tSri(`termUnits.${payment.termUnit as 'dias'}`).toLowerCase(),
-                        })}
-                      </span>
-                    )}
-                  </span>
-                  <span className="tabular-nums">{amount(payment.amount)}</span>
-                </li>
-              ))}
-            </ul>
-          </SectionCard>
+          {document.payments.length > 0 && (
+            <SectionCard title={t('detail.payments.title')}>
+              <ul className="space-y-2 text-sm">
+                {document.payments.map((payment, index) => (
+                  <li key={index} className="flex justify-between gap-3">
+                    <span className="min-w-0">
+                      {tSri(`paymentMethods.${payment.method as '01'}`)}
+                      {payment.term !== null && payment.termUnit && (
+                        <span className="block text-xs text-muted-foreground">
+                          {t('detail.payments.term', {
+                            term: payment.term,
+                            unit: tSri(`termUnits.${payment.termUnit as 'dias'}`).toLowerCase(),
+                          })}
+                        </span>
+                      )}
+                    </span>
+                    <span className="tabular-nums">{amount(payment.amount)}</span>
+                  </li>
+                ))}
+              </ul>
+            </SectionCard>
+          )}
           {!authorized && (
             <p className="text-xs text-muted-foreground">{t('detail.downloads.rideLater')}</p>
           )}

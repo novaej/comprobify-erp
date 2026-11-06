@@ -239,11 +239,11 @@ function buyer(doc: Doc, data: RideData, y: number): number {
   hline(doc, M, y + nameH + rowH, CW, DARK);
   write(doc, 'Razón Social / Nombres y Apellidos:', M + P, y + P, 168, { size: 7, color: GREY });
   write(doc, data.buyer.name, M + P + 172, y + P - 1, CW - 180, { size: 8 });
-  const cell = CW / 3;
+  const cell = CW / (data.modification ? 2 : 3);
   const cells: [string, string][] = [
     ['Identificación', data.buyer.identification],
     ['Fecha de emisión', data.issueDate],
-    ['Guía de remisión', ''],
+    ...(data.modification ? [] : ([['Guía de remisión', '']] as [string, string][])),
   ];
   cells.forEach(([label, value], index) => {
     const cx = M + index * cell;
@@ -254,6 +254,31 @@ function buyer(doc: Doc, data: RideData, y: number): number {
   write(doc, 'Dirección:', M + P, y + nameH + rowH + 3, 46, { size: 7, color: GREY });
   write(doc, data.buyer.address ?? '', M + P + 50, y + nameH + rowH + 3, CW - 58, { size: 7.5 });
   return y + nameH + rowH + addressH + 4;
+}
+
+// A nota de crédito names the factura it modifies and why.
+function modification(doc: Doc, data: RideData, y: number): number {
+  const m = data.modification;
+  if (!m) return y;
+  const P = 4;
+  const reasonH = Math.max(14, height(doc, m.reason, CW - 150, { size: 8 }) + 6);
+  const rowH = 22;
+  box(doc, M, y, CW, rowH + reasonH);
+  hline(doc, M, y + rowH, CW, DARK);
+  const cell = CW / 2;
+  const cells: [string, string][] = [
+    ['Comprobante que se modifica', `FACTURA ${m.number}`],
+    ['Fecha emisión (comprobante a modificar)', m.issueDate],
+  ];
+  cells.forEach(([label, value], index) => {
+    const cx = M + index * cell;
+    if (index > 0) vline(doc, cx, y, rowH);
+    write(doc, label, cx + P, y + 3, cell - P * 2, { size: 6.5, color: GREY });
+    write(doc, value, cx + P, y + 11, cell - P * 2, { size: 8 });
+  });
+  write(doc, 'Razón de modificación:', M + P, y + rowH + 4, 110, { size: 7, color: GREY });
+  write(doc, m.reason, M + P + 114, y + rowH + 3, CW - 120, { size: 8 });
+  return y + rowH + reasonH + 4;
 }
 
 type Column = {
@@ -363,8 +388,7 @@ function bottom(doc: Doc, data: RideData, y: number): number {
   const rows = totalRows(data);
   const leftH =
     (data.additionalInfo.length > 0 ? headerH + fieldH.reduce((a, b) => a + b, 0) : 0) +
-    headerH +
-    paymentH.reduce((a, b) => a + b, 0);
+    (data.payments.length > 0 ? headerH + paymentH.reduce((a, b) => a + b, 0) : 0);
   const rightH = rows.length * 17;
   const h = Math.max(leftH, rightH);
   if (y + h > BOTTOM) {
@@ -390,27 +414,29 @@ function bottom(doc: Doc, data: RideData, y: number): number {
       ly += fieldH[i]!;
     });
   }
-  filled(doc, lx, ly, leftW, headerH, HEADER_BG);
-  write(doc, 'Forma de pago', lx + P, ly + 3, labelW - P, { size: 7.5, bold: true });
-  write(doc, 'Valor', lx + labelW + P, ly + 3, amountW - P * 2, {
-    size: 7.5,
-    bold: true,
-    align: 'right',
-  });
-  vline(doc, lx + labelW, ly, headerH);
-  ly += headerH;
-  data.payments.forEach((payment, i) => {
-    hline(doc, lx, ly, leftW);
-    vline(doc, lx + labelW, ly, paymentH[i]!);
-    write(doc, paymentLabel(payment), lx + P, ly + 3, labelW - P * 2, { size: 7 });
-    write(doc, payment.total, lx + labelW + P, ly + 3, amountW - P * 2, {
-      size: 7,
+  if (data.payments.length > 0) {
+    filled(doc, lx, ly, leftW, headerH, HEADER_BG);
+    write(doc, 'Forma de pago', lx + P, ly + 3, labelW - P, { size: 7.5, bold: true });
+    write(doc, 'Valor', lx + labelW + P, ly + 3, amountW - P * 2, {
+      size: 7.5,
+      bold: true,
       align: 'right',
     });
-    ly += paymentH[i]!;
-  });
-  // Closes the last payment row; the totals box beside it can run longer.
-  hline(doc, lx, ly, leftW, DARK);
+    vline(doc, lx + labelW, ly, headerH);
+    ly += headerH;
+    data.payments.forEach((payment, i) => {
+      hline(doc, lx, ly, leftW);
+      vline(doc, lx + labelW, ly, paymentH[i]!);
+      write(doc, paymentLabel(payment), lx + P, ly + 3, labelW - P * 2, { size: 7 });
+      write(doc, payment.total, lx + labelW + P, ly + 3, amountW - P * 2, {
+        size: 7,
+        align: 'right',
+      });
+      ly += paymentH[i]!;
+    });
+    // Closes the last payment row; the totals box beside it can run longer.
+    hline(doc, lx, ly, leftW, DARK);
+  }
 
   let ry = y;
   for (const row of rows) {
@@ -447,6 +473,7 @@ export async function renderRide(data: RideData, extras: RideExtras): Promise<Bu
   });
   let y = await header(doc, data, extras, M);
   y = buyer(doc, data, y);
+  y = modification(doc, data, y);
   y = items(doc, data, y);
   bottom(doc, data, y);
   doc.end();

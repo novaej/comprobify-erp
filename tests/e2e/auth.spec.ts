@@ -55,6 +55,11 @@ async function grantSeats(ownerEmail: string): Promise<void> {
 
 // Gratis has no templates (the Branding module brings them): an exception, as above.
 async function grantTemplates(ownerEmail: string): Promise<void> {
+  await grantFeature(ownerEmail, 'DOCUMENT_TEMPLATES', 'e2e templates');
+}
+
+// Nor credit notes (their own module).
+async function grantFeature(ownerEmail: string, feature: string, reason: string): Promise<void> {
   const client = new Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
   try {
@@ -63,10 +68,10 @@ async function grantTemplates(ownerEmail: string): Promise<void> {
     await client.query(
       `INSERT INTO tenant_feature_overrides
          (tenant_id, feature_key, feature_kind, effect, limit_value, reason, created_by)
-       SELECT m.tenant_id, 'DOCUMENT_TEMPLATES', 'BOOLEAN', 'GRANT', NULL, 'e2e templates', u.id
+       SELECT m.tenant_id, $2, 'BOOLEAN', 'GRANT', NULL, $3, u.id
        FROM memberships m JOIN users u ON u.id = m.user_id
        WHERE u.email = $1 AND m.role = 'OWNER'`,
-      [ownerEmail],
+      [ownerEmail, feature, reason],
     );
     await client.query('COMMIT');
   } finally {
@@ -613,6 +618,61 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await voiding.getByRole('button', { name: 'Marcar como anulada' }).click();
     await expect(page.getByText('Factura anulada.')).toBeVisible();
     await expect(heading).toContainText('Anulado');
+  });
+
+  test('credits an authorized invoice with a nota de crédito and links both ways (FR-DOC-9, FR-DOC-12)', async ({
+    page,
+  }) => {
+    await grantFeature(email, 'DOC_TYPE_04', 'e2e credit notes');
+    await signIn(page, email, newPassword);
+    await expect(
+      page.getByRole('navigation', { name: 'Navegación principal' }).last(),
+    ).toBeVisible();
+    const heading = page.getByRole('heading', { level: 1 });
+
+    // The type is enabled at the issue point first.
+    await page.goto('/es/settings');
+    await page.getByRole('button', { name: 'Tipos de comprobante de 001-001' }).click();
+    const types = page.getByRole('dialog', { name: 'Tipos de comprobante de 001-001' });
+    await types.getByRole('checkbox', { name: 'Nota de crédito' }).check();
+    await types.getByRole('button', { name: 'Guardar' }).click();
+    await expect(page.getByText('Cambios guardados.')).toBeVisible();
+
+    const invoice = await issueInvoice(page, '40');
+    await runSri(invoice, 'authorize');
+    await page.reload();
+    await expect(heading).toContainText('Autorizado');
+    await page.getByRole('link', { name: 'Nota de crédito' }).click();
+    await expect(heading).toContainText('Nota de crédito de 001-001-');
+    // Over the balance is said before anything is sent.
+    const quantity = page.getByRole('textbox', { name: /Cantidad a acreditar de Mantenimiento/ });
+    await quantity.fill('2');
+    await expect(page.getByRole('alert').filter({ hasText: 'Supera lo que queda' })).toBeVisible();
+    await page.getByRole('button', { name: 'Todo' }).click();
+    await page.getByRole('textbox', { name: 'Motivo' }).fill('Servicio no prestado');
+    await expect(page.getByRole('complementary')).toContainText('$46,00');
+    await look(page, 'credit-note-new');
+    await page.getByRole('button', { name: 'Emitir nota de crédito' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Emitir la nota de crédito?' })
+      .getByRole('button', { name: 'Emitir nota de crédito' })
+      .click();
+
+    await expect(heading).toContainText('Nota de crédito 001-001-');
+    const note = page.url().split('/').at(-1)!;
+    await expect(page.getByRole('main')).toContainText('Modifica a');
+    await look(page, 'credit-note');
+    await runSri(note, 'authorize');
+    await page.reload();
+    await expect(heading).toContainText('Autorizado');
+    const ride = await page.request.get(`/es/documents/${note}/ride`);
+    expect(ride.headers()['content-type']).toBe('application/pdf');
+    expect((await ride.body()).subarray(0, 5).toString()).toBe('%PDF-');
+
+    // The invoice shows its note, and has nothing left to credit.
+    await page.goto(`/es/documents/${invoice}`);
+    await expect(page.getByRole('main')).toContainText('Nota de crédito 001-001-');
+    await look(page, 'document-credited');
   });
 
   test('invites a read-only member who joins and sees only what the role allows (FR-USR-1, FR-ROLE-3)', async ({

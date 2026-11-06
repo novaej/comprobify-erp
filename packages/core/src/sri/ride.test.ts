@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { parseP12 } from '../certificates';
 import { ecuadorDateTimeDisplay } from '../kernel';
-import { createTestP12, sampleFactura } from '../testing';
+import { createTestP12, sampleFactura, sampleNotaCredito } from '../testing';
+import { buildNotaCredito } from './nota-credito';
 import { authorizedXmlFile } from './authorized-file';
 import { buildFactura } from './factura';
 import { signXml } from './signer';
@@ -100,5 +101,22 @@ describe('the RIDE (FR-DOC-10)', () => {
     expect(file).toContain('<estado>AUTORIZADO</estado>');
     expect(file).toContain('<fechaAutorizacion>2026-11-10T10:00:00-05:00</fechaAutorizacion>');
     expect(file).toContain(`<comprobante><![CDATA[${xml}]]></comprobante>`);
+  });
+
+  it('reads a nota de crédito: the document it modifies, the reason, no payments', async () => {
+    const xml = signXml(buildNotaCredito(sampleNotaCredito()).xml, certificate, now);
+    const data = rideData(xml);
+    expect(data.documentType).toBe('04');
+    expect(data.modification?.reason).toBeTruthy();
+    expect(data.payments).toEqual([]);
+    expect(data.total).toMatch(/^\d+\.\d{2}$/);
+    const pdf = await renderRide(data, {
+      authorizationNumber: sampleNotaCredito().accessKey,
+      authorizedAt: now,
+      logo: null,
+      compress: false,
+    });
+    expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+    expect(pdf.toString('latin1').match(/\/Type \/Page\b/g)).toHaveLength(1);
   });
 });
