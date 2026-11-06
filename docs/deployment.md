@@ -73,7 +73,7 @@ The area also requires two-step verification, so set it up on that account befor
 | `APP_URL` | web | Public URL. Email links point here. |
 | `CERT_ENCRYPTION_KEY` | web, worker | 64 hex characters (`openssl rand -hex 32`). Encrypts each company's stored certificate private key; never signs anything itself. The worker decrypts a company's key with it to sign that company's re-issues; losing it makes every stored key unusable, so back it up with the database credentials. |
 | `AGREEMENTS_ENABLED` | web | `false` until the owner approves the legal texts (`docs/legal/review-notes.md`). When `true`, go-live requires acceptance. |
-| `OPERATOR_NAME`, `OPERATOR_RUC`, `OPERATOR_ADDRESS`, `SUPPORT_EMAIL` | web | The operator named in the legal texts. Required when `AGREEMENTS_ENABLED` is `true`. `OPERATOR_RUC` is also printed on every document as "RUC Proveedor" (ADR-013). |
+| `OPERATOR_NAME`, `OPERATOR_RUC`, `OPERATOR_ADDRESS`, `SUPPORT_EMAIL` | web | The operator named in the legal texts. Required when `AGREEMENTS_ENABLED` is `true`. `OPERATOR_RUC` is also printed on every document as "RUC Proveedor" (Anexo 26, ADR-013), so it is required in production whether or not agreements are on. |
 | `CONSUMER_FINAL_MAX_AMOUNT` | web | The most a consumidor final invoice may total, `50.00` by default (FR-DOC-9). |
 | `AUTH_SECRET` | web | At least 32 characters. Signs session cookies and tokens; rotating it signs everyone out. |
 | `MAILGUN_API_KEY`, `MAILGUN_DOMAIN` | worker | Required outside `local`. Locally, emails are logged instead. |

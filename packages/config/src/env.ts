@@ -125,6 +125,14 @@ export const webEnvSchema = z
   })
   .superRefine((env, ctx) => {
     refuseMockInProduction(env, ctx);
+    // Anexo 26: documents issued through our software name its provider's RUC.
+    if (env.APP_ENV === 'production' && !env.OPERATOR_RUC) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['OPERATOR_RUC'],
+        message: 'is required when APP_ENV is production (printed as "RUC Proveedor")',
+      });
+    }
     if (!env.AGREEMENTS_ENABLED) return;
     for (const name of [
       'OPERATOR_NAME',

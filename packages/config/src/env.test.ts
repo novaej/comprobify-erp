@@ -148,6 +148,16 @@ describe('legal agreements', () => {
   });
 });
 
+describe('the operator RUC (Anexo 26)', () => {
+  it('is required in production, so no invoice leaves out "RUC Proveedor"', () => {
+    const message = failure(() => loadWebEnv({ ...web, APP_ENV: 'production' }));
+    expect(message).toContain('OPERATOR_RUC: is required when APP_ENV is production');
+    expect(() =>
+      loadWebEnv({ ...web, APP_ENV: 'production', OPERATOR_RUC: '1712345678001' }),
+    ).not.toThrow();
+  });
+});
+
 describe('test env', () => {
   const app = 'postgres://app:x@localhost:5432/comprobify_erp_test';
   const owner = 'postgres://owner:x@localhost:5432/comprobify_erp_test';

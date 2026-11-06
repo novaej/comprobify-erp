@@ -12,7 +12,7 @@ This document specifies a **new system, built from scratch in a new repository**
 - The two existing repositories are the **knowledge source**, read-only. Port proven pieces from them (listed in Appendix A) instead of reinventing them, adapting them to TypeScript and the new architecture. Never copy their two-system machinery (Appendix B lists what to leave behind).
   - API: `../comprobify` (Node/Express, raw SQL, ADRs in `docs/adr/`, SRI rules in `CLAUDE.md`).
   - Web: `../comprobify-web` (Next.js, the current design system and screens).
-  - SRI technical spec: Ficha Técnica, esquema offline, v2.32 (Oct 2025). The owner has the PDF; ask for it before implementing a new document type.
+  - SRI technical spec: Ficha Técnica, esquema offline, v2.34 (July 2026). The owner has the PDF; ask for it before implementing a new document type.
 - When a requirement here conflicts with the old code, this document wins. When this document is silent, prefer the old system's behaviour and record the decision in an ADR.
 - Every requirement has an id (`FR-…`, `NFR-…`). Reference ids in commits, tests and ADRs.
 - Write `CLAUDE.md` for the new repo in the first milestone (section 13) and keep it current; it is the primary guide for every later session.
@@ -267,7 +267,7 @@ Verified against the Ficha Técnica v2.32 unless marked.
 13. **Element order matters** for XSD validation (e.g. `detallesAdicionales` between `precioTotalSinImpuesto` and `impuestos`).
 14. Line tax amounts are computed from `rate`, never from a non-existent field (old bug produced `NaN` in the DB).
 15. The RIDE is a frozen representation of the authorized XML (old bug: RIDE drifted after builder fixes).
-16. "RUC Proveedor" (software provider) printed as a campo adicional from `OPERATOR_RUC`; verify it is still required.
+16. "RUC Proveedor" (software provider) printed as a campo adicional from `OPERATOR_RUC`. Required by Anexo 26 of v2.34 (resolution NAC-DGERCGC26-00000027), so `OPERATOR_RUC` is mandatory in production.
 17. Error 33 ("IP sancionada") is not in v2.32; still pace sends.
 18. Open: chronological-order trade-off when re-issuing across a month boundary (accountant), legal consumidor-final cap, resolutions 14/17 texts.
 
@@ -587,7 +587,7 @@ Order rationale: the SRI engine (3) comes before ERP modules because every sales
 2. ~~Add-ons or whole plans only~~: decided, modules as add-ons and a negotiated Personalizado (ADR-011). Prices per plan and module: Milestone 8.
 3. Accountant: month-boundary re-issue and chronological order; consumidor-final cap; void deadline; retention period; which IVA rates beyond 0%, 15%, 5%, not subject and exempt a product may carry (the 13% by decree, the differentiated rate; ADR-012).
 4. Verify resolutions NAC-DGERCGC25-00000014/17 texts.
-5. Is "RUC Proveedor" campo adicional still required?
+5. ~~Is "RUC Proveedor" campo adicional still required?~~ Yes: Anexo 26 of Ficha v2.34 (ADR-013).
 6. Costing method: weighted average (proposed) vs FIFO.
 7. ~~Auth library~~: decided, Better Auth (ADR-009).
 8. Product name/branding for the ERP (keep "Comprobify"?).

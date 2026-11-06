@@ -26,7 +26,7 @@ Comprobify is a cloud ERP for Ecuadorian SMBs built around SRI electronic invoic
 - PRD vs old code: the PRD wins. PRD silent: prefer old behaviour and record the decision in an ADR.
 - Reference requirement ids in commits, tests and ADRs.
 - Track progress in `NEXT_STEPS.md`: tick a step in the same change that finishes it, and remove a milestone's section when its gate passes.
-- SRI spec: Ficha Técnica v2.32, in `docs/reference/`. That folder is git-ignored and local only: never commit it, and ask the owner for the PDF if it's missing.
+- SRI spec: Ficha Técnica v2.34, in `docs/reference/`. That folder is git-ignored and local only: never commit it, and ask the owner for the PDF if it's missing.
 
 ---
 

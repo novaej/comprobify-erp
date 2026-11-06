@@ -76,7 +76,7 @@ The two signed subtrees, `SignedInfo` and `SignedProperties`, are digested with 
 
 **RIMPE.** The builder prints the legend Anexo 22 names for the company's regime, the Ficha's text exactly: `CONTRIBUYENTE RÉGIMEN RIMPE` or `CONTRIBUYENTE NEGOCIO POPULAR - RÉGIMEN RIMPE`. The bundled XSD stays as SRI publishes it, checked by its hash, and `widenFactura` adds the negocio popular text to the pattern when the schema is loaded, as other implementers do. It fails loud if SRI's file no longer has the pattern it widens. The list stays closed: any other text fails. A general regime company prints no legend. The widened pattern isn't proven against SRI's own validator yet: if SRI ever returns a negocio popular invoice over the legend, it comes back DEVUELTA and is corrected as any other, and this decision is revisited.
 
-**RUC Proveedor.** When the operator's RUC is set, every document carries it as the `campoAdicional` "RUC Proveedor". Resolution NAC-DGERCGC26-00000027 asks documents issued through a third party's software to name that provider; the PRD (open question 5) still asks to check the resolution's text.
+**RUC Proveedor.** When the operator's RUC is set, every document carries it as the `campoAdicional` "RUC Proveedor". Resolution NAC-DGERCGC26-00000027 asks documents issued through a third party's software to name that provider; Anexo 26 of Ficha v2.34 makes it official: the `campoAdicional` named `RUC Proveedor`, obligatory 60 days after the resolution's publication. `OPERATOR_RUC` is therefore required in production.
 
 ## Consequences
 
