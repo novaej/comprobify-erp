@@ -10,7 +10,8 @@
   },
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "xsd:embed": "node scripts/embed-xsd.mjs"
   },
   "devDependencies": {
     "@comprobify/config": "workspace:*",

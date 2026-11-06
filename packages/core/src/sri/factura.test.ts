@@ -1,23 +1,10 @@
-import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { sampleFactura } from '../testing';
 import { buildFactura } from './factura';
-import { validateXml, widenFactura } from './xsd';
+import { validateXml, widenRimpe } from './xsd';
 import factura210 from './xsd/factura-2.1.0';
-import xmldsigCore from './xsd/xmldsig-core';
-
-const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 
 describe('the factura builder', () => {
-  it('embeds the XSDs unchanged', () => {
-    expect(sha256(factura210)).toBe(
-      '5f2c37bc1a58bb40e8bbbc366cabe05d5dc199598aeea1561137370f8bd4eace',
-    );
-    expect(sha256(xmldsigCore)).toBe(
-      '35cf8197da812c85e40d57891b35c94187569ed474a2dac813ce5090dafcd35c',
-    );
-  });
-
   it('builds a factura the XSD 2.1.0 accepts, with totals from the rounded lines', async () => {
     const { xml, totals } = buildFactura(sampleFactura());
     await expect(validateXml(xml, '01')).resolves.toEqual({ valid: true });
@@ -99,6 +86,6 @@ describe('the factura builder', () => {
   });
 
   it('refuses to widen an XSD whose RIMPE pattern changed', () => {
-    expect(() => widenFactura(factura210.replace('RÉGIMEN RIMPE"', 'RIMPE"'))).toThrow();
+    expect(() => widenRimpe(factura210.replace('RÉGIMEN RIMPE"', 'RIMPE"'))).toThrow();
   });
 });

@@ -18,6 +18,14 @@ export { accessKey, module11, randomNumericCode } from './access-key';
 export type { AccessKeyParts } from './access-key';
 export { buildFactura, FACTURA_VERSION, RIMPE_LEGENDS } from './factura';
 export type { FacturaInput, NameValue } from './factura';
+export {
+  DOCUMENT_TYPES,
+  ISSUABLE_TYPES,
+  documentTypeInfo,
+  isIssuableType,
+  issuableType,
+} from './document-types';
+export type { DocumentTypeInfo, IssuableType } from './document-types';
 export { validateXml } from './xsd';
 export type { ValidatedDocumentType, XsdResult } from './xsd';
 export { signXml } from './signer';

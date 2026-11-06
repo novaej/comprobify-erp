@@ -76,3 +76,12 @@ A schedule goes in `schedules` in the same file, with its time zone.
 ## Comments
 
 Short, and about why, not what. One line is the norm.
+
+## Adding a new document type
+
+1. Put the XSD as SRI publishes it in `packages/core/assets/xsd/`, add it to `SCHEMAS` in `packages/core/scripts/embed-xsd.mjs`, and run `pnpm --filter @comprobify/core xsd:embed`. Add its sha256 to `xsd-assets.test.ts`.
+2. Add the type to `ISSUABLE_TYPES` and `DOCUMENT_TYPES` in `packages/core/src/sri/document-types.ts` (root element, version, schema file, label), and its title to `RIDE_DOCUMENT_TITLES`. The registry tests fail until each part exists.
+3. Write its builder in `packages/core/src/sri/`, in the XSD's element order, with a test against the schema and the Ficha's example.
+4. Write its creation function in `packages/core/src/documents/` through the FR-DOC-2 pipeline, validating against the XSD before signing.
+5. Map its authorized XML for the RIDE in `sri/ride-data.ts` and `sri/ride-pdf.ts`.
+6. Add the screens, the messages (`es` and `en`) and the `DOC_TYPE_*` plan feature if it isn't there.

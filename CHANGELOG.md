@@ -84,5 +84,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - The RIDE draws a line under the last payment row (FR-DOC-10, ADR-015).
 - A RIMPE negocio popular company can issue invoices: its legend, `CONTRIBUYENTE NEGOCIO POPULAR - RÉGIMEN RIMPE`, is added to the bundled factura XSD's pattern, which SRI publishes with the emprendedor legend only (ADR-013).
 - Milestone 3's gate passed: an invoice authorized by SRI's test environment with a real certificate.
+- The SRI schemas live in the repo as the files SRI publishes (`packages/core/assets/xsd/`), with a test that holds the embedded copies to them; the nota de crédito XSD is there for Milestone 4 (ADR-013).
+- A registry of the document types SRI's engine issues (factura, nota de crédito, guía de remisión): XSD validation, the re-issue check and the buyer's email read it. The nota de crédito and guía schemas are embedded and validate; the RIMPE legend widening covers all three (FR-DOC-1, ADR-013).
 - `OPERATOR_RUC` is required in production: Ficha v2.34's Anexo 26 makes "RUC Proveedor" mandatory on every invoice (ADR-013).
 - Onboarding asks for the tax regime, so a RIMPE company's first invoice carries its legend; it stays editable in Configuración (FR-ONB-2).

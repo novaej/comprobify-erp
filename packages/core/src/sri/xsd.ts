@@ -2,21 +2,20 @@ import { spawn } from 'node:child_process';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import factura210 from './xsd/factura-2.1.0';
+import { DOCUMENT_TYPES, ISSUABLE_TYPES, type IssuableType } from './document-types';
 import xmldsigCore from './xsd/xmldsig-core';
 
 // ADR-013: xmllint (libxml2) validates; the schemas are embedded and written to a
-// temporary folder once per process, under the names the factura XSD imports.
-const SCHEMAS = { '01': 'factura_V2.1.0.xsd' } as const;
-export type ValidatedDocumentType = keyof typeof SCHEMAS;
+// temporary folder once per process, under the names the document XSDs import.
+export type ValidatedDocumentType = IssuableType;
 
-// ADR-013: the published pattern takes only the emprendedor legend, though Anexo 22
-// also requires the negocio popular one. Widened here so the published file stays as is.
+// ADR-013: every document schema's published pattern takes only the emprendedor legend, though
+// Anexo 22 also requires the negocio popular one. Widened here so the published files stay as is.
 const PUBLISHED_RIMPE = '<xsd:pattern value="CONTRIBUYENTE RÉGIMEN RIMPE"/>';
 
-export function widenFactura(published: string): string {
+export function widenRimpe(published: string): string {
   if (!published.includes(PUBLISHED_RIMPE)) {
-    throw new Error('The factura XSD no longer has the RIMPE pattern to widen.');
+    throw new Error('The XSD no longer has the RIMPE pattern to widen.');
   }
   return published.replace(
     PUBLISHED_RIMPE,
@@ -29,10 +28,10 @@ let folder: Promise<string> | undefined;
 function schemaFolder(): Promise<string> {
   folder ??= (async () => {
     const path = await mkdtemp(join(/*turbopackIgnore: true*/ tmpdir(), 'comprobify-xsd-'));
-    await writeFile(
-      join(/*turbopackIgnore: true*/ path, 'factura_V2.1.0.xsd'),
-      widenFactura(factura210),
-    );
+    for (const type of ISSUABLE_TYPES) {
+      const { schemaFile, xsd } = DOCUMENT_TYPES[type];
+      await writeFile(join(/*turbopackIgnore: true*/ path, schemaFile), widenRimpe(xsd));
+    }
     await writeFile(join(/*turbopackIgnore: true*/ path, 'xmldsig-core-schema.xsd'), xmldsigCore);
     return path;
   })().catch((error: unknown) => {
@@ -51,7 +50,10 @@ export async function validateXml(
   documentType: ValidatedDocumentType,
 ): Promise<XsdResult> {
   // A temporary folder, not a project file: nothing for Next to trace.
-  const schema = join(/*turbopackIgnore: true*/ await schemaFolder(), SCHEMAS[documentType]);
+  const schema = join(
+    /*turbopackIgnore: true*/ await schemaFolder(),
+    DOCUMENT_TYPES[documentType].schemaFile,
+  );
   return new Promise((resolve, reject) => {
     const child = spawn('xmllint', ['--noout', '--nonet', '--schema', schema, '-'], {
       stdio: ['pipe', 'ignore', 'pipe'],

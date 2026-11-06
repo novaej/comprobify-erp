@@ -11,6 +11,7 @@ import {
 } from '../kernel';
 import {
   accessKey,
+  issuableType,
   randomNumericCode,
   redateSignedXml,
   signXml,
@@ -151,7 +152,7 @@ export async function reissueDocument(
   });
   const xml = redateSignedXml(row.signedXml!, { accessKey: key, issueDate: today });
   // SRI rule 8, as at creation.
-  const check = await validateXml(xml, '01');
+  const check = await validateXml(xml, issuableType(row.documentType));
   if (!check.valid) throw new Error(`Re-issued XML fails the XSD: ${check.errors.join('; ')}`);
   const signedXml = signXml(
     xml,

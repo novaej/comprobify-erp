@@ -10,7 +10,7 @@ import {
   type ActorContext,
   type Clock,
 } from '../kernel';
-import { authorizedXmlFile, renderRide, rideData } from '../sri';
+import { authorizedXmlFile, documentTypeInfo, renderRide, rideData } from '../sri';
 import { companyLogo, documentLogo } from '../tenancy';
 import type { Jobs, QueuePayload } from '../jobs';
 import type { Logger } from '@comprobify/config/logger';
@@ -108,7 +108,7 @@ export async function emailDocument(
     organization: data.legalName,
     ruc: data.ruc,
     buyerName: data.buyer.name,
-    documentLabel: 'Factura',
+    documentLabel: documentTypeInfo(row.documentType).label,
     number: name,
     issueDate: data.issueDate,
     total: data.total,
