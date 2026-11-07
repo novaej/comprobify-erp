@@ -652,7 +652,8 @@
     "purchaseOrders": "Purchase orders",
     "newPurchaseOrder": "New purchase order",
     "purchaseOrder": "Purchase order",
-    "editPurchaseOrder": "Edit purchase order"
+    "editPurchaseOrder": "Edit purchase order",
+    "receivePurchaseOrder": "Receive goods"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -1852,6 +1853,12 @@
         "subtotal": "Subtotal",
         "iva": "IVA",
         "total": "Total"
+      },
+      "receipts": {
+        "title": "Receipts",
+        "empty": "Nothing from this order has arrived yet.",
+        "receipt": "Receipt of {date}",
+        "noMovement": "no stock"
       }
     },
     "actions": {
@@ -1871,11 +1878,39 @@
       "closeTitle": "Close the order?",
       "closeDescription": "A closed order receives no more goods. This can't be undone.",
       "closeShort": "What hasn't arrived yet won't be received.",
-      "closed": "Order closed."
+      "closed": "Order closed.",
+      "receive": "Receive goods"
     },
-    "saved": "Order saved."
+    "saved": "Order saved.",
+    "receive": {
+      "title": "Receive goods",
+      "description": "Record what arrived for order {number}. You can receive part of it and the rest later.",
+      "back": "Order {number}",
+      "linesTitle": "What arrived",
+      "product": "Product",
+      "ordered": "Ordered",
+      "received": "Received",
+      "left": "Left",
+      "now": "Receiving now",
+      "nowFor": "Receiving now: {name}",
+      "all": "Everything left",
+      "none": "Nothing",
+      "noStock": "No stock",
+      "noStockHint": "Services, and products that track no stock, are received without moving stock.",
+      "warehouse": "Goes into warehouse {warehouse}, at the order cost.",
+      "notes": "Notes",
+      "notesHint": "Optional. For example, the provider's delivery note or invoice number.",
+      "submit": "Record receipt",
+      "cancel": "Cancel",
+      "nothing": "Enter how much arrived for at least one product, no more than is left.",
+      "confirmTitle": "Record the receipt?",
+      "confirmDescription": "The stock enters the warehouse now, and a receipt can't be undone. A mistake is fixed with a stock adjustment.",
+      "done": "Receipt recorded."
+    }
   },
   "purchaseOrdersError": {
+    "ORDER_NOT_RECEIVABLE": "Only a sent order receives goods.",
+    "RECEIPT_EXCEEDS_ORDER": "A line receives more than is left. Reload the page: someone else may have received it already.",
     "PROVIDER_INACTIVE": "The provider is inactive. Activate it or pick another.",
     "PRODUCT_INACTIVE": "A product on the order is inactive. Remove it or activate it.",
     "WAREHOUSE_INACTIVE": "The warehouse is inactive. Pick another.",

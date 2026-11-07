@@ -832,7 +832,9 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await look(page, 'providers');
   });
 
-  test('orders goods from a provider and follows the order (FR-PUR-1)', async ({ page }) => {
+  test('orders goods from a provider, receives them in parts and stocks them (FR-PUR-1, FR-PUR-2)', async ({
+    page,
+  }) => {
     await grantFeature(email, 'PURCHASE_ORDERS', 'e2e purchase orders');
     await signIn(page, email, newPassword);
     const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
@@ -863,6 +865,38 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Enviada');
     await expect(page.getByRole('link', { name: 'Editar' })).toHaveCount(0);
     await look(page, 'purchase-order-sent');
+
+    // FR-PUR-2: one unit first, then the rest; the stock follows at the order's cost.
+    await page.getByRole('link', { name: 'Recibir mercadería' }).click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Recibir mercadería');
+    const now = page.getByRole('textbox', { name: 'Recibe ahora: Café molido' });
+    await expect(now).toHaveValue('4');
+    await now.fill('1');
+    await look(page, 'purchase-order-receive');
+    await page.getByRole('button', { name: 'Registrar recepción' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Registrar la recepción?' })
+      .getByRole('button', { name: 'Registrar recepción' })
+      .click();
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Recibida en parte');
+    await page.getByRole('link', { name: 'Recibir mercadería' }).click();
+    await expect(page.getByRole('textbox', { name: 'Recibe ahora: Café molido' })).toHaveValue('3');
+    await page.getByRole('button', { name: 'Registrar recepción' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Registrar la recepción?' })
+      .getByRole('button', { name: 'Registrar recepción' })
+      .click();
+    await expect(page.getByRole('heading', { level: 1 })).not.toContainText('en parte');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Recibida');
+    await expect(
+      page.getByRole('region', { name: 'Recepciones' }).getByText(/^Recepción del/),
+    ).toHaveCount(2);
+    await look(page, 'purchase-order-received');
+    // 7 at 2.50 held before, plus 4 at 2.75.
+    await nav.getByRole('link', { name: 'Inventario' }).click();
+    const stock = page.getByRole('row', { name: /Café molido/ });
+    await expect(stock).toContainText('11');
+    await expect(stock).toContainText('$28,50');
 
     await page.getByRole('link', { name: 'Órdenes de compra' }).first().click();
     await expect(page.getByRole('table', { name: 'Órdenes de compra' })).toContainText(

@@ -19,37 +19,26 @@ import {
   ecuadorDate,
   money,
   preciseInput,
-  requireFeature,
-  requirePermission,
   toSriAmount,
   type ActorContext,
 } from '../kernel';
 import { providerForOrder } from '../parties';
 import { lineAmounts } from '../sri';
 import { nextNumber, warehousesOf, type Warehouse } from '../tenancy';
+import { receiptsOf, type ReceiptView } from './receipts';
+import {
+  canManage,
+  canRead,
+  lockOrder,
+  movesStock,
+  optionalText,
+  positive,
+  type PurchaseOrder,
+} from './shared';
 import { assertPurchaseOrderTransition, PURCHASE_ORDER_STATUSES } from './status';
 
 // FR-PUR-1 (ADR-019): what the company asks a provider for, at a cost without IVA, to arrive
 // at one warehouse. Editable while a draft; after that only its status moves.
-
-function canRead(ctx: ActorContext) {
-  requireFeature(ctx, 'PURCHASE_ORDERS');
-  requirePermission(ctx, 'purchasing.read');
-}
-function canManage(ctx: ActorContext) {
-  requireFeature(ctx, 'PURCHASE_ORDERS');
-  requirePermission(ctx, 'purchasing.manage');
-}
-
-const positive = preciseInput.refine((value) => new Dec(value).gt(0), 'Must be more than 0');
-const optionalText = (max: number) =>
-  z
-    .string()
-    .trim()
-    .max(max)
-    .nullable()
-    .default(null)
-    .transform((value) => value || null);
 
 export const purchaseOrderInput = z.object({
   providerId: z.uuid(),
@@ -63,7 +52,7 @@ export const purchaseOrderInput = z.object({
 });
 export type PurchaseOrderInput = z.input<typeof purchaseOrderInput>;
 
-export type PurchaseOrder = typeof schema.purchaseOrders.$inferSelect;
+export type { PurchaseOrder };
 export type PurchaseOrderLine = typeof schema.purchaseOrderLines.$inferSelect;
 
 type PricedLine = Omit<
@@ -176,17 +165,6 @@ export async function createPurchaseOrder(
     await insertLines(ctx, tx, order!.id, 1, lines);
     return order!;
   });
-}
-
-// The order under a row lock, so two changes to it wait for each other.
-async function lockOrder(tx: Tx, id: string): Promise<PurchaseOrder> {
-  const [order] = await tx.db
-    .select()
-    .from(schema.purchaseOrders)
-    .where(eq(schema.purchaseOrders.id, id))
-    .for('update');
-  if (!order) throw new DomainError('NOT_FOUND', 'Purchase order not found');
-  return order;
 }
 
 // A draft's new content: its lines become a new revision, the old ones stay (rule 12).
@@ -346,7 +324,9 @@ export async function listPurchaseOrders(
 export type PurchaseOrderView = PurchaseOrder & {
   provider: { id: string; idType: string; identification: string; name: string; emails: string[] };
   warehouse: Warehouse;
-  lines: PurchaseOrderLine[];
+  // What is still to arrive, and whether receiving it moves stock (FR-PUR-2).
+  lines: (PurchaseOrderLine & { left: string; stocked: boolean })[];
+  receipts: ReceiptView[];
 };
 
 export async function getPurchaseOrder(
@@ -384,7 +364,26 @@ export async function getPurchaseOrder(
         ),
       )
       .orderBy(asc(schema.purchaseOrderLines.position));
-    return { ...order, provider: provider!, warehouse: warehouse!, lines };
+    const receipts = await receiptsOf(tx, orderId);
+    const products = new Map(
+      (
+        await productsForOrder(
+          tx,
+          lines.map((line) => line.productId),
+        )
+      ).map((product) => [product.id, product]),
+    );
+    return {
+      ...order,
+      provider: provider!,
+      warehouse: warehouse!,
+      lines: lines.map((line) => ({
+        ...line,
+        left: new Dec(line.quantity).sub(line.receivedQuantity).toFixed(6),
+        stocked: movesStock(ctx, products.get(line.productId)),
+      })),
+      receipts,
+    };
   });
 }
 

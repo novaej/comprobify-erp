@@ -5,6 +5,8 @@ import {
   closePurchaseOrder,
   createPurchaseOrder,
   markPurchaseOrderSent,
+  receivePurchaseOrder,
+  type ReceiptInput,
   updatePurchaseOrder,
   type PurchaseOrderInput,
 } from '@comprobify/core';
@@ -64,4 +66,19 @@ export async function orderStatusAction(_: ActionState, form: FormData): Promise
   });
   if (state.done) revalidatePath(`/${locale}/purchase-orders`, 'layout');
   return state;
+}
+
+// FR-PUR-2. Core checks what is left and moves the stock in the same transaction.
+export async function receiveAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const locale = localeOf(form);
+  const { actor } = await loadShell(locale);
+  const { db } = await getRuntime();
+  const payload = payloadOf(form) as ReceiptInput | undefined;
+  if (payload === undefined) return { error: 'INVALID_INPUT' };
+  const state = await toActionState(async () => {
+    await receivePurchaseOrder(actor, db, payload);
+  });
+  if (!state.done) return state;
+  revalidatePath(`/${locale}`, 'layout');
+  return redirect({ href: `/purchase-orders/${payload.orderId}`, locale });
 }

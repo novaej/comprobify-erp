@@ -68,10 +68,12 @@ export default async function PurchaseOrderPage({
   const allowed = {
     edit: canManage && order.status === 'DRAFT',
     send: canManage && canPurchaseOrderTransition(order.status, 'SENT'),
+    receive: canManage && (order.status === 'SENT' || order.status === 'PARTIALLY_RECEIVED'),
     cancel: canManage && canPurchaseOrderTransition(order.status, 'CANCELLED'),
     close: canManage && canPurchaseOrderTransition(order.status, 'CLOSED'),
   };
-  const receivedAny = order.status !== 'DRAFT' && order.status !== 'SENT';
+  const receivedAny = order.receipts.length > 0;
+  const lineById = new Map(order.lines.map((line) => [line.id, line]));
 
   return (
     <div className="max-w-6xl space-y-6">
@@ -226,6 +228,52 @@ export default async function PurchaseOrderPage({
           </dl>
         </SectionCard>
       </div>
+
+      {order.status !== 'DRAFT' && order.status !== 'CANCELLED' && (
+        <SectionCard title={t('detail.receipts.title')}>
+          {order.receipts.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t('detail.receipts.empty')}</p>
+          ) : (
+            <ol className="space-y-4">
+              {order.receipts.map((receipt) => (
+                <li key={receipt.id} className="rounded-md bg-muted/40 px-3 py-2">
+                  <p className="text-sm font-medium">
+                    {t('detail.receipts.receipt', { date: date(receipt.receivedDate) })}
+                    <span className="ml-2 text-xs font-normal text-muted-foreground">
+                      {when(receipt.createdAt)}
+                    </span>
+                  </p>
+                  <ul className="mt-1 space-y-0.5 text-sm">
+                    {receipt.lines.map((item) => {
+                      const line = lineById.get(item.orderLineId);
+                      return (
+                        <li
+                          key={item.orderLineId}
+                          className="flex flex-wrap items-center gap-x-2 gap-y-1"
+                        >
+                          <span className="tabular-nums">{quantity(item.quantity)}</span>
+                          {line?.unit && (
+                            <span className="text-xs text-muted-foreground">{line.unit}</span>
+                          )}
+                          <span>{line?.name}</span>
+                          {!item.moved && (
+                            <ToneBadge tone="neutral">{t('detail.receipts.noMovement')}</ToneBadge>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  {receipt.notes && (
+                    <p className="mt-1 text-xs break-words text-muted-foreground">
+                      {receipt.notes}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ol>
+          )}
+        </SectionCard>
+      )}
     </div>
   );
 }

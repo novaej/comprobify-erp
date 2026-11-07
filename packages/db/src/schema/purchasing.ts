@@ -14,6 +14,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { oneOf, transitionTriggerBody } from './checks';
 import { users } from './identity';
+import { stockMovements } from './inventory';
 import { products, providers } from './master-data';
 import { SRI_IVA_RATE_CODES } from './sri';
 import { warehouses } from './tenancy';
@@ -156,3 +157,62 @@ export const purchaseOrderLines = pgTable(
 // The trigger that enforces PURCHASE_ORDER_TRANSITIONS; migration 0040 holds its output.
 export const purchaseOrderStatusTriggerBody = (): string =>
   transitionTriggerBody('Purchase order', PURCHASE_ORDER_STATUSES, PURCHASE_ORDER_TRANSITIONS);
+
+// FR-PUR-2: what arrived, one receipt at a time, never changed afterwards.
+export const purchaseReceipts = pgTable(
+  'purchase_receipts',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id').notNull(),
+    orderId: uuid('order_id').notNull(),
+    receivedDate: date('received_date').notNull(),
+    notes: text('notes'),
+    createdBy: uuid('created_by').references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      name: 'purchase_receipts_order_fk',
+      columns: [table.tenantId, table.orderId],
+      foreignColumns: [purchaseOrders.tenantId, purchaseOrders.id],
+    }),
+    unique('purchase_receipts_tenant_id_unique').on(table.tenantId, table.id),
+    index('purchase_receipts_order').on(table.tenantId, table.orderId, table.createdAt),
+  ],
+);
+
+// Each line received, at the order's cost, with the stock movement it made when the product
+// tracks stock (null for services and goods that don't).
+export const purchaseReceiptLines = pgTable(
+  'purchase_receipt_lines',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id').notNull(),
+    receiptId: uuid('receipt_id').notNull(),
+    orderLineId: uuid('order_line_id').notNull(),
+    productId: uuid('product_id').notNull(),
+    quantity: precise('quantity').notNull(),
+    unitCost: precise('unit_cost').notNull(),
+    movementId: uuid('movement_id').references(() => stockMovements.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      name: 'purchase_receipt_lines_receipt_fk',
+      columns: [table.tenantId, table.receiptId],
+      foreignColumns: [purchaseReceipts.tenantId, purchaseReceipts.id],
+    }),
+    foreignKey({
+      name: 'purchase_receipt_lines_order_line_fk',
+      columns: [table.tenantId, table.orderLineId],
+      foreignColumns: [purchaseOrderLines.tenantId, purchaseOrderLines.id],
+    }),
+    foreignKey({
+      name: 'purchase_receipt_lines_product_fk',
+      columns: [table.tenantId, table.productId],
+      foreignColumns: [products.tenantId, products.id],
+    }),
+    unique('purchase_receipt_lines_line_unique').on(table.receiptId, table.orderLineId),
+    check('purchase_receipt_lines_quantity_check', sql`quantity > 0 AND unit_cost >= 0`),
+  ],
+);

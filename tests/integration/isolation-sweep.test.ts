@@ -8,6 +8,9 @@ import {
   createProduct,
   createProvider,
   createPurchaseOrder,
+  getPurchaseOrder,
+  markPurchaseOrderSent,
+  receivePurchaseOrder,
   createAuth,
   createJobs,
   createKeyCipher,
@@ -206,10 +209,17 @@ describe('isolation sweep over every tenant table', () => {
       });
       // A purchase order, its line and its number (FR-PUR-1).
       const [warehouse] = await orderWarehouses(actor, db);
-      await createPurchaseOrder(actor, db, {
+      const order = await createPurchaseOrder(actor, db, {
         providerId: supplier.id,
         warehouseId: warehouse!.id,
         lines: [{ productId: product.id, quantity: '2', unitCost: '0.80' }],
+      });
+      // And a receipt with its line (FR-PUR-2).
+      await markPurchaseOrderSent(actor, db, order.id);
+      const [orderLine] = (await getPurchaseOrder(actor, db, order.id)).lines;
+      await receivePurchaseOrder(actor, db, {
+        orderId: order.id,
+        lines: [{ lineId: orderLine!.id, quantity: '1' }],
       });
     }
     return org;
@@ -271,6 +281,8 @@ describe('isolation sweep over every tenant table', () => {
         'providers',
         'purchase_order_lines',
         'purchase_orders',
+        'purchase_receipt_lines',
+        'purchase_receipts',
         'sri_exchanges',
         'stock_levels',
         'stock_movements',

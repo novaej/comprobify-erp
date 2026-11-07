@@ -19,6 +19,8 @@ export type {
   PurchaseOrderRow,
   PurchaseOrderView,
 } from './orders';
+export { receiptInput, receivePurchaseOrder } from './receipts';
+export type { ReceiptInput, ReceiptView } from './receipts';
 export {
   assertPurchaseOrderTransition,
   canPurchaseOrderTransition,

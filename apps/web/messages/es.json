@@ -652,7 +652,8 @@
     "purchaseOrders": "Órdenes de compra",
     "newPurchaseOrder": "Nueva orden de compra",
     "purchaseOrder": "Orden de compra",
-    "editPurchaseOrder": "Editar orden de compra"
+    "editPurchaseOrder": "Editar orden de compra",
+    "receivePurchaseOrder": "Recibir mercadería"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -1852,6 +1853,12 @@
         "subtotal": "Subtotal",
         "iva": "IVA",
         "total": "Total"
+      },
+      "receipts": {
+        "title": "Recepciones",
+        "empty": "Aún no llega nada de esta orden.",
+        "receipt": "Recepción del {date}",
+        "noMovement": "sin inventario"
       }
     },
     "actions": {
@@ -1871,11 +1878,39 @@
       "closeTitle": "¿Cerrar la orden?",
       "closeDescription": "Una orden cerrada no recibe más mercadería. No se puede deshacer.",
       "closeShort": "Lo que falta por llegar ya no se recibirá.",
-      "closed": "Orden cerrada."
+      "closed": "Orden cerrada.",
+      "receive": "Recibir mercadería"
     },
-    "saved": "Orden guardada."
+    "saved": "Orden guardada.",
+    "receive": {
+      "title": "Recibir mercadería",
+      "description": "Anota lo que llegó de la orden {number}. Puedes recibir una parte y el resto después.",
+      "back": "Orden {number}",
+      "linesTitle": "Lo que llegó",
+      "product": "Producto",
+      "ordered": "Pedido",
+      "received": "Ya recibido",
+      "left": "Pendiente",
+      "now": "Recibe ahora",
+      "nowFor": "Recibe ahora: {name}",
+      "all": "Todo lo pendiente",
+      "none": "Nada",
+      "noStock": "Sin inventario",
+      "noStockHint": "Los servicios y los productos que no controlan inventario se reciben sin mover existencias.",
+      "warehouse": "Entra a la bodega {warehouse}, al costo de la orden.",
+      "notes": "Notas",
+      "notesHint": "Opcional. Por ejemplo, el número de la guía o la factura del proveedor.",
+      "submit": "Registrar recepción",
+      "cancel": "Cancelar",
+      "nothing": "Indica cuánto llegó de al menos un producto, sin pasar lo pendiente.",
+      "confirmTitle": "¿Registrar la recepción?",
+      "confirmDescription": "Las existencias entran a la bodega ahora y una recepción no se puede deshacer. Un error se corrige con un ajuste de inventario.",
+      "done": "Recepción registrada."
+    }
   },
   "purchaseOrdersError": {
+    "ORDER_NOT_RECEIVABLE": "Solo una orden enviada recibe mercadería.",
+    "RECEIPT_EXCEEDS_ORDER": "Una línea recibe más de lo pendiente. Recarga la página: puede que otra persona ya la haya recibido.",
     "PROVIDER_INACTIVE": "El proveedor está inactivo. Actívalo o elige otro.",
     "PRODUCT_INACTIVE": "Un producto de la orden está inactivo. Quítalo o actívalo.",
     "WAREHOUSE_INACTIVE": "La bodega está inactiva. Elige otra.",

@@ -41,7 +41,22 @@ A test compares the live trigger with the generated text. On top of the PRD's pa
 
 Each change takes the order `FOR UPDATE` and checks the transition before writing, so two people acting at once get `INVALID_TRANSITION` instead of a silent overwrite. "Sent" is marked by hand for now: the provider may get the order by phone or in person. Step 8 adds sending it by email.
 
-**Permissions and plan.** Orders need the `PURCHASE_ORDERS` feature (the Compras module). `purchasing.read` sees them, and `purchasing.manage` creates, edits and moves them. Core checks both. The pages and the menu only hide what the role or the plan doesn't allow.
+**Receiving** (FR-PUR-2, `purchasing/receipts.ts`). A receipt names some of the order's lines and how much of each arrived, and is one transaction:
+
+1. It locks the order, which must be `SENT` or `PARTIALLY_RECEIVED` (`ORDER_NOT_RECEIVABLE` otherwise).
+2. It refuses the whole receipt if any line gets more than is left (`RECEIPT_EXCEEDS_ORDER`). A line can't appear twice in one receipt.
+3. For each line it raises the line's `received_quantity`. A good that tracks stock also gets a `PURCHASE_RECEIPT` movement through `applyMovement`. The movement goes into the order's warehouse, at the line's unit cost, with the receipt as its source, so the average follows ADR-018.
+4. The order becomes `RECEIVED` when every line is complete, and `PARTIALLY_RECEIVED` otherwise.
+
+Some lines are received without a movement:
+
+- services;
+- goods that don't track stock;
+- any line, when the company no longer has the Inventario module.
+
+The receipt line records whether it moved stock. Receipts and their lines are append-only, like the ledger. A mistake is corrected with a stock adjustment, never by editing the receipt. The receipt's date is the Ecuador day it was recorded.
+
+**Permissions and plan.** Orders need the `PURCHASE_ORDERS` feature (the Compras module). `purchasing.read` sees them, and `purchasing.manage` creates, edits, receives and moves them. Receiving needs no inventory permission: the purchasing role receives what it ordered. Core checks both. The pages and the menu only hide what the role or the plan doesn't allow.
 
 ## Consequences
 
@@ -50,11 +65,13 @@ Each change takes the order `FOR UPDATE` and checks the transition before writin
 - Order numbers never repeat, even under concurrency, and have no gaps.
 - An edited draft keeps its history without deleting anything.
 - The database refuses an impossible status change even if code skips core.
+- A receipt and its stock movements commit together, so the stock never shows goods the order doesn't, or the reverse.
 
 ### Negative
 
 - Every edit of a draft adds a full set of lines. Drafts are edited a few times at most, so the growth is small.
 - A partly received order can't be cancelled, only closed. A cancelled order means nothing ever arrived, and that stays true.
+- A wrong receipt can't be undone. Goods received by mistake leave with a stock adjustment, and the order still shows them as received.
 
 ### Alternatives considered
 

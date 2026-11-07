@@ -2,7 +2,7 @@
 
 import { Button, buttonVariants } from '@comprobify/ui/components/button';
 import { Textarea } from '@comprobify/ui/components/textarea';
-import { Ban, Lock, PencilLine, Send } from 'lucide-react';
+import { Ban, Lock, PackageCheck, PencilLine, Send } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -12,7 +12,13 @@ import { useServerAction } from '@/components/use-server-action';
 import { Link } from '@/i18n/navigation';
 import { orderStatusAction } from '../actions';
 
-export type OrderAllowed = { edit: boolean; send: boolean; cancel: boolean; close: boolean };
+export type OrderAllowed = {
+  edit: boolean;
+  send: boolean;
+  receive: boolean;
+  cancel: boolean;
+  close: boolean;
+};
 
 // FR-PUR-1: what the order allows now, each asked first (FR-UX-2).
 export function OrderActions({
@@ -48,6 +54,12 @@ export function OrderActions({
         <Link href={`/purchase-orders/${id}/edit`} className={buttonVariants({ size: 'sm' })}>
           <PencilLine className="mr-1.5 h-4 w-4" aria-hidden />
           {t('edit')}
+        </Link>
+      )}
+      {allowed.receive && (
+        <Link href={`/purchase-orders/${id}/receive`} className={buttonVariants({ size: 'sm' })}>
+          <PackageCheck className="mr-1.5 h-4 w-4" aria-hidden />
+          {t('receive')}
         </Link>
       )}
       {allowed.send && (
