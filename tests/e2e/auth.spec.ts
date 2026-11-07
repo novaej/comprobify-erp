@@ -809,6 +809,29 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     ).toBeVisible();
   });
 
+  test('keeps the providers the company buys from (FR-MD-3)', async ({ page }) => {
+    await grantFeature(email, 'PROVIDERS', 'e2e providers');
+    await signIn(page, email, newPassword);
+    const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
+    await nav.getByRole('link', { name: 'Proveedores' }).click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Proveedores');
+    await look(page, 'providers-empty');
+    await page.getByRole('button', { name: 'Nuevo proveedor' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Nuevo proveedor' });
+    await dialog
+      .getByRole('textbox', { name: 'Identificación', exact: true })
+      .fill('1790012345001');
+    await dialog.getByLabel('Nombre o razón social').fill('Distribuidora Andina S.A.');
+    await dialog.getByLabel('Correos').fill('compras@andina.ec');
+    await look(page, 'provider-new');
+    await dialog.getByRole('button', { name: 'Crear proveedor' }).click();
+    await expect(page.getByText('Proveedor creado.')).toBeVisible();
+    await expect(page.getByRole('table', { name: 'Proveedores' })).toContainText(
+      'Distribuidora Andina S.A.',
+    );
+    await look(page, 'providers');
+  });
+
   test('invites a read-only member who joins and sees only what the role allows (FR-USR-1, FR-ROLE-3)', async ({
     page,
     browser,

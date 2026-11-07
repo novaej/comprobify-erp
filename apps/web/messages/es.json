@@ -203,7 +203,8 @@
     "products": "Productos",
     "company": "Empresa",
     "documents": "Comprobantes",
-    "inventory": "Inventario"
+    "inventory": "Inventario",
+    "providers": "Proveedores"
   },
   "shell": {
     "sandboxTitle": "Estás en el ambiente de pruebas",
@@ -645,7 +646,8 @@
     "newGuide": "Nueva guía de remisión",
     "inventory": "Inventario",
     "inventoryProduct": "Existencias del producto",
-    "inventoryValuation": "Valoración del inventario"
+    "inventoryValuation": "Valoración del inventario",
+    "providers": "Proveedores"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -1652,6 +1654,66 @@
     "FEATURE_NOT_ENABLED": "Tu plan no incluye el inventario.",
     "NOT_FOUND": "No se encontró el producto o la bodega.",
     "INVALID_INPUT": "Revisa los datos: la cantidad debe ser mayor que cero y los números admiten hasta 6 decimales.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+  },
+  "providers": {
+    "title": "Proveedores",
+    "description": "A quién le compra tu empresa. Sus datos se usan en las órdenes de compra.",
+    "new": "Nuevo proveedor",
+    "dialogDescription": "Sus datos aparecen en las órdenes de compra que le envíes.",
+    "search": "Buscar por nombre o identificación",
+    "searchButton": "Buscar",
+    "emptyTitle": "Todavía no hay proveedores",
+    "empty": "Crea el primero para emitirle órdenes de compra.",
+    "noMatchesTitle": "Sin resultados",
+    "noMatches": "Ningún proveedor coincide con la búsqueda.",
+    "table": {
+      "name": "Nombre",
+      "identification": "Identificación",
+      "email": "Correo",
+      "status": "Estado",
+      "actions": "Acciones"
+    },
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "edit": "Editar",
+    "editName": "Editar a {name}",
+    "idType": "Tipo de identificación",
+    "identification": "Identificación",
+    "identificationHint": {
+      "04": "13 dígitos.",
+      "05": "10 dígitos, con su dígito verificador.",
+      "06": "Letras y números, como en el pasaporte.",
+      "08": "La identificación tributaria de su país."
+    },
+    "name": "Nombre o razón social",
+    "emails": "Correos",
+    "emailsHint": "Separados por coma. La orden de compra se envía al primero.",
+    "phone": "Teléfono",
+    "address": "Dirección",
+    "paymentTerm": "Plazo de pago",
+    "paymentTermUnit": "Unidad",
+    "save": "Guardar cambios",
+    "saved": "Proveedor guardado.",
+    "create": "Crear proveedor",
+    "created": "Proveedor creado.",
+    "deactivate": "Desactivar",
+    "deactivateName": "Desactivar a {name}",
+    "deactivateTitle": "¿Desactivar el proveedor?",
+    "deactivateDescription": "Deja de aparecer al crear órdenes de compra. Sus órdenes anteriores no cambian y puedes reactivarlo.",
+    "deactivated": "Proveedor desactivado.",
+    "reactivate": "Reactivar",
+    "reactivateName": "Reactivar a {name}",
+    "reactivateTitle": "¿Reactivar el proveedor?",
+    "reactivateDescription": "Vuelve a aparecer al crear órdenes de compra.",
+    "reactivated": "Proveedor reactivado."
+  },
+  "providersError": {
+    "IDENTIFICATION_TAKEN": "Ya existe un proveedor con esa identificación.",
+    "FORBIDDEN": "Tu rol no permite esta acción.",
+    "FEATURE_NOT_ENABLED": "Tu plan no incluye proveedores.",
+    "NOT_FOUND": "No se encontró el proveedor.",
+    "INVALID_INPUT": "Revisa los datos: la identificación debe ser válida para su tipo y cada correo, una dirección.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
   }
 }

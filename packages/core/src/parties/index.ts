@@ -6,49 +6,30 @@ import {
   ilike,
   or,
   schema,
-  SRI_TERM_UNITS,
   sql,
   type Database,
   type Tx,
 } from '@comprobify/db';
 import { z } from 'zod';
 import { DomainError, requireFeature, requirePermission, type ActorContext } from '../kernel';
-import { isValidIdentification } from './identification';
+import { clientInput, line } from './input';
 
 export { isValidCedula, isValidIdentification } from './identification';
 export { CLIENT_ID_TYPES };
+export { clientInput } from './input';
+export {
+  createProvider,
+  getProvider,
+  listProviders,
+  providerForOrder,
+  providerInput,
+  setProviderActive,
+  updateProvider,
+} from './providers';
+export type { Provider } from './providers';
 
 // FR-MD-2: the company's clients. Consumidor final is built in, never a row; a company
 // and its twin keep their own lists.
-
-// SRI's text fields refuse newlines; lengths are the factura XSD's.
-const line = (max: number) =>
-  z
-    .string()
-    .trim()
-    .min(1)
-    .max(max)
-    .regex(/^[^\n\r\t]*$/);
-
-export const clientInput = z
-  .object({
-    idType: z.enum(CLIENT_ID_TYPES as [string, ...string[]]),
-    identification: z.string().trim().toUpperCase().max(20),
-    name: line(300),
-    emails: z.array(z.email().max(254).toLowerCase()).max(5).default([]),
-    phone: line(30).nullable().default(null),
-    address: line(300).nullable().default(null),
-    paymentTerm: z.number().int().min(1).max(3650).nullable().default(null),
-    paymentTermUnit: z.enum(SRI_TERM_UNITS).nullable().default(null),
-  })
-  .refine((input) => isValidIdentification(input.idType, input.identification), {
-    path: ['identification'],
-    message: 'Invalid identification for its type',
-  })
-  .refine((input) => (input.paymentTerm === null) === (input.paymentTermUnit === null), {
-    path: ['paymentTermUnit'],
-    message: 'A payment term needs its unit',
-  });
 
 export type Client = typeof schema.clients.$inferSelect;
 

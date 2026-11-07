@@ -6,6 +6,7 @@ import {
   applyMovement,
   createClient,
   createProduct,
+  createProvider,
   createAuth,
   createJobs,
   createKeyCipher,
@@ -123,6 +124,10 @@ describe('isolation sweep over every tenant table', () => {
       realTenantId: org.realTenantId,
       moduleKey: 'INVENTORY',
     });
+    await addModule(await superAdmin(db), db, {
+      realTenantId: org.realTenantId,
+      moduleKey: 'PURCHASING',
+    });
     await acceptAgreements(ctx, db, { ipAddress: '203.0.113.9', userAgent: 'Sweep' }, parties);
     for (const tenantId of [org.realTenantId, org.twinTenantId]) {
       await recordSessionStart(db, { tenantId, userId: owner, sessionId: randomUUID() });
@@ -132,6 +137,11 @@ describe('isolation sweep over every tenant table', () => {
         idType: '05',
         identification: '1710034065',
         name: 'Cliente',
+      });
+      await createProvider(actor, db, {
+        idType: '05',
+        identification: '1710034065',
+        name: 'Proveedor',
       });
       // Documents, lines, payments, events and a re-issue (FR-DOC-6, FR-DOC-13).
       const document = await insertTestDocument(db, tenantId);
@@ -249,6 +259,7 @@ describe('isolation sweep over every tenant table', () => {
         'issue_points',
         'memberships',
         'products',
+        'providers',
         'sri_exchanges',
         'stock_levels',
         'stock_movements',

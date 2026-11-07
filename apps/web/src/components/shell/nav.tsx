@@ -14,6 +14,7 @@ import {
   Menu,
   Package,
   Receipt,
+  Truck,
   ScrollText,
   ShieldCheck,
   UserRound,
@@ -38,6 +39,7 @@ type NavItem = {
     | 'clients'
     | 'products'
     | 'inventory'
+    | 'providers'
     | 'company'
     | 'users'
     | 'activity'
@@ -88,6 +90,14 @@ const NAV_ITEMS: NavItem[] = [
     group: 'operate',
     permission: 'inventory.read',
     feature: 'INVENTORY',
+  },
+  {
+    href: '/providers',
+    icon: Truck,
+    labelKey: 'providers',
+    group: 'operate',
+    permission: 'purchasing.read',
+    feature: 'PROVIDERS',
   },
   {
     href: '/settings',

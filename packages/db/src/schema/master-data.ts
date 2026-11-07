@@ -65,6 +65,46 @@ export const clients = pgTable(
   ],
 );
 
+// FR-MD-3: who the company buys from, in the client's identity shape. Default retention
+// codes arrive with retenciones (post-MVP). The twin keeps its own.
+export const providers = pgTable(
+  'providers',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    idType: text('id_type', { enum: CLIENT_ID_TYPES as [string, ...string[]] }).notNull(),
+    identification: text('identification').notNull(),
+    name: text('name').notNull(),
+    emails: text('emails')
+      .array()
+      .default(sql`'{}'::text[]`)
+      .notNull(),
+    phone: text('phone'),
+    address: text('address'),
+    paymentTerm: integer('payment_term'),
+    paymentTermUnit: text('payment_term_unit', { enum: SRI_TERM_UNITS }),
+    active: boolean('active').default(true).notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    unique('providers_tenant_identification_unique').on(
+      table.tenantId,
+      table.idType,
+      table.identification,
+    ),
+    unique('providers_tenant_id_unique').on(table.tenantId, table.id),
+    check('providers_id_type_check', oneOf('id_type', CLIENT_ID_TYPES)),
+    check('providers_term_unit_check', oneOf('payment_term_unit', SRI_TERM_UNITS)),
+    check(
+      'providers_payment_term_check',
+      sql`(payment_term IS NULL) = (payment_term_unit IS NULL) AND (payment_term IS NULL OR payment_term > 0)`,
+    ),
+  ],
+);
+
 export type AdditionalDetail = { name: string; value: string };
 
 // FR-MD-1. Price and cost are numeric with SRI's six decimals for unit prices (ADR-012).

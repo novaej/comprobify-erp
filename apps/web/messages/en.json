@@ -203,7 +203,8 @@
     "products": "Products",
     "company": "Company",
     "documents": "Documents",
-    "inventory": "Inventory"
+    "inventory": "Inventory",
+    "providers": "Providers"
   },
   "shell": {
     "sandboxTitle": "You're in the test environment",
@@ -645,7 +646,8 @@
     "newGuide": "New delivery guide",
     "inventory": "Inventory",
     "inventoryProduct": "Product stock",
-    "inventoryValuation": "Inventory valuation"
+    "inventoryValuation": "Inventory valuation",
+    "providers": "Providers"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -1653,5 +1655,65 @@
     "NOT_FOUND": "The product or warehouse wasn't found.",
     "INVALID_INPUT": "Check the data: the quantity must be above zero and numbers take up to 6 decimals.",
     "UNKNOWN": "Something went wrong. Try again."
+  },
+  "providers": {
+    "title": "Providers",
+    "description": "Who your company buys from. Their details go on purchase orders.",
+    "new": "New provider",
+    "dialogDescription": "These details show on the purchase orders you send them.",
+    "search": "Search by name or ID",
+    "searchButton": "Search",
+    "emptyTitle": "No providers yet",
+    "empty": "Create the first one to send them purchase orders.",
+    "noMatchesTitle": "No results",
+    "noMatches": "No provider matches the search.",
+    "table": {
+      "name": "Name",
+      "identification": "ID",
+      "email": "Email",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "active": "Active",
+    "inactive": "Inactive",
+    "edit": "Edit",
+    "editName": "Edit {name}",
+    "idType": "ID type",
+    "identification": "ID number",
+    "identificationHint": {
+      "04": "13 digits.",
+      "05": "10 digits, with its check digit.",
+      "06": "Letters and digits, as on the passport.",
+      "08": "The tax ID of their country."
+    },
+    "name": "Name or company name",
+    "emails": "Emails",
+    "emailsHint": "Comma separated. The purchase order goes to the first.",
+    "phone": "Phone",
+    "address": "Address",
+    "paymentTerm": "Payment term",
+    "paymentTermUnit": "Unit",
+    "save": "Save changes",
+    "saved": "Provider saved.",
+    "create": "Create provider",
+    "created": "Provider created.",
+    "deactivate": "Deactivate",
+    "deactivateName": "Deactivate {name}",
+    "deactivateTitle": "Deactivate the provider?",
+    "deactivateDescription": "It no longer shows when creating purchase orders. Its past orders don't change, and you can reactivate it.",
+    "deactivated": "Provider deactivated.",
+    "reactivate": "Reactivate",
+    "reactivateName": "Reactivate {name}",
+    "reactivateTitle": "Reactivate the provider?",
+    "reactivateDescription": "It shows again when creating purchase orders.",
+    "reactivated": "Provider reactivated."
+  },
+  "providersError": {
+    "IDENTIFICATION_TAKEN": "A provider with that ID already exists.",
+    "FORBIDDEN": "Your role doesn't allow this.",
+    "FEATURE_NOT_ENABLED": "Your plan doesn't include providers.",
+    "NOT_FOUND": "Provider not found.",
+    "INVALID_INPUT": "Check the details: the ID must be valid for its type, and each email an address.",
+    "UNKNOWN": "An unexpected error occurred. Please try again."
   }
 }

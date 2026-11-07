@@ -274,6 +274,13 @@
       "when": 1794072545097,
       "tag": "0038_products_stock_rule",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1794078829336,
+      "tag": "0039_providers",
+      "breakpoints": true
     }
   ]
 }
