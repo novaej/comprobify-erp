@@ -81,6 +81,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - The inventory ledger: `stock_movements` (append-only) and `stock_levels` per product and warehouse, with weighted average cost kept as value over quantity, a row lock per level, and the company's negative-stock rule (block by default). `applyMovement` is the one way stock changes, in the caller's transaction (migration 0037, ADR-018, FR-INV-1, FR-INV-2, FR-INV-4, FR-INV-5, FR-INV-6).
 - Stock adjustments with a reason, opening balances (only a level's first movement) and their CSV import, checked whole before anything is applied, in Spanish or English spreadsheets. A product can't stop tracking stock a warehouse still holds, and a service never tracks stock (migration 0038, FR-INV-3, FR-INV-6, ADR-018).
 - Inventory screens: stock per product in one warehouse or all, a product's levels and movements with its adjustment and opening-balance dialogs, the opening-balance import with a downloadable template, and the valuation at average cost with a CSV export. The negative-stock rule is a switch in Empresa (FR-INV-2, FR-INV-3, FR-INV-4, FR-INV-5).
+- The nightly stock check: the `inventory.verify` job compares every level with the sums of its ledger and logs any drift (FR-INV-2, NFR-JOB-2, ADR-018).
 
 ### Fixed
 

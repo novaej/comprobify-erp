@@ -68,6 +68,12 @@ export const queues = {
     options: { retryLimit: 1, expireInSeconds: 300 },
     concurrency: 1,
   },
+  // FR-INV-2: every level against its ledger, once a night.
+  'inventory.verify': {
+    payload: z.object({}),
+    options: { retryLimit: 1, expireInSeconds: 900 },
+    concurrency: 1,
+  },
   'identity.prune': {
     payload: z.object({}),
     options: { retryLimit: 2, expireInSeconds: 300 },
@@ -89,6 +95,8 @@ export const schedules: readonly {
 }[] = [
   { queue: 'system.heartbeat', cron: '*/5 * * * *', tz: JOB_TIME_ZONE, data: {} },
   { queue: 'identity.prune', cron: '15 3 * * *', tz: JOB_TIME_ZONE, data: {} },
+  // Quiet hours in Quito, after the day's receipts and adjustments.
+  { queue: 'inventory.verify', cron: '45 2 * * *', tz: JOB_TIME_ZONE, data: {} },
   { queue: 'sri.overdue', cron: '*/15 * * * *', tz: JOB_TIME_ZONE, data: {} },
   // After midnight in Quito, once yesterday's deadline checks have run.
   { queue: 'sri.reissue-sweep', cron: '30 0 * * *', tz: JOB_TIME_ZONE, data: {} },

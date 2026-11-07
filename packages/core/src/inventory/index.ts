@@ -33,3 +33,5 @@ export type {
   Valuation,
   ValuationLine,
 } from './queries';
+export { verifyStockLevels } from './verify';
+export type { StockDrift } from './verify';

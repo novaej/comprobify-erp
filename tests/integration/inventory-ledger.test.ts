@@ -9,6 +9,7 @@ import {
   importOpeningBalances,
   setOpeningBalance,
   updateProduct,
+  verifyStockLevels,
   createKeyCipher,
   createProduct,
   fixedClock,
@@ -22,7 +23,7 @@ import {
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { asc, eq, schema, sql, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, superAdmin } from './helpers';
+import { appDatabase, superAdmin, testLogger } from './helpers';
 
 // FR-INV-1, FR-INV-2, FR-INV-4, FR-INV-5, FR-INV-6 (ADR-018): the ledger and its levels.
 describe('inventory ledger', () => {
@@ -456,6 +457,43 @@ describe('inventory ledger', () => {
         }),
       ),
     ).toBe('SERVICE_HAS_NO_STOCK');
+  });
+
+  // FR-INV-2: the nightly check.
+  it('finds no drift between the levels and their ledger, and reports one that appears', async () => {
+    const id = await product();
+    await move({
+      type: 'OPENING_BALANCE',
+      productId: id,
+      warehouseId,
+      quantity: '3',
+      unitCost: '3.333333',
+    });
+    await move({ type: 'ADJUSTMENT_OUT', productId: id, warehouseId, quantity: '1' });
+    const mine = (drifts: { tenantId: string }[]) =>
+      drifts.filter((drift) => drift.tenantId === org.twinTenantId);
+
+    const clean = await verifyStockLevels({ db, logger: testLogger() });
+    expect(clean.checked).toBeGreaterThan(0);
+    expect(mine(clean.drifts)).toEqual([]);
+
+    // A level changed outside applyMovement, as a bad script would.
+    await db.withTenant({ tenantId: org.twinTenantId }, ({ db: tx }) =>
+      tx
+        .update(schema.stockLevels)
+        .set({ value: '1.000000' })
+        .where(eq(schema.stockLevels.productId, id)),
+    );
+    const found = await verifyStockLevels({ db, logger: testLogger() });
+    expect(mine(found.drifts)).toEqual([
+      expect.objectContaining({
+        productId: id,
+        onHand: '2.000000',
+        ledgerOnHand: '2.000000',
+        value: '1.000000',
+        ledgerValue: '6.666666',
+      }),
+    ]);
   });
 
   // FR-INV-5. Last: it adds a second warehouse, which the import above doesn't expect.
