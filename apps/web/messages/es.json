@@ -1372,7 +1372,7 @@
     },
     "lines": {
       "title": "Líneas de la factura",
-      "description": "Escribe la cantidad a acreditar en cada línea que corresponda; deja vacías las demás.",
+      "description": "Elige «Devolución» para acreditar bienes (cantidad y precio) o «Descuento o ajuste» para acreditar solo un valor, por ejemplo 10 USD de una línea, sin usar su cantidad. Deja vacías las líneas que no se acrediten.",
       "item": "Producto o servicio",
       "left": "Por acreditar",
       "leftBase": "{amount} sin IVA",
@@ -1383,7 +1383,14 @@
       "over": "Supera lo que queda.",
       "quantityFor": "Cantidad a acreditar de {name}",
       "priceFor": "Precio unitario de {name}",
-      "discountFor": "Descuento de {name}"
+      "discountFor": "Descuento de {name}",
+      "kind": "Tipo",
+      "kindFor": "Tipo de crédito de {name}",
+      "kindReturn": "Devolución",
+      "kindAmount": "Descuento o ajuste",
+      "amountFor": "Valor a acreditar de {name}",
+      "amountPlaceholder": "Valor sin IVA",
+      "overAmount": "Supera el valor que queda."
     },
     "totals": {
       "title": "Total a acreditar",

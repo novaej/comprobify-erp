@@ -1,0 +1,2 @@
+ALTER TABLE "document_lines" ADD COLUMN "credit_kind" text;--> statement-breakpoint
+ALTER TABLE "document_lines" ADD CONSTRAINT "document_lines_credit_kind_check" CHECK (credit_kind IS NULL OR (source_position IS NOT NULL AND credit_kind IN ('RETURN', 'AMOUNT')));

@@ -53,7 +53,13 @@ export const creditNoteInput = z.object({
       z.object({
         // The position of the invoice line it credits.
         sourcePosition: z.int().min(1),
-        quantity: preciseInput.refine((value) => new Dec(value).gt(0), 'Must be more than 0'),
+        quantity: preciseInput
+          .refine((value) => new Dec(value).gt(0), 'Must be more than 0')
+          .default('1'),
+        // RETURN credits goods (quantity at a price) and holds quantity and amount of the line.
+        // AMOUNT credits a value only (a discount or adjustment): it is written as quantity 1 at
+        // `unitPrice`, which is then required, and holds the amount but not the quantity.
+        kind: z.enum(['RETURN', 'AMOUNT']).default('RETURN'),
         // Null credits at the invoice line's own price.
         unitPrice: preciseInput.nullable().default(null),
         discount: amountInput.default('0'),
@@ -107,7 +113,8 @@ async function balanceOf(tx: Tx, origin: Row, except: string | null): Promise<Ba
   const held = await tx.db
     .select({
       position: documentLines.sourcePosition,
-      quantity: sql<string>`sum(${documentLines.quantity})`,
+      // An AMOUNT line holds no quantity.
+      quantity: sql<string>`sum(CASE WHEN ${documentLines.creditKind} = 'AMOUNT' THEN 0 ELSE ${documentLines.quantity} END)`,
       base: sql<string>`sum(${documentLines.base})`,
     })
     .from(documentLines)
@@ -200,12 +207,18 @@ async function composeCreditNote(
   const byPosition = new Map(balance.map((entry) => [entry.line.position, entry]));
 
   const spent = new Map<number, { quantity: Dec; base: Dec }>();
-  const lines = input.lines.map((line, index) => {
-    const source = byPosition.get(line.sourcePosition);
+  const lines = input.lines.map((given, index) => {
+    const source = byPosition.get(given.sourcePosition);
     if (!source)
       throw new DomainError('CREDIT_LINE_UNKNOWN', 'The invoice has no such line', {
         line: index + 1,
       });
+    if (given.kind === 'AMOUNT' && (given.unitPrice === null || !new Dec(given.unitPrice).gt(0)))
+      throw new DomainError('CREDIT_AMOUNT_REQUIRED', 'An amount credit needs its amount', {
+        line: index + 1,
+      });
+    // An amount credit is one unit at its value, with no discount of its own.
+    const line = given.kind === 'AMOUNT' ? { ...given, quantity: '1', discount: '0' } : given;
     const unitPrice = line.unitPrice ?? source.line.unitPrice;
     if (new Dec(line.quantity).mul(unitPrice).lt(line.discount))
       throw new DomainError('LINE_DISCOUNT_TOO_LARGE', 'A discount exceeds its line', {
@@ -219,7 +232,7 @@ async function composeCreditNote(
     }).base;
     const before = spent.get(line.sourcePosition) ?? { quantity: new Dec(0), base: new Dec(0) };
     spent.set(line.sourcePosition, {
-      quantity: before.quantity.add(line.quantity),
+      quantity: line.kind === 'AMOUNT' ? before.quantity : before.quantity.add(line.quantity),
       base: before.base.add(base),
     });
     return { line, source: source.line, unitPrice };
@@ -306,6 +319,7 @@ async function composeCreditNote(
           revision,
           position: index + 1,
           sourcePosition: line.sourcePosition,
+          creditKind: line.kind,
           productId: source.productId,
           code: source.code,
           auxiliaryCode: source.auxiliaryCode,
@@ -454,7 +468,13 @@ export type CreditNoteDraft = {
   originNumber: string;
   reason: string;
   // Only the lines that were credited, as the form starts from them.
-  lines: { sourcePosition: number; quantity: string; unitPrice: string; discount: string }[];
+  lines: {
+    sourcePosition: number;
+    kind: 'RETURN' | 'AMOUNT';
+    quantity: string;
+    unitPrice: string;
+    discount: string;
+  }[];
   additionalInfo: { name: string; value: string }[];
 };
 
@@ -503,6 +523,7 @@ export async function creditNoteDraft(
           : [
               {
                 sourcePosition: line.sourcePosition,
+                kind: line.creditKind === 'AMOUNT' ? ('AMOUNT' as const) : ('RETURN' as const),
                 quantity: line.quantity,
                 unitPrice: line.unitPrice,
                 discount: line.discount,

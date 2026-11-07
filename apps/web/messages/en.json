@@ -1372,7 +1372,7 @@
     },
     "lines": {
       "title": "Invoice lines",
-      "description": "Enter the quantity to credit on each line that applies; leave the rest empty.",
+      "description": "Choose “Return” to credit goods (quantity and price) or “Discount or adjustment” to credit only an amount, say 10 USD of a line, without using up its quantity. Leave empty the lines that aren't credited.",
       "item": "Product or service",
       "left": "Left to credit",
       "leftBase": "{amount} before VAT",
@@ -1383,7 +1383,14 @@
       "over": "More than what is left.",
       "quantityFor": "Quantity to credit of {name}",
       "priceFor": "Unit price of {name}",
-      "discountFor": "Discount of {name}"
+      "discountFor": "Discount of {name}",
+      "kind": "Type",
+      "kindFor": "Credit type for {name}",
+      "kindReturn": "Return",
+      "kindAmount": "Discount or adjustment",
+      "amountFor": "Amount to credit for {name}",
+      "amountPlaceholder": "Amount before VAT",
+      "overAmount": "More than what is left."
     },
     "totals": {
       "title": "Total to credit",

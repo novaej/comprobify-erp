@@ -2,25 +2,16 @@
 
 Open work only. Tick steps as they land. When a milestone's gate passes, remove its section: `CHANGELOG.md` and git keep the history. Requirements and gates are in [docs/PRD.md](docs/PRD.md), section 15.
 
-## Current: Milestone 4, Other SRI documents
+## Current: Milestone 5, Inventory and purchasing
 
-**Gate:** each type authorized in the SRI test environment with its RIDE (PRD section 15). Types are 04 nota de crédito and 06 guía de remisión (FR-DOC-1); nota de débito and retención come after the MVP.
-
-Read FR-DOC-1, FR-SAL-8 and FR-SAL-9 and the Ficha annexes for each type (Anexo 3 has the 1.1.0 formats) before each step. The factura pipeline is the pattern: builder, XSD before signing, signer, jobs, RIDE. The rules for a new type are in `docs/guides/coding-guidelines.md`.
-
-- [x] 1. The type registry (FR-DOC-1): `sri/document-types.ts` holds each type's root, version, schema and label; XSD validation, the re-issue check and the buyer's email read it instead of assuming 01. The builder and RIDE mapper join the entry in steps 3 to 7. The schemas are generated from `assets/xsd/`, and the RIMPE widening covers all three.
-- [x] 2. Links between documents: `documents.related_document_id` (migration 0034) points a credit note at its invoice and a guía optionally at one, through a composite foreign key so it can't leave the company. A credit note must have one and a factura can't; the link never changes (the immutability trigger). `getDocument` returns the origin and what came from it. The origin's number, date and type travel in the XML (`numDocModificado`, `fechaEmisionDocSustento`) from step 3.
-- [x] 3. Nota de crédito builder: `buildNotaCredito` writes XSD 1.1.0's elements in order (its own line names, no unit, payments or tip; `valorModificacion` is the credited total) with the factura's rounding. The header, tax blocks and additional information the two share moved to `sri/document-parts.ts`. Tested against the XSD, signing and re-dating.
-- [x] 4. Nota de crédito creation: `createCreditNote` and `correctCreditNote` through the FR-DOC-2 pipeline (`documents/credit-note.ts`, shared pieces in `documents/compose.ts`); only from an `AUTHORIZED` invoice of an identified buyer; a reason; each line held to what its invoice line has left in quantity and amount, with the invoice row locked so two at once can't overspend it; `creditBalance` for the form. Migration 0035. The type is offered at issue points (ADR-016). Until step 5 a credit note has no RIDE, so the buyer's email job skips it.
-- [x] 5. Nota de crédito screens and RIDE: create it from the invoice's page (`documents/[id]/credit-note`), correct it on the same form, the detail shows "Modifies" and the notes of an invoice, the RIDE and buyer's email from the authorized XML (FR-DOC-9, FR-DOC-10, FR-DOC-12, FR-UX-2). Known gap: the invoice keeps offering the button after everything is credited; the form then has nothing left to pick.
-- [x] 6. Guía de remisión builder and XSD (`sri/guia-remision.ts`, `buildGuiaRemision`, `guiaDateProblem`; signed and validated against `guia_remision_V1.1.0.xsd`; it has no issue date of its own, so step 7's re-issue must move the access key and the transport dates, not `fechaEmision`): the guía's own XSD (**the owner downloads it from SRI into `packages/core/assets/xsd/`**), the builder, and the rules of FR-SAL-9: transportista, plate, start date not before the issue date (SRI error 82), departure address, recipients each with an optional supporting document.
-- [x] 7. Guía creation, screens and RIDE (`documents/delivery-guide.ts`, `documents/guide/`, ADR-017; the RIDE has its own blocks): from an invoice or standalone, consuming quota (FR-SAL-9); the sale-order origin waits for Milestone 6. Its RIDE from the authorized XML.
-- [ ] 8. Gate, **run by the owner**: one nota de crédito and one guía authorized by SRI's test environment, following a checklist prepared here; the mock covers both types in CI.
-
-Carried to later milestones: the optional **stock return** on a credit note (`RETURN_IN`, FR-SAL-8) needs the inventory ledger, so it lands in Milestone 5; the guía from a **sale order** lands in Milestone 6.
+Not yet planned in steps. Read PRD section 15 and the inventory requirements first, then list the steps here before building. The costing method decision needs the Opus model.
 
 ## Carried forward
 
+- **Milestone 4:** the optional **stock return** on a credit note (`RETURN_IN`, FR-SAL-8) needs the inventory ledger, so it lands in Milestone 5. A credit note line is a return or an amount (ADR-016), so a stock return attaches to return lines only.
+- **Milestone 4:** the invoice keeps offering "Nota de crédito" after everything is credited; the form then has nothing left to pick. Hide the button once no line has quantity or amount left.
+- **Milestone 4:** only the first guía recipient is searchable by client; the others take their invoice through the invoice search (ADR-017). The guía is not offered by plate catalogue or carrier directory.
+- **Milestone 6:** the guía from a **sale order** (FR-SAL-9).
 - **Milestone 3:** certificate renewal (FR-ONB-3); twin reset.
 - **Owner, with live email:** the Mailgun webhook for the buyer's copy (delivered, failed, complained), matched by the `document-id` variable each message carries (FR-DOC-11). Needs the Mailgun signing key and a public URL.
 - **Milestone 8:** a switch that stops Payphone charges and callbacks in a restored copy of real data, as `EMAIL_REDIRECT_TO` does for email (CLAUDE.md mistake 13).
@@ -35,7 +26,7 @@ Carried to later milestones: the optional **stock return** on a credit note (`RE
 
 ## Upcoming milestones
 
-- [ ] 4. Other SRI documents (planned above)
+- [x] 4. Other SRI documents
 - [ ] 5. Inventory and purchasing
 - [ ] 6. Sales
 - [ ] 7. Bulk invoicing

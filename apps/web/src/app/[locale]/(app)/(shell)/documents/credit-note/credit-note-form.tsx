@@ -35,13 +35,22 @@ export type BalanceLine = {
   remainingBase: string;
 };
 
+type Kind = 'RETURN' | 'AMOUNT';
+
 export type CreditDraft = {
   documentId: string;
   reason: string;
-  lines: { sourcePosition: number; quantity: string; unitPrice: string; discount: string }[];
+  lines: {
+    sourcePosition: number;
+    kind: Kind;
+    quantity: string;
+    unitPrice: string;
+    discount: string;
+  }[];
 };
 
-type Entry = { quantity: string; unitPrice: string; discount: string };
+// A RETURN credits goods at a price; an AMOUNT credits a value only, kept in `amount`.
+type Entry = { kind: Kind; quantity: string; unitPrice: string; discount: string; amount: string };
 
 // The nota de crédito form: pick what to credit from the invoice's remaining balance.
 export function CreditNoteForm({
@@ -73,9 +82,12 @@ export function CreditNoteForm({
         return [
           line.position,
           {
-            quantity: used?.quantity ?? '',
-            unitPrice: used?.unitPrice ?? line.unitPrice,
+            kind: used?.kind ?? 'RETURN',
+            quantity: used?.kind === 'AMOUNT' ? '' : (used?.quantity ?? ''),
+            unitPrice:
+              used?.kind === 'AMOUNT' ? line.unitPrice : (used?.unitPrice ?? line.unitPrice),
             discount: used && Number(used.discount) > 0 ? used.discount : '',
+            amount: used?.kind === 'AMOUNT' ? used.unitPrice : '',
           },
         ];
       }),
@@ -91,33 +103,72 @@ export function CreditNoteForm({
 
   const set = (position: number, change: Partial<Entry>) =>
     setEntries((current) => ({ ...current, [position]: { ...current[position]!, ...change } }));
-  const chosen = balance.filter((line) => (entries[line.position]?.quantity ?? '').trim() !== '');
+  const given = (line: BalanceLine) => {
+    const entry = entries[line.position];
+    return ((entry?.kind === 'AMOUNT' ? entry.amount : entry?.quantity) ?? '').trim() !== '';
+  };
+  const chosen = balance.filter(given);
   const ratePercents = useMemo(() => new Map(Object.entries(percents)), [percents]);
   const totals = formTotals(
-    chosen.map((line) => ({ ...entries[line.position]!, ivaRateCode: line.ivaRateCode })),
+    chosen.map((line) => {
+      const entry = entries[line.position]!;
+      return {
+        ...(entry.kind === 'AMOUNT'
+          ? { quantity: '1', unitPrice: entry.amount, discount: '' }
+          : entry),
+        ivaRateCode: line.ivaRateCode,
+      };
+    }),
     ratePercents,
   );
   // Over the balance is core's call, but a screen can say so before sending.
   const over = (line: BalanceLine) => {
-    const quantity = parseDecimal(entries[line.position]?.quantity ?? '');
+    const entry = entries[line.position];
+    if (entry?.kind === 'AMOUNT') {
+      const amount = parseDecimal(entry.amount);
+      const left = parseDecimal(line.remainingBase);
+      return amount !== null && left !== null && amount > left;
+    }
+    const quantity = parseDecimal(entry?.quantity ?? '');
     const left = parseDecimal(line.remainingQuantity);
     return quantity !== null && left !== null && quantity > left;
+  };
+  // A return is also held to the value left: after a discount, the units may not fit at full price.
+  const overValue = (line: BalanceLine) => {
+    const entry = entries[line.position];
+    if (!entry || entry.kind === 'AMOUNT' || !given(line)) return false;
+    const left = parseDecimal(line.remainingBase);
+    const value = formTotals([{ ...entry, ivaRateCode: line.ivaRateCode }], ratePercents).subtotal;
+    return left !== null && value > left / 10_000n;
+  };
+  const isZero = (line: BalanceLine) => {
+    const entry = entries[line.position]!;
+    return parseDecimal(entry.kind === 'AMOUNT' ? entry.amount : entry.quantity) === 0n;
   };
   const canSend =
     reason.trim() !== '' &&
     issuePointId !== '' &&
     chosen.length > 0 &&
     !totals.incomplete &&
-    !chosen.some((line) => parseDecimal(entries[line.position]!.quantity) === 0n || over(line));
+    !chosen.some((line) => isZero(line) || over(line) || overValue(line));
 
   const send = () => {
     const form = new FormData();
     form.set('locale', locale);
     const lines = chosen.map((line) => {
       const entry = entries[line.position]!;
+      if (entry.kind === 'AMOUNT')
+        return {
+          sourcePosition: line.position,
+          kind: 'AMOUNT' as const,
+          quantity: '1',
+          unitPrice: normalizeDecimal(entry.amount),
+          discount: '0',
+        };
       const price = normalizeDecimal(entry.unitPrice);
       return {
         sourcePosition: line.position,
+        kind: 'RETURN' as const,
         quantity: normalizeDecimal(entry.quantity),
         // The invoice's own price is the default; only a different one is sent.
         unitPrice: price === '' || price === line.unitPrice ? null : price,
@@ -191,8 +242,9 @@ export function CreditNoteForm({
                 <StackHeader>
                   <StackRow className="bg-muted/40">
                     <StackHead className="pl-4">{t('lines.item')}</StackHead>
+                    <StackHead className="w-36">{t('lines.kind')}</StackHead>
                     <StackHead className="text-right">{t('lines.left')}</StackHead>
-                    <StackHead className="w-32">{t('lines.quantity')}</StackHead>
+                    <StackHead className="w-48 min-w-48">{t('lines.quantity')}</StackHead>
                     <StackHead className="w-32">{t('lines.unitPrice')}</StackHead>
                     <StackHead className="w-28 pr-4">{t('lines.discount')}</StackHead>
                   </StackRow>
@@ -209,6 +261,18 @@ export function CreditNoteForm({
                             {line.code} · {line.ivaLabel}
                           </p>
                         </StackCell>
+                        <StackCell label={t('lines.kind')}>
+                          <ChoiceSelect
+                            label={t('lines.kindFor', { name: line.name })}
+                            value={entry.kind}
+                            disabled={exhausted}
+                            onChange={(kind) => set(line.position, { kind: kind as Kind })}
+                            options={[
+                              { value: 'RETURN', label: t('lines.kindReturn') },
+                              { value: 'AMOUNT', label: t('lines.kindAmount') },
+                            ]}
+                          />
+                        </StackCell>
                         <StackCell label={t('lines.left')} className="text-right tabular-nums">
                           {line.remainingQuantity}
                           <span className="block text-xs text-muted-foreground">
@@ -216,54 +280,84 @@ export function CreditNoteForm({
                           </span>
                         </StackCell>
                         <StackCell label={t('lines.quantity')}>
-                          <div className="flex items-center gap-1">
-                            <Input
-                              inputMode="decimal"
-                              aria-label={t('lines.quantityFor', { name: line.name })}
-                              aria-invalid={over(line) || undefined}
-                              value={entry.quantity}
-                              disabled={exhausted}
-                              onChange={(event) =>
-                                set(line.position, { quantity: event.target.value })
-                              }
-                              className="text-right tabular-nums"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              disabled={exhausted}
-                              onClick={() =>
-                                set(line.position, { quantity: line.remainingQuantity })
-                              }
-                            >
-                              {t('lines.all')}
-                            </Button>
-                          </div>
-                          {over(line) && (
-                            <p role="alert" className="mt-1 text-xs text-destructive">
-                              {t('lines.over')}
+                          {entry.kind === 'AMOUNT' ? (
+                            <p className="py-2 text-right text-sm text-muted-foreground tabular-nums">
+                              1
                             </p>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-1">
+                                <Input
+                                  inputMode="decimal"
+                                  aria-label={t('lines.quantityFor', { name: line.name })}
+                                  aria-invalid={over(line) || overValue(line) || undefined}
+                                  value={entry.quantity}
+                                  disabled={exhausted}
+                                  onChange={(event) =>
+                                    set(line.position, { quantity: event.target.value })
+                                  }
+                                  className="min-w-20 flex-1 text-right tabular-nums"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  disabled={exhausted}
+                                  onClick={() =>
+                                    set(line.position, { quantity: line.remainingQuantity })
+                                  }
+                                >
+                                  {t('lines.all')}
+                                </Button>
+                              </div>
+                              {(over(line) || overValue(line)) && (
+                                <p role="alert" className="mt-1 text-xs text-destructive">
+                                  {over(line) ? t('lines.over') : t('lines.overAmount')}
+                                </p>
+                              )}
+                            </>
                           )}
                         </StackCell>
                         <StackCell label={t('lines.unitPrice')}>
-                          <Input
-                            inputMode="decimal"
-                            aria-label={t('lines.priceFor', { name: line.name })}
-                            value={entry.unitPrice}
-                            disabled={exhausted}
-                            onChange={(event) =>
-                              set(line.position, { unitPrice: event.target.value })
-                            }
-                            className="text-right tabular-nums"
-                          />
+                          {entry.kind === 'AMOUNT' ? (
+                            <>
+                              <Input
+                                inputMode="decimal"
+                                aria-label={t('lines.amountFor', { name: line.name })}
+                                aria-invalid={over(line) || undefined}
+                                placeholder={t('lines.amountPlaceholder')}
+                                value={entry.amount}
+                                disabled={exhausted}
+                                onChange={(event) =>
+                                  set(line.position, { amount: event.target.value })
+                                }
+                                className="text-right tabular-nums"
+                              />
+                              {over(line) && (
+                                <p role="alert" className="mt-1 text-xs text-destructive">
+                                  {t('lines.overAmount')}
+                                </p>
+                              )}
+                            </>
+                          ) : (
+                            <Input
+                              inputMode="decimal"
+                              aria-label={t('lines.priceFor', { name: line.name })}
+                              value={entry.unitPrice}
+                              disabled={exhausted}
+                              onChange={(event) =>
+                                set(line.position, { unitPrice: event.target.value })
+                              }
+                              className="text-right tabular-nums"
+                            />
+                          )}
                         </StackCell>
                         <StackCell label={t('lines.discount')} className="pr-4">
                           <Input
                             inputMode="decimal"
                             aria-label={t('lines.discountFor', { name: line.name })}
-                            value={entry.discount}
-                            disabled={exhausted}
+                            value={entry.kind === 'AMOUNT' ? '' : entry.discount}
+                            disabled={exhausted || entry.kind === 'AMOUNT'}
                             onChange={(event) =>
                               set(line.position, { discount: event.target.value })
                             }

@@ -22,7 +22,7 @@ Questions the PRD leaves open:
 
 **The balance is kept per invoice line, in quantity and in amount.** A credit note's line says which line of the invoice it credits (`document_lines.source_position`). What a line has left is its quantity and its base minus what other credit notes hold of it. A credit note's line must fit both. The tax rate, code and name come from the invoice's line, so a credit note can't change the tax.
 
-- A credit line's unit price defaults to the invoice's. A different price is allowed while the amount fits, so a discount after the sale is a credit of the same quantity at a lower price, which uses up that line's quantity. That is the cost of holding quantity and amount together; the alternative, a free amount on the invoice, would make the quantity meaningless.
+- **A credit line is a RETURN or an AMOUNT** (`document_lines.credit_kind`, null reads as RETURN). A return credits goods: quantity at a price (the invoice's by default, or lower), and holds quantity and amount of the line. An amount credits a value only, such as a discount after the sale: it is written as quantity 1 at that value, needs the value, takes no discount of its own, and holds the amount but not the quantity. SRI's schema ties a credit line to nothing on the invoice, so either form is valid XML. This was added after the first SRI test run, when a price-only credit of a two-unit line could only be made by using up both units.
 - Several lines of one credit note may credit the same invoice line; they are added up before the check.
 - Rounding can leave a cent on a line (three units at 3.333333 sum to 9.99 on a 10.00 base). The cent stays; nothing credits it.
 
@@ -48,7 +48,7 @@ Questions the PRD leaves open:
 
 ### Negative
 
-- A credit note for a price reduction uses a line's whole quantity. Crediting units afterwards needs the balance of that line's quantity, which a price credit took. In practice: credit a discount on the line before the returns, or give the discount on a line of its own.
+- A return at a lower price still uses its quantity, so a discount belongs in an amount line, not a cheaper return.
 - A credit note rejected and never corrected holds no balance but still exists, with its number. There is no void for an unauthorized document (FR-DOC-8).
 - Credit notes of an invoice serialize on its row; that is only a problem for a hot invoice, which doesn't happen.
 

@@ -237,6 +237,62 @@ describe('credit notes', () => {
     expect(jobs_.rows).toHaveLength(1);
   });
 
+  it('credits an amount without using the line quantity, and returns can follow', async () => {
+    const origin = await authorized();
+    // 10.00 off line 1 (4 units, 40.00 base): quantity 1 at 10.00 on the wire.
+    const discount = await issueCredit(origin, [
+      { sourcePosition: 1, kind: 'AMOUNT', unitPrice: '10.00' },
+    ]);
+    expect(discount.total).toBe('11.50');
+    const stored = await row(discount);
+    await expect(validateXml(stored.signedXml!, '04')).resolves.toEqual({ valid: true });
+    expect(stored.signedXml).toContain('<cantidad>1.000000</cantidad>');
+    // The quantity is untouched, the amount is not.
+    const [first] = await creditBalance(await owner(), db, origin.id);
+    expect(first).toMatchObject({ remainingQuantity: '4', remainingBase: '30.00' });
+
+    // Three units come back at the invoice's price: 4 units cannot, the amount is 30.00 left.
+    expect(
+      await failure(
+        createCreditNote(
+          await owner(),
+          db,
+          credit(origin, [{ sourcePosition: 1, quantity: '4' }]),
+          issueDeps,
+        ),
+      ),
+    ).toBe('CREDIT_EXCEEDS_BALANCE');
+    await issueCredit(origin, [{ sourcePosition: 1, quantity: '3' }]);
+    expect((await creditBalance(await owner(), db, origin.id))[0]).toMatchObject({
+      remainingQuantity: '1',
+      remainingBase: '0.00',
+    });
+  });
+
+  it('refuses an amount above the line or without a value', async () => {
+    const origin = await authorized();
+    expect(
+      await failure(
+        createCreditNote(
+          await owner(),
+          db,
+          credit(origin, [{ sourcePosition: 1, kind: 'AMOUNT', unitPrice: '40.01' }]),
+          issueDeps,
+        ),
+      ),
+    ).toBe('CREDIT_EXCEEDS_BALANCE');
+    expect(
+      await failure(
+        createCreditNote(
+          await owner(),
+          db,
+          credit(origin, [{ sourcePosition: 1, kind: 'AMOUNT' }]),
+          issueDeps,
+        ),
+      ),
+    ).toBe('CREDIT_AMOUNT_REQUIRED');
+  });
+
   it('holds the next one to what is left, in quantity and in amount', async () => {
     const origin = await authorized();
     await issueCredit(origin, [{ sourcePosition: 1, quantity: '3' }]);
