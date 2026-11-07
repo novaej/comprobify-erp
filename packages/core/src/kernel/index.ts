@@ -26,3 +26,4 @@ export {
   type DecValue,
 } from './money';
 export { requirePermission } from './permissions';
+export { csvDecimal, parseCsv, type Csv } from './csv';

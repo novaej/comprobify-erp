@@ -3,6 +3,7 @@ import {
   asc,
   eq,
   ilike,
+  inArray,
   or,
   PRODUCT_KINDS,
   schema,
@@ -61,6 +62,18 @@ const isUniqueViolation = (error: unknown) => {
   );
 };
 
+// The products trigger refuses to stop tracking stock a warehouse still holds (FR-INV-6).
+const isStockHeld = (error: unknown) => {
+  const pgError = error instanceof Error && error.cause ? error.cause : error;
+  return pgError instanceof Error && pgError.message.startsWith('STOCK_HELD');
+};
+
+// Only goods have stock.
+function checkKind(input: z.output<typeof productInput>) {
+  if (input.kind === 'SERVICE' && input.tracksStock)
+    throw new DomainError('SERVICE_HAS_NO_STOCK', 'A service does not track stock');
+}
+
 function canRead(ctx: ActorContext) {
   requireFeature(ctx, 'CATALOG');
   requirePermission(ctx, 'catalog.read');
@@ -118,6 +131,7 @@ export async function createProduct(
 ): Promise<Product> {
   canManage(ctx);
   const input = productInput.parse(raw);
+  checkKind(input);
   try {
     const [row] = await db.withTenant({ tenantId: ctx.tenantId }, ({ db: tx }) =>
       tx
@@ -142,6 +156,7 @@ export async function updateProduct(
   canManage(ctx);
   const productId = z.uuid().parse(id);
   const input = productInput.parse(raw);
+  checkKind(input);
   try {
     const [row] = await db.withTenant({ tenantId: ctx.tenantId }, ({ db: tx }) =>
       tx
@@ -155,6 +170,8 @@ export async function updateProduct(
   } catch (error) {
     if (isUniqueViolation(error))
       throw new DomainError('CODE_TAKEN', 'A product with that code exists');
+    if (isStockHeld(error))
+      throw new DomainError('STOCK_HELD', 'The product still has stock in a warehouse');
     throw error;
   }
 }
@@ -196,4 +213,21 @@ export async function stockedProduct(
   if (row.kind !== 'GOOD' || !row.tracksStock)
     throw new DomainError('PRODUCT_NOT_STOCKED', 'This product does not track stock');
   return { id: row.id, cost: row.cost };
+}
+
+// Products by code for an import, read in the caller's transaction.
+export async function productsByCode(
+  tx: Tx,
+  codes: string[],
+): Promise<{ id: string; code: string; kind: string; tracksStock: boolean }[]> {
+  if (codes.length === 0) return [];
+  return tx.db
+    .select({
+      id: schema.products.id,
+      code: schema.products.code,
+      kind: schema.products.kind,
+      tracksStock: schema.products.tracksStock,
+    })
+    .from(schema.products)
+    .where(inArray(schema.products.code, codes));
 }

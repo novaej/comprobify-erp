@@ -901,7 +901,7 @@
     "cost": "Cost",
     "iva": "VAT",
     "tracksStock": "Tracks stock",
-    "tracksStockHint": "Used once inventory is available.",
+    "tracksStockHint": "Its stock in and out is recorded in inventory, at its average cost.",
     "details": "Additional details",
     "detailsHint": "Up to three, shown on every line of the document.",
     "detailName": "Detail {number} name",
@@ -929,7 +929,9 @@
     "FEATURE_NOT_ENABLED": "Your plan doesn't include the product catalog.",
     "NOT_FOUND": "Product not found.",
     "INVALID_INPUT": "Check the details: the price takes up to 6 decimals, and text can not have line breaks.",
-    "UNKNOWN": "An unexpected error occurred. Please try again."
+    "UNKNOWN": "An unexpected error occurred. Please try again.",
+    "STOCK_HELD": "A warehouse still holds stock of this product: adjust it to zero before you stop tracking stock.",
+    "SERVICE_HAS_NO_STOCK": "A service does not track stock."
   },
   "settings": {
     "title": "Company",

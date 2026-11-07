@@ -27,7 +27,8 @@ const common = {
   reason: z.string().trim().min(1).max(300).nullable().default(null),
 };
 export const movementInput = z.discriminatedUnion('type', [
-  z.object({ type: z.enum(STOCK_IN), unitCost: preciseInput, ...common }),
+  // Null comes in at the level's current average, as an adjustment of found goods does.
+  z.object({ type: z.enum(STOCK_IN), unitCost: preciseInput.nullable().default(null), ...common }),
   z.object({ type: z.enum(STOCK_OUT), ...common }),
 ]);
 export type MovementInput = z.input<typeof movementInput>;
@@ -42,6 +43,8 @@ export async function applyMovement(
   ctx: ActorContext,
   tx: Tx,
   raw: MovementInput,
+  // An opening balance is only the first movement of its level (FR-INV-3).
+  options: { onlyFirst?: boolean } = {},
 ): Promise<{ movement: StockMovement; level: StockLevel }> {
   requireFeature(ctx, 'INVENTORY');
   const input = movementInput.parse(raw);
@@ -65,6 +68,24 @@ export async function applyMovement(
     .onConflictDoNothing();
   const [level] = await tx.db.select().from(stockLevels).where(key).for('update');
   if (!level) throw new Error('A stock level that was just ensured is missing');
+  if (options.onlyFirst) {
+    const [moved] = await tx.db
+      .select({ id: stockMovements.id })
+      .from(stockMovements)
+      .where(
+        and(
+          eq(stockMovements.tenantId, ctx.tenantId),
+          eq(stockMovements.productId, input.productId),
+          eq(stockMovements.warehouseId, input.warehouseId),
+        ),
+      )
+      .limit(1);
+    if (moved)
+      throw new DomainError(
+        'STOCK_ALREADY_MOVED',
+        'An opening balance goes only where stock has not moved yet',
+      );
+  }
 
   const quantity = new Dec(input.quantity);
   if (input.type === 'ADJUSTMENT_OUT' || input.type === 'SALE') {
@@ -81,7 +102,7 @@ export async function applyMovement(
       averageCost: new Dec(level.averageCost),
     },
     'unitCost' in input
-      ? { direction: 'IN', quantity, unitCost: new Dec(input.unitCost) }
+      ? { direction: 'IN', quantity, unitCost: new Dec(input.unitCost ?? level.averageCost) }
       : { direction: 'OUT', quantity },
   );
 

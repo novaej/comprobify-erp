@@ -1,6 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import {
+  adjustStock,
   applyMovement,
+  importOpeningBalances,
+  setOpeningBalance,
+  updateProduct,
   createKeyCipher,
   createProduct,
   fixedClock,
@@ -38,16 +42,18 @@ describe('inventory ledger', () => {
     }
     return 'it did not fail';
   };
-  const product = async (overrides: { tracksStock?: boolean; kind?: 'GOOD' | 'SERVICE' } = {}) =>
+  const product = async (
+    overrides: { tracksStock?: boolean; kind?: 'GOOD' | 'SERVICE'; code?: string } = {},
+  ) =>
     (
       await createProduct(await owner(), db, {
-        code: `P-${randomUUID().slice(0, 8)}`,
+        code: overrides.code ?? `P-${randomUUID().slice(0, 8)}`,
         name: 'Café molido',
         kind: overrides.kind ?? 'GOOD',
         price: '5',
         cost: '2',
         ivaRateCode: '4',
-        tracksStock: overrides.tracksStock ?? true,
+        tracksStock: overrides.tracksStock ?? overrides.kind !== 'SERVICE',
       })
     ).id;
   const ledger = (productId: string) =>
@@ -288,5 +294,163 @@ describe('inventory ledger', () => {
       tx.select().from(schema.stockLevels).where(eq(schema.stockLevels.productId, id)),
     );
     expect(seen).toEqual([]);
+  });
+
+  // FR-INV-3.
+  it('adjusts by hand with a reason, in at a cost or the average, out at the average', async () => {
+    const id = await product();
+    const actor = await owner();
+    await adjustStock(actor, db, {
+      productId: id,
+      warehouseId,
+      direction: 'IN',
+      quantity: '4',
+      unitCost: '3',
+      reason: 'Encontrado en bodega',
+    });
+    // No cost: the found goods come in at the average.
+    const found = await adjustStock(actor, db, {
+      productId: id,
+      warehouseId,
+      direction: 'IN',
+      quantity: '1',
+      reason: 'Conteo',
+    });
+    expect(found.movement).toMatchObject({ type: 'ADJUSTMENT_IN', unitCost: '3.000000' });
+    const lost = await adjustStock(actor, db, {
+      productId: id,
+      warehouseId,
+      direction: 'OUT',
+      quantity: '2',
+      reason: 'Roto',
+    });
+    expect(lost.movement).toMatchObject({
+      type: 'ADJUSTMENT_OUT',
+      quantity: '-2.000000',
+      reason: 'Roto',
+    });
+    expect(lost.level).toMatchObject({ onHand: '3.000000', value: '9.000000' });
+    expect(
+      await failure(
+        adjustStock(actor, db, {
+          productId: id,
+          warehouseId,
+          direction: 'OUT',
+          quantity: '1',
+          reason: ' ',
+        }),
+      ),
+    ).not.toBe('it did not fail');
+  });
+
+  it('takes an opening balance only as the first movement of a level', async () => {
+    const id = await product();
+    const actor = await owner();
+    await setOpeningBalance(actor, db, {
+      productId: id,
+      warehouseId,
+      quantity: '7',
+      unitCost: '1.5',
+    });
+    expect(
+      await failure(
+        setOpeningBalance(actor, db, { productId: id, warehouseId, quantity: '1', unitCost: '1' }),
+      ),
+    ).toBe('STOCK_ALREADY_MOVED');
+  });
+
+  it('imports opening balances from a spreadsheet, whole or not at all', async () => {
+    const a = await product({ code: `IMP-A-${randomUUID().slice(0, 4)}` });
+    const b = await product({ code: `IMP-B-${randomUUID().slice(0, 4)}` });
+    const plain = await product({ code: `IMP-C-${randomUUID().slice(0, 4)}`, tracksStock: false });
+    const codes = await db.withTenant({ tenantId: org.twinTenantId }, ({ db: tx }) =>
+      tx.select({ id: schema.products.id, code: schema.products.code }).from(schema.products),
+    );
+    const code = (id: string) => codes.find((row) => row.id === id)!.code;
+    const actor = await owner();
+
+    // Spanish Excel: semicolons and decimal commas. One bad line stops the whole file.
+    const bad = await importOpeningBalances(
+      actor,
+      db,
+      `Código;Sucursal;Cantidad;Costo unitario\n${code(a)};001;10;2,50\n${code(plain)};001;1;1\nNOPE;001;1;1\n${code(b)};009;1;1\n${code(a)};1;2;1\n`,
+    );
+    expect(bad).toEqual({
+      imported: 0,
+      problems: [
+        { line: 3, code: 'PRODUCT_NOT_STOCKED' },
+        { line: 4, code: 'PRODUCT_NOT_FOUND' },
+        { line: 5, code: 'BRANCH_NOT_FOUND' },
+        { line: 6, code: 'DUPLICATE_ROW' },
+      ],
+    });
+    expect(await ledger(a)).toEqual([]);
+
+    const good = await importOpeningBalances(
+      actor,
+      db,
+      `code,quantity,unit_cost\n${code(a)},10,2.50\n${code(b)},3,1\n`,
+    );
+    expect(good).toEqual({ imported: 2, problems: [] });
+    const [movement] = await ledger(a);
+    expect(movement).toMatchObject({
+      type: 'OPENING_BALANCE',
+      quantity: '10.000000',
+      value: '25.000000',
+      sourceType: 'OPENING_IMPORT',
+    });
+    // Twice is refused: those levels have moved.
+    expect(
+      await importOpeningBalances(actor, db, `code,quantity,unit_cost\n${code(a)},1,1\n`),
+    ).toEqual({ imported: 0, problems: [{ line: 2, code: 'STOCK_ALREADY_MOVED' }] });
+    expect(await failure(importOpeningBalances(actor, db, 'name,price\nA,1\n'))).toBe(
+      'IMPORT_COLUMNS',
+    );
+  });
+
+  // FR-INV-6.
+  it('keeps a product tracking stock while a warehouse holds it, and services never do', async () => {
+    const id = await product();
+    const actor = await owner();
+    await adjustStock(actor, db, {
+      productId: id,
+      warehouseId,
+      direction: 'IN',
+      quantity: '1',
+      unitCost: '1',
+      reason: 'x',
+    });
+    const base = {
+      code: `S-${randomUUID().slice(0, 8)}`,
+      name: 'Café molido',
+      kind: 'GOOD' as const,
+      price: '5',
+      ivaRateCode: '4',
+    };
+    expect(await failure(updateProduct(actor, db, id, { ...base, tracksStock: false }))).toBe(
+      'STOCK_HELD',
+    );
+    await adjustStock(actor, db, {
+      productId: id,
+      warehouseId,
+      direction: 'OUT',
+      quantity: '1',
+      reason: 'x',
+    });
+    await expect(
+      updateProduct(actor, db, id, { ...base, tracksStock: false }),
+    ).resolves.toMatchObject({
+      tracksStock: false,
+    });
+    expect(
+      await failure(
+        createProduct(actor, db, {
+          ...base,
+          code: `S-${randomUUID().slice(0, 8)}`,
+          kind: 'SERVICE',
+          tracksStock: true,
+        }),
+      ),
+    ).toBe('SERVICE_HAS_NO_STOCK');
   });
 });

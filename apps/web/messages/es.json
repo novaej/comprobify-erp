@@ -901,7 +901,7 @@
     "cost": "Costo",
     "iva": "IVA",
     "tracksStock": "Controla inventario",
-    "tracksStockHint": "Se usará cuando el inventario esté disponible.",
+    "tracksStockHint": "Sus entradas y salidas se registran en inventario, con su costo promedio.",
     "details": "Detalles adicionales",
     "detailsHint": "Hasta tres, que salen en cada línea del comprobante.",
     "detailName": "Nombre del detalle {number}",
@@ -929,7 +929,9 @@
     "FEATURE_NOT_ENABLED": "Tu plan no incluye el catálogo de productos.",
     "NOT_FOUND": "No se encontró el producto.",
     "INVALID_INPUT": "Revisa los datos: el precio admite hasta 6 decimales y los textos no pueden tener saltos de línea.",
-    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "STOCK_HELD": "Todavía hay existencias de este producto en una bodega: ajústalas a cero antes de dejar de controlar inventario.",
+    "SERVICE_HAS_NO_STOCK": "Un servicio no controla inventario."
   },
   "settings": {
     "title": "Empresa",

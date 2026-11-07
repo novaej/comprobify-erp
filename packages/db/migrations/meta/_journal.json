@@ -267,6 +267,13 @@
       "when": 1794059894562,
       "tag": "0037_inventory_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1794072545097,
+      "tag": "0038_products_stock_rule",
+      "breakpoints": true
     }
   ]
 }

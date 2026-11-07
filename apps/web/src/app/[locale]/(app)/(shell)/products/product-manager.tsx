@@ -231,7 +231,7 @@ function ProductDialog({
         ...(product ? { id: product.id } : {}),
         kind,
         ivaRateCode: iva,
-        ...(tracksStock ? { tracksStock: 'on' } : {}),
+        ...(tracksStock && kind === 'GOOD' ? { tracksStock: 'on' } : {}),
       }}
     >
       <div className="grid gap-4 sm:grid-cols-2">
@@ -314,19 +314,22 @@ function ProductDialog({
           )}
         </FormField>
       </div>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p id={`${uid}-stock`} className="text-sm font-medium">
-            {t('tracksStock')}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">{t('tracksStockHint')}</p>
+      {/* Only goods have stock (FR-INV-6). */}
+      {kind === 'GOOD' && (
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p id={`${uid}-stock`} className="text-sm font-medium">
+              {t('tracksStock')}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{t('tracksStockHint')}</p>
+          </div>
+          <Switch
+            checked={tracksStock}
+            onCheckedChange={setTracksStock}
+            aria-labelledby={`${uid}-stock`}
+          />
         </div>
-        <Switch
-          checked={tracksStock}
-          onCheckedChange={setTracksStock}
-          aria-labelledby={`${uid}-stock`}
-        />
-      </div>
+      )}
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">{t('details')}</legend>
         <p className="text-xs text-muted-foreground">{t('detailsHint')}</p>

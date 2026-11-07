@@ -79,6 +79,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - Invoice templates: save the form's client, lines, payments and additional information under a name, load one into a new invoice, remove it; with the Branding module (`DOCUMENT_TEMPLATES`). The buyer's email follows the old app's layout: greeting, a table of the document's facts with its authorization number, the attachments, the issuer's name and RUC (FR-MD-5, FR-DOC-11).
 - `AUTH_SECRET`, `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, `MAILGUN_REGION` and `EMAIL_FROM`.
 - The inventory ledger: `stock_movements` (append-only) and `stock_levels` per product and warehouse, with weighted average cost kept as value over quantity, a row lock per level, and the company's negative-stock rule (block by default). `applyMovement` is the one way stock changes, in the caller's transaction (migration 0037, ADR-018, FR-INV-1, FR-INV-2, FR-INV-4, FR-INV-5, FR-INV-6).
+- Stock adjustments with a reason, opening balances (only a level's first movement) and their CSV import, checked whole before anything is applied, in Spanish or English spreadsheets. A product can't stop tracking stock a warehouse still holds, and a service never tracks stock (migration 0038, FR-INV-3, FR-INV-6, ADR-018).
 
 ### Fixed
 
