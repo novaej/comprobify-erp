@@ -56,6 +56,17 @@ Some lines are received without a movement:
 
 The receipt line records whether it moved stock. Receipts and their lines are append-only, like the ledger. A mistake is corrected with a stock adjustment, never by editing the receipt. The receipt's date is the Ecuador day it was recorded.
 
+**The PDF and the email** (FR-PUR-3, `purchasing/email.ts`, `purchasing/order-pdf.ts`). The PDF is drawn from the stored order. It is in Spanish and A4, like the RIDE:
+
+- the company and its logo (while the plan has `RIDE_LOGO`, as on documents);
+- the number and dates;
+- the provider, and the delivery warehouse and its branch address;
+- the lines, totals by IVA rate, and the notes.
+
+A test company's PDF is stamped "PRUEBA: NO ES UN PEDIDO REAL", and its email subject starts with `[PRUEBAS]`. The order page shows the PDF. "Enviar por correo" takes one or more addresses, starting with the provider's. On a draft it also marks the order `SENT`: the status change and the `purchasing.email` job are in the same transaction (rule 10). A sent or partly received order can be emailed again.
+
+The job re-reads the order, so it sends the order as it is then. It sends nothing if the order was cancelled meanwhile. It sends one message per address, from "Empresa via Comprobify" through the documents sender. Afterwards it records `emailed_at` and `emailed_to` on the order, unless email is off. A retry after a partial failure can send a copy twice; that is harmless, so the job doesn't track each address.
+
 **Permissions and plan.** Orders need the `PURCHASE_ORDERS` feature (the Compras module). `purchasing.read` sees them, and `purchasing.manage` creates, edits, receives and moves them. Receiving needs no inventory permission: the purchasing role receives what it ordered. Core checks both. The pages and the menu only hide what the role or the plan doesn't allow.
 
 ## Consequences
@@ -66,6 +77,7 @@ The receipt line records whether it moved stock. Receipts and their lines are ap
 - An edited draft keeps its history without deleting anything.
 - The database refuses an impossible status change even if code skips core.
 - A receipt and its stock movements commit together, so the stock never shows goods the order doesn't, or the reverse.
+- An emailed draft is sent and its email queued in one commit: never sent without its email, or emailed while still a draft.
 
 ### Negative
 

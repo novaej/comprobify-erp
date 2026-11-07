@@ -1859,7 +1859,9 @@
         "empty": "Aún no llega nada de esta orden.",
         "receipt": "Recepción del {date}",
         "noMovement": "sin inventario"
-      }
+      },
+      "pdf": "Ver PDF",
+      "emailedAt": "Enviada por correo a"
     },
     "actions": {
       "edit": "Editar",
@@ -1879,7 +1881,17 @@
       "closeDescription": "Una orden cerrada no recibe más mercadería. No se puede deshacer.",
       "closeShort": "Lo que falta por llegar ya no se recibirá.",
       "closed": "Orden cerrada.",
-      "receive": "Recibir mercadería"
+      "receive": "Recibir mercadería",
+      "email": "Enviar por correo",
+      "emailAgain": "Reenviar por correo",
+      "emailTitle": "Enviar la orden por correo",
+      "emailDescription": "El proveedor recibe la orden en PDF, y la orden queda enviada: ya no podrás editarla.",
+      "emailAgainTitle": "Reenviar la orden",
+      "emailAgainDescription": "El proveedor recibe otra copia en PDF de la orden.",
+      "emailTo": "Para",
+      "emailToHint": "Uno o más correos, separados por comas.",
+      "emailSubmit": "Enviar",
+      "emailed": "La orden sale por correo en unos segundos."
     },
     "saved": "Orden guardada.",
     "receive": {
@@ -1920,7 +1932,8 @@
     "FORBIDDEN": "Tu rol no permite esta acción.",
     "FEATURE_NOT_ENABLED": "Tu plan no incluye órdenes de compra.",
     "NOT_FOUND": "No se encontró la orden, el proveedor o el producto.",
-    "INVALID_INPUT": "Revisa los datos: cada cantidad debe ser mayor que cero y los números admiten hasta 6 decimales.",
-    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    "INVALID_INPUT": "Revisa los datos: cada correo debe ser una dirección válida, cada cantidad mayor que cero, y los números admiten hasta 6 decimales.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "ORDER_NOT_EMAILABLE": "Esta orden ya no se envía al proveedor."
   }
 }

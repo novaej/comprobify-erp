@@ -84,6 +84,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - Providers: the client's identity rules and payment terms, with their screen, behind the `PROVIDERS` feature (`purchasing.read` to see, `providers.manage` to change). Migration 0039 (FR-MD-3).
 - Purchase orders: a number per company, catalogue lines at cost without IVA, drafts edited as revisions, and the status machine generated into the CHECK and trigger; list, form and detail screens behind the `PURCHASE_ORDERS` feature (`purchasing.read` to see, `purchasing.manage` to change). Migration 0040 (FR-PUR-1, FR-DOC-3, ADR-019).
 - Receiving purchase orders: in parts or all at once, never more than is left. Goods that track stock enter the order's warehouse at its cost in the same transaction, and services are received without a movement. The order's status follows. Append-only receipts, a receive screen, and the receipt history on the order. Migration 0041 (FR-PUR-2, ADR-019).
+- The purchase order as a PDF, shown on the order and emailed to the provider. Emailing a draft sends it, with the job enqueued in the same transaction; a sent order can be emailed again. Test companies' copies are marked as tests. The `purchasing.email` queue. Migration 0042 (FR-PUR-3, ADR-019).
 - The nightly stock check: the `inventory.verify` job compares every level with the sums of its ledger and logs any drift (FR-INV-2, NFR-JOB-2, ADR-018).
 
 ### Fixed

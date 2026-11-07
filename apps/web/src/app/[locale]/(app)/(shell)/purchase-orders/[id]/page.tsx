@@ -6,6 +6,8 @@ import {
   purchaseOrderNumber,
   type PurchaseOrderView,
 } from '@comprobify/core';
+import { buttonVariants } from '@comprobify/ui/components/button';
+import { FileText } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
 import { DetailTile } from '@/components/detail-tile';
@@ -68,6 +70,11 @@ export default async function PurchaseOrderPage({
   const allowed = {
     edit: canManage && order.status === 'DRAFT',
     send: canManage && canPurchaseOrderTransition(order.status, 'SENT'),
+    email:
+      canManage &&
+      (order.status === 'DRAFT' ||
+        order.status === 'SENT' ||
+        order.status === 'PARTIALLY_RECEIVED'),
     receive: canManage && (order.status === 'SENT' || order.status === 'PARTIALLY_RECEIVED'),
     cancel: canManage && canPurchaseOrderTransition(order.status, 'CANCELLED'),
     close: canManage && canPurchaseOrderTransition(order.status, 'CLOSED'),
@@ -88,12 +95,25 @@ export default async function PurchaseOrderPage({
         description={t(`statusHelp.${order.status}`)}
         backHref="/purchase-orders"
         backLabel={t('detail.back')}
+        action={
+          <a
+            href={`/${locale}/purchase-orders/${order.id}/pdf`}
+            target="_blank"
+            rel="noopener"
+            className={buttonVariants({ variant: 'outline', size: 'sm' })}
+          >
+            <FileText className="mr-1.5 h-4 w-4" aria-hidden />
+            {t('detail.pdf')}
+          </a>
+        }
       />
       <OrderActions
         id={order.id}
         number={number}
         allowed={allowed}
         short={order.status === 'PARTIALLY_RECEIVED'}
+        providerEmails={order.provider.emails}
+        draft={order.status === 'DRAFT'}
       />
 
       <SectionCard title={t('detail.summary')}>
@@ -125,6 +145,13 @@ export default async function PurchaseOrderPage({
             />
           )}
           {order.sentAt && <DetailTile label={t('detail.sentAt')} value={when(order.sentAt)} />}
+          {order.emailedAt && order.emailedTo && (
+            <DetailTile
+              label={t('detail.emailedAt')}
+              value={<span className="break-all">{order.emailedTo.join(', ')}</span>}
+              detail={when(order.emailedAt)}
+            />
+          )}
           {order.closedAt && (
             <DetailTile label={t('detail.closedAt')} value={when(order.closedAt)} />
           )}

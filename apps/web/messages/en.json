@@ -1859,7 +1859,9 @@
         "empty": "Nothing from this order has arrived yet.",
         "receipt": "Receipt of {date}",
         "noMovement": "no stock"
-      }
+      },
+      "pdf": "View PDF",
+      "emailedAt": "Emailed to"
     },
     "actions": {
       "edit": "Edit",
@@ -1879,7 +1881,17 @@
       "closeDescription": "A closed order receives no more goods. This can't be undone.",
       "closeShort": "What hasn't arrived yet won't be received.",
       "closed": "Order closed.",
-      "receive": "Receive goods"
+      "receive": "Receive goods",
+      "email": "Email to provider",
+      "emailAgain": "Email again",
+      "emailTitle": "Email the order",
+      "emailDescription": "The provider gets the order as a PDF, and the order is marked sent: you can't edit it afterwards.",
+      "emailAgainTitle": "Email the order again",
+      "emailAgainDescription": "The provider gets another PDF copy of the order.",
+      "emailTo": "To",
+      "emailToHint": "One or more addresses, separated by commas.",
+      "emailSubmit": "Send",
+      "emailed": "The order goes out by email in a few seconds."
     },
     "saved": "Order saved.",
     "receive": {
@@ -1920,7 +1932,8 @@
     "FORBIDDEN": "Your role doesn't allow this.",
     "FEATURE_NOT_ENABLED": "Your plan doesn't include purchase orders.",
     "NOT_FOUND": "The order, provider or product wasn't found.",
-    "INVALID_INPUT": "Check the data: each quantity must be more than zero, and numbers take up to 6 decimals.",
-    "UNKNOWN": "Something unexpected went wrong. Try again."
+    "INVALID_INPUT": "Check the data: each address must be valid, each quantity more than zero, and numbers take up to 6 decimals.",
+    "UNKNOWN": "Something unexpected went wrong. Try again.",
+    "ORDER_NOT_EMAILABLE": "This order is no longer sent to the provider."
   }
 }

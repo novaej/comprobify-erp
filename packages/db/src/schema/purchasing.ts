@@ -71,6 +71,9 @@ export const purchaseOrders = pgTable(
     iva: amount('iva').notNull(),
     total: amount('total').notNull(),
     sentAt: timestamp('sent_at', { withTimezone: true }),
+    // The last copy emailed to the provider (FR-PUR-3), set by the job once it went out.
+    emailedAt: timestamp('emailed_at', { withTimezone: true }),
+    emailedTo: text('emailed_to').array(),
     closedAt: timestamp('closed_at', { withTimezone: true }),
     cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
     cancelReason: text('cancel_reason'),

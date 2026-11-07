@@ -19,6 +19,15 @@ export type {
   PurchaseOrderRow,
   PurchaseOrderView,
 } from './orders';
+export {
+  emailOrderInput,
+  emailPurchaseOrder,
+  purchaseOrderPdf,
+  sendPurchaseOrderEmail,
+} from './email';
+export type { OrderEmailDeps } from './email';
+export { renderPurchaseOrderPdf } from './order-pdf';
+export type { OrderPdfData } from './order-pdf';
 export { receiptInput, receivePurchaseOrder } from './receipts';
 export type { ReceiptInput, ReceiptView } from './receipts';
 export {

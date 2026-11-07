@@ -110,74 +110,138 @@ export type DocumentEmailParams = {
   test: boolean;
 };
 
-// FR-DOC-11: the buyer's copy, RIDE and XML attached, in the old app's layout: greeting,
-// the document's facts, the attachments, the issuer. Spanish: the document is.
-export function renderDocumentEmail(to: string, params: DocumentEmailParams): EmailMessage {
-  const subject = `${params.test ? '[PRUEBAS] ' : ''}${params.documentLabel} Electrónica N° ${params.number} — ${params.organization}`;
-  const greeting = `Estimado/a ${params.buyerName},`;
-  const intro =
-    'Nos complacemos en informarle que su comprobante electrónico ha sido autorizado por el SRI.';
-  const test = params.test
-    ? 'Este es un comprobante del ambiente de pruebas del SRI y no tiene validez tributaria.'
-    : null;
-  const facts: [string, string][] = [
-    [`${params.documentLabel} N°`, params.number],
-    ['Fecha de emisión', params.issueDate],
-    ['Total', `$${params.total}`],
-    ['Número de autorización', params.authorizationNumber],
-  ];
-  const attachments: [string, string][] = [
-    [params.attachments.ride, 'Representación impresa del comprobante (RIDE)'],
-    [params.attachments.xml, 'Comprobante electrónico (XML autorizado)'],
-  ];
-  const thanks = 'Gracias por su preferencia.';
-  const disclaimer =
-    'No responda a este correo: es un mensaje automático enviado por Comprobify en nombre del emisor.';
+// What the company's papers say to the other party: a greeting, the facts, the files, the
+// company, in the old app's layout. Spanish: the papers are.
+type BusinessEmail = {
+  subject: string;
+  greeting: string;
+  intro: string;
+  notice: string | null;
+  facts: [string, string][];
+  attachmentsIntro: string;
+  attachments: [string, string | null][];
+  closing: string;
+  organization: string;
+  ruc: string;
+};
 
+const DISCLAIMER =
+  'No responda a este correo: es un mensaje automático enviado por Comprobify en nombre del emisor.';
+
+function businessEmail(to: string, email: BusinessEmail): EmailMessage {
+  const fileLine = ([file, what]: [string, string | null]) => (what ? `${file}: ${what}` : file);
   const text = [
-    greeting,
+    email.greeting,
     '',
-    intro,
-    ...(test ? ['', test] : []),
+    email.intro,
+    ...(email.notice ? ['', email.notice] : []),
     '',
-    ...facts.map(([label, value]) => `  ${label}:  ${value}`),
+    ...email.facts.map(([label, value]) => `  ${label}:  ${value}`),
     '',
-    'Adjunto encontrará los siguientes documentos:',
-    ...attachments.map(([file, what]) => `  • ${file}: ${what}`),
+    email.attachmentsIntro,
+    ...email.attachments.map((item) => `  • ${fileLine(item)}`),
     '',
-    thanks,
+    email.closing,
     '',
-    params.organization,
-    `RUC: ${params.ruc}`,
+    email.organization,
+    `RUC: ${email.ruc}`,
     '',
-    disclaimer,
+    DISCLAIMER,
   ].join('\n');
 
   const cell = 'padding:6px 12px;border-bottom:1px solid #eee';
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
 <body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:20px">
-<p>${escapeHtml(greeting)}</p>
-<p>${escapeHtml(intro)}</p>
-${test ? `<p style="background:#fff3cd;padding:10px 12px;border-radius:6px">${escapeHtml(test)}</p>` : ''}
+<p>${escapeHtml(email.greeting)}</p>
+<p>${escapeHtml(email.intro)}</p>
+${email.notice ? `<p style="background:#fff3cd;padding:10px 12px;border-radius:6px">${escapeHtml(email.notice)}</p>` : ''}
 <table style="border-collapse:collapse;width:100%;margin:16px 0">
-${facts.map(([label, value]) => `<tr><td style="${cell};background:#f5f5f5;font-weight:bold;width:45%">${escapeHtml(label)}</td><td style="${cell}">${escapeHtml(value)}</td></tr>`).join('\n')}
+${email.facts.map(([label, value]) => `<tr><td style="${cell};background:#f5f5f5;font-weight:bold;width:45%">${escapeHtml(label)}</td><td style="${cell}">${escapeHtml(value)}</td></tr>`).join('\n')}
 </table>
-<p>Adjunto encontrará los siguientes documentos:</p>
+<p>${escapeHtml(email.attachmentsIntro)}</p>
 <ul>
-${attachments.map(([file, what]) => `<li><strong>${escapeHtml(file)}</strong>: ${escapeHtml(what)}</li>`).join('\n')}
+${email.attachments.map(([file, what]) => `<li><strong>${escapeHtml(file)}</strong>${what ? `: ${escapeHtml(what)}` : ''}</li>`).join('\n')}
 </ul>
-<p>${escapeHtml(thanks)}</p>
+<p>${escapeHtml(email.closing)}</p>
 <hr style="border:none;border-top:1px solid #ddd;margin:20px 0">
-<p style="font-size:12px;color:#666"><strong>${escapeHtml(params.organization)}</strong><br>RUC: ${escapeHtml(params.ruc)}</p>
-<p style="font-size:11px;color:#999">${escapeHtml(disclaimer)}</p>
+<p style="font-size:12px;color:#666"><strong>${escapeHtml(email.organization)}</strong><br>RUC: ${escapeHtml(email.ruc)}</p>
+<p style="font-size:11px;color:#999">${escapeHtml(DISCLAIMER)}</p>
 </body></html>`;
   return {
     to,
-    subject,
+    subject: email.subject,
     text,
     html,
-    fromName: `${params.organization} via Comprobify`,
+    fromName: `${email.organization} via Comprobify`,
     sender: 'documents',
     locale: 'es',
   };
+}
+
+// FR-DOC-11: the buyer's copy, RIDE and XML attached.
+export function renderDocumentEmail(to: string, params: DocumentEmailParams): EmailMessage {
+  return businessEmail(to, {
+    subject: `${params.test ? '[PRUEBAS] ' : ''}${params.documentLabel} Electrónica N° ${params.number} — ${params.organization}`,
+    greeting: `Estimado/a ${params.buyerName},`,
+    intro:
+      'Nos complacemos en informarle que su comprobante electrónico ha sido autorizado por el SRI.',
+    notice: params.test
+      ? 'Este es un comprobante del ambiente de pruebas del SRI y no tiene validez tributaria.'
+      : null,
+    facts: [
+      [`${params.documentLabel} N°`, params.number],
+      ['Fecha de emisión', params.issueDate],
+      ['Total', `$${params.total}`],
+      ['Número de autorización', params.authorizationNumber],
+    ],
+    attachmentsIntro: 'Adjunto encontrará los siguientes documentos:',
+    attachments: [
+      [params.attachments.ride, 'Representación impresa del comprobante (RIDE)'],
+      [params.attachments.xml, 'Comprobante electrónico (XML autorizado)'],
+    ],
+    closing: 'Gracias por su preferencia.',
+    organization: params.organization,
+    ruc: params.ruc,
+  });
+}
+
+export type PurchaseOrderEmailParams = {
+  organization: string;
+  ruc: string;
+  providerName: string;
+  number: string;
+  orderDate: string;
+  expectedDate: string | null;
+  total: string;
+  attachment: string;
+  // The company's test copy: the provider is told it isn't a real order.
+  test: boolean;
+};
+
+// FR-PUR-3: the order to the provider, its PDF attached.
+export function renderPurchaseOrderEmail(
+  to: string,
+  params: PurchaseOrderEmailParams,
+): EmailMessage {
+  return businessEmail(to, {
+    subject: `${params.test ? '[PRUEBAS] ' : ''}Orden de compra ${params.number} — ${params.organization}`,
+    greeting: `Estimado/a ${params.providerName},`,
+    intro: `${params.organization} le envía la orden de compra ${params.number}.`,
+    notice: params.test
+      ? 'Esta orden viene del ambiente de pruebas de la empresa y no es un pedido real.'
+      : null,
+    facts: [
+      ['Orden de compra', params.number],
+      ['Fecha', params.orderDate],
+      ...(params.expectedDate
+        ? ([['Entrega prevista', params.expectedDate]] as [string, string][])
+        : []),
+      ['Total', `$${params.total}`],
+    ],
+    attachmentsIntro: 'Adjunto encontrará la orden en PDF:',
+    attachments: [[params.attachment, null]],
+    closing: 'Por favor, confirme la recepción del pedido y la fecha de entrega con la empresa.',
+    organization: params.organization,
+    ruc: params.ruc,
+  });
 }

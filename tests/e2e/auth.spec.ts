@@ -832,7 +832,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await look(page, 'providers');
   });
 
-  test('orders goods from a provider, receives them in parts and stocks them (FR-PUR-1, FR-PUR-2)', async ({
+  test('orders goods from a provider, emails it, receives it in parts and stocks it (FR-PUR-1 to FR-PUR-3)', async ({
     page,
   }) => {
     await grantFeature(email, 'PURCHASE_ORDERS', 'e2e purchase orders');
@@ -858,10 +858,18 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Borrador');
     await look(page, 'purchase-order-draft');
 
-    await page.getByRole('button', { name: 'Marcar como enviada' }).click();
-    const confirm = page.getByRole('dialog', { name: '¿Marcar la orden como enviada?' });
-    await confirm.getByRole('button', { name: 'Marcar como enviada' }).click();
-    await expect(page.getByText('Orden marcada como enviada.')).toBeVisible();
+    // FR-PUR-3: the PDF, then the draft emailed to the provider, which sends it.
+    const pdf = await page.request.get(
+      (await page.getByRole('link', { name: 'Ver PDF' }).getAttribute('href'))!,
+    );
+    expect(pdf.headers()['content-type']).toBe('application/pdf');
+    expect((await pdf.body()).subarray(0, 5).toString()).toBe('%PDF-');
+    await page.getByRole('button', { name: 'Enviar por correo' }).click();
+    const emailDialog = page.getByRole('dialog', { name: 'Enviar la orden por correo' });
+    await expect(emailDialog.getByLabel('Para')).toHaveValue('compras@andina.ec');
+    await look(page, 'purchase-order-email');
+    await emailDialog.getByRole('button', { name: 'Enviar' }).click();
+    await expect(page.getByText('La orden sale por correo en unos segundos.')).toBeVisible();
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Enviada');
     await expect(page.getByRole('link', { name: 'Editar' })).toHaveCount(0);
     await look(page, 'purchase-order-sent');

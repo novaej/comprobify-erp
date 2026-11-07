@@ -68,6 +68,16 @@ export const queues = {
     options: { retryLimit: 1, expireInSeconds: 300 },
     concurrency: 1,
   },
+  // FR-PUR-3: the order's PDF to the provider, enqueued with the change that asked for it.
+  'purchasing.email': {
+    payload: z.object({
+      tenantId: z.uuid(),
+      orderId: z.uuid(),
+      to: z.array(z.email()).min(1).max(10),
+    }),
+    options: { retryLimit: 5, retryDelay: 60, retryBackoff: true, expireInSeconds: 120 },
+    concurrency: 2,
+  },
   // FR-INV-2: every level against its ledger, once a night.
   'inventory.verify': {
     payload: z.object({}),

@@ -13,6 +13,7 @@ import { sendEmailHandler, type EmailProvider } from './email';
 import { createRateLimiter, pruneIdentityTables } from './identity';
 import { verifyStockLevels } from './inventory';
 import { heartbeatHandler, type Jobs } from './jobs';
+import { sendPurchaseOrderEmail } from './purchasing';
 import type { KeyCipher } from './certificates';
 import type { Clock } from './kernel';
 import type { SriClient } from './sri';
@@ -52,6 +53,9 @@ export async function registerHandlers(jobs: Jobs, deps: HandlerDeps): Promise<v
   );
   await jobs.work('documents.email', (job) =>
     emailDocument({ db: deps.db, provider: emailProvider, clock, logger }, job.data),
+  );
+  await jobs.work('purchasing.email', (job) =>
+    sendPurchaseOrderEmail({ db: deps.db, provider: emailProvider, clock, logger }, job.data),
   );
   await jobs.work('inventory.verify', async () => {
     await verifyStockLevels({ db: deps.db, logger });

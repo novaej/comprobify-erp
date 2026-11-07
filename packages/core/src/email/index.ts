@@ -16,8 +16,20 @@ export type {
   MailgunOptions,
   SendResult,
 } from './provider';
-export { emailLocale, emailTemplate, renderDocumentEmail, renderEmail } from './templates';
-export type { DocumentEmailParams, EmailLocale, EmailParams, EmailTemplate } from './templates';
+export {
+  emailLocale,
+  emailTemplate,
+  renderDocumentEmail,
+  renderEmail,
+  renderPurchaseOrderEmail,
+} from './templates';
+export type {
+  DocumentEmailParams,
+  EmailLocale,
+  EmailParams,
+  EmailTemplate,
+  PurchaseOrderEmailParams,
+} from './templates';
 
 // The email.send job payload. The URL may hold a token; jobs are purged by pg-boss retention.
 export const sendEmailPayload = z.object({

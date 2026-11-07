@@ -1,8 +1,9 @@
 'use client';
 
 import { Button, buttonVariants } from '@comprobify/ui/components/button';
+import { Input } from '@comprobify/ui/components/input';
 import { Textarea } from '@comprobify/ui/components/textarea';
-import { Ban, Lock, PackageCheck, PencilLine, Send } from 'lucide-react';
+import { Ban, Lock, Mail, PackageCheck, PencilLine, Send } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -10,11 +11,12 @@ import { FormDialog } from '@/components/form-dialog';
 import { FormField } from '@/components/form-field';
 import { useServerAction } from '@/components/use-server-action';
 import { Link } from '@/i18n/navigation';
-import { orderStatusAction } from '../actions';
+import { emailOrderAction, orderStatusAction } from '../actions';
 
 export type OrderAllowed = {
   edit: boolean;
   send: boolean;
+  email: boolean;
   receive: boolean;
   cancel: boolean;
   close: boolean;
@@ -26,15 +28,21 @@ export function OrderActions({
   number,
   allowed,
   short,
+  providerEmails,
+  draft,
 }: {
   id: string;
   number: string;
   allowed: OrderAllowed;
+  // The provider's addresses, offered as the recipients.
+  providerEmails: string[];
+  // Emailing a draft also marks it sent.
+  draft: boolean;
   // Closing before everything arrived says so.
   short: boolean;
 }) {
   const t = useTranslations('purchaseOrders.actions');
-  const [open, setOpen] = useState<'send' | 'cancel' | 'close' | null>(null);
+  const [open, setOpen] = useState<'send' | 'email' | 'cancel' | 'close' | null>(null);
   const close = () => setOpen(null);
   const send = useServerAction(orderStatusAction, {
     errors: 'purchaseOrdersError',
@@ -61,6 +69,12 @@ export function OrderActions({
           <PackageCheck className="mr-1.5 h-4 w-4" aria-hidden />
           {t('receive')}
         </Link>
+      )}
+      {allowed.email && (
+        <Button size="sm" variant={draft ? 'default' : 'outline'} onClick={() => setOpen('email')}>
+          <Mail className="mr-1.5 h-4 w-4" aria-hidden />
+          {draft ? t('email') : t('emailAgain')}
+        </Button>
       )}
       {allowed.send && (
         <Button size="sm" variant="outline" onClick={() => setOpen('send')}>
@@ -104,6 +118,30 @@ export function OrderActions({
         error={finish.error}
         onConfirm={() => finish.run({ id, change: 'close' })}
       />
+      <FormDialog
+        open={open === 'email'}
+        onOpenChange={(next) => setOpen(next ? 'email' : null)}
+        title={draft ? t('emailTitle') : t('emailAgainTitle')}
+        description={draft ? t('emailDescription') : t('emailAgainDescription')}
+        submitLabel={t('emailSubmit')}
+        action={emailOrderAction}
+        errors="purchaseOrdersError"
+        success={t('emailed')}
+        extra={{ id }}
+      >
+        <FormField label={t('emailTo')} hint={t('emailToHint')} required>
+          {(a11y) => (
+            <Input
+              {...a11y}
+              name="to"
+              inputMode="email"
+              defaultValue={providerEmails.join(', ')}
+              required
+              autoFocus
+            />
+          )}
+        </FormField>
+      </FormDialog>
       <FormDialog
         open={open === 'cancel'}
         onOpenChange={(next) => setOpen(next ? 'cancel' : null)}

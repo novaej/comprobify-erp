@@ -27,6 +27,7 @@ export type Warehouse = {
   name: string;
   branchCode: string;
   branchName: string;
+  branchAddress: string;
   active: boolean;
 };
 
@@ -39,6 +40,7 @@ export async function warehousesOf(tx: Tx): Promise<Warehouse[]> {
       name: warehouses.name,
       branchCode: branches.code,
       branchName: branches.name,
+      branchAddress: branches.address,
       active: warehouses.active,
     })
     .from(warehouses)
@@ -66,4 +68,29 @@ export async function nextNumber(
     })
     .returning({ value: tenantCounters.lastValue });
   return row!.value;
+}
+
+export type CompanyHeader = {
+  ruc: string;
+  legalName: string;
+  tradeName: string | null;
+  mainAddress: string;
+  mode: string;
+};
+
+// Who the company is, for the papers it sends that aren't SRI documents (FR-PUR-3).
+export async function companyHeader(tx: Tx, tenantId: string): Promise<CompanyHeader> {
+  const { tenants } = schema;
+  const [row] = await tx.db
+    .select({
+      ruc: tenants.ruc,
+      legalName: tenants.legalName,
+      tradeName: tenants.tradeName,
+      mainAddress: tenants.mainAddress,
+      mode: tenants.mode,
+    })
+    .from(tenants)
+    .where(eq(tenants.id, tenantId));
+  if (!row) throw new Error('A tenant that owns the row is missing');
+  return row;
 }

@@ -60,5 +60,5 @@ export {
   updateCompanyProfile,
 } from './settings';
 export type { CompanySettings } from './settings';
-export { negativeStockRule, nextNumber, warehousesOf } from './warehouses';
-export type { Warehouse } from './warehouses';
+export { companyHeader, negativeStockRule, nextNumber, warehousesOf } from './warehouses';
+export type { CompanyHeader, Warehouse } from './warehouses';

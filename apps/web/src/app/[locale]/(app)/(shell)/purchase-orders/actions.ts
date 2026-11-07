@@ -4,6 +4,7 @@ import {
   cancelPurchaseOrder,
   closePurchaseOrder,
   createPurchaseOrder,
+  emailPurchaseOrder,
   markPurchaseOrderSent,
   receivePurchaseOrder,
   type ReceiptInput,
@@ -81,4 +82,20 @@ export async function receiveAction(_: ActionState, form: FormData): Promise<Act
   if (!state.done) return state;
   revalidatePath(`/${locale}`, 'layout');
   return redirect({ href: `/purchase-orders/${payload.orderId}`, locale });
+}
+
+// FR-PUR-3. A draft is sent by it; the job goes out with the change.
+export async function emailOrderAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const locale = localeOf(form);
+  const { actor } = await loadShell(locale);
+  const { db, jobs } = await getRuntime();
+  const to = text(form, 'to')
+    .split(/[,;\s]+/)
+    .map((email) => email.trim())
+    .filter(Boolean);
+  const state = await toActionState(async () => {
+    await emailPurchaseOrder(actor, db, { id: text(form, 'id'), to }, { jobs });
+  });
+  if (state.done) revalidatePath(`/${locale}/purchase-orders`, 'layout');
+  return state;
 }
