@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { and, asc, eq, schema, type Database, type Tx } from '@comprobify/db';
+import { and, asc, desc, eq, inArray, schema, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
 import {
   DomainError,
@@ -108,13 +108,15 @@ const idTypeOf = (identification: string): '04' | '05' | '06' =>
   /^[0-9]{13}$/.test(identification) ? '04' : /^[0-9]{10}$/.test(identification) ? '05' : '06';
 
 // SRI error 82, said before signing: the transport starts on or after the day it is sent.
-function checkDates(issueDate: string, input: Content) {
-  const problem = guiaDateProblem(issueDate, input.transportStart, input.transportEnd);
+// SRI reads the guía's emission date from the transport start (error 58 otherwise), so the
+// access key and the row carry that date; `today` is the day it is sent.
+function checkDates(today: string, input: Content) {
+  const problem = guiaDateProblem(today, input.transportStart, input.transportEnd);
   if (problem === 'START_BEFORE_ISSUE')
     throw new DomainError(
       'TRANSPORT_START_BEFORE_ISSUE',
       'The transport can not start before the guía is issued',
-      { issueDate },
+      { issueDate: today },
     );
   if (problem === 'END_BEFORE_START')
     throw new DomainError(
@@ -148,7 +150,7 @@ async function composeGuide(
   numbering: { sequential: number; issueDate: string; ambiente: Ambiente; accessKey: string },
   deps: IssueDeps,
 ) {
-  checkDates(numbering.issueDate, input);
+  checkDates(ecuadorDate(ctx.clock.now()), input);
   const { xml } = buildGuiaRemision({
     ambiente: numbering.ambiente,
     accessKey: numbering.accessKey,
@@ -223,7 +225,6 @@ export async function createGuide(
   requireFeature(ctx, 'DOC_TYPE_06');
   const input = guideInput.parse(raw);
   const payloadHash = createHash('sha256').update(JSON.stringify(input)).digest('hex');
-  const now = ctx.clock.now();
 
   return db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
     const existing = await findIdempotent(tx, ctx, input.idempotencyKey, payloadHash);
@@ -237,7 +238,7 @@ export async function createGuide(
       issuePointId: input.issuePointId,
       documentType: '06',
     });
-    const issueDate = ecuadorDate(now);
+    const issueDate = input.transportStart;
     const ambiente = ambienteFor(ctx.tenantMode, deps.appEnv);
     const series = `${issuer.branchCode}${issuer.pointCode}`;
     const key = accessKey({
@@ -300,8 +301,8 @@ export async function createGuide(
   });
 }
 
-// FR-DOC-7 for a guía: the same row and sequential. A correction on a later day takes today's
-// date, so the transport dates must still hold against it (SRI error 82).
+// FR-DOC-7 for a guía: the same row and sequential. Its date is the transport start, so a
+// correction keeps the key unless the start moves; it must still not be in the past (error 82).
 export async function correctGuide(
   ctx: ActorContext,
   db: Database,
@@ -320,6 +321,7 @@ export async function correctGuide(
       return { ...parts, insertParts: (id, revision) => parts.insertParts(tx, id, revision) };
     },
     deps,
+    { issueDate: input.transportStart },
   );
 }
 
@@ -373,6 +375,42 @@ export async function guideDraft(
         additionalInfo: data.additionalInfo.filter((field) => !added.has(field.name)),
       },
     };
+  });
+}
+
+export type GuideInvoice = {
+  id: string;
+  number: string;
+  issueDate: string;
+  buyerName: string;
+  buyerIdentification: string;
+};
+
+// The latest authorized invoices, for the form's search: picking one fills the recipient.
+export async function guideInvoices(ctx: ActorContext, db: Database): Promise<GuideInvoice[]> {
+  requirePermission(ctx, 'documents.issue');
+  return db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+    const rows = await tx
+      .select()
+      .from(schema.documents)
+      .where(
+        and(
+          eq(schema.documents.documentType, '01'),
+          eq(schema.documents.status, 'AUTHORIZED'),
+          ctx.issuePointIds !== null
+            ? inArray(schema.documents.issuePointId, ctx.issuePointIds)
+            : undefined,
+        ),
+      )
+      .orderBy(desc(schema.documents.issueDate), desc(schema.documents.sequential))
+      .limit(100);
+    return rows.map((row) => ({
+      id: row.id,
+      number: documentNumber(row.series, row.sequential),
+      issueDate: row.issueDate,
+      buyerName: row.buyerName,
+      buyerIdentification: row.buyerIdentification,
+    }));
   });
 }
 

@@ -326,6 +326,8 @@ export async function correctDocument(
   documentType: '01' | '04' | '06',
   compose: Composer,
   deps: Pick<IssueDeps, 'jobs'>,
+  // A guía's date is its transport start, not the day it is sent.
+  options: { issueDate?: string } = {},
 ): Promise<IssuedDocument> {
   requirePermission(ctx, 'documents.issue');
   const id = z.uuid().parse(documentId);
@@ -350,7 +352,7 @@ export async function correctDocument(
       );
 
     const issuer = await issuingContext(ctx, tx, row.issuePointId);
-    const today = ecuadorDate(now);
+    const today = options.issueDate ?? ecuadorDate(now);
     const key =
       row.issueDate === today
         ? row.accessKey

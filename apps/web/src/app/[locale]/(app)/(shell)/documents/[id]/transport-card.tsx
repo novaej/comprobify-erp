@@ -10,7 +10,7 @@ export async function TransportCard({ transport }: { transport: Transport }) {
   const t = await getTranslations('documents.detail.transport');
   return (
     <SectionCard title={t('title')}>
-      <dl className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <dl className="grid gap-2 sm:grid-cols-2 2xl:grid-cols-3">
         <DetailTile
           label={t('carrier')}
           value={transport.carrier.name}

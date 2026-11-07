@@ -1,6 +1,6 @@
 'use server';
 
-import { correctGuide, createGuide } from '@comprobify/core';
+import { correctGuide, createGuide, guideFromInvoice } from '@comprobify/core';
 import { redirect } from '@/i18n/navigation';
 import { toActionState, type ActionState } from '@/server/actions';
 import { getRuntime } from '@/server/runtime';
@@ -46,4 +46,15 @@ export async function correctGuideAction(_: ActionState, form: FormData): Promis
   });
   if (!done) return state;
   return redirect({ href: `/documents/${id}`, locale });
+}
+
+// Picking an invoice in the form fills the recipient with its buyer and goods.
+export async function invoiceRecipientAction(locale: string, invoiceId: string) {
+  const { actor } = await loadShell(locale === 'en' ? 'en' : 'es');
+  const { db } = await getRuntime();
+  try {
+    return await guideFromInvoice(actor, db, invoiceId);
+  } catch {
+    return null;
+  }
 }

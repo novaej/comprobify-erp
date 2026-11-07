@@ -2,9 +2,12 @@ import {
   CARRIER_ID_TYPES,
   ecuadorDate,
   guideFromInvoice,
+  guideInvoices,
   hasFeature,
   isDomainError,
   issuingOptions,
+  listClients,
+  listProducts,
   systemClock,
 } from '@comprobify/core';
 import { buttonVariants } from '@comprobify/ui/components/button';
@@ -60,6 +63,14 @@ export default async function NewGuidePage({
     }
   }
   const options = await issuingOptions(actor, db, '06');
+  // Pickers only for what the plan and role allow, as on the invoice form.
+  const canProducts = hasFeature(actor, 'CATALOG') && actor.permissions.includes('catalog.read');
+  const canClients = hasFeature(actor, 'CLIENTS') && actor.permissions.includes('clients.read');
+  const [products, clients, invoices] = await Promise.all([
+    canProducts ? listProducts(actor, db) : [],
+    canClients ? listClients(actor, db) : [],
+    origin ? [] : guideInvoices(actor, db),
+  ]);
 
   return (
     <div className="max-w-5xl">
@@ -95,6 +106,19 @@ export default async function NewGuidePage({
           originId={origin?.originId ?? null}
           originNumber={origin?.number ?? null}
           initial={origin ? { recipients: [origin.recipient] } : undefined}
+          products={products.map((product) => ({
+            id: product.id,
+            code: product.code,
+            auxiliaryCode: product.auxiliaryCode,
+            name: product.name,
+          }))}
+          clients={clients.map((client) => ({
+            id: client.id,
+            identification: client.identification,
+            name: client.name,
+            address: client.address,
+          }))}
+          invoices={invoices}
         />
       )}
     </div>

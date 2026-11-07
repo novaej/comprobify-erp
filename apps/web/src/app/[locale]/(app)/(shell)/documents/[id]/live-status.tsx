@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from '@/i18n/navigation';
+import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect } from 'react';
 
@@ -30,7 +31,8 @@ export function LiveStatus({ waiting }: { waiting: boolean }) {
   }, [waiting, router]);
   if (!waiting) return null;
   return (
-    <p role="status" className="text-xs text-muted-foreground">
+    <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
+      <Loader2 className="h-4 w-4 shrink-0 motion-safe:animate-spin" aria-hidden />
       {t('waiting')}
     </p>
   );

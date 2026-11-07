@@ -15,8 +15,15 @@ export {
   guideDraft,
   guideFromInvoice,
   guideInput,
+  guideInvoices,
 } from './delivery-guide';
-export type { GuideContent, GuideCorrectionInput, GuideDraft, GuideInput } from './delivery-guide';
+export type {
+  GuideContent,
+  GuideCorrectionInput,
+  GuideDraft,
+  GuideInput,
+  GuideInvoice,
+} from './delivery-guide';
 export {
   correctCreditNote,
   createCreditNote,

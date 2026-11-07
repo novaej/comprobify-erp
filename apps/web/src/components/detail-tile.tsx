@@ -19,9 +19,9 @@ export function DetailTile({
   editLabel?: string;
 }) {
   return (
-    <div className="flex min-h-11 items-center justify-between gap-3 rounded-md bg-muted/40 px-3 py-1.5">
+    <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-3 gap-y-0.5 rounded-md bg-muted/40 px-3 py-1.5">
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="flex flex-wrap items-center justify-end gap-1 text-right text-sm font-medium">
+      <dd className="flex min-w-0 max-w-full flex-wrap items-center justify-end gap-1 break-words text-right text-sm font-medium">
         {value}
         {detail && <span className="text-xs font-normal text-muted-foreground">({detail})</span>}
         {onEdit && (

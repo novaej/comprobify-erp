@@ -434,9 +434,9 @@ function bottom(doc: Doc, data: RideData, y: number): number {
       });
       ly += paymentH[i]!;
     });
-    // Closes the last payment row; the totals box beside it can run longer.
-    hline(doc, lx, ly, leftW, DARK);
   }
+  // Closes the last row, payment or information; the totals box beside it can run longer.
+  if (ly > y) hline(doc, lx, ly, leftW, DARK);
 
   let ry = y;
   for (const row of rows) {

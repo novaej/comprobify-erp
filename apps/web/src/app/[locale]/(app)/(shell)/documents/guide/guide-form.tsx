@@ -8,16 +8,35 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { Banner } from '@/components/banner';
 import { ChoiceSelect, type Choice } from '@/components/choice-select';
+import { Combobox, type ComboOption } from '@/components/combobox';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { FormActionBar } from '@/components/form-action-bar';
 import { FormField } from '@/components/form-field';
 import { SectionCard } from '@/components/section-card';
 import { normalizeDecimal, parseDecimal } from '@/lib/invoice-totals';
-import { correctGuideAction, createGuideAction } from './actions';
+import { correctGuideAction, createGuideAction, invoiceRecipientAction } from './actions';
 
 export type GuideContent = CoreGuideContent;
 type GuideRecipient = GuideContent['recipients'][number];
 type GuideLine = GuideRecipient['lines'][number];
+
+export type GuideProduct = { id: string; code: string; auxiliaryCode: string | null; name: string };
+export type GuideClient = {
+  id: string;
+  identification: string;
+  name: string;
+  address: string | null;
+};
+export type GuideInvoiceOption = {
+  id: string;
+  number: string;
+  issueDate: string;
+  buyerName: string;
+  buyerIdentification: string;
+};
+
+const matches = (text: string, query: string) =>
+  text.toLowerCase().includes(query.trim().toLowerCase());
 
 const blankLine = (): GuideLine => ({
   code: null,
@@ -43,10 +62,13 @@ export function GuideForm({
   issuePoints,
   carrierTypes,
   today,
-  originId,
+  originId: fixedOrigin,
   originNumber,
   initial,
   draft,
+  products = [],
+  clients = [],
+  invoices = [],
 }: {
   issuePoints: Choice[];
   carrierTypes: Choice[];
@@ -56,6 +78,10 @@ export function GuideForm({
   originNumber: string | null;
   initial?: Partial<GuideContent>;
   draft?: { documentId: string };
+  products?: GuideProduct[];
+  clients?: GuideClient[];
+  // Latest authorized invoices to search; empty hides the search.
+  invoices?: GuideInvoiceOption[];
 }) {
   const t = useTranslations('guideForm');
   const tError = useTranslations('documentsError');
@@ -79,6 +105,43 @@ export function GuideForm({
   );
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string>();
+  // The invoice the guía goes with: given, or picked from the search.
+  const [originId, setOriginId] = useState(fixedOrigin);
+  const [queries, setQueries] = useState<Record<string, string>>({});
+  const query = (key: string) => queries[key] ?? '';
+  const setQuery = (key: string, value: string) =>
+    setQueries((current) => ({ ...current, [key]: value }));
+
+  const invoiceOptions = (text: string): ComboOption[] =>
+    invoices
+      .filter(
+        (one) =>
+          matches(one.number, text) ||
+          matches(one.buyerName, text) ||
+          one.buyerIdentification.startsWith(text.trim()),
+      )
+      .slice(0, 8)
+      .map((one) => ({
+        value: one.id,
+        label: `${one.number} · ${one.buyerName}`,
+        detail: `${one.buyerIdentification}, ${one.issueDate.split('-').reverse().join('/')}`,
+      }));
+  const clientOptions = (text: string): ComboOption[] =>
+    clients
+      .filter((one) => matches(one.name, text) || one.identification.startsWith(text.trim()))
+      .slice(0, 8)
+      .map((one) => ({ value: one.id, label: one.name, detail: one.identification }));
+  const productOptions = (text: string): ComboOption[] =>
+    products
+      .filter((one) => matches(one.code, text) || matches(one.name, text))
+      .slice(0, 8)
+      .map((one) => ({ value: one.id, label: one.name, detail: one.code }));
+  const pickInvoice = async (index: number, id: string) => {
+    const found = await invoiceRecipientAction(locale, id);
+    if (!found) return;
+    setOriginId(found.originId);
+    changeRecipient(index, found.recipient);
+  };
 
   const changeRecipient = (index: number, change: Partial<GuideRecipient>) =>
     setRecipients((current) =>
@@ -297,6 +360,55 @@ export function GuideForm({
             aria-label={t('recipient.title', { number: index + 1 })}
             className="space-y-4"
           >
+            {(clients.length > 0 || (invoices.length > 0 && !fixedOrigin)) && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {invoices.length > 0 && !fixedOrigin && (
+                  <FormField
+                    label={t('recipient.searchInvoice')}
+                    hint={t('recipient.searchInvoiceHint')}
+                  >
+                    {(a11y) => (
+                      <Combobox
+                        a11y={a11y}
+                        value={query(`invoice${index}`)}
+                        onInputChange={(text) => setQuery(`invoice${index}`, text)}
+                        options={invoiceOptions(query(`invoice${index}`))}
+                        onPick={(option) => {
+                          setQuery(`invoice${index}`, '');
+                          void pickInvoice(index, option.value);
+                        }}
+                        emptyText={t('recipient.noInvoices')}
+                        listLabel={t('recipient.invoices')}
+                      />
+                    )}
+                  </FormField>
+                )}
+                {clients.length > 0 && (
+                  <FormField label={t('recipient.searchClient')}>
+                    {(a11y) => (
+                      <Combobox
+                        a11y={a11y}
+                        value={query(`client${index}`)}
+                        onInputChange={(text) => setQuery(`client${index}`, text)}
+                        options={clientOptions(query(`client${index}`))}
+                        onPick={(option) => {
+                          const client = clients.find((one) => one.id === option.value);
+                          setQuery(`client${index}`, '');
+                          if (client)
+                            changeRecipient(index, {
+                              identification: client.identification,
+                              name: client.name,
+                              address: client.address ?? one.address,
+                            });
+                        }}
+                        emptyText={t('recipient.noClients')}
+                        listLabel={t('recipient.clients')}
+                      />
+                    )}
+                  </FormField>
+                )}
+              </div>
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField label={t('recipient.identification')} required>
                 {(a11y) => (
@@ -416,14 +528,36 @@ export function GuideForm({
                       className="grid items-end gap-3 sm:grid-cols-[8rem_minmax(0,1fr)_8rem_auto]"
                     >
                       <FormField label={t('goods.code')}>
-                        {(a11y) => (
-                          <Input
-                            {...a11y}
-                            value={line.code ?? ''}
-                            maxLength={25}
-                            onChange={(e) => changeLine(index, lineIndex, { code: e.target.value })}
-                          />
-                        )}
+                        {(a11y) =>
+                          products.length > 0 ? (
+                            <Combobox
+                              a11y={a11y}
+                              value={line.code ?? ''}
+                              onInputChange={(code) => changeLine(index, lineIndex, { code })}
+                              options={productOptions(line.code ?? '')}
+                              onPick={(option) => {
+                                const product = products.find((one) => one.id === option.value);
+                                if (product)
+                                  changeLine(index, lineIndex, {
+                                    code: product.code,
+                                    auxiliaryCode: product.auxiliaryCode,
+                                    name: product.name,
+                                  });
+                              }}
+                              emptyText={t('goods.noProducts')}
+                              listLabel={t('goods.products')}
+                            />
+                          ) : (
+                            <Input
+                              {...a11y}
+                              value={line.code ?? ''}
+                              maxLength={25}
+                              onChange={(e) =>
+                                changeLine(index, lineIndex, { code: e.target.value })
+                              }
+                            />
+                          )
+                        }
                       </FormField>
                       <FormField label={t('goods.name')} required>
                         {(a11y) => (

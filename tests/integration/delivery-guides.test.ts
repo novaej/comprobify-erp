@@ -241,6 +241,19 @@ describe('delivery guides', () => {
     expect(ride.content.subarray(0, 5).toString()).toBe('%PDF-');
   });
 
+  it('dates the guía by its transport start, which is what SRI checks the key against (error 58)', async () => {
+    const note = await createGuide(
+      await owner(),
+      db,
+      guide({ transportStart: '2026-11-11', transportEnd: '2026-11-12' }),
+      issueDeps,
+    );
+    expect(note.accessKey.slice(0, 8)).toBe('11112026');
+    const stored = await row(note);
+    expect(stored.issueDate).toBe('2026-11-11');
+    expect(stored.signedXml).toContain('<fechaIniTransporte>11/11/2026</fechaIniTransporte>');
+  });
+
   it('refuses a transport that starts before the day it is sent (SRI error 82)', async () => {
     expect(
       await failure(
@@ -298,6 +311,9 @@ describe('delivery guides', () => {
       issueDeps,
     );
     expect(corrected).toMatchObject({ id: note.id, number: note.number, status: 'SIGNED' });
+    // The key follows the new start date.
+    expect(corrected.accessKey.slice(0, 8)).toBe('11112026');
+    expect((await row(note)).issueDate).toBe('2026-11-11');
     expect((await row(note)).signedXml).toContain('<placa>PBA-0001</placa>');
   });
 

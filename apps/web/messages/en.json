@@ -1438,7 +1438,14 @@
       "reason": "Reason for the move",
       "route": "Route",
       "add": "Add recipient",
-      "remove": "Remove recipient {number}"
+      "remove": "Remove recipient {number}",
+      "searchInvoice": "Find an invoice",
+      "searchInvoiceHint": "Fills the recipient and goods from the invoice.",
+      "noInvoices": "No authorized invoices match.",
+      "invoices": "Authorized invoices",
+      "searchClient": "Find a client",
+      "noClients": "No clients match.",
+      "clients": "Clients"
     },
     "support": {
       "title": "Sales document (optional)",
@@ -1454,7 +1461,9 @@
       "name": "Description",
       "quantity": "Quantity",
       "add": "Add item",
-      "remove": "Remove item {number}"
+      "remove": "Remove item {number}",
+      "noProducts": "No products match.",
+      "products": "Products"
     },
     "submit": "Issue delivery guide",
     "confirmTitle": "Issue the delivery guide?",

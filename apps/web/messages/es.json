@@ -1438,7 +1438,14 @@
       "reason": "Motivo del traslado",
       "route": "Ruta",
       "add": "Agregar destinatario",
-      "remove": "Quitar el destinatario {number}"
+      "remove": "Quitar el destinatario {number}",
+      "searchInvoice": "Buscar una factura",
+      "searchInvoiceHint": "Rellena el destinatario y los bienes con los de la factura.",
+      "noInvoices": "Sin facturas autorizadas que coincidan.",
+      "invoices": "Facturas autorizadas",
+      "searchClient": "Buscar un cliente",
+      "noClients": "Sin clientes que coincidan.",
+      "clients": "Clientes"
     },
     "support": {
       "title": "Comprobante de venta (opcional)",
@@ -1454,7 +1461,9 @@
       "name": "Descripción",
       "quantity": "Cantidad",
       "add": "Agregar ítem",
-      "remove": "Quitar el ítem {number}"
+      "remove": "Quitar el ítem {number}",
+      "noProducts": "Sin productos que coincidan.",
+      "products": "Productos"
     },
     "submit": "Emitir guía de remisión",
     "confirmTitle": "¿Emitir la guía de remisión?",

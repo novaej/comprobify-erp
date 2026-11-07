@@ -1,6 +1,6 @@
 import type { DocumentStatus } from '@comprobify/core';
 import { cn } from '@comprobify/ui/lib/utils';
-import { Check, X } from 'lucide-react';
+import { Check, Loader2, X } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 const STEPS = ['signed', 'sent', 'received', 'authorized'] as const;
@@ -47,13 +47,15 @@ export async function DocumentProgress({ status }: { status: DocumentStatus }) {
               className={cn(
                 'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs',
                 done && 'border-primary bg-primary text-primary-foreground',
-                current && 'border-primary bg-primary/10 motion-safe:animate-pulse',
+                current && 'border-primary bg-primary/10 text-primary',
                 stopped && 'border-destructive bg-destructive text-white',
                 !done && !current && !stopped && 'border-border bg-card',
               )}
             >
               {done ? (
                 <Check className="h-3.5 w-3.5" />
+              ) : current ? (
+                <Loader2 className="h-3.5 w-3.5 motion-safe:animate-spin" />
               ) : stopped ? (
                 <X className="h-3.5 w-3.5" />
               ) : null}
