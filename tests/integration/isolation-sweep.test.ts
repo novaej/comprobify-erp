@@ -7,6 +7,7 @@ import {
   createClient,
   createProduct,
   createProvider,
+  createPurchaseOrder,
   createAuth,
   createJobs,
   createKeyCipher,
@@ -14,6 +15,7 @@ import {
   createVerifiedUser,
   fixedClock,
   inviteMember,
+  orderWarehouses,
   onboardOrganization,
   recordSessionStart,
   resolveActor,
@@ -138,7 +140,7 @@ describe('isolation sweep over every tenant table', () => {
         identification: '1710034065',
         name: 'Cliente',
       });
-      await createProvider(actor, db, {
+      const supplier = await createProvider(actor, db, {
         idType: '05',
         identification: '1710034065',
         name: 'Proveedor',
@@ -202,6 +204,13 @@ describe('isolation sweep over every tenant table', () => {
           unitCost: '1',
         });
       });
+      // A purchase order, its line and its number (FR-PUR-1).
+      const [warehouse] = await orderWarehouses(actor, db);
+      await createPurchaseOrder(actor, db, {
+        providerId: supplier.id,
+        warehouseId: warehouse!.id,
+        lines: [{ productId: product.id, quantity: '2', unitCost: '0.80' }],
+      });
     }
     return org;
   };
@@ -260,11 +269,14 @@ describe('isolation sweep over every tenant table', () => {
         'memberships',
         'products',
         'providers',
+        'purchase_order_lines',
+        'purchase_orders',
         'sri_exchanges',
         'stock_levels',
         'stock_movements',
         'subscription_items',
         'subscriptions',
+        'tenant_counters',
         'tenant_feature_overrides',
         'tenant_logos',
         'warehouses',

@@ -12,6 +12,7 @@ export {
   VERSION_REASONS,
   AUDIT_ACTIONS,
   CLIENT_ID_TYPES,
+  COUNTER_KINDS,
   CONSUMER_FINAL_ID,
   DOCUMENT_EVENT_TYPES,
   DOCUMENT_STATUSES,
@@ -24,6 +25,9 @@ export {
   PLAN_STATUSES,
   NEGATIVE_STOCK_RULES,
   PRODUCT_KINDS,
+  PURCHASE_ORDER_STATUSES,
+  PURCHASE_ORDER_TRANSITIONS,
+  purchaseOrderStatusTriggerBody,
   PLATFORM_AUDIT_ACTIONS,
   SRI_DOCUMENT_TYPES,
   SRI_ID_TYPES,
@@ -40,7 +44,7 @@ export {
   TENANT_MODES,
   TENANT_STATUSES,
 } from './schema';
-export type { DocumentStatus } from './schema';
+export type { DocumentStatus, PurchaseOrderStatus } from './schema';
 // Re-exported so callers share this package's drizzle-orm instance and types.
 export {
   and,

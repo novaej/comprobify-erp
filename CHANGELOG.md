@@ -82,6 +82,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - Stock adjustments with a reason, opening balances (only a level's first movement) and their CSV import, checked whole before anything is applied, in Spanish or English spreadsheets. A product can't stop tracking stock a warehouse still holds, and a service never tracks stock (migration 0038, FR-INV-3, FR-INV-6, ADR-018).
 - Inventory screens: stock per product in one warehouse or all, a product's levels and movements with its adjustment and opening-balance dialogs, the opening-balance import with a downloadable template, and the valuation at average cost with a CSV export. The negative-stock rule is a switch in Empresa (FR-INV-2, FR-INV-3, FR-INV-4, FR-INV-5).
 - Providers: the client's identity rules and payment terms, with their screen, behind the `PROVIDERS` feature (`purchasing.read` to see, `providers.manage` to change). Migration 0039 (FR-MD-3).
+- Purchase orders: a number per company, catalogue lines at cost without IVA, drafts edited as revisions, and the status machine generated into the CHECK and trigger; list, form and detail screens behind the `PURCHASE_ORDERS` feature (`purchasing.read` to see, `purchasing.manage` to change). Migration 0040 (FR-PUR-1, FR-DOC-3, ADR-019).
 - The nightly stock check: the `inventory.verify` job compares every level with the sums of its ledger and logs any drift (FR-INV-2, NFR-JOB-2, ADR-018).
 
 ### Fixed

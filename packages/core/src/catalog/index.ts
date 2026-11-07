@@ -293,3 +293,33 @@ export async function productSummary(
     .where(eq(schema.products.id, productId));
   return row ?? null;
 }
+
+export type OrderProduct = {
+  id: string;
+  code: string;
+  name: string;
+  unit: string | null;
+  kind: string;
+  tracksStock: boolean;
+  ivaRateCode: string;
+  active: boolean;
+};
+
+// The products on a purchase order, read in its transaction (FR-PUR-1).
+export async function productsForOrder(tx: Tx, ids: string[]): Promise<OrderProduct[]> {
+  if (ids.length === 0) return [];
+  const { products } = schema;
+  return tx.db
+    .select({
+      id: products.id,
+      code: products.code,
+      name: products.name,
+      unit: products.unit,
+      kind: products.kind,
+      tracksStock: products.tracksStock,
+      ivaRateCode: products.ivaRateCode,
+      active: products.active,
+    })
+    .from(products)
+    .where(inArray(products.id, ids));
+}

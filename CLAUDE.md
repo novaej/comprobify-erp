@@ -185,6 +185,8 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `apps/web/src/lib/invoice-totals.ts` | The form's exact totals, held to core's by a test |
 | `packages/core/src/inventory/` | The stock ledger: `applyMovement` (the one way stock changes) and the weighted average cost rules (`cost.ts`, ADR-018); the tables are in `packages/db/src/schema/inventory.ts` |
 | `packages/core/src/parties/`, `packages/core/src/catalog/` | Clients and providers with identification checks; products and services (FR-MD-1, FR-MD-2, FR-MD-3) |
+| `packages/core/src/purchasing/` | Purchase orders: numbers, revisions, the status machine (`status.ts`; the tables and transitions are in `packages/db/src/schema/purchasing.ts`, ADR-019) |
+| `apps/web/src/app/[locale]/(app)/(shell)/purchase-orders/` | The order list, form (new and edit) and detail |
 | `packages/core/src/agreements/` | Legal texts (`texts/*.md`, published by the migrate step), personalization, acceptance |
 | `docs/legal/review-notes.md` | What changed in the legal texts and the open legal questions |
 | `packages/core/src/audit/` | `recordAudit` (same transaction as the change), the activity list, sign-ins |

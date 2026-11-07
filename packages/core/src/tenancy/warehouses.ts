@@ -1,4 +1,13 @@
-import { and, asc, eq, schema, type NEGATIVE_STOCK_RULES, type Tx } from '@comprobify/db';
+import {
+  and,
+  asc,
+  eq,
+  schema,
+  sql,
+  type COUNTER_KINDS,
+  type NEGATIVE_STOCK_RULES,
+  type Tx,
+} from '@comprobify/db';
 
 // FR-INV-4: whether an outflow may take a level below what is available. Read in the
 // caller's transaction, so the rule applied is the one in force when the stock moves.
@@ -38,4 +47,23 @@ export async function warehousesOf(tx: Tx): Promise<Warehouse[]> {
       and(eq(branches.tenantId, warehouses.tenantId), eq(branches.id, warehouses.branchId)),
     )
     .orderBy(asc(branches.code));
+}
+
+// The company's next number of a kind, taken in the caller's transaction: an upsert holds
+// the row until commit, so two at once wait and never share one, and a rollback gives it back.
+export async function nextNumber(
+  tx: Tx,
+  tenantId: string,
+  kind: (typeof COUNTER_KINDS)[number],
+): Promise<number> {
+  const { tenantCounters } = schema;
+  const [row] = await tx.db
+    .insert(tenantCounters)
+    .values({ tenantId, kind, lastValue: 1 })
+    .onConflictDoUpdate({
+      target: [tenantCounters.tenantId, tenantCounters.kind],
+      set: { lastValue: sql`${tenantCounters.lastValue} + 1` },
+    })
+    .returning({ value: tenantCounters.lastValue });
+  return row!.value;
 }

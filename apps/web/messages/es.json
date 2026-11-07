@@ -204,7 +204,8 @@
     "company": "Empresa",
     "documents": "Comprobantes",
     "inventory": "Inventario",
-    "providers": "Proveedores"
+    "providers": "Proveedores",
+    "purchaseOrders": "Órdenes de compra"
   },
   "shell": {
     "sandboxTitle": "Estás en el ambiente de pruebas",
@@ -647,7 +648,11 @@
     "inventory": "Inventario",
     "inventoryProduct": "Existencias del producto",
     "inventoryValuation": "Valoración del inventario",
-    "providers": "Proveedores"
+    "providers": "Proveedores",
+    "purchaseOrders": "Órdenes de compra",
+    "newPurchaseOrder": "Nueva orden de compra",
+    "purchaseOrder": "Orden de compra",
+    "editPurchaseOrder": "Editar orden de compra"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -1714,6 +1719,173 @@
     "FEATURE_NOT_ENABLED": "Tu plan no incluye proveedores.",
     "NOT_FOUND": "No se encontró el proveedor.",
     "INVALID_INPUT": "Revisa los datos: la identificación debe ser válida para su tipo y cada correo, una dirección.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+  },
+  "purchaseOrders": {
+    "title": "Órdenes de compra",
+    "description": "Lo que pides a tus proveedores, hasta que llega a la bodega.",
+    "new": "Nueva orden",
+    "search": "Buscar por proveedor o número",
+    "searchButton": "Buscar",
+    "filters": {
+      "status": "Estado",
+      "allStatuses": "Todos los estados",
+      "apply": "Filtrar",
+      "clear": "Quitar filtros"
+    },
+    "emptyTitle": "Aún no hay órdenes de compra",
+    "empty": "Crea una orden para pedir productos a un proveedor.",
+    "noMatchesTitle": "Sin resultados",
+    "noMatches": "Ninguna orden coincide con los filtros.",
+    "table": {
+      "number": "Número",
+      "date": "Fecha",
+      "provider": "Proveedor",
+      "expected": "Llegada prevista",
+      "total": "Total",
+      "status": "Estado",
+      "open": "Abrir orden {number}"
+    },
+    "statuses": {
+      "DRAFT": "Borrador",
+      "SENT": "Enviada",
+      "PARTIALLY_RECEIVED": "Recibida en parte",
+      "RECEIVED": "Recibida",
+      "CLOSED": "Cerrada",
+      "CANCELLED": "Anulada"
+    },
+    "statusHelp": {
+      "DRAFT": "Aún puedes editarla. Márcala como enviada cuando el proveedor la tenga.",
+      "SENT": "El proveedor la tiene. Recibe la mercadería cuando llegue.",
+      "PARTIALLY_RECEIVED": "Llegó una parte. Recibe el resto o ciérrala si no llegará.",
+      "RECEIVED": "Llegó todo. Ciérrala cuando termines con ella.",
+      "CLOSED": "Terminada: no recibe más mercadería.",
+      "CANCELLED": "Anulada antes de recibir mercadería."
+    },
+    "pagination": {
+      "label": "Páginas",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page": "Página {page} de {pages}"
+    },
+    "noProviders": {
+      "title": "Primero registra un proveedor",
+      "description": "Cada orden es para un proveedor activo.",
+      "action": "Ir a proveedores"
+    },
+    "noWarehouses": "Tu empresa no tiene bodegas activas. Cada establecimiento tiene una.",
+    "form": {
+      "back": "Órdenes de compra",
+      "backOrder": "Orden {number}",
+      "newDescription": "Pide productos de tu catálogo a un proveedor, al costo sin IVA.",
+      "editDescription": "Mientras es un borrador puedes cambiarla toda.",
+      "provider": {
+        "title": "Proveedor",
+        "search": "Buscar proveedor",
+        "none": "No hay proveedores que coincidan.",
+        "list": "Proveedores",
+        "change": "Cambiar",
+        "identification": "Identificación"
+      },
+      "delivery": {
+        "title": "Entrega",
+        "warehouse": "Bodega de destino",
+        "expectedDate": "Llegada prevista",
+        "expectedHint": "Opcional. No puede ser antes de hoy.",
+        "notes": "Notas para el proveedor",
+        "notesHint": "Opcional, hasta 1000 caracteres."
+      },
+      "lines": {
+        "title": "Productos",
+        "description": "Del catálogo. El IVA es el de cada producto.",
+        "product": "Producto",
+        "products": "Productos",
+        "noProducts": "No hay productos que coincidan.",
+        "quantity": "Cantidad",
+        "unitCost": "Costo unitario",
+        "iva": "IVA",
+        "total": "Subtotal",
+        "add": "Agregar producto",
+        "remove": "Quitar la línea {number}",
+        "line": "Línea {number}",
+        "added": "Línea {number} agregada.",
+        "removed": "Línea {number} quitada.",
+        "pick": "Busca un producto por código o nombre"
+      },
+      "totals": {
+        "title": "Totales",
+        "subtotal": "Subtotal",
+        "iva": "IVA",
+        "total": "Total"
+      },
+      "create": "Guardar borrador",
+      "save": "Guardar cambios",
+      "cancel": "Cancelar",
+      "incomplete": "Elige el proveedor y completa cada línea con un producto, una cantidad y un costo."
+    },
+    "detail": {
+      "back": "Órdenes de compra",
+      "title": "Orden {number}",
+      "summary": "Resumen",
+      "provider": "Proveedor",
+      "identification": "Identificación",
+      "email": "Correo",
+      "warehouse": "Bodega",
+      "orderDate": "Fecha",
+      "expectedDate": "Llegada prevista",
+      "sentAt": "Enviada",
+      "closedAt": "Cerrada",
+      "cancelledAt": "Anulada",
+      "cancelReason": "Motivo de anulación",
+      "notes": "Notas",
+      "lines": {
+        "title": "Productos",
+        "product": "Producto",
+        "quantity": "Cantidad",
+        "received": "Recibido",
+        "unitCost": "Costo unitario",
+        "iva": "IVA",
+        "total": "Subtotal"
+      },
+      "totals": {
+        "title": "Totales",
+        "subtotal": "Subtotal",
+        "iva": "IVA",
+        "total": "Total"
+      }
+    },
+    "actions": {
+      "edit": "Editar",
+      "send": "Marcar como enviada",
+      "sendTitle": "¿Marcar la orden como enviada?",
+      "sendDescription": "Hazlo cuando el proveedor ya la tenga. Después ya no podrás editarla.",
+      "sent": "Orden marcada como enviada.",
+      "cancel": "Anular",
+      "cancelTitle": "Anular la orden",
+      "cancelDescription": "La orden queda anulada y no recibirá mercadería. No se puede deshacer.",
+      "cancelReason": "Motivo",
+      "cancelReasonHint": "Por ejemplo: el proveedor no tiene stock.",
+      "cancelSubmit": "Anular orden",
+      "cancelled": "Orden anulada.",
+      "close": "Cerrar orden",
+      "closeTitle": "¿Cerrar la orden?",
+      "closeDescription": "Una orden cerrada no recibe más mercadería. No se puede deshacer.",
+      "closeShort": "Lo que falta por llegar ya no se recibirá.",
+      "closed": "Orden cerrada."
+    },
+    "saved": "Orden guardada."
+  },
+  "purchaseOrdersError": {
+    "PROVIDER_INACTIVE": "El proveedor está inactivo. Actívalo o elige otro.",
+    "PRODUCT_INACTIVE": "Un producto de la orden está inactivo. Quítalo o actívalo.",
+    "WAREHOUSE_INACTIVE": "La bodega está inactiva. Elige otra.",
+    "EXPECTED_BEFORE_ORDER": "La llegada prevista no puede ser antes de la fecha de la orden.",
+    "ORDER_NOT_DRAFT": "La orden ya se envió: no se puede editar.",
+    "INVALID_TRANSITION": "La orden cambió mientras tanto. Recarga la página.",
+    "FORBIDDEN": "Tu rol no permite esta acción.",
+    "FEATURE_NOT_ENABLED": "Tu plan no incluye órdenes de compra.",
+    "NOT_FOUND": "No se encontró la orden, el proveedor o el producto.",
+    "INVALID_INPUT": "Revisa los datos: cada cantidad debe ser mayor que cero y los números admiten hasta 6 decimales.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
   }
 }

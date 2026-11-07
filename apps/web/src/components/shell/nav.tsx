@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   Contact,
   ChevronRight,
+  ClipboardList,
   FileText,
   LayoutDashboard,
   LogOut,
@@ -40,6 +41,7 @@ type NavItem = {
     | 'products'
     | 'inventory'
     | 'providers'
+    | 'purchaseOrders'
     | 'company'
     | 'users'
     | 'activity'
@@ -98,6 +100,14 @@ const NAV_ITEMS: NavItem[] = [
     group: 'operate',
     permission: 'purchasing.read',
     feature: 'PROVIDERS',
+  },
+  {
+    href: '/purchase-orders',
+    icon: ClipboardList,
+    labelKey: 'purchaseOrders',
+    group: 'operate',
+    permission: 'purchasing.read',
+    feature: 'PURCHASE_ORDERS',
   },
   {
     href: '/settings',

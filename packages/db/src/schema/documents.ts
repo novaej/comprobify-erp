@@ -15,7 +15,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { oneOf } from './checks';
+import { oneOf, transitionTriggerBody } from './checks';
 import { users } from './identity';
 import { clients, products, type AdditionalDetail } from './master-data';
 import {
@@ -453,21 +453,6 @@ export const documentTemplates = pgTable(
   ],
 );
 
-// The trigger that enforces DOCUMENT_TRANSITIONS in the database, generated from it so the
-// two can't drift (rule 17). A migration holds its output; a test compares the live one.
-export function documentStatusTriggerBody(): string {
-  const cases = DOCUMENT_STATUSES.map((from) => {
-    const allowed = DOCUMENT_TRANSITIONS[from];
-    // A terminal status allows nothing: `IN (NULL)` would be NULL, which lets it through.
-    const test =
-      allowed.length > 0 ? `NEW.status IN (${allowed.map((to) => `'${to}'`).join(', ')})` : 'false';
-    return `    WHEN '${from}' THEN ${test}`;
-  }).join('\n');
-  return `IF NEW.status IS DISTINCT FROM OLD.status AND NOT (CASE OLD.status
-${cases}
-    ELSE false
-  END) THEN
-    RAISE EXCEPTION 'Document status % can not become %', OLD.status, NEW.status
-      USING ERRCODE = '23514';
-  END IF;`;
-}
+// The trigger that enforces DOCUMENT_TRANSITIONS; migration 0028 holds its output.
+export const documentStatusTriggerBody = (): string =>
+  transitionTriggerBody('Document', DOCUMENT_STATUSES, DOCUMENT_TRANSITIONS);

@@ -832,6 +832,45 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await look(page, 'providers');
   });
 
+  test('orders goods from a provider and follows the order (FR-PUR-1)', async ({ page }) => {
+    await grantFeature(email, 'PURCHASE_ORDERS', 'e2e purchase orders');
+    await signIn(page, email, newPassword);
+    const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
+    await nav.getByRole('link', { name: 'Órdenes de compra' }).click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Órdenes de compra');
+    await look(page, 'purchase-orders-empty');
+    await page.getByRole('link', { name: 'Nueva orden' }).first().click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Nueva orden');
+    await page.getByRole('combobox', { name: 'Buscar proveedor' }).fill('Andina');
+    await page.getByRole('option', { name: /Distribuidora Andina/ }).click();
+    const line = page.getByRole('group', { name: 'Línea 1' });
+    await line.getByRole('combobox', { name: 'Producto' }).fill('molido');
+    await page.getByRole('option', { name: /Café molido/ }).click();
+    await line.getByRole('textbox', { name: 'Cantidad' }).fill('4');
+    await line.getByRole('textbox', { name: 'Costo unitario' }).fill('2,75');
+    // 11.00 plus the product's IVA.
+    await expect(line.getByRole('status')).toHaveText('$11,00');
+    await look(page, 'purchase-order-new');
+    await page.getByRole('button', { name: 'Guardar borrador' }).click();
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Orden OC-000001');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Borrador');
+    await look(page, 'purchase-order-draft');
+
+    await page.getByRole('button', { name: 'Marcar como enviada' }).click();
+    const confirm = page.getByRole('dialog', { name: '¿Marcar la orden como enviada?' });
+    await confirm.getByRole('button', { name: 'Marcar como enviada' }).click();
+    await expect(page.getByText('Orden marcada como enviada.')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Enviada');
+    await expect(page.getByRole('link', { name: 'Editar' })).toHaveCount(0);
+    await look(page, 'purchase-order-sent');
+
+    await page.getByRole('link', { name: 'Órdenes de compra' }).first().click();
+    await expect(page.getByRole('table', { name: 'Órdenes de compra' })).toContainText(
+      'Distribuidora Andina S.A.',
+    );
+    await look(page, 'purchase-orders');
+  });
+
   test('invites a read-only member who joins and sees only what the role allows (FR-USR-1, FR-ROLE-3)', async ({
     page,
     browser,

@@ -5,5 +5,6 @@ export * from './entitlements';
 export * from './identity';
 export * from './inventory';
 export * from './master-data';
+export * from './purchasing';
 export * from './sri';
 export * from './tenancy';

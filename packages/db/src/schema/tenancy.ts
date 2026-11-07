@@ -7,6 +7,7 @@ import {
   index,
   integer,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   unique,
@@ -347,5 +348,25 @@ export const issuePointAccess = pgTable(
       foreignColumns: [issuePoints.tenantId, issuePoints.id],
     }),
     unique('issue_point_access_unique').on(table.tenantId, table.userId, table.issuePointId),
+  ],
+);
+
+// Numbers a company gives its own records, one counter each (FR-PUR-1). Sale orders add theirs.
+export const COUNTER_KINDS = ['PURCHASE_ORDER'] as const;
+
+// Taken with an upsert that returns the new value, so two at once never share a number.
+export const tenantCounters = pgTable(
+  'tenant_counters',
+  {
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    kind: text('kind', { enum: COUNTER_KINDS }).notNull(),
+    lastValue: integer('last_value').notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.tenantId, table.kind] }),
+    check('tenant_counters_kind_check', oneOf('kind', COUNTER_KINDS)),
+    check('tenant_counters_value_check', sql`last_value > 0`),
   ],
 );

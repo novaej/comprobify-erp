@@ -204,7 +204,8 @@
     "company": "Company",
     "documents": "Documents",
     "inventory": "Inventory",
-    "providers": "Providers"
+    "providers": "Providers",
+    "purchaseOrders": "Purchase orders"
   },
   "shell": {
     "sandboxTitle": "You're in the test environment",
@@ -647,7 +648,11 @@
     "inventory": "Inventory",
     "inventoryProduct": "Product stock",
     "inventoryValuation": "Inventory valuation",
-    "providers": "Providers"
+    "providers": "Providers",
+    "purchaseOrders": "Purchase orders",
+    "newPurchaseOrder": "New purchase order",
+    "purchaseOrder": "Purchase order",
+    "editPurchaseOrder": "Edit purchase order"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -1715,5 +1720,172 @@
     "NOT_FOUND": "Provider not found.",
     "INVALID_INPUT": "Check the details: the ID must be valid for its type, and each email an address.",
     "UNKNOWN": "An unexpected error occurred. Please try again."
+  },
+  "purchaseOrders": {
+    "title": "Purchase orders",
+    "description": "What you order from your providers, until it reaches the warehouse.",
+    "new": "New order",
+    "search": "Search by provider or number",
+    "searchButton": "Search",
+    "filters": {
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "apply": "Filter",
+      "clear": "Clear filters"
+    },
+    "emptyTitle": "No purchase orders yet",
+    "empty": "Create an order to buy products from a provider.",
+    "noMatchesTitle": "No results",
+    "noMatches": "No order matches the filters.",
+    "table": {
+      "number": "Number",
+      "date": "Date",
+      "provider": "Provider",
+      "expected": "Expected",
+      "total": "Total",
+      "status": "Status",
+      "open": "Open order {number}"
+    },
+    "statuses": {
+      "DRAFT": "Draft",
+      "SENT": "Sent",
+      "PARTIALLY_RECEIVED": "Partly received",
+      "RECEIVED": "Received",
+      "CLOSED": "Closed",
+      "CANCELLED": "Cancelled"
+    },
+    "statusHelp": {
+      "DRAFT": "You can still edit it. Mark it sent once the provider has it.",
+      "SENT": "The provider has it. Receive the goods when they arrive.",
+      "PARTIALLY_RECEIVED": "Part of it arrived. Receive the rest, or close it if it won't come.",
+      "RECEIVED": "Everything arrived. Close it when you are done with it.",
+      "CLOSED": "Done: it receives no more goods.",
+      "CANCELLED": "Cancelled before any goods arrived."
+    },
+    "pagination": {
+      "label": "Pages",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page} of {pages}"
+    },
+    "noProviders": {
+      "title": "Add a provider first",
+      "description": "Each order is for an active provider.",
+      "action": "Go to providers"
+    },
+    "noWarehouses": "Your company has no active warehouses. Each branch has one.",
+    "form": {
+      "back": "Purchase orders",
+      "backOrder": "Order {number}",
+      "newDescription": "Order products from your catalogue from a provider, at cost without IVA.",
+      "editDescription": "While it is a draft you can change all of it.",
+      "provider": {
+        "title": "Provider",
+        "search": "Search providers",
+        "none": "No provider matches.",
+        "list": "Providers",
+        "change": "Change",
+        "identification": "Identification"
+      },
+      "delivery": {
+        "title": "Delivery",
+        "warehouse": "Destination warehouse",
+        "expectedDate": "Expected",
+        "expectedHint": "Optional. Not before today.",
+        "notes": "Notes for the provider",
+        "notesHint": "Optional, up to 1000 characters."
+      },
+      "lines": {
+        "title": "Products",
+        "description": "From the catalogue. Each product carries its own IVA.",
+        "product": "Product",
+        "products": "Products",
+        "noProducts": "No product matches.",
+        "quantity": "Quantity",
+        "unitCost": "Unit cost",
+        "iva": "IVA",
+        "total": "Subtotal",
+        "add": "Add product",
+        "remove": "Remove line {number}",
+        "line": "Line {number}",
+        "added": "Line {number} added.",
+        "removed": "Line {number} removed.",
+        "pick": "Search a product by code or name"
+      },
+      "totals": {
+        "title": "Totals",
+        "subtotal": "Subtotal",
+        "iva": "IVA",
+        "total": "Total"
+      },
+      "create": "Save draft",
+      "save": "Save changes",
+      "cancel": "Cancel",
+      "incomplete": "Pick the provider and give each line a product, a quantity and a cost."
+    },
+    "detail": {
+      "back": "Purchase orders",
+      "title": "Order {number}",
+      "summary": "Summary",
+      "provider": "Provider",
+      "identification": "Identification",
+      "email": "Email",
+      "warehouse": "Warehouse",
+      "orderDate": "Date",
+      "expectedDate": "Expected",
+      "sentAt": "Sent",
+      "closedAt": "Closed",
+      "cancelledAt": "Cancelled",
+      "cancelReason": "Cancellation reason",
+      "notes": "Notes",
+      "lines": {
+        "title": "Products",
+        "product": "Product",
+        "quantity": "Quantity",
+        "received": "Received",
+        "unitCost": "Unit cost",
+        "iva": "IVA",
+        "total": "Subtotal"
+      },
+      "totals": {
+        "title": "Totals",
+        "subtotal": "Subtotal",
+        "iva": "IVA",
+        "total": "Total"
+      }
+    },
+    "actions": {
+      "edit": "Edit",
+      "send": "Mark as sent",
+      "sendTitle": "Mark the order as sent?",
+      "sendDescription": "Do it once the provider has it. You can't edit it afterwards.",
+      "sent": "Order marked as sent.",
+      "cancel": "Cancel order",
+      "cancelTitle": "Cancel the order",
+      "cancelDescription": "The order is cancelled and receives no goods. This can't be undone.",
+      "cancelReason": "Reason",
+      "cancelReasonHint": "For example: the provider is out of stock.",
+      "cancelSubmit": "Cancel order",
+      "cancelled": "Order cancelled.",
+      "close": "Close order",
+      "closeTitle": "Close the order?",
+      "closeDescription": "A closed order receives no more goods. This can't be undone.",
+      "closeShort": "What hasn't arrived yet won't be received.",
+      "closed": "Order closed."
+    },
+    "saved": "Order saved."
+  },
+  "purchaseOrdersError": {
+    "PROVIDER_INACTIVE": "The provider is inactive. Activate it or pick another.",
+    "PRODUCT_INACTIVE": "A product on the order is inactive. Remove it or activate it.",
+    "WAREHOUSE_INACTIVE": "The warehouse is inactive. Pick another.",
+    "EXPECTED_BEFORE_ORDER": "The expected date can't be before the order date.",
+    "ORDER_NOT_DRAFT": "The order has been sent: it can't be edited.",
+    "INVALID_TRANSITION": "The order changed in the meantime. Reload the page.",
+    "FORBIDDEN": "Your role doesn't allow this.",
+    "FEATURE_NOT_ENABLED": "Your plan doesn't include purchase orders.",
+    "NOT_FOUND": "The order, provider or product wasn't found.",
+    "INVALID_INPUT": "Check the data: each quantity must be more than zero, and numbers take up to 6 decimals.",
+    "UNKNOWN": "Something unexpected went wrong. Try again."
   }
 }
