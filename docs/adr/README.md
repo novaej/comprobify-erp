@@ -38,6 +38,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [015](015-ride-and-buyer-email.md) | The RIDE and the buyer's copy | Accepted |
 | [016](016-credit-notes-and-the-balance.md) | Credit notes and the balance of an invoice | Accepted |
 | [017](017-delivery-guides.md) | Delivery guides | Accepted |
+| [018](018-inventory-ledger-and-costing.md) | The inventory ledger and weighted average cost | Accepted |
 
 ## Old ADRs to read before each milestone
 

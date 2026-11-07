@@ -23,6 +23,8 @@ export const TENANT_MODES = ['TEST', 'PRODUCTION'] as const;
 export const TENANT_STATUSES = ['ACTIVE', 'SUSPENDED'] as const;
 // The legend each regime prints on its documents (Ficha, Anexo 22).
 export const TAX_REGIMES = ['GENERAL', 'RIMPE_EMPRENDEDOR', 'RIMPE_NEGOCIO_POPULAR'] as const;
+// FR-INV-4: what an outflow beyond the available stock does. BLOCK is the default.
+export const NEGATIVE_STOCK_RULES = ['BLOCK', 'ALLOW'] as const;
 export const MEMBERSHIP_ROLES = [
   'OWNER',
   'ADMIN',
@@ -62,6 +64,9 @@ export const tenants = pgTable(
     specialTaxpayerResolution: text('special_taxpayer_resolution'),
     withholdingAgentResolution: text('withholding_agent_resolution'),
     taxRegime: text('tax_regime', { enum: TAX_REGIMES }).default('GENERAL').notNull(),
+    negativeStock: text('negative_stock', { enum: NEGATIVE_STOCK_RULES })
+      .default('BLOCK')
+      .notNull(),
     // Set by go-live; a real organization can't issue before it (FR-ONB-5).
     liveAt: timestamp('live_at', { withTimezone: true }),
     createdAt: createdAt(),
@@ -76,6 +81,7 @@ export const tenants = pgTable(
     check('tenants_twin_check', sql`(${table.mode} = 'TEST') = (${table.twinOf} IS NOT NULL)`),
     check('tenants_idle_timeout_check', sql`${table.idleTimeoutMinutes} BETWEEN 5 AND 480`),
     check('tenants_tax_regime_check', oneOf('tax_regime', TAX_REGIMES)),
+    check('tenants_negative_stock_check', oneOf('negative_stock', NEGATIVE_STOCK_RULES)),
     // The factura XSD's own patterns.
     check(
       'tenants_special_taxpayer_check',
@@ -205,6 +211,7 @@ export const warehouses = pgTable(
       foreignColumns: [branches.tenantId, branches.id],
     }),
     unique('warehouses_branch_unique').on(table.branchId),
+    unique('warehouses_tenant_id_unique').on(table.tenantId, table.id),
   ],
 );
 

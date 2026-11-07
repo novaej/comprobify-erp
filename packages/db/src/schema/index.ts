@@ -3,6 +3,7 @@ export * from './audit';
 export * from './documents';
 export * from './entitlements';
 export * from './identity';
+export * from './inventory';
 export * from './master-data';
 export * from './sri';
 export * from './tenancy';

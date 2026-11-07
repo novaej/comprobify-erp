@@ -12,5 +12,6 @@ export * from './sri';
 export * from './parties';
 export * from './catalog';
 export * from './documents';
+export * from './inventory';
 export { registerHandlers } from './register-handlers';
 export type { HandlerDeps } from './register-handlers';

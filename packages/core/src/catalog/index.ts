@@ -1,4 +1,15 @@
-import { and, asc, eq, ilike, or, PRODUCT_KINDS, schema, sql, type Database } from '@comprobify/db';
+import {
+  and,
+  asc,
+  eq,
+  ilike,
+  or,
+  PRODUCT_KINDS,
+  schema,
+  sql,
+  type Database,
+  type Tx,
+} from '@comprobify/db';
 import { z } from 'zod';
 import {
   DomainError,
@@ -164,4 +175,25 @@ export async function setProductActive(
       .returning({ id: schema.products.id }),
   );
   if (updated.length === 0) throw new DomainError('NOT_FOUND', 'Product not found');
+}
+
+// FR-INV-6: a product whose stock may move, read in the caller's transaction. Only a good
+// that tracks stock has a level.
+export async function stockedProduct(
+  tx: Tx,
+  productId: string,
+): Promise<{ id: string; cost: string | null }> {
+  const [row] = await tx.db
+    .select({
+      id: schema.products.id,
+      kind: schema.products.kind,
+      tracksStock: schema.products.tracksStock,
+      cost: schema.products.cost,
+    })
+    .from(schema.products)
+    .where(eq(schema.products.id, productId));
+  if (!row) throw new DomainError('NOT_FOUND', 'Product not found');
+  if (row.kind !== 'GOOD' || !row.tracksStock)
+    throw new DomainError('PRODUCT_NOT_STOCKED', 'This product does not track stock');
+  return { id: row.id, cost: row.cost };
 }

@@ -182,6 +182,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/documents/` | `createInvoice` (the FR-DOC-2 pipeline), the send and authorize handlers and their calendar (`sending.ts`, `calendar.ts`), the next-day and manual re-issue (`reissue.ts`), correction (in `create-invoice.ts`), void (`void.ts`), the RIDE and buyer's copy (`ride.ts`; drawing in `sri/ride-*.ts`), status machine checks and sequentials; the table, transitions and trigger generator are in `packages/db/src/schema/documents.ts` (FR-DOC-3) |
 | `apps/web/src/app/[locale]/(app)/(shell)/documents/` | The document list, invoice form and detail, with the RIDE and XML routes |
 | `apps/web/src/lib/invoice-totals.ts` | The form's exact totals, held to core's by a test |
+| `packages/core/src/inventory/` | The stock ledger: `applyMovement` (the one way stock changes) and the weighted average cost rules (`cost.ts`, ADR-018); the tables are in `packages/db/src/schema/inventory.ts` |
 | `packages/core/src/parties/`, `packages/core/src/catalog/` | Clients with identification checks; products and services (FR-MD-1, FR-MD-2) |
 | `packages/core/src/agreements/` | Legal texts (`texts/*.md`, published by the migrate step), personalization, acceptance |
 | `docs/legal/review-notes.md` | What changed in the legal texts and the open legal questions |

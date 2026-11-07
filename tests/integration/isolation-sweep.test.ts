@@ -3,6 +3,7 @@ import {
   acceptAgreements,
   acceptInvitation,
   addModule,
+  applyMovement,
   createClient,
   createProduct,
   createAuth,
@@ -172,12 +173,24 @@ describe('isolation sweep over every tenant table', () => {
           signedXml: '<factura/>',
         }),
       );
-      await createProduct(actor, db, {
+      const product = await createProduct(actor, db, {
         code: 'P-1',
         name: 'Producto',
         kind: 'GOOD',
         price: '1.00',
         ivaRateCode: '4',
+        tracksStock: true,
+      });
+      // A stock level and its movement (FR-INV-1, FR-INV-2).
+      await db.withTenant({ tenantId }, async (tx) => {
+        const [warehouse] = await tx.db.select().from(schema.warehouses);
+        await applyMovement(actor, tx, {
+          type: 'OPENING_BALANCE',
+          productId: product.id,
+          warehouseId: warehouse!.id,
+          quantity: '1',
+          unitCost: '1',
+        });
       });
     }
     return org;
@@ -237,6 +250,8 @@ describe('isolation sweep over every tenant table', () => {
         'memberships',
         'products',
         'sri_exchanges',
+        'stock_levels',
+        'stock_movements',
         'subscription_items',
         'subscriptions',
         'tenant_feature_overrides',

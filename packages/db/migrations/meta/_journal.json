@@ -260,6 +260,13 @@
       "when": 1794056216044,
       "tag": "0036_credit_note_amount_lines",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794059894562,
+      "tag": "0037_inventory_ledger",
+      "breakpoints": true
     }
   ]
 }

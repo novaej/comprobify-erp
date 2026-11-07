@@ -78,6 +78,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - Who answered each call to SRI, SRI or the mock, is recorded with the host. The history marks each step (done, stopped by SRI, failed to send) and labels what the simulator answered, and a document the mock authorized says it never reached SRI. Every signed version of a document is kept in `document_versions`. The history no longer copies SRI's raw answer, which stays in `sri_exchanges` (FR-DOC-7, FR-DOC-12, FR-DOC-13, ADR-014).
 - Invoice templates: save the form's client, lines, payments and additional information under a name, load one into a new invoice, remove it; with the Branding module (`DOCUMENT_TEMPLATES`). The buyer's email follows the old app's layout: greeting, a table of the document's facts with its authorization number, the attachments, the issuer's name and RUC (FR-MD-5, FR-DOC-11).
 - `AUTH_SECRET`, `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, `MAILGUN_REGION` and `EMAIL_FROM`.
+- The inventory ledger: `stock_movements` (append-only) and `stock_levels` per product and warehouse, with weighted average cost kept as value over quantity, a row lock per level, and the company's negative-stock rule (block by default). `applyMovement` is the one way stock changes, in the caller's transaction (migration 0037, ADR-018, FR-INV-1, FR-INV-2, FR-INV-4, FR-INV-5, FR-INV-6).
 
 ### Fixed
 

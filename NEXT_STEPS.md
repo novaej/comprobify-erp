@@ -4,7 +4,19 @@ Open work only. Tick steps as they land. When a milestone's gate passes, remove 
 
 ## Current: Milestone 5, Inventory and purchasing
 
-Not yet planned in steps. Read PRD section 15 and the inventory requirements first, then list the steps here before building. The costing method decision needs the Opus model.
+**Gate:** a receipt and an adjustment reflected in stock levels and cost; the nightly check finds no drift (PRD section 15).
+
+Read FR-MD-3, FR-MD-4, FR-INV-1 to FR-INV-6 and FR-PUR-1 to FR-PUR-3 before each step. Decided with the owner: **weighted average cost, kept per warehouse** (PRD open question 6), and invoices and the credit note's stock return start moving stock in **Milestone 6**, together with reservations, so a return can't add stock that never left.
+
+- [x] 1. The ledger (ADR-018, migration 0037): `stock_movements` (append-only, a trigger refuses `UPDATE`) and `stock_levels` (on hand, reserved, value; one row per product and warehouse), movement types generated into the CHECK, and the company's negative-stock rule (block by default, FR-INV-4). One core function, `applyMovement`, locks the level row, refuses what the rule forbids, writes the movement and the level in the caller's transaction. Average cost as value over quantity, so rounding never drifts. Unit tests for the cost rules; integration for concurrency, the rule and isolation.
+- [ ] 2. Adjustments and opening balances (FR-INV-3): an adjustment in or out with a reason (in at a cost, out at the average); an opening balance only before a product's first movement in that warehouse; CSV import of opening balances. A product's `tracksStock` can't be turned off while it holds stock (FR-INV-6).
+- [ ] 3. Inventory screens: stock levels per warehouse, a product's movements, the adjustment dialog, the opening import, the valuation report (FR-INV-5), and the negative-stock setting. Gated by `INVENTORY` and `inventory.read` / `inventory.adjust`.
+- [ ] 4. The nightly check (FR-INV-2): a job in Ecuador time that compares each level with its ledger, quantity and value, and logs drift as an alert (notifications arrive in Milestone 9).
+- [ ] 5. Providers (FR-MD-3): the client's identity shape plus payment terms, with their screens. Retention codes wait for retenciones (post-MVP).
+- [ ] 6. Purchase orders (FR-PUR-1): `DRAFT → SENT → PARTIALLY_RECEIVED → RECEIVED → CLOSED`, `CANCELLED` from DRAFT or SENT, with the CHECK and trigger generated from the TypeScript transitions (FR-DOC-3); a number per company; lines from the catalogue; screens.
+- [ ] 7. Receiving (FR-PUR-2): full or partial per line, never more than is left; a `PURCHASE_RECEIPT` movement per stocked line in the same transaction, updating the average; the order's status follows. Services are received without a movement.
+- [ ] 8. The order as a PDF, emailed to the provider (FR-PUR-3, optional), through a job enqueued with the change.
+- [ ] 9. Gate: E2E for an opening balance, a receipt and an adjustment with the levels and cost they leave; the nightly check over seeded data finds no drift. Then the owner tries it locally.
 
 ## Carried forward
 
