@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   UserRound,
   UsersRound,
+  Warehouse,
   X,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -36,6 +37,7 @@ type NavItem = {
     | 'documents'
     | 'clients'
     | 'products'
+    | 'inventory'
     | 'company'
     | 'users'
     | 'activity'
@@ -78,6 +80,14 @@ const NAV_ITEMS: NavItem[] = [
     group: 'operate',
     permission: 'catalog.read',
     feature: 'CATALOG',
+  },
+  {
+    href: '/inventory',
+    icon: Warehouse,
+    labelKey: 'inventory',
+    group: 'operate',
+    permission: 'inventory.read',
+    feature: 'INVENTORY',
   },
   {
     href: '/settings',

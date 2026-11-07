@@ -54,6 +54,7 @@ export {
   ISSUABLE_DOCUMENT_TYPES,
   setIssuePointDocumentType,
   setIssuePointPaused,
+  setNegativeStockRule,
   TAX_REGIMES,
   updateBranch,
   updateCompanyProfile,

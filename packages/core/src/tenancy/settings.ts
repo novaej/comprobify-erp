@@ -4,6 +4,7 @@ import {
   count,
   eq,
   inArray,
+  NEGATIVE_STOCK_RULES,
   schema,
   sql,
   TAX_REGIMES,
@@ -70,6 +71,7 @@ export type CompanySettings = {
     withholdingAgentResolution: string | null;
     taxRegime: (typeof TAX_REGIMES)[number];
   };
+  negativeStock: (typeof NEGATIVE_STOCK_RULES)[number];
   branches: {
     id: string;
     code: string;
@@ -113,6 +115,7 @@ export async function companySettings(ctx: ActorContext, db: Database): Promise<
         withholdingAgentResolution: tenant!.withholdingAgentResolution,
         taxRegime: tenant!.taxRegime,
       },
+      negativeStock: tenant!.negativeStock,
       branches: branchRows.map((branch) => ({
         id: branch.id,
         code: branch.code,
@@ -160,6 +163,26 @@ export const updateCompanyProfile = (
       actorUserId: ctx.userId ?? null,
       action: 'organization.settings_changed',
       details: { taxRegime: input.taxRegime, requiredAccounting: input.requiredAccounting },
+    });
+  });
+
+// FR-INV-4: whether stock may go below what is available. Set on the company and its twin.
+export const setNegativeStockRule = (
+  ctx: ActorContext,
+  db: Database,
+  raw: (typeof NEGATIVE_STOCK_RULES)[number],
+) =>
+  change(ctx, db, 'set the negative stock rule of a company and its twin', async (tx, pair) => {
+    const rule = z.enum(NEGATIVE_STOCK_RULES).parse(raw);
+    await tx
+      .update(schema.tenants)
+      .set({ negativeStock: rule, updatedAt: sql`now()` })
+      .where(inArray(schema.tenants.id, tenantsOf(pair)));
+    await recordAudit(tx, {
+      tenantId: pair.realTenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'organization.settings_changed',
+      details: { negativeStock: rule },
     });
   });
 

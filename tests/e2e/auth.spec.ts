@@ -734,6 +734,81 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page.getByRole('main')).toContainText('Guía de remisión 001-001-');
   });
 
+  test('keeps stock with its average cost: opening balance, adjustment and valuation (FR-INV-2, FR-INV-3, FR-INV-5)', async ({
+    page,
+  }) => {
+    await grantFeature(email, 'INVENTORY', 'e2e inventory');
+    await signIn(page, email, newPassword);
+    const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
+    const heading = page.getByRole('heading', { level: 1 });
+
+    // A good that tracks stock.
+    await nav.getByRole('link', { name: 'Productos' }).click();
+    await page.getByRole('button', { name: 'Nuevo producto' }).click();
+    const productDialog = page.getByRole('dialog', { name: 'Nuevo producto' });
+    await productDialog.getByRole('textbox', { name: 'Código', exact: true }).fill('CAF-001');
+    await productDialog.getByRole('textbox', { name: 'Nombre', exact: true }).fill('Café molido');
+    await productDialog.getByLabel('Precio unitario').fill('5');
+    await productDialog.getByRole('switch', { name: 'Controla inventario' }).click();
+    await productDialog.getByRole('button', { name: 'Crear producto' }).click();
+    await expect(page.getByText('Producto creado.')).toBeVisible();
+
+    await nav.getByRole('link', { name: 'Inventario' }).click();
+    await expect(heading).toHaveText('Inventario');
+    await page.getByRole('button', { name: 'Importar saldos iniciales' }).click();
+    await expect(page.getByRole('dialog', { name: 'Importar saldos iniciales' })).toBeVisible();
+    await look(page, 'inventory-import');
+    await page.keyboard.press('Escape');
+    await look(page, 'inventory');
+    await page.getByRole('link', { name: 'Café molido', exact: true }).click();
+    await expect(heading).toHaveText('Café molido');
+
+    await page.getByRole('button', { name: 'Saldo inicial' }).click();
+    const opening = page.getByRole('dialog', { name: 'Saldo inicial' });
+    await opening.getByLabel('Cantidad').fill('10');
+    await opening.getByLabel('Costo unitario sin IVA').fill('2,50');
+    await opening.getByRole('button', { name: 'Registrar saldo inicial' }).click();
+    await expect(page.getByText('Saldo inicial registrado.')).toBeVisible();
+    // Only before the first movement: the button is gone.
+    await expect(page.getByRole('button', { name: 'Saldo inicial' })).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Ajustar existencias' }).click();
+    const adjust = page.getByRole('dialog', { name: 'Ajustar existencias' });
+    await adjust.getByRole('combobox', { name: 'Tipo' }).click();
+    await page.getByRole('option', { name: 'Salida' }).click();
+    await adjust.getByLabel('Cantidad').fill('30');
+    await adjust.getByLabel('Motivo').fill('Mercadería dañada');
+    await adjust.getByRole('button', { name: 'Registrar ajuste' }).click();
+    // Blocked by default: there are only 10.
+    await expect(adjust.getByRole('alert')).toContainText('No hay suficientes existencias');
+    await adjust.getByLabel('Cantidad').fill('3');
+    await look(page, 'inventory-adjust');
+    await adjust.getByRole('button', { name: 'Registrar ajuste' }).click();
+    await expect(page.getByText('Ajuste registrado.')).toBeVisible();
+
+    const main = page.getByRole('main');
+    await expect(main).toContainText('$17,50');
+    const movements = page.getByRole('table', { name: 'Movimientos' });
+    await expect(movements.getByRole('row', { name: /Ajuste de salida/ })).toContainText(
+      'Mercadería dañada',
+    );
+    await expect(movements.getByRole('row', { name: /Saldo inicial/ })).toContainText('$25,00');
+    await look(page, 'inventory-product');
+
+    await page.goto('/es/inventory/valuation');
+    await expect(heading).toHaveText('Valoración del inventario');
+    await expect(main).toContainText('$17,50');
+    await look(page, 'inventory-valuation');
+    const csv = await page.request.get('/es/inventory/valuation/csv');
+    expect(await csv.text()).toContain('CAF-001;Café molido;;7;0;2,500000;17,50');
+
+    // The rule is the company's, in Empresa.
+    await page.goto('/es/settings');
+    await expect(
+      page.getByRole('switch', { name: 'Permitir existencias negativas' }),
+    ).toBeVisible();
+  });
+
   test('invites a read-only member who joins and sees only what the role allows (FR-USR-1, FR-ROLE-3)', async ({
     page,
     browser,

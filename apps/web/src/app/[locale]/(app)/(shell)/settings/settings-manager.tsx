@@ -17,6 +17,7 @@ import {
   createIssuePointAction,
   saveBranchAction,
   setDocumentTypesAction,
+  setNegativeStockAction,
   setPausedAction,
   updateProfileAction,
 } from './actions';
@@ -32,6 +33,9 @@ export type SettingsView = {
     withholdingAgentResolution: string | null;
     taxRegime: string;
   };
+  negativeStock: 'BLOCK' | 'ALLOW';
+  // The Inventario module, which the negative-stock rule belongs to.
+  inventory: boolean;
   branches: {
     id: string;
     code: string;
@@ -171,6 +175,8 @@ export function SettingsManager({ settings }: { settings: SettingsView }) {
         </div>
       </SectionCard>
 
+      {settings.inventory && <StockRuleCard allowed={settings.negativeStock === 'ALLOW'} />}
+
       {dialog?.kind === 'profile' && <ProfileDialog settings={settings} onClose={close} />}
       {dialog?.kind === 'branch' && <BranchDialog branch={dialog.branch} onClose={close} />}
       {dialog?.kind === 'point' && (
@@ -209,6 +215,43 @@ export function SettingsManager({ settings }: { settings: SettingsView }) {
         />
       )}
     </div>
+  );
+}
+
+// FR-INV-4: block by default; allowing it lets an outflow take stock below zero.
+function StockRuleCard({ allowed }: { allowed: boolean }) {
+  const t = useTranslations('settings');
+  const uid = useId();
+  const [allow, setAllow] = useState(allowed);
+  const save = useServerAction(setNegativeStockAction, { errors: 'settingsError' });
+  return (
+    <SectionCard title={t('inventoryTitle')} description={t('inventoryDescription')}>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p id={`${uid}-negative`} className="text-sm font-medium">
+            {t('negativeStock')}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">{t('negativeStockHint')}</p>
+        </div>
+        <Switch
+          checked={allow}
+          disabled={save.pending}
+          aria-labelledby={`${uid}-negative`}
+          onCheckedChange={(next) => {
+            setAllow(next);
+            save.run(
+              { allow: String(next) },
+              { success: next ? t('negativeStockAllowed') : t('negativeStockBlocked') },
+            );
+          }}
+        />
+      </div>
+      {save.error && (
+        <p role="alert" className="mt-2 text-sm text-destructive">
+          {save.error}
+        </p>
+      )}
+    </SectionCard>
   );
 }
 

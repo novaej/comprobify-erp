@@ -5,6 +5,7 @@ import {
   createIssuePoint,
   setIssuePointDocumentType,
   setIssuePointPaused,
+  setNegativeStockRule,
   updateBranch,
   updateCompanyProfile,
 } from '@comprobify/core';
@@ -86,5 +87,14 @@ export async function setPausedAction(_: ActionState, form: FormData): Promise<A
       issuePointId: text(form, 'issuePointId'),
       canIssue: text(form, 'canIssue') === 'true',
     }),
+  );
+}
+
+// FR-INV-4.
+export async function setNegativeStockAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const { actor } = await loadShell(localeOf(form));
+  const { db } = await getRuntime();
+  return run(form, () =>
+    setNegativeStockRule(actor, db, text(form, 'allow') === 'true' ? 'ALLOW' : 'BLOCK'),
   );
 }

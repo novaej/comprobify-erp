@@ -16,3 +16,20 @@ export type {
   OpeningBalanceInput,
   OpeningImportResult,
 } from './adjustments';
+export {
+  listStock,
+  MOVEMENTS_PAGE_SIZE,
+  productStock,
+  STOCK_PAGE_SIZE,
+  stockFilters,
+  stockValuation,
+} from './queries';
+export type {
+  MovementRow,
+  ProductStock,
+  StockFigures,
+  StockFilters,
+  StockRow,
+  Valuation,
+  ValuationLine,
+} from './queries';

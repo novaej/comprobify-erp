@@ -1,6 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import {
   adjustStock,
+  createBranch,
+  listStock,
+  productStock,
+  stockValuation,
   applyMovement,
   importOpeningBalances,
   setOpeningBalance,
@@ -452,5 +456,74 @@ describe('inventory ledger', () => {
         }),
       ),
     ).toBe('SERVICE_HAS_NO_STOCK');
+  });
+
+  // FR-INV-5. Last: it adds a second warehouse, which the import above doesn't expect.
+  it('adds warehouses up, with the average of the sum, and values the stock per warehouse', async () => {
+    await setOverride(await superAdmin(db), db, {
+      realTenantId: org.realTenantId,
+      featureKey: 'MAX_BRANCHES',
+      effect: 'LIMIT',
+      limitValue: 2,
+      reason: 'test',
+    });
+    const real = await resolveActor(db, { userId: ownerId, tenantId: org.realTenantId, clock });
+    await createBranch(real, db, { code: '002', name: 'Norte', address: 'Quito' });
+    const warehouses = await db.withTenant({ tenantId: org.twinTenantId }, ({ db: tx }) =>
+      tx.select().from(schema.warehouses),
+    );
+    const north = warehouses.find((warehouse) => warehouse.id !== warehouseId)!.id;
+
+    const code = `MULTI-${randomUUID().slice(0, 6)}`;
+    const id = await product({ code });
+    await move({
+      type: 'OPENING_BALANCE',
+      productId: id,
+      warehouseId,
+      quantity: '10',
+      unitCost: '2',
+    });
+    await move({
+      type: 'OPENING_BALANCE',
+      productId: id,
+      warehouseId: north,
+      quantity: '5',
+      unitCost: '5',
+    });
+
+    const actor = await owner();
+    const all = await listStock(actor, db, { query: code });
+    expect(all.rows).toMatchObject([
+      // (20 + 25) / 15
+      { id, onHand: '15', available: '15', averageCost: '3.000000', value: '45.00' },
+    ]);
+    expect(all.warehouses).toHaveLength(2);
+    const one = await listStock(actor, db, { query: code, warehouseId: north });
+    expect(one.rows).toMatchObject([{ onHand: '5', averageCost: '5.000000', value: '25.00' }]);
+
+    const detail = await productStock(actor, db, id);
+    expect(
+      detail.warehouses.map((warehouse) => [
+        warehouse.branchCode,
+        warehouse.onHand,
+        warehouse.moved,
+      ]),
+    ).toEqual([
+      ['001', '10', true],
+      ['002', '5', true],
+    ]);
+    expect(detail.movementsTotal).toBe(2);
+    expect(detail.total).toMatchObject({ onHand: '15', value: '45.00' });
+
+    const valuation = await stockValuation(actor, db);
+    expect(valuation.lines.filter((line) => line.code === code)).toMatchObject([
+      { branchCode: '001', value: '20.00' },
+      { branchCode: '002', value: '25.00' },
+    ]);
+    const sum = valuation.warehouses.reduce(
+      (total, warehouse) => total + Number(warehouse.value),
+      0,
+    );
+    expect(sum.toFixed(2)).toBe(valuation.total);
   });
 });

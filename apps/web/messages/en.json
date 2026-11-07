@@ -202,7 +202,8 @@
     "clients": "Clients",
     "products": "Products",
     "company": "Company",
-    "documents": "Documents"
+    "documents": "Documents",
+    "inventory": "Inventory"
   },
   "shell": {
     "sandboxTitle": "You're in the test environment",
@@ -641,7 +642,10 @@
     "pendingDocuments": "Pending",
     "correctInvoice": "Correct invoice",
     "newCreditNote": "New credit note",
-    "newGuide": "New delivery guide"
+    "newGuide": "New delivery guide",
+    "inventory": "Inventory",
+    "inventoryProduct": "Product stock",
+    "inventoryValuation": "Inventory valuation"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -993,7 +997,13 @@
     "documentTypesFor": "Document types of {point}",
     "documentTypesDescription": "Turn on the ones this point issues. Turning one off leaves what was issued alone.",
     "notInPlan": "Not in your plan",
-    "moreTypesSoon": "Credit notes and delivery guides are coming soon."
+    "moreTypesSoon": "Credit notes and delivery guides are coming soon.",
+    "inventoryTitle": "Inventory",
+    "inventoryDescription": "How stock behaves when goods go out.",
+    "negativeStock": "Allow negative stock",
+    "negativeStockHint": "Off, an outflow beyond what is available is refused. On, it is recorded and the stock stays below zero until the next receipt.",
+    "negativeStockAllowed": "Negative stock is allowed.",
+    "negativeStockBlocked": "Outflows without stock are refused."
   },
   "settingsError": {
     "FORBIDDEN": "Your role can't change the company details.",
@@ -1486,5 +1496,162 @@
       "confirmTitle": "Correct and resend the guide?",
       "confirmDescription": "It is signed again and sent to SRI with the same number."
     }
+  },
+  "inventory": {
+    "title": "Inventory",
+    "description": "Stock and average cost of each product that tracks stock, per warehouse.",
+    "search": "Search by name or code",
+    "valuationLink": "Valuation",
+    "inactive": "Inactive",
+    "emptyTitle": "No product tracks stock",
+    "empty": "Turn on “Tracks stock” on the products whose stock you want to keep.",
+    "emptyAction": "Go to products",
+    "noMatchesTitle": "No results",
+    "noMatches": "No product matches the search.",
+    "filters": {
+      "warehouse": "Warehouse",
+      "allWarehouses": "All warehouses",
+      "apply": "Filter",
+      "clear": "Clear filters"
+    },
+    "table": {
+      "product": "Product",
+      "warehouse": "Warehouse",
+      "onHand": "On hand",
+      "reserved": "Reserved",
+      "available": "Available",
+      "averageCost": "Average cost",
+      "value": "Value",
+      "date": "Date",
+      "type": "Movement",
+      "quantity": "Quantity",
+      "unitCost": "Unit cost",
+      "reason": "Reason",
+      "open": "Open {name}"
+    },
+    "pagination": {
+      "label": "Pages",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page} of {pages}"
+    },
+    "types": {
+      "OPENING_BALANCE": "Opening balance",
+      "PURCHASE_RECEIPT": "Purchase receipt",
+      "ADJUSTMENT_IN": "Adjustment in",
+      "ADJUSTMENT_OUT": "Adjustment out",
+      "SALE": "Sale",
+      "RETURN_IN": "Return",
+      "RESERVATION": "Reservation",
+      "RELEASE": "Release"
+    },
+    "sources": {
+      "ADJUSTMENT": "Adjustment",
+      "OPENING_IMPORT": "Imported from a file",
+      "PURCHASE_RECEIPT": "Receipt",
+      "DOCUMENT": "Document"
+    },
+    "product": {
+      "description": "Code {code}. Stock, average cost and movements.",
+      "back": "Back to inventory",
+      "stockTitle": "Stock",
+      "totalTitle": "Stock in all warehouses",
+      "warehousesTitle": "Per warehouse",
+      "movementsTitle": "Movements",
+      "noMovementsTitle": "No movements",
+      "noMovements": "Record an opening balance or an adjustment to start.",
+      "negative": "Some stock is below zero: goods went out that weren't available. The next receipt settles it.",
+      "rule": "Negative stock",
+      "rules": {
+        "BLOCK": "Not allowed",
+        "ALLOW": "Allowed"
+      }
+    },
+    "actions": {
+      "adjust": "Adjust stock",
+      "adjustTitle": "Adjust stock",
+      "adjustDescription": "Record goods found, lost, damaged or used. It stays in the movements with your name and the reason.",
+      "adjustSubmit": "Record adjustment",
+      "adjusted": "Adjustment recorded.",
+      "opening": "Opening balance",
+      "openingTitle": "Opening balance",
+      "openingDescription": "What the warehouse held before you started using Comprobify. Only before the first movement.",
+      "openingSubmit": "Record opening balance",
+      "openingDone": "Opening balance recorded.",
+      "warehouse": "Warehouse",
+      "direction": "Type",
+      "directions": {
+        "IN": "In",
+        "OUT": "Out"
+      },
+      "quantity": "Quantity",
+      "unitCost": "Unit cost before VAT",
+      "unitCostHint": "Empty: it comes in at the current average cost ({cost}).",
+      "outAtAverage": "Goods out are valued at the current average cost.",
+      "reason": "Reason",
+      "reasonHint": "For example: stock count, damaged goods, sample."
+    },
+    "import": {
+      "open": "Import opening balances",
+      "title": "Import opening balances",
+      "description": "A CSV file with the product code, the quantity and the unit cost before VAT. It is imported whole or not at all: if one line has a problem, none is recorded.",
+      "descriptionBranches": "A CSV file with the product code, the branch code, the quantity and the unit cost before VAT. It is imported whole or not at all: if one line has a problem, none is recorded.",
+      "template": "Download the template",
+      "templateFile": "opening-balances.csv",
+      "file": "CSV file",
+      "fileHint": "Save it from Excel as “CSV UTF-8 (comma delimited)”.",
+      "submit": "Import",
+      "cancel": "Cancel",
+      "done": "{count, plural, one {Imported # opening balance.} other {Imported # opening balances.}}",
+      "problems": "{count, plural, one {One line has a problem; nothing was imported.} other {# lines have problems; nothing was imported.}}",
+      "line": "Line {line}:",
+      "problem": {
+        "CODE_REQUIRED": "the product code is missing.",
+        "PRODUCT_NOT_FOUND": "no product has that code.",
+        "PRODUCT_NOT_STOCKED": "the product doesn't track stock.",
+        "BRANCH_REQUIRED": "the branch code is missing.",
+        "BRANCH_NOT_FOUND": "that branch doesn't exist.",
+        "QUANTITY_INVALID": "the quantity must be a number above zero, with up to 6 decimals.",
+        "COST_INVALID": "the cost must be a number, with up to 6 decimals.",
+        "DUPLICATE_ROW": "the product is already earlier in the file for that warehouse.",
+        "STOCK_ALREADY_MOVED": "the product already has movements in that warehouse."
+      }
+    },
+    "valuation": {
+      "title": "Inventory valuation",
+      "description": "What the stock is worth at its weighted average cost.",
+      "download": "Download CSV",
+      "totalsTitle": "Totals",
+      "total": "Inventory total",
+      "products": "{count, plural, one {# product} other {# products}}",
+      "linesTitle": "Detail",
+      "emptyTitle": "No stock",
+      "empty": "Once there is stock, its value shows here.",
+      "csv": {
+        "filename": "inventory-valuation.csv",
+        "branch": "Branch",
+        "warehouse": "Warehouse",
+        "code": "Code",
+        "product": "Product",
+        "unit": "Unit",
+        "onHand": "On hand",
+        "reserved": "Reserved",
+        "averageCost": "Average cost",
+        "value": "Value"
+      }
+    }
+  },
+  "inventoryError": {
+    "INSUFFICIENT_STOCK": "There isn't enough stock available in that warehouse.",
+    "STOCK_ALREADY_MOVED": "That product already has movements in the warehouse: use an adjustment.",
+    "PRODUCT_NOT_STOCKED": "The product doesn't track stock.",
+    "IMPORT_EMPTY": "The file has no lines.",
+    "IMPORT_COLUMNS": "The file needs code, quantity and unit cost columns. Download the template.",
+    "IMPORT_TOO_LARGE": "The file has too many lines: up to 5000 per file.",
+    "FORBIDDEN": "Your role doesn't allow this.",
+    "FEATURE_NOT_ENABLED": "Your plan doesn't include inventory.",
+    "NOT_FOUND": "The product or warehouse wasn't found.",
+    "INVALID_INPUT": "Check the data: the quantity must be above zero and numbers take up to 6 decimals.",
+    "UNKNOWN": "Something went wrong. Try again."
   }
 }

@@ -231,3 +231,65 @@ export async function productsByCode(
     .from(schema.products)
     .where(inArray(schema.products.code, codes));
 }
+
+export type StockedProduct = {
+  id: string;
+  code: string;
+  name: string;
+  unit: string | null;
+  active: boolean;
+};
+
+// FR-INV-6: the goods that track stock, a page at a time by name, for the inventory screens.
+export async function stockedProducts(
+  tx: Tx,
+  options: { query?: string; ids?: string[]; offset: number; limit: number },
+): Promise<{ rows: StockedProduct[]; total: number }> {
+  const { products } = schema;
+  const query = options.query?.trim().slice(0, 100);
+  const pattern = query ? `%${query.replaceAll(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
+  const where = and(
+    eq(products.kind, 'GOOD'),
+    eq(products.tracksStock, true),
+    options.ids ? inArray(products.id, options.ids) : undefined,
+    pattern ? or(ilike(products.name, pattern), ilike(products.code, pattern)) : undefined,
+  );
+  const [count] = await tx.db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(products)
+    .where(where);
+  const rows = await tx.db
+    .select({
+      id: products.id,
+      code: products.code,
+      name: products.name,
+      unit: products.unit,
+      active: products.active,
+    })
+    .from(products)
+    .where(where)
+    .orderBy(sql`${products.active} DESC`, asc(products.name), asc(products.id))
+    .limit(options.limit)
+    .offset(options.offset);
+  return { rows, total: count!.total };
+}
+
+// One product's name and whether it tracks stock, for its inventory page.
+export async function productSummary(
+  tx: Tx,
+  productId: string,
+): Promise<(StockedProduct & { tracksStock: boolean; kind: string }) | null> {
+  const [row] = await tx.db
+    .select({
+      id: schema.products.id,
+      code: schema.products.code,
+      name: schema.products.name,
+      unit: schema.products.unit,
+      active: schema.products.active,
+      tracksStock: schema.products.tracksStock,
+      kind: schema.products.kind,
+    })
+    .from(schema.products)
+    .where(eq(schema.products.id, productId));
+  return row ?? null;
+}

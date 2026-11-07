@@ -38,6 +38,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
             value: code,
             label: tSri(`documentTypes.${code}`),
           })),
+          inventory: hasFeature(actor, 'INVENTORY'),
           offered: ISSUABLE_DOCUMENT_TYPES.filter((type) => hasFeature(actor, `DOC_TYPE_${type}`)),
         }}
       />

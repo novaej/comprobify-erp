@@ -202,7 +202,8 @@
     "clients": "Clientes",
     "products": "Productos",
     "company": "Empresa",
-    "documents": "Comprobantes"
+    "documents": "Comprobantes",
+    "inventory": "Inventario"
   },
   "shell": {
     "sandboxTitle": "Estás en el ambiente de pruebas",
@@ -641,7 +642,10 @@
     "pendingDocuments": "Pendientes",
     "correctInvoice": "Corregir factura",
     "newCreditNote": "Nueva nota de crédito",
-    "newGuide": "Nueva guía de remisión"
+    "newGuide": "Nueva guía de remisión",
+    "inventory": "Inventario",
+    "inventoryProduct": "Existencias del producto",
+    "inventoryValuation": "Valoración del inventario"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -993,7 +997,13 @@
     "documentTypesFor": "Tipos de comprobante de {point}",
     "documentTypesDescription": "Activa los que este punto emite. Desactivar uno no afecta lo ya emitido.",
     "notInPlan": "Fuera de tu plan",
-    "moreTypesSoon": "Las notas de crédito y las guías de remisión llegarán pronto."
+    "moreTypesSoon": "Las notas de crédito y las guías de remisión llegarán pronto.",
+    "inventoryTitle": "Inventario",
+    "inventoryDescription": "Cómo se comportan las existencias al salir mercadería.",
+    "negativeStock": "Permitir existencias negativas",
+    "negativeStockHint": "Apagado, una salida que supera lo disponible se rechaza. Encendido, se registra y la existencia queda bajo cero hasta la siguiente entrada.",
+    "negativeStockAllowed": "Se permiten existencias negativas.",
+    "negativeStockBlocked": "Las salidas sin existencias se rechazan."
   },
   "settingsError": {
     "FORBIDDEN": "Tu rol no permite cambiar los datos de la empresa.",
@@ -1486,5 +1496,162 @@
       "confirmTitle": "¿Corregir y reenviar la guía?",
       "confirmDescription": "Se firma de nuevo y se envía al SRI con el mismo número."
     }
+  },
+  "inventory": {
+    "title": "Inventario",
+    "description": "Existencias y costo promedio de cada producto que controla inventario, por bodega.",
+    "search": "Buscar por nombre o código",
+    "valuationLink": "Valoración",
+    "inactive": "Inactivo",
+    "emptyTitle": "Ningún producto controla inventario",
+    "empty": "Activa «Controla inventario» en los productos cuyas existencias quieras llevar.",
+    "emptyAction": "Ir a productos",
+    "noMatchesTitle": "Sin resultados",
+    "noMatches": "Ningún producto coincide con la búsqueda.",
+    "filters": {
+      "warehouse": "Bodega",
+      "allWarehouses": "Todas las bodegas",
+      "apply": "Filtrar",
+      "clear": "Quitar filtros"
+    },
+    "table": {
+      "product": "Producto",
+      "warehouse": "Bodega",
+      "onHand": "Existencias",
+      "reserved": "Reservado",
+      "available": "Disponible",
+      "averageCost": "Costo promedio",
+      "value": "Valor",
+      "date": "Fecha",
+      "type": "Movimiento",
+      "quantity": "Cantidad",
+      "unitCost": "Costo unitario",
+      "reason": "Motivo",
+      "open": "Ver {name}"
+    },
+    "pagination": {
+      "label": "Páginas",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page": "Página {page} de {pages}"
+    },
+    "types": {
+      "OPENING_BALANCE": "Saldo inicial",
+      "PURCHASE_RECEIPT": "Recepción de compra",
+      "ADJUSTMENT_IN": "Ajuste de entrada",
+      "ADJUSTMENT_OUT": "Ajuste de salida",
+      "SALE": "Venta",
+      "RETURN_IN": "Devolución",
+      "RESERVATION": "Reserva",
+      "RELEASE": "Liberación"
+    },
+    "sources": {
+      "ADJUSTMENT": "Ajuste",
+      "OPENING_IMPORT": "Importado de un archivo",
+      "PURCHASE_RECEIPT": "Recepción",
+      "DOCUMENT": "Comprobante"
+    },
+    "product": {
+      "description": "Código {code}. Existencias, costo promedio y movimientos.",
+      "back": "Volver a inventario",
+      "stockTitle": "Existencias",
+      "totalTitle": "Existencias en todas las bodegas",
+      "warehousesTitle": "Por bodega",
+      "movementsTitle": "Movimientos",
+      "noMovementsTitle": "Sin movimientos",
+      "noMovements": "Registra un saldo inicial o un ajuste para empezar.",
+      "negative": "Hay existencias bajo cero: se registraron salidas sin mercadería disponible. Se corrigen con la siguiente entrada.",
+      "rule": "Existencias negativas",
+      "rules": {
+        "BLOCK": "No se permiten",
+        "ALLOW": "Se permiten"
+      }
+    },
+    "actions": {
+      "adjust": "Ajustar existencias",
+      "adjustTitle": "Ajustar existencias",
+      "adjustDescription": "Registra mercadería encontrada, perdida, dañada o consumida. Queda en los movimientos con tu nombre y el motivo.",
+      "adjustSubmit": "Registrar ajuste",
+      "adjusted": "Ajuste registrado.",
+      "opening": "Saldo inicial",
+      "openingTitle": "Saldo inicial",
+      "openingDescription": "Lo que había en la bodega antes de empezar a usar Comprobify. Solo se registra antes del primer movimiento.",
+      "openingSubmit": "Registrar saldo inicial",
+      "openingDone": "Saldo inicial registrado.",
+      "warehouse": "Bodega",
+      "direction": "Tipo",
+      "directions": {
+        "IN": "Entrada",
+        "OUT": "Salida"
+      },
+      "quantity": "Cantidad",
+      "unitCost": "Costo unitario sin IVA",
+      "unitCostHint": "Vacío: entra al costo promedio actual ({cost}).",
+      "outAtAverage": "Una salida se valora al costo promedio actual.",
+      "reason": "Motivo",
+      "reasonHint": "Por ejemplo: conteo físico, mercadería dañada, muestra."
+    },
+    "import": {
+      "open": "Importar saldos iniciales",
+      "title": "Importar saldos iniciales",
+      "description": "Un archivo CSV con el código del producto, la cantidad y el costo unitario sin IVA. Se importa completo o nada: si una línea tiene un problema, no se registra ninguna.",
+      "descriptionBranches": "Un archivo CSV con el código del producto, el código de la sucursal, la cantidad y el costo unitario sin IVA. Se importa completo o nada: si una línea tiene un problema, no se registra ninguna.",
+      "template": "Descargar plantilla",
+      "templateFile": "saldos-iniciales.csv",
+      "file": "Archivo CSV",
+      "fileHint": "Guárdalo desde Excel como «CSV (delimitado por punto y coma)» o «CSV UTF-8».",
+      "submit": "Importar",
+      "cancel": "Cancelar",
+      "done": "{count, plural, one {Se importó # saldo inicial.} other {Se importaron # saldos iniciales.}}",
+      "problems": "{count, plural, one {Una línea tiene un problema; no se importó nada.} other {# líneas tienen problemas; no se importó nada.}}",
+      "line": "Línea {line}:",
+      "problem": {
+        "CODE_REQUIRED": "falta el código del producto.",
+        "PRODUCT_NOT_FOUND": "no existe un producto con ese código.",
+        "PRODUCT_NOT_STOCKED": "el producto no controla inventario.",
+        "BRANCH_REQUIRED": "falta el código de la sucursal.",
+        "BRANCH_NOT_FOUND": "no existe esa sucursal.",
+        "QUANTITY_INVALID": "la cantidad debe ser un número mayor que cero, con hasta 6 decimales.",
+        "COST_INVALID": "el costo debe ser un número, con hasta 6 decimales.",
+        "DUPLICATE_ROW": "el producto ya aparece antes en el archivo para esa bodega.",
+        "STOCK_ALREADY_MOVED": "el producto ya tiene movimientos en esa bodega."
+      }
+    },
+    "valuation": {
+      "title": "Valoración del inventario",
+      "description": "Lo que valen las existencias a su costo promedio ponderado.",
+      "download": "Descargar CSV",
+      "totalsTitle": "Totales",
+      "total": "Total del inventario",
+      "products": "{count, plural, one {# producto} other {# productos}}",
+      "linesTitle": "Detalle",
+      "emptyTitle": "Sin existencias",
+      "empty": "Cuando haya existencias, aquí verás su valor.",
+      "csv": {
+        "filename": "valoracion-inventario.csv",
+        "branch": "Sucursal",
+        "warehouse": "Bodega",
+        "code": "Código",
+        "product": "Producto",
+        "unit": "Unidad",
+        "onHand": "Existencias",
+        "reserved": "Reservado",
+        "averageCost": "Costo promedio",
+        "value": "Valor"
+      }
+    }
+  },
+  "inventoryError": {
+    "INSUFFICIENT_STOCK": "No hay suficientes existencias disponibles en esa bodega.",
+    "STOCK_ALREADY_MOVED": "Ese producto ya tiene movimientos en la bodega: usa un ajuste.",
+    "PRODUCT_NOT_STOCKED": "El producto no controla inventario.",
+    "IMPORT_EMPTY": "El archivo no tiene líneas.",
+    "IMPORT_COLUMNS": "El archivo necesita las columnas código, cantidad y costo unitario. Descarga la plantilla.",
+    "IMPORT_TOO_LARGE": "El archivo tiene demasiadas líneas: hasta 5000 por archivo.",
+    "FORBIDDEN": "Tu rol no permite esta acción.",
+    "FEATURE_NOT_ENABLED": "Tu plan no incluye el inventario.",
+    "NOT_FOUND": "No se encontró el producto o la bodega.",
+    "INVALID_INPUT": "Revisa los datos: la cantidad debe ser mayor que cero y los números admiten hasta 6 decimales.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
   }
 }
