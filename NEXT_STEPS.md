@@ -13,11 +13,22 @@ Open work only. Tick steps as they land. When a milestone's gate passes, remove 
 - **Milestone 8:** a switch that stops Payphone charges and callbacks in a restored copy of real data, as `EMAIL_REDIRECT_TO` does for email (CLAUDE.md mistake 13).
 - **Milestone 8 (also):** `DOCUMENT_QUOTA` counts the Ecuador calendar month for now; count it per billing period instead, with packs (FR-BILL-7).
 - **Milestone 9:** a page in the platform area to read a document's `sri_exchanges` for support, and a retention period for them (they grow with every authorization check).
-- **Milestone 9 (also):** the alerts that are only logged today become notifications: no SRI answer 24 hours after RECEIVED, code 45, a re-issue skipped at a month boundary, and "Factura … re-emitida con fecha …" (FR-DOC-5, FR-DOC-6, FR-NOT-2).
+- **Milestone 9 (also):** the alerts that are only logged today become notifications: `BATCH_COMPLETED` (FR-BULK-3), no SRI answer 24 hours after RECEIVED, code 45, a re-issue skipped at a month boundary, and "Factura … re-emitida con fecha …" (FR-DOC-5, FR-DOC-6, FR-NOT-2).
 - **Milestone 9 (also):** email the companies on a plan when a module or a lower limit is scheduled to leave it, as with price changes (FR-BILL-6, FR-NOT-2); a page for the platform activity log (`platform_audit_events`).
 - **Not scheduled:** the vehicle plate on invoices of transport operators, excluding taxis (Anexo 25, Ficha v2.33), if such companies sign up.
 - **Not scheduled:** CSV import and export of clients and products (FR-MD-1).
 - **Not scheduled:** ownership transfer (PRD section 3). Today nobody can change or remove the owner.
+
+## Milestone 7: Bulk invoicing
+
+Gate: a 1,000-item batch locally on the mock SRI with the quota cutting it off, and another company's single invoice within NFR-PERF-3 while it runs. Decisions are in [ADR-026](docs/adr/026-bulk-invoicing.md). The 10,000-item run is Milestone 10's load test.
+
+- [x] 1. Tables, migration 0047, ADR-026
+- [ ] 2. Core: start a batch from orders, the item job, quota cut-off, retry, completion sweep
+- [ ] 3. Pacing: the feeder with per-company and global caps, and a test that a big batch doesn't starve a small one
+- [ ] 4. Web: batch list and stack view with live progress, starting a batch from orders, the platform queue page
+- [ ] 5. CSV upload (format in the ADR)
+- [ ] 6. Gate: 1,000 items on the mock with quota cut, latency of another company's invoice
 
 ## Upcoming milestones
 

@@ -257,6 +257,34 @@ describe('isolation sweep over every tenant table', () => {
           quantity: '1',
         }),
       );
+      // A batch with an item that made an invoice, and one still waiting (FR-BULK-1).
+      await db.withSystem('test: start a batch', async ({ db: tx, executeSql }) => {
+        const { rows } = await executeSql<{ id: string }>(
+          `SELECT id FROM issue_points WHERE tenant_id = $1 LIMIT 1`,
+          [tenantId],
+        );
+        const [batch] = await tx
+          .insert(schema.bulkBatches)
+          .values({
+            tenantId,
+            source: 'SALE_ORDERS',
+            issuePointId: rows[0]!.id,
+            paymentMethod: '01',
+            totalItems: 2,
+          })
+          .returning({ id: schema.bulkBatches.id });
+        await tx.insert(schema.bulkBatchItems).values([
+          {
+            tenantId,
+            batchId: batch!.id,
+            position: 1,
+            status: 'CREATED',
+            saleOrderId: sale.id,
+            documentId: document.id,
+          },
+          { tenantId, batchId: batch!.id, position: 2, saleOrderId: sale.id },
+        ]);
+      });
     }
     return org;
   };
@@ -298,6 +326,8 @@ describe('isolation sweep over every tenant table', () => {
         'agreement_acceptances',
         'audit_events',
         'branches',
+        'bulk_batch_items',
+        'bulk_batches',
         'certificates',
         'clients',
         'document_events',

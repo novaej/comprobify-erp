@@ -46,6 +46,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [023](023-delivery-guides-of-a-sale-order.md) | The delivery guides of a sale order | Accepted |
 | [024](024-receivables.md) | Receivables | Accepted |
 | [025](025-master-data-at-go-live.md) | Copying master data at go-live | Accepted |
+| [026](026-bulk-invoicing.md) | Bulk invoicing | Accepted |
 
 ## Old ADRs to read before each milestone
 

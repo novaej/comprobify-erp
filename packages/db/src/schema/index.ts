@@ -1,5 +1,6 @@
 export * from './agreements';
 export * from './audit';
+export * from './bulk';
 export * from './documents';
 export * from './entitlements';
 export * from './identity';

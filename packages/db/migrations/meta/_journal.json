@@ -330,6 +330,13 @@
       "when": 1794244681218,
       "tag": "0046_invoice_payments",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1794254566544,
+      "tag": "0047_bulk_batches",
+      "breakpoints": true
     }
   ]
 }
