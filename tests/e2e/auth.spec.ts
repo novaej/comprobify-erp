@@ -98,7 +98,10 @@ async function setSuperAdmin(userEmail: string): Promise<void> {
 
 // What the worker does, run here against the mock SRI: the app Playwright starts has no
 // worker. On the stack the worker may get there first; the handlers don't mind.
-async function runSri(documentId: string, answer: 'authorize' | 'return'): Promise<void> {
+async function runSri(
+  documentId: string,
+  answer: 'authorize' | 'return' | 'reject',
+): Promise<void> {
   const silent = { debug() {}, info() {}, warn() {}, error() {}, child: () => silent };
   const db = createDatabase({ connectionString: process.env.DATABASE_URL!, logger: silent });
   try {
@@ -120,7 +123,9 @@ async function runSri(documentId: string, answer: 'authorize' | 'return'): Promi
       logger: silent,
     };
     await sendDocument(deps, ref);
-    if (answer === 'authorize') {
+    if (answer === 'reject')
+      mock.queue('authorization', { kind: 'notAuthorized', code: '46', message: 'RUC no existe' });
+    if (answer !== 'return') {
       // On the stack the worker may have sent it already, to its own mock: this one learns
       // the document too, so it can authorize it.
       await deps.sri.send(row!.signed_xml, row!.ambiente);
@@ -1248,6 +1253,128 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await page.getByRole('link', { name: 'PV-000002' }).click();
     await expect(heading).toContainText('Pedido PV-000002');
     await expect(page.getByRole('link', { name: /^Guía de remisión 001-001-/ })).toHaveCount(1);
+  });
+
+  test('Milestone 6 gate: 10 units invoiced 4 + 6 end INVOICED, a rejected invoice is corrected through its order, and a void returns its quantities (FR-SAL-1 to FR-SAL-6)', async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await signIn(page, email, newPassword);
+    const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
+    await expect(nav).toBeVisible();
+    const heading = page.getByRole('heading', { level: 1 });
+    const main = page.getByRole('main');
+
+    // A product with 10 on hand.
+    await nav.getByRole('link', { name: 'Productos' }).click();
+    await page.getByRole('button', { name: 'Nuevo producto' }).click();
+    const product = page.getByRole('dialog', { name: 'Nuevo producto' });
+    await product.getByRole('textbox', { name: 'Código', exact: true }).fill('GATE-1');
+    await product
+      .getByRole('textbox', { name: 'Nombre', exact: true })
+      .fill('Producto de la prueba');
+    await product.getByLabel('Precio unitario').fill('10');
+    await product.getByRole('switch', { name: 'Controla inventario' }).click();
+    await product.getByRole('button', { name: 'Crear producto' }).click();
+    await expect(page.getByText('Producto creado.')).toBeVisible();
+    await nav.getByRole('link', { name: 'Inventario' }).click();
+    await page.getByRole('link', { name: 'Producto de la prueba', exact: true }).click();
+    await page.getByRole('button', { name: 'Saldo inicial' }).click();
+    const opening = page.getByRole('dialog', { name: 'Saldo inicial' });
+    await opening.getByLabel('Cantidad').fill('10');
+    await opening.getByLabel('Costo unitario sin IVA').fill('5');
+    await opening.getByRole('button', { name: 'Registrar saldo inicial' }).click();
+    await expect(page.getByText('Saldo inicial registrado.')).toBeVisible();
+    const stockUrl = page.url();
+    // On hand, available and reserved, as the page shows them.
+    const stock = async () => {
+      await page.goto(stockUrl);
+      const text = (await main.textContent()) ?? '';
+      const found = /Existencias(\d+)Disponible(\d+)Reservado(\d+)/.exec(text);
+      expect(found, text).not.toBeNull();
+      return found!.slice(1).map(Number);
+    };
+    expect(await stock()).toEqual([10, 10, 0]);
+
+    // The order for all 10, confirmed: all held.
+    await page.goto('/es/sale-orders/new');
+    const client = page.getByRole('combobox', {
+      name: 'Buscar cliente por nombre o identificación',
+    });
+    await client.fill('María');
+    await client.press('Enter');
+    const line = page.getByRole('group', { name: 'Línea 1' });
+    await line.getByRole('combobox', { name: 'Producto' }).fill('GATE-1');
+    await page.keyboard.press('Enter');
+    await line.getByRole('textbox', { name: 'Cantidad' }).fill('10');
+    await page.getByRole('button', { name: 'Guardar borrador' }).click();
+    await expect(heading).toContainText('Pedido PV-');
+    await page.getByRole('button', { name: 'Confirmar pedido' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Confirmar el pedido?' })
+      .getByRole('button', { name: 'Confirmar pedido' })
+      .click();
+    await expect(heading).toContainText('Confirmado');
+    const orderUrl = page.url();
+    expect(await stock()).toEqual([10, 0, 10]);
+
+    const invoiceNow = async (quantity: string) => {
+      await page.goto(`${orderUrl}/invoice`);
+      await page
+        .getByRole('textbox', { name: 'Cantidad a facturar de Producto de la prueba' })
+        .fill(quantity);
+      await page.getByRole('button', { name: 'Emitir factura' }).click();
+      await page
+        .getByRole('dialog', { name: '¿Emitir la factura?' })
+        .getByRole('button', { name: 'Emitir factura' })
+        .click();
+      await expect(heading).toContainText('Factura 001-001-');
+      return page.url().split('/').at(-1)!;
+    };
+
+    // 4 invoiced and authorized: sold, the other 6 still held by the order.
+    const first = await invoiceNow('4');
+    await runSri(first, 'authorize');
+    expect(await stock()).toEqual([6, 0, 6]);
+    await page.goto(orderUrl);
+    await expect(heading).toContainText('Facturado en parte');
+
+    // The other 6 are rejected by SRI: they keep their goods, and are corrected through the order.
+    const second = await invoiceNow('6');
+    await runSri(second, 'reject');
+    await page.goto(`/es/documents/${second}`);
+    await expect(heading).toContainText('No autorizado');
+    await page.getByRole('link', { name: 'Corregir' }).click();
+    await expect(heading).toContainText('Corregir la factura 001-001-');
+    await expect(
+      page.getByRole('textbox', { name: 'Cantidad a facturar de Producto de la prueba' }),
+    ).toHaveValue('6');
+    await page.getByRole('button', { name: 'Corregir y reenviar' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Corregir la factura?' })
+      .getByRole('button', { name: 'Corregir y reenviar' })
+      .click();
+    await expect(heading).toContainText('Firmado');
+    expect(page.url()).toContain(second);
+    await runSri(second, 'authorize');
+    await page.goto(orderUrl);
+    await expect(heading).toContainText('Facturado');
+    await expect(heading).not.toContainText('en parte');
+    expect(await stock()).toEqual([0, 0, 0]);
+
+    // Voiding the 6 returns them: back in stock and held by the order again.
+    await page.goto(`/es/documents/${second}`);
+    await page.getByRole('button', { name: 'Anular' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Marcar la factura como anulada?' })
+      .getByRole('button', { name: 'Marcar como anulada' })
+      .click();
+    await expect(page.getByText('Factura anulada.')).toBeVisible();
+    await expect(heading).toContainText('Anulado');
+    expect(await stock()).toEqual([6, 0, 6]);
+    await page.goto(orderUrl);
+    await expect(heading).toContainText('Facturado en parte');
+    await look(page, 'sale-order-gate');
   });
 
   test('finds no drift between the stock levels and their ledger after the day (FR-INV-2, Milestone 5 gate)', async () => {
