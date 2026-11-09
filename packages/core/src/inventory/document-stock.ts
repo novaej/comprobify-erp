@@ -119,6 +119,71 @@ export async function releaseDocumentStock(
       });
 }
 
+// An invoice made from a sale order takes over what the order holds for the same goods: that
+// much is released from the order and held for the invoice, in the order's warehouse. What the
+// order didn't hold (no Inventario when it was confirmed) is held for the invoice under the
+// negative-stock rule (ADR-022).
+export async function transferOrderHold(
+  ctx: ActorContext,
+  tx: Tx,
+  input: { orderId: string; documentId: string; warehouseId: string; lines: StockLine[] },
+): Promise<void> {
+  if (!hasFeature(ctx, 'INVENTORY')) return;
+  const mover: Mover = { tenantId: ctx.tenantId, userId: ctx.userId ?? null };
+  const totals = await stockedTotals(tx, input.lines);
+  const held = await movedBy(tx, ctx.tenantId, [input.orderId], 'SALE_ORDER');
+  for (const productId of [...totals.keys()].sort()) {
+    const quantity = totals.get(productId)!;
+    const holding =
+      held.find((row) => row.productId === productId && row.warehouseId === input.warehouseId)
+        ?.reserved ?? new Dec(0);
+    const release = Dec.min(quantity, holding);
+    if (release.gt(0))
+      await moveStock(tx, mover, {
+        type: 'RELEASE',
+        productId,
+        warehouseId: input.warehouseId,
+        quantity: release.toFixed(6),
+        source: source(input.orderId, 'SALE_ORDER'),
+      });
+    await moveStock(tx, mover, {
+      type: 'RESERVATION',
+      productId,
+      warehouseId: input.warehouseId,
+      quantity: quantity.toFixed(6),
+      source: source(input.documentId),
+    });
+  }
+}
+
+// The other way: what an invoice held or sold goes back to being held by its order, because the
+// invoice is being corrected or was voided. A void must not fail, so no rule is checked.
+export async function returnHoldToOrder(
+  tx: Tx,
+  mover: Mover,
+  input: { orderId: string; documentId: string },
+): Promise<void> {
+  const own = await movedBy(tx, mover.tenantId, [input.documentId]);
+  // Settled before anything is held again, so the document's own hold is gone first.
+  await releaseDocumentStock(tx, mover, input.documentId);
+  for (const row of own) {
+    const quantity = row.reserved.gt(0) ? row.reserved : row.sold;
+    if (quantity.gt(0))
+      await moveStock(
+        tx,
+        mover,
+        {
+          type: 'RESERVATION',
+          productId: row.productId,
+          warehouseId: row.warehouseId,
+          quantity: quantity.toFixed(6),
+          source: source(input.orderId, 'SALE_ORDER'),
+        },
+        { anyRule: true },
+      );
+  }
+}
+
 // When SRI authorizes an invoice: what it holds leaves, at the average.
 export async function sellDocumentStock(tx: Tx, mover: Mover, documentId: string): Promise<void> {
   for (const held of await movedBy(tx, mover.tenantId, [documentId]))

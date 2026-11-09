@@ -3,8 +3,12 @@
 import {
   cancelSaleOrder,
   confirmSaleOrder,
+  correctOrderInvoice,
   createSaleOrder,
+  invoiceSaleOrder,
   updateSaleOrder,
+  type OrderInvoiceCorrectionInput,
+  type OrderInvoiceInput,
   type SaleOrderInput,
 } from '@comprobify/core';
 import { revalidatePath } from 'next/cache';
@@ -57,4 +61,50 @@ export async function saleOrderStatusAction(_: ActionState, form: FormData): Pro
   });
   if (state.done) revalidatePath(`/${locale}`, 'layout');
   return state;
+}
+
+// FR-SAL-3, FR-SAL-6. Core holds each line to what the order has left and takes the order's
+// goods over for the invoice in the same transaction.
+export async function invoiceOrderAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const locale = localeOf(form);
+  const { actor } = await loadShell(locale);
+  const { db, issueDeps } = await getRuntime();
+  let payload: OrderInvoiceInput;
+  try {
+    payload = JSON.parse(text(form, 'payload')) as OrderInvoiceInput;
+  } catch {
+    return { error: 'INVALID_INPUT' };
+  }
+  let id: string | undefined;
+  const state = await toActionState(async () => {
+    id = (await invoiceSaleOrder(actor, db, payload, issueDeps)).id;
+  });
+  if (!id) return state;
+  revalidatePath(`/${locale}`, 'layout');
+  return redirect({ href: `/documents/${id}`, locale });
+}
+
+// FR-DOC-7: an order's invoice is corrected through its order, the same row and number.
+export async function correctOrderInvoiceAction(
+  _: ActionState,
+  form: FormData,
+): Promise<ActionState> {
+  const locale = localeOf(form);
+  const { actor } = await loadShell(locale);
+  const { db, issueDeps } = await getRuntime();
+  const id = text(form, 'id');
+  let payload: OrderInvoiceCorrectionInput;
+  try {
+    payload = JSON.parse(text(form, 'payload')) as OrderInvoiceCorrectionInput;
+  } catch {
+    return { error: 'INVALID_INPUT' };
+  }
+  let done = false;
+  const state = await toActionState(async () => {
+    await correctOrderInvoice(actor, db, id, payload, issueDeps);
+    done = true;
+  });
+  if (!done) return state;
+  revalidatePath(`/${locale}`, 'layout');
+  return redirect({ href: `/documents/${id}`, locale });
 }

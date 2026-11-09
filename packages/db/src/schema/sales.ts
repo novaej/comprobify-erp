@@ -12,6 +12,7 @@ import {
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { documents } from './documents';
 import { oneOf, transitionTriggerBody } from './checks';
 import { users } from './identity';
 import { clients, products } from './master-data';
@@ -139,3 +140,45 @@ export const saleOrderLines = pgTable(
 // The trigger that enforces SALE_ORDER_TRANSITIONS; migration 0044 holds its output.
 export const saleOrderStatusTriggerBody = (): string =>
   transitionTriggerBody('Sale order', SALE_ORDER_STATUSES, SALE_ORDER_TRANSITIONS);
+
+// FR-SAL-3: which invoice covers how much of which order line. A row belongs to one revision of
+// its document (a correction adds its own, rows are never changed) and counts while that
+// revision is the document's current one and the document isn't voided (FR-SAL-4).
+export const saleOrderInvoiceLines = pgTable(
+  'sale_order_invoice_lines',
+  {
+    id: id(),
+    tenantId: uuid('tenant_id').notNull(),
+    orderId: uuid('order_id').notNull(),
+    orderLineId: uuid('order_line_id').notNull(),
+    documentId: uuid('document_id').notNull(),
+    documentRevision: integer('document_revision').notNull(),
+    quantity: precise('quantity').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      name: 'sale_order_invoice_lines_order_fk',
+      columns: [table.tenantId, table.orderId],
+      foreignColumns: [saleOrders.tenantId, saleOrders.id],
+    }),
+    foreignKey({
+      name: 'sale_order_invoice_lines_line_fk',
+      columns: [table.tenantId, table.orderLineId],
+      foreignColumns: [saleOrderLines.tenantId, saleOrderLines.id],
+    }),
+    foreignKey({
+      name: 'sale_order_invoice_lines_document_fk',
+      columns: [table.tenantId, table.documentId],
+      foreignColumns: [documents.tenantId, documents.id],
+    }),
+    unique('sale_order_invoice_lines_unique').on(
+      table.documentId,
+      table.documentRevision,
+      table.orderLineId,
+    ),
+    index('sale_order_invoice_lines_order').on(table.tenantId, table.orderId),
+    index('sale_order_invoice_lines_document').on(table.tenantId, table.documentId),
+    check('sale_order_invoice_lines_quantity_check', sql`quantity > 0`),
+  ],
+);

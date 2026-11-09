@@ -1,4 +1,5 @@
 import {
+  saleOrderNumber,
   ecuadorDate,
   getDocument,
   isDomainError,
@@ -308,9 +309,20 @@ export default async function DocumentPage({
 
           {document.transport && <TransportCard transport={document.transport} />}
 
-          {(document.origin || document.derived.length > 0) && (
+          {(document.origin || document.derived.length > 0 || document.saleOrder) && (
             <SectionCard title={t('detail.related.title')}>
               <ul className="space-y-2 text-sm">
+                {document.saleOrder && (
+                  <li className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="text-muted-foreground">{t('detail.related.saleOrder')}</span>
+                    <Link
+                      href={`/sale-orders/${document.saleOrder.id}`}
+                      className="font-medium tabular-nums underline-offset-4 hover:underline"
+                    >
+                      {saleOrderNumber(document.saleOrder.number)}
+                    </Link>
+                  </li>
+                )}
                 {[
                   ...(document.origin
                     ? [{ link: document.origin, label: t('detail.related.origin') }]

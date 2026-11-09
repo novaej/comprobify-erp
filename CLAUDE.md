@@ -179,7 +179,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/platform/` | The super admin's workflows: companies, their plans, add-ons, Personalizado, complimentary, overrides; editing plans and modules |
 | `apps/web/src/app/[locale]/(admin)/` | The platform area, outside any company (`loadPlatform`) |
 | `packages/core/src/sri/` | SRI catalogues (from `packages/db/src/schema/sri.ts`), totals and rounding (ADR-012), access keys, the factura builder, XSD validation and the XAdES-BES signer (ADR-013), the SOAP client and the mock SRI (ADR-014) |
-| `packages/core/src/documents/` | `createInvoice` (the FR-DOC-2 pipeline), the send and authorize handlers and their calendar (`sending.ts`, `calendar.ts`), the next-day and manual re-issue (`reissue.ts`), correction (in `create-invoice.ts`), void (`void.ts`), the stock side of SRI's answers (`stock.ts`, ADR-020), the RIDE and buyer's copy (`ride.ts`; drawing in `sri/ride-*.ts`), status machine checks and sequentials; the table, transitions and trigger generator are in `packages/db/src/schema/documents.ts` (FR-DOC-3) |
+| `packages/core/src/documents/` | `createInvoice` (the FR-DOC-2 pipeline), the send and authorize handlers and their calendar (`sending.ts`, `calendar.ts`), the next-day and manual re-issue (`reissue.ts`), correction (in `create-invoice.ts`), void (`void.ts`), the stock side of SRI's answers (`stock.ts`, ADR-020), invoicing a sale order (`order-invoice.ts`, ADR-022), the RIDE and buyer's copy (`ride.ts`; drawing in `sri/ride-*.ts`), status machine checks and sequentials; the table, transitions and trigger generator are in `packages/db/src/schema/documents.ts` (FR-DOC-3) |
 | `apps/web/src/app/[locale]/(app)/(shell)/documents/` | The document list, invoice form and detail, with the RIDE and XML routes |
 | `apps/web/src/app/[locale]/(app)/(shell)/inventory/` | Stock list, a product's stock and movements, adjustments, the opening import, valuation and its CSV |
 | `apps/web/src/lib/invoice-totals.ts` | The form's exact totals, held to core's by a test |
@@ -187,8 +187,8 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/parties/`, `packages/core/src/catalog/` | Clients and providers with identification checks; products and services (FR-MD-1, FR-MD-2, FR-MD-3) |
 | `packages/core/src/purchasing/` | Purchase orders: numbers, revisions, receiving into stock (`receipts.ts`), the PDF and its email (`order-pdf.ts`, `email.ts`), the status machine (`status.ts`; the tables and transitions are in `packages/db/src/schema/purchasing.ts`, ADR-019) |
 | `apps/web/src/app/[locale]/(app)/(shell)/purchase-orders/` | The order list, form (new and edit), detail, receive screen and PDF route |
-| `packages/core/src/sales/` | Sale orders: numbers, revisions, holding goods on confirm and releasing them on cancel (`orders.ts`), the status machine (`status.ts`; the tables and transitions are in `packages/db/src/schema/sales.ts`, ADR-021) |
-| `apps/web/src/app/[locale]/(app)/(shell)/sale-orders/` | The order list, form (new and edit) and detail |
+| `packages/core/src/sales/` | Sale orders: numbers, revisions, holding goods on confirm and releasing them on cancel (`orders.ts`), what invoices cover and the order's status (`invoicing.ts`, ADR-022), the status machine (`status.ts`; the tables and transitions are in `packages/db/src/schema/sales.ts`, ADR-021) |
+| `apps/web/src/app/[locale]/(app)/(shell)/sale-orders/` | The order list, form (new and edit), detail and the form that invoices it |
 | `packages/core/src/agreements/` | Legal texts (`texts/*.md`, published by the migrate step), personalization, acceptance |
 | `docs/legal/review-notes.md` | What changed in the legal texts and the open legal questions |
 | `packages/core/src/audit/` | `recordAudit` (same transaction as the change), the activity list, sign-ins |

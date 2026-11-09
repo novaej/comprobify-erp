@@ -1,6 +1,5 @@
 import {
   and,
-  asc,
   desc,
   eq,
   ilike,
@@ -26,6 +25,7 @@ import {
 import { buyerForDocument } from '../parties';
 import { documentTotals, lineAmounts } from '../sri';
 import { nextNumber, warehousesOf, type Warehouse } from '../tenancy';
+import { coverageOf } from './invoicing';
 import { canManage, canRead, lockOrder, optionalText, positive, type SaleOrder } from './shared';
 import { assertSaleOrderTransition, SALE_ORDER_STATUSES } from './status';
 
@@ -203,7 +203,8 @@ export async function createSaleOrder(
 }
 
 // New content as a new revision of the lines; the old ones stay (rule 12). A confirmed order
-// lets its goods go and holds the new ones in the same transaction (FR-SAL-5).
+// lets its goods go and holds the new ones in the same transaction. Once an invoice covers it
+// the order is no longer CONFIRMED, so it can't be edited: the path is a credit note (FR-SAL-5).
 export async function updateSaleOrder(
   ctx: ActorContext,
   db: Database,
@@ -371,7 +372,8 @@ export async function listSaleOrders(
 export type SaleOrderView = SaleOrder & {
   client: { id: string; idType: string; identification: string; name: string } | null;
   warehouse: Warehouse;
-  lines: SaleOrderLine[];
+  // `invoiced` is covered by invoices that aren't voided (FR-SAL-3, FR-SAL-4).
+  lines: (SaleOrderLine & { invoiced: string; left: string })[];
 };
 
 export async function getSaleOrder(
@@ -400,21 +402,16 @@ export async function getSaleOrder(
           .where(eq(schema.clients.id, order.clientId))
       : [];
     const warehouse = (await warehousesOf(tx)).find((item) => item.id === order.warehouseId);
-    const lines = await tx.db
-      .select()
-      .from(schema.saleOrderLines)
-      .where(
-        and(
-          eq(schema.saleOrderLines.orderId, orderId),
-          eq(schema.saleOrderLines.revision, order.revision),
-        ),
-      )
-      .orderBy(asc(schema.saleOrderLines.position));
+    const coverage = await coverageOf(tx, order);
     return {
       ...order,
       client: client ?? null,
       warehouse: warehouse!,
-      lines,
+      lines: coverage.map((entry) => ({
+        ...entry.line,
+        invoiced: entry.invoiced.toFixed(6),
+        left: entry.left.toFixed(6),
+      })),
     };
   });
 }

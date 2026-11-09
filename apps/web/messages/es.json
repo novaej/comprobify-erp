@@ -658,7 +658,8 @@
     "saleOrders": "Pedidos de venta",
     "newSaleOrder": "Nuevo pedido de venta",
     "saleOrder": "Pedido de venta",
-    "editSaleOrder": "Editar pedido de venta"
+    "editSaleOrder": "Editar pedido de venta",
+    "invoiceSaleOrder": "Facturar pedido de venta"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -1182,7 +1183,8 @@
       "related": {
         "title": "Documentos relacionados",
         "origin": "Modifica a",
-        "derived": "Nota de crédito"
+        "derived": "Nota de crédito",
+        "saleOrder": "Pedido de venta"
       },
       "transport": {
         "title": "Transporte",
@@ -1984,9 +1986,9 @@
     },
     "statusHelp": {
       "DRAFT": "Aún puedes editarlo. No reserva mercadería hasta que lo confirmes.",
-      "CONFIRMED": "La mercadería está reservada para el cliente. Puedes editarlo o anularlo.",
-      "PARTIALLY_INVOICED": "Una parte ya se facturó.",
-      "INVOICED": "Todo el pedido está facturado.",
+      "CONFIRMED": "La mercadería está reservada para el cliente. Puedes facturarlo, editarlo o anularlo.",
+      "PARTIALLY_INVOICED": "Una parte ya se facturó. Factura el resto cuando quieras.",
+      "INVOICED": "Todo el pedido está facturado y autorizado por el SRI.",
       "CANCELLED": "Anulado: la mercadería reservada volvió a estar disponible."
     },
     "pagination": {
@@ -2065,13 +2067,18 @@
         "unitPrice": "Precio unitario",
         "discount": "Descuento",
         "iva": "IVA",
-        "total": "Subtotal"
+        "total": "Subtotal",
+        "invoiced": "Facturado"
       },
       "totals": {
         "title": "Totales",
         "subtotal": "Subtotal",
         "iva": "IVA",
         "total": "Total"
+      },
+      "invoices": {
+        "title": "Facturas",
+        "invoice": "Factura {number}"
       }
     },
     "actions": {
@@ -2086,7 +2093,56 @@
       "cancelReason": "Motivo",
       "cancelReasonHint": "Por ejemplo: el cliente desistió.",
       "cancelSubmit": "Anular pedido",
-      "cancelled": "Pedido anulado."
+      "cancelled": "Pedido anulado.",
+      "invoice": "Facturar"
+    },
+    "invoice": {
+      "title": "Facturar el pedido {number}",
+      "description": "Elige qué factura y cuánto. Lo que quede pendiente se factura después, en otra factura.",
+      "issuing": {
+        "title": "Emisión",
+        "issuePoint": "Punto de emisión",
+        "order": "Pedido",
+        "none": "Aún no hay un punto de emisión habilitado para facturas.",
+        "noneAction": "Ir a Empresa"
+      },
+      "lines": {
+        "title": "Líneas del pedido",
+        "description": "Cada línea no puede superar lo que aún queda por facturar. Deja vacías las que no vayan en esta factura.",
+        "descriptionCorrect": "Las cantidades de esta factura vuelven a elegirse sobre lo que queda del pedido, sin contar esta misma factura.",
+        "item": "Producto",
+        "left": "Por facturar",
+        "quantity": "Cantidad a facturar",
+        "quantityFor": "Cantidad a facturar de {name}",
+        "unitPrice": "Precio unitario",
+        "all": "Todo",
+        "over": "Supera lo que queda del pedido."
+      },
+      "payment": {
+        "title": "Forma de pago",
+        "description": "La factura se paga con una sola forma de pago por el total.",
+        "method": "Forma de pago",
+        "term": "Plazo",
+        "termUnit": "Unidad"
+      },
+      "totals": {
+        "title": "Totales",
+        "subtotal": "Subtotal",
+        "iva": "IVA {percent}%",
+        "total": "Total"
+      },
+      "submit": "Emitir factura",
+      "confirmTitle": "¿Emitir la factura?",
+      "confirmDescription": "Se emite al SRI con el siguiente número y la mercadería reservada del pedido pasa a la factura. No se puede deshacer.",
+      "confirmDetail": "Pedido {order}: {total}",
+      "correct": {
+        "title": "Corregir la factura {number}",
+        "description": "Se reenvía al SRI con el mismo número, con las líneas que elijas del pedido.",
+        "back": "Factura {number}",
+        "submit": "Corregir y reenviar",
+        "confirmTitle": "¿Corregir la factura?",
+        "confirmDescription": "Se reenvía al SRI con el mismo número y las cantidades que elegiste."
+      }
     }
   },
   "saleOrdersError": {
@@ -2101,6 +2157,12 @@
     "FEATURE_NOT_ENABLED": "Tu plan no incluye pedidos de venta.",
     "NOT_FOUND": "No se encontró el pedido, el cliente o el producto.",
     "INVALID_INPUT": "Revisa los datos: cada cantidad debe ser mayor que cero, el descuento no puede pasar de su línea y los números admiten hasta 6 decimales.",
-    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "ORDER_NOT_INVOICEABLE": "Solo un pedido confirmado se factura.",
+    "ORDER_QUANTITY_EXCEEDED": "Una línea supera lo que queda del pedido. Recarga la página: puede que ya se haya facturado.",
+    "ORDER_LINE_UNKNOWN": "Una línea no es del pedido o está repetida.",
+    "PAYMENT_AMOUNT_REQUIRED": "Con varias formas de pago, cada una necesita su valor.",
+    "INVOICE_FROM_ORDER": "Esta factura se corrige desde su pedido.",
+    "NOT_ORDER_INVOICE": "Esta factura no se hizo desde un pedido."
   }
 }

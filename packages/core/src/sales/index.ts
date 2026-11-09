@@ -26,3 +26,13 @@ export {
   saleOrderNumber,
 } from './status';
 export type { SaleOrderStatus } from './status';
+export {
+  documentIdsOfOrder,
+  invoiceContent,
+  linkInvoice,
+  orderForInvoicing,
+  orderOfDocument,
+  orderRefOfDocument,
+  syncSaleOrder,
+} from './invoicing';
+export type { LineCoverage } from './invoicing';

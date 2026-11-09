@@ -3,6 +3,7 @@ import {
   getSaleOrder,
   hasFeature,
   isDomainError,
+  saleOrderInvoices,
   saleOrderNumber,
   type SaleOrderView,
 } from '@comprobify/core';
@@ -23,9 +24,11 @@ import {
   TableCard,
 } from '@/components/stack-table';
 import { ToneBadge } from '@/components/tone-badge';
+import { Link } from '@/i18n/navigation';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
+import { STATUS_TONE } from '../../documents/document-status';
 import { SALE_ORDER_TONE } from '../order-status';
 import { OrderActions } from './order-actions';
 
@@ -54,6 +57,7 @@ export default async function SaleOrderPage({
   }
   const t = await getTranslations('saleOrders');
   const tSri = await getTranslations('sri');
+  const tDocuments = await getTranslations('documents');
   const format = await getFormatter();
   const money = new Intl.NumberFormat(locale === 'en' ? 'en' : 'es-EC', {
     style: 'currency',
@@ -67,10 +71,21 @@ export default async function SaleOrderPage({
   const canManage = actor.permissions.includes('sales.manage');
   const allowed = {
     edit: canManage && (order.status === 'DRAFT' || order.status === 'CONFIRMED'),
-    confirm: canManage && canSaleOrderTransition(order.status, 'CONFIRMED'),
+    // Back to CONFIRMED is what a void does, not something a person asks for.
+    confirm: canManage && order.status === 'DRAFT',
     cancel: canManage && canSaleOrderTransition(order.status, 'CANCELLED'),
+    // FR-SAL-3: what is left of a confirmed order is invoiced in one or more invoices.
+    invoice:
+      canManage &&
+      actor.permissions.includes('documents.issue') &&
+      (order.status === 'CONFIRMED' || order.status === 'PARTIALLY_INVOICED') &&
+      order.lines.some((line) => Number(line.left) > 0),
   };
   const discounted = order.lines.some((line) => Number(line.discount) > 0);
+  const invoicedAny = order.lines.some((line) => Number(line.invoiced) > 0);
+  const invoices = actor.permissions.includes('documents.read')
+    ? await saleOrderInvoices(actor, db, order.id)
+    : [];
 
   return (
     <div className="max-w-6xl space-y-6">
@@ -145,6 +160,9 @@ export default async function SaleOrderPage({
                     <StackHead className="text-right">{t('detail.lines.discount')}</StackHead>
                   )}
                   <StackHead>{t('detail.lines.iva')}</StackHead>
+                  {invoicedAny && (
+                    <StackHead className="text-right">{t('detail.lines.invoiced')}</StackHead>
+                  )}
                   <StackHead className="pr-4 text-right">{t('detail.lines.total')}</StackHead>
                 </StackRow>
               </StackHeader>
@@ -184,6 +202,14 @@ export default async function SaleOrderPage({
                     <StackCell label={t('detail.lines.iva')}>
                       {tSri(`ivaRates.${line.ivaRateCode as '4'}`)}
                     </StackCell>
+                    {invoicedAny && (
+                      <StackCell
+                        label={t('detail.lines.invoiced')}
+                        className="text-right tabular-nums"
+                      >
+                        {quantity(line.invoiced)}
+                      </StackCell>
+                    )}
                     <StackCell
                       label={t('detail.lines.total')}
                       className="pr-4 text-right tabular-nums"
@@ -214,6 +240,30 @@ export default async function SaleOrderPage({
           </dl>
         </SectionCard>
       </div>
+
+      {invoices.length > 0 && (
+        <SectionCard title={t('detail.invoices.title')}>
+          <ul className="space-y-2 text-sm">
+            {invoices.map((invoice) => (
+              <li key={invoice.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <Link
+                  href={`/documents/${invoice.id}`}
+                  className="font-medium tabular-nums underline-offset-4 hover:underline"
+                >
+                  {t('detail.invoices.invoice', { number: invoice.number })}
+                </Link>
+                <ToneBadge tone={STATUS_TONE[invoice.status as keyof typeof STATUS_TONE]}>
+                  {tDocuments(`statuses.${invoice.status as 'SIGNED'}`)}
+                </ToneBadge>
+                <span className="tabular-nums text-muted-foreground">
+                  {date(invoice.issueDate)}
+                </span>
+                <span className="ml-auto tabular-nums">{amount(invoice.total)}</span>
+              </li>
+            ))}
+          </ul>
+        </SectionCard>
+      )}
     </div>
   );
 }

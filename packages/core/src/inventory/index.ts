@@ -6,8 +6,10 @@ export {
   goodsStillOut,
   releaseDocumentStock,
   reserveDocumentStock,
+  returnHoldToOrder,
   returnSoldStock,
   sellDocumentStock,
+  transferOrderHold,
   undoReturn,
 } from './document-stock';
 export type { HoldSource, StockLine } from './document-stock';

@@ -9,6 +9,20 @@ export type { DocumentStatus } from './status';
 export { takeSequential } from './sequence';
 export { correctInvoice, correctionInput, createInvoice, invoiceInput } from './create-invoice';
 export {
+  correctOrderInvoice,
+  invoiceSaleOrder,
+  orderInvoiceCorrectionInput,
+  orderInvoiceDraft,
+  orderInvoiceInput,
+  saleOrderInvoices,
+} from './order-invoice';
+export type {
+  OrderInvoiceCorrectionInput,
+  OrderInvoiceDraft,
+  OrderInvoiceInput,
+  OrderInvoiceRow,
+} from './order-invoice';
+export {
   correctGuide,
   createGuide,
   guideCorrectionInput,

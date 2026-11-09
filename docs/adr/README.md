@@ -42,6 +42,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [019](019-purchase-orders.md) | Purchase orders | Accepted |
 | [020](020-documents-move-stock.md) | Invoices and credit notes move stock | Accepted |
 | [021](021-sale-orders.md) | Sale orders | Accepted |
+| [022](022-invoicing-sale-orders.md) | Invoicing a sale order | Accepted |
 
 ## Old ADRs to read before each milestone
 

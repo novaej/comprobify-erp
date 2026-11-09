@@ -2,7 +2,7 @@
 
 import { Button, buttonVariants } from '@comprobify/ui/components/button';
 import { Textarea } from '@comprobify/ui/components/textarea';
-import { Ban, CircleCheck, PencilLine } from 'lucide-react';
+import { Ban, CircleCheck, FileText, PencilLine } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -12,7 +12,12 @@ import { useServerAction } from '@/components/use-server-action';
 import { Link } from '@/i18n/navigation';
 import { saleOrderStatusAction } from '../actions';
 
-export type OrderAllowed = { edit: boolean; confirm: boolean; cancel: boolean };
+export type OrderAllowed = {
+  edit: boolean;
+  confirm: boolean;
+  cancel: boolean;
+  invoice: boolean;
+};
 
 // FR-SAL-1: what the order allows now, each asked first (FR-UX-2).
 export function OrderActions({
@@ -41,6 +46,12 @@ export function OrderActions({
           <CircleCheck className="mr-1.5 h-4 w-4" aria-hidden />
           {t('confirm')}
         </Button>
+      )}
+      {allowed.invoice && (
+        <Link href={`/sale-orders/${id}/invoice`} className={buttonVariants({ size: 'sm' })}>
+          <FileText className="mr-1.5 h-4 w-4" aria-hidden />
+          {t('invoice')}
+        </Link>
       )}
       {allowed.edit && (
         <Link

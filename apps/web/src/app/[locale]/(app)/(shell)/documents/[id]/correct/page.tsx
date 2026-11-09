@@ -6,6 +6,8 @@ import {
   getDocument,
   guideDraft,
   isDomainError,
+  orderInvoiceDraft,
+  saleOrderNumber,
   systemClock,
   type CorrectionDraft,
 } from '@comprobify/core';
@@ -22,6 +24,8 @@ import { CreditNoteForm } from '../../credit-note/credit-note-form';
 import { creditFormData } from '../../credit-note/form-data';
 import { invoiceFormData } from '../../new/form-data';
 import { InvoiceForm } from '../../new/invoice-form';
+import { orderInvoiceFormData } from '../../../sale-orders/invoice-data';
+import { OrderInvoiceForm } from '../../../sale-orders/[id]/invoice/order-invoice-form';
 
 export const generateMetadata = pageTitle('correctInvoice');
 
@@ -38,8 +42,11 @@ export default async function CorrectInvoicePage({
 
   const { db } = await getRuntime();
   let kind: string;
+  let fromOrder: boolean;
   try {
-    kind = (await getDocument(actor, db, id)).documentType;
+    const found = await getDocument(actor, db, id);
+    kind = found.documentType;
+    fromOrder = found.saleOrder !== null;
   } catch (error) {
     if (isDomainError(error, 'NOT_FOUND') || (error instanceof Error && error.name === 'ZodError'))
       notFound();
@@ -47,6 +54,8 @@ export default async function CorrectInvoicePage({
   }
   if (kind === '04') return <CorrectCreditNote locale={locale} id={id} />;
   if (kind === '06') return <CorrectGuide locale={locale} id={id} />;
+  // An invoice made from a sale order is corrected through the order (ADR-022).
+  if (fromOrder) return <CorrectOrderInvoice locale={locale} id={id} />;
 
   let draft: CorrectionDraft;
   try {
@@ -172,6 +181,49 @@ async function CorrectGuide({ locale, id }: { locale: string; id: string }) {
           transportEnd: draft.content.transportEnd < today ? today : draft.content.transportEnd,
         }}
         draft={{ documentId: draft.id }}
+      />
+    </div>
+  );
+}
+
+// FR-DOC-7, FR-SAL-4: the order's lines, with this invoice's own quantities as they were.
+async function CorrectOrderInvoice({ locale, id }: { locale: string; id: string }) {
+  const { actor } = await loadShell(locale);
+  const { db } = await getRuntime();
+  let draft: Awaited<ReturnType<typeof orderInvoiceDraft>>;
+  try {
+    draft = await orderInvoiceDraft(actor, db, id);
+  } catch (error) {
+    if (isDomainError(error, 'NOT_CORRECTABLE'))
+      return redirect({ href: `/documents/${id}`, locale });
+    if (isDomainError(error, 'NOT_FOUND') || (error instanceof Error && error.name === 'ZodError'))
+      notFound();
+    throw error;
+  }
+  const t = await getTranslations('saleOrders.invoice');
+  const data = await orderInvoiceFormData(actor, draft.lines);
+  const payment = draft.payments[0];
+  const number = saleOrderNumber(draft.order.number);
+
+  return (
+    <div className="max-w-7xl">
+      <PageHeader
+        title={t('correct.title', { number: draft.number })}
+        description={t('correct.description')}
+        backHref={`/documents/${draft.id}`}
+        backLabel={t('correct.back', { number: draft.number })}
+      />
+      <OrderInvoiceForm
+        orderId={draft.order.id}
+        orderNumber={number}
+        {...data}
+        issuePoints={[{ value: draft.issuePointId, label: draft.issuePoint }]}
+        draft={{
+          documentId: draft.id,
+          method: payment?.method ?? '01',
+          term: payment?.term === null || payment?.term === undefined ? '' : String(payment.term),
+          termUnit: payment?.termUnit ?? '',
+        }}
       />
     </div>
   );

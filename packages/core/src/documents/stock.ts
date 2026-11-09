@@ -1,11 +1,13 @@
 import { and, eq, schema, sql, type Tx } from '@comprobify/db';
 import {
   goodsStillOut,
+  returnHoldToOrder,
   returnSoldStock,
   sellDocumentStock,
   undoReturn,
   type Mover,
 } from '../inventory';
+import { orderOfDocument, syncSaleOrder } from '../sales';
 import type { Row } from './sending';
 
 // ADR-020: the stock side of SRI's answers, in the transaction that records them.
@@ -30,7 +32,13 @@ async function creditNotesOf(tx: Tx, invoice: Row): Promise<string[]> {
 // brings back its return lines, up to what the invoice sold and hasn't had back.
 export async function stockOnAuthorized(tx: Tx, row: Row): Promise<void> {
   const mover: Mover = { tenantId: row.tenantId, userId: null };
-  if (row.documentType === '01') return sellDocumentStock(tx, mover, row.id);
+  if (row.documentType === '01') {
+    await sellDocumentStock(tx, mover, row.id);
+    // Authorized invoices are what finish an order (FR-SAL-4).
+    const orderId = await orderOfDocument(tx, row.id);
+    if (orderId) await syncSaleOrder(tx, orderId);
+    return;
+  }
   if (row.documentType !== '04' || !row.returnsStock || !row.relatedDocumentId) return;
   const { documents, documentLines } = schema;
   const [invoice] = await tx.db
@@ -60,13 +68,21 @@ export async function stockOnAuthorized(tx: Tx, row: Row): Promise<void> {
 // A voided invoice gets back everything still out; a voided credit note takes back its return.
 export async function stockOnVoided(tx: Tx, row: Row, userId: string | null): Promise<void> {
   const mover: Mover = { tenantId: row.tenantId, userId };
-  if (row.documentType === '01')
-    return returnSoldStock(tx, mover, {
+  if (row.documentType === '01') {
+    await returnSoldStock(tx, mover, {
       invoiceId: row.id,
       returns: await creditNotesOf(tx, row),
       into: row.id,
       lines: null,
     });
+    // Only a voided invoice gives its quantities back to the order, and its hold (FR-SAL-4).
+    const orderId = await orderOfDocument(tx, row.id);
+    if (orderId) {
+      await returnHoldToOrder(tx, mover, { orderId, documentId: row.id });
+      await syncSaleOrder(tx, orderId);
+    }
+    return;
+  }
   if (row.documentType === '04') return undoReturn(tx, mover, row.id);
 }
 

@@ -1061,6 +1061,91 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await look(page, 'sale-orders');
   });
 
+  test('invoices a sale order in parts, corrects one through the order and finishes it (FR-SAL-3, FR-SAL-4, FR-SAL-6)', async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await signIn(page, email, newPassword);
+    const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
+    await expect(nav).toBeVisible();
+    const heading = page.getByRole('heading', { level: 1 });
+
+    // 5 of Café molido for María, confirmed so they are held.
+    await page.goto('/es/sale-orders/new');
+    const client = page.getByRole('combobox', {
+      name: 'Buscar cliente por nombre o identificación',
+    });
+    await client.fill('María');
+    await client.press('Enter');
+    const line = page.getByRole('group', { name: 'Línea 1' });
+    await line.getByRole('combobox', { name: 'Producto' }).fill('CAF-001');
+    await page.keyboard.press('Enter');
+    await line.getByRole('textbox', { name: 'Cantidad' }).fill('5');
+    await page.getByRole('button', { name: 'Guardar borrador' }).click();
+    await expect(heading).toContainText('Pedido PV-000002');
+    await page.getByRole('button', { name: 'Confirmar pedido' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Confirmar el pedido?' })
+      .getByRole('button', { name: 'Confirmar pedido' })
+      .click();
+    await expect(heading).toContainText('Confirmado');
+
+    // The first part: 2 of the 5.
+    const orderUrl = page.url();
+    const invoiceNow = async (quantity: string | null) => {
+      await page.goto(`${orderUrl}/invoice`);
+      await expect(heading).toContainText('Facturar el pedido PV-000002');
+      const field = page.getByRole('textbox', { name: 'Cantidad a facturar de Café molido' });
+      if (quantity) await field.fill(quantity);
+      await page.getByRole('button', { name: 'Emitir factura' }).click();
+      await page
+        .getByRole('dialog', { name: '¿Emitir la factura?' })
+        .getByRole('button', { name: 'Emitir factura' })
+        .click();
+      await expect(heading).toContainText('Factura 001-001-');
+      return page.url().split('/').at(-1)!;
+    };
+    await page.goto(`${orderUrl}/invoice`);
+    await expect(
+      page.getByRole('textbox', { name: 'Cantidad a facturar de Café molido' }),
+    ).toHaveValue('5');
+    await page.getByRole('textbox', { name: 'Cantidad a facturar de Café molido' }).fill('6');
+    await expect(page.getByRole('alert').filter({ hasText: 'Supera lo que queda' })).toBeVisible();
+    await look(page, 'sale-order-invoice');
+    const first = await invoiceNow('2');
+    await expect(page.getByRole('main')).toContainText('PV-000002');
+    await runSri(first, 'authorize');
+
+    // The second part is returned by SRI, and corrected through the order.
+    const second = await invoiceNow('3');
+    await runSri(second, 'return');
+    await page.goto(`/es/documents/${second}`);
+    await expect(heading).toContainText('Devuelto');
+    await page.getByRole('link', { name: 'Corregir' }).click();
+    await expect(heading).toContainText('Corregir la factura 001-001-');
+    await page.getByRole('textbox', { name: 'Cantidad a facturar de Café molido' }).fill('2');
+    await look(page, 'sale-order-invoice-correct');
+    await page.getByRole('button', { name: 'Corregir y reenviar' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Corregir la factura?' })
+      .getByRole('button', { name: 'Corregir y reenviar' })
+      .click();
+    await expect(heading).toContainText('Firmado');
+    expect(page.url()).toContain(second);
+    await runSri(second, 'authorize');
+
+    // One is left: invoiced, the order is finished.
+    await invoiceNow(null).then((last) => runSri(last, 'authorize'));
+    await page.goto(orderUrl);
+    await expect(heading).toContainText('Facturado');
+    await expect(heading).not.toContainText('en parte');
+    await expect(page.getByRole('main')).toContainText('Facturas');
+    await expect(page.getByRole('link', { name: /^Factura 001-001-/ })).toHaveCount(3);
+    await look(page, 'sale-order-invoiced');
+    await expect(page.getByRole('button', { name: 'Anular' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Confirmar pedido' })).toHaveCount(0);
+  });
+
   test('finds no drift between the stock levels and their ledger after the day (FR-INV-2, Milestone 5 gate)', async () => {
     // What the nightly inventory.verify job runs, over everything the tests above stocked.
     const silent = { debug() {}, info() {}, warn() {}, error() {}, child: () => silent };

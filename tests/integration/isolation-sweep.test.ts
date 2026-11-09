@@ -11,6 +11,7 @@ import {
   createSaleOrder,
   confirmSaleOrder,
   getPurchaseOrder,
+  getSaleOrder,
   markPurchaseOrderSent,
   receivePurchaseOrder,
   createAuth,
@@ -234,6 +235,18 @@ describe('isolation sweep over every tenant table', () => {
         lines: [{ productId: product.id, quantity: '1', unitPrice: '1.50', discount: '0' }],
       });
       await confirmSaleOrder(actor, db, sale.id);
+      // And an invoice covering part of it (FR-SAL-3).
+      const [saleLine] = (await getSaleOrder(actor, db, sale.id)).lines;
+      await db.withSystem('test: link an invoice to a sale order', ({ db: tx }) =>
+        tx.insert(schema.saleOrderInvoiceLines).values({
+          tenantId,
+          orderId: sale.id,
+          orderLineId: saleLine!.id,
+          documentId: document.id,
+          documentRevision: 1,
+          quantity: '1',
+        }),
+      );
     }
     return org;
   };
@@ -296,6 +309,7 @@ describe('isolation sweep over every tenant table', () => {
         'purchase_orders',
         'purchase_receipt_lines',
         'purchase_receipts',
+        'sale_order_invoice_lines',
         'sale_order_lines',
         'sale_orders',
         'sri_exchanges',

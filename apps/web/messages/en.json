@@ -658,7 +658,8 @@
     "saleOrders": "Sale orders",
     "newSaleOrder": "New sale order",
     "saleOrder": "Sale order",
-    "editSaleOrder": "Edit sale order"
+    "editSaleOrder": "Edit sale order",
+    "invoiceSaleOrder": "Invoice sale order"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -1182,7 +1183,8 @@
       "related": {
         "title": "Related documents",
         "origin": "Modifies",
-        "derived": "Credit note"
+        "derived": "Credit note",
+        "saleOrder": "Sale order"
       },
       "transport": {
         "title": "Transport",
@@ -1984,9 +1986,9 @@
     },
     "statusHelp": {
       "DRAFT": "You can still edit it. It holds no goods until you confirm it.",
-      "CONFIRMED": "The goods are held for the client. You can edit or cancel it.",
-      "PARTIALLY_INVOICED": "Part of it has been invoiced.",
-      "INVOICED": "The whole order is invoiced.",
+      "CONFIRMED": "The goods are held for the client. You can invoice, edit or cancel it.",
+      "PARTIALLY_INVOICED": "Part of it has been invoiced. Invoice the rest when you like.",
+      "INVOICED": "The whole order is invoiced and authorized by SRI.",
       "CANCELLED": "Cancelled: the goods it held are available again."
     },
     "pagination": {
@@ -2065,13 +2067,18 @@
         "unitPrice": "Unit price",
         "discount": "Discount",
         "iva": "IVA",
-        "total": "Subtotal"
+        "total": "Subtotal",
+        "invoiced": "Invoiced"
       },
       "totals": {
         "title": "Totals",
         "subtotal": "Subtotal",
         "iva": "IVA",
         "total": "Total"
+      },
+      "invoices": {
+        "title": "Invoices",
+        "invoice": "Invoice {number}"
       }
     },
     "actions": {
@@ -2086,7 +2093,56 @@
       "cancelReason": "Reason",
       "cancelReasonHint": "For example: the client changed their mind.",
       "cancelSubmit": "Cancel order",
-      "cancelled": "Order cancelled."
+      "cancelled": "Order cancelled.",
+      "invoice": "Invoice"
+    },
+    "invoice": {
+      "title": "Invoice order {number}",
+      "description": "Choose what to invoice and how much. What is left is invoiced later, in another invoice.",
+      "issuing": {
+        "title": "Issuing",
+        "issuePoint": "Issue point",
+        "order": "Order",
+        "none": "No issue point is enabled for invoices yet.",
+        "noneAction": "Go to Company"
+      },
+      "lines": {
+        "title": "Order lines",
+        "description": "Each line can't exceed what is still to invoice. Leave empty the ones that aren't on this invoice.",
+        "descriptionCorrect": "This invoice's quantities are chosen again over what the order has left, not counting this invoice itself.",
+        "item": "Product",
+        "left": "To invoice",
+        "quantity": "Quantity to invoice",
+        "quantityFor": "Quantity to invoice of {name}",
+        "unitPrice": "Unit price",
+        "all": "All",
+        "over": "More than the order has left."
+      },
+      "payment": {
+        "title": "Payment",
+        "description": "The invoice is paid with a single method for the total.",
+        "method": "Payment method",
+        "term": "Term",
+        "termUnit": "Unit"
+      },
+      "totals": {
+        "title": "Totals",
+        "subtotal": "Subtotal",
+        "iva": "IVA {percent}%",
+        "total": "Total"
+      },
+      "submit": "Issue invoice",
+      "confirmTitle": "Issue the invoice?",
+      "confirmDescription": "It is sent to SRI with the next number, and the goods the order held pass to the invoice. This can't be undone.",
+      "confirmDetail": "Order {order}: {total}",
+      "correct": {
+        "title": "Correct invoice {number}",
+        "description": "It is sent to SRI again with the same number, with the lines you choose from the order.",
+        "back": "Invoice {number}",
+        "submit": "Correct and resend",
+        "confirmTitle": "Correct the invoice?",
+        "confirmDescription": "It is sent to SRI again with the same number and the quantities you chose."
+      }
     }
   },
   "saleOrdersError": {
@@ -2101,6 +2157,12 @@
     "FEATURE_NOT_ENABLED": "Your plan doesn't include sale orders.",
     "NOT_FOUND": "The order, client or product was not found.",
     "INVALID_INPUT": "Check the data: each quantity must be more than zero, a discount can't pass its line, and numbers take up to 6 decimals.",
-    "UNKNOWN": "An unexpected error occurred. Try again."
+    "UNKNOWN": "An unexpected error occurred. Try again.",
+    "ORDER_NOT_INVOICEABLE": "Only a confirmed order is invoiced.",
+    "ORDER_QUANTITY_EXCEEDED": "A line is more than the order has left. Reload the page: it may already have been invoiced.",
+    "ORDER_LINE_UNKNOWN": "A line isn't on the order or is repeated.",
+    "PAYMENT_AMOUNT_REQUIRED": "With several payment methods, each needs its amount.",
+    "INVOICE_FROM_ORDER": "This invoice is corrected from its order.",
+    "NOT_ORDER_INVOICE": "This invoice wasn't made from an order."
   }
 }

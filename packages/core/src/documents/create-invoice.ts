@@ -11,7 +11,8 @@ import {
   toSriAmount,
   type ActorContext,
 } from '../kernel';
-import { releaseDocumentStock, reserveDocumentStock } from '../inventory';
+import { releaseDocumentStock, reserveDocumentStock, transferOrderHold } from '../inventory';
+import { orderOfDocument } from '../sales';
 import { buyerChangesInput, buyerForDocument, updateBuyerDetails } from '../parties';
 import {
   accessKey,
@@ -89,7 +90,7 @@ export const invoiceInput = z.object({
 });
 export type InvoiceInput = z.input<typeof invoiceInput>;
 
-type ParsedInvoice = z.output<typeof invoiceInput>;
+export type ParsedInvoice = z.output<typeof invoiceInput>;
 type Content = Pick<
   ParsedInvoice,
   'clientId' | 'clientChanges' | 'lines' | 'payments' | 'additionalInfo'
@@ -98,7 +99,7 @@ type Content = Pick<
 // What a creation and a correction share: the buyer, the FR-DOC-9 checks, the XML in the
 // XSD's order, the XSD check, the signature, and the rows to store. The caller decides
 // the number, date and key.
-async function composeInvoice(
+export async function composeInvoice(
   ctx: ActorContext,
   tx: Tx,
   input: Content,
@@ -220,6 +221,10 @@ async function composeInvoice(
   return { columns, insertParts };
 }
 
+// Where an invoice's goods come from when it is made from a sale order (ADR-022): the order's
+// warehouse, with the order's hold passed to the invoice.
+export type OrderSource = { orderId: string; warehouseId: string };
+
 // FR-DOC-2, in one transaction: idempotency, issue point, quota, the sequential, the
 // access key, the XML, the XSD, the signature, the rows, and the send job. Anything
 // that fails rolls the number back.
@@ -232,84 +237,107 @@ export async function createInvoice(
   requirePermission(ctx, 'documents.issue');
   const input = invoiceInput.parse(raw);
   const payloadHash = createHash('sha256').update(JSON.stringify(input)).digest('hex');
+  return db.withTenant({ tenantId: ctx.tenantId }, (tx) =>
+    issueInvoice(ctx, tx, input, payloadHash, deps),
+  );
+}
+
+// The pipeline in the caller's transaction, so an invoice made from a sale order can link
+// itself to the order, and pass its hold, in the same one (FR-SAL-6). `afterInsert` runs with
+// the new document, before the send job is queued.
+export async function issueInvoice(
+  ctx: ActorContext,
+  tx: Tx,
+  input: ParsedInvoice,
+  payloadHash: string,
+  deps: IssueDeps,
+  order: OrderSource | null = null,
+  afterInsert: (document: typeof schema.documents.$inferSelect) => Promise<void> = async () => {},
+): Promise<IssuedDocument> {
   const now = ctx.clock.now();
+  const { documents } = schema;
+  const existing = await findIdempotent(tx, ctx, input.idempotencyKey, payloadHash);
+  if (existing) return existing;
 
-  return db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
-    const { documents } = schema;
-    const existing = await findIdempotent(tx, ctx, input.idempotencyKey, payloadHash);
-    if (existing) return existing;
+  const issuer = await issuingContext(ctx, tx, input.issuePointId);
+  await consumeQuota(ctx, tx);
+  const sequential = await takeSequential(tx.db, {
+    tenantId: ctx.tenantId,
+    issuePointId: input.issuePointId,
+    documentType: '01',
+  });
+  const issueDate = ecuadorDate(now);
+  const ambiente = ambienteFor(ctx.tenantMode, deps.appEnv);
+  const series = `${issuer.branchCode}${issuer.pointCode}`;
+  const key = accessKey({
+    issueDate,
+    documentType: '01',
+    ruc: issuer.ruc,
+    ambiente,
+    series,
+    sequential,
+    numericCode: randomNumericCode(),
+  });
+  const { columns, insertParts } = await composeInvoice(
+    ctx,
+    tx,
+    input,
+    issuer,
+    { sequential, issueDate, ambiente, accessKey: key },
+    deps,
+  );
 
-    const issuer = await issuingContext(ctx, tx, input.issuePointId);
-    await consumeQuota(ctx, tx);
-    const sequential = await takeSequential(tx.db, {
+  const [document] = await tx.db
+    .insert(documents)
+    .values({
+      ...columns,
       tenantId: ctx.tenantId,
       issuePointId: input.issuePointId,
       documentType: '01',
-    });
-    const issueDate = ecuadorDate(now);
-    const ambiente = ambienteFor(ctx.tenantMode, deps.appEnv);
-    const series = `${issuer.branchCode}${issuer.pointCode}`;
-    const key = accessKey({
-      issueDate,
-      documentType: '01',
-      ruc: issuer.ruc,
-      ambiente,
       series,
       sequential,
-      numericCode: randomNumericCode(),
+      ambiente,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash,
+      createdBy: ctx.userId ?? null,
+    })
+    .returning();
+  await insertParts(document!.id, 1);
+  // ADR-020: the goods are held from now; SRI's authorization sells them.
+  if (order)
+    await transferOrderHold(ctx, tx, {
+      orderId: order.orderId,
+      documentId: document!.id,
+      warehouseId: order.warehouseId,
+      lines: input.lines,
     });
-    const { columns, insertParts } = await composeInvoice(
-      ctx,
-      tx,
-      input,
-      issuer,
-      { sequential, issueDate, ambiente, accessKey: key },
-      deps,
-    );
-
-    const [document] = await tx.db
-      .insert(documents)
-      .values({
-        ...columns,
-        tenantId: ctx.tenantId,
-        issuePointId: input.issuePointId,
-        documentType: '01',
-        series,
-        sequential,
-        ambiente,
-        idempotencyKey: input.idempotencyKey,
-        payloadHash,
-        createdBy: ctx.userId ?? null,
-      })
-      .returning();
-    await insertParts(document!.id, 1);
-    // ADR-020: the goods are held from now; SRI's authorization sells them.
+  else
     await reserveDocumentStock(ctx, tx, {
       documentId: document!.id,
       warehouseId: await issuePointWarehouse(tx, input.issuePointId),
       lines: input.lines,
     });
-    await recordVersion(tx, {
-      tenantId: ctx.tenantId,
-      documentId: document!.id,
-      reason: 'CREATED',
-      revision: 1,
-      accessKey: document!.accessKey,
-      issueDate: document!.issueDate,
-      signedXml: document!.signedXml!,
-      actorUserId: ctx.userId ?? null,
-    });
-    await tx.db.insert(schema.documentEvents).values({
-      tenantId: ctx.tenantId,
-      documentId: document!.id,
-      type: 'CREATED',
-      toStatus: 'SIGNED',
-      actorUserId: ctx.userId ?? null,
-    });
-    // Same transaction: a rolled-back document never gets sent (CLAUDE.md rule 10).
-    await deps.jobs.enqueue(tx, 'sri.send', { tenantId: ctx.tenantId, documentId: document!.id });
-    return issued(document!, true);
+  await afterInsert(document!);
+  await recordVersion(tx, {
+    tenantId: ctx.tenantId,
+    documentId: document!.id,
+    reason: 'CREATED',
+    revision: 1,
+    accessKey: document!.accessKey,
+    issueDate: document!.issueDate,
+    signedXml: document!.signedXml!,
+    actorUserId: ctx.userId ?? null,
   });
+  await tx.db.insert(schema.documentEvents).values({
+    tenantId: ctx.tenantId,
+    documentId: document!.id,
+    type: 'CREATED',
+    toStatus: 'SIGNED',
+    actorUserId: ctx.userId ?? null,
+  });
+  // Same transaction: a rolled-back document never gets sent (CLAUDE.md rule 10).
+  await deps.jobs.enqueue(tx, 'sri.send', { tenantId: ctx.tenantId, documentId: document!.id });
+  return issued(document!, true);
 }
 
 export const correctionInput = invoiceInput.omit({ issuePointId: true, idempotencyKey: true });
@@ -448,6 +476,10 @@ export async function correctInvoice(
     documentId,
     '01',
     async (tx, row, issuer, numbering) => {
+      // An invoice made from a sale order is corrected through it, which holds its lines
+      // to what the order has left (ADR-022).
+      if (await orderOfDocument(tx, row.id))
+        throw new DomainError('INVOICE_FROM_ORDER', 'This invoice is corrected through its order');
       const composed = await composeInvoice(ctx, tx, input, issuer, numbering, deps);
       // The new lines are held instead of the old ones (ADR-020).
       await releaseDocumentStock(

@@ -23,6 +23,7 @@ import {
 } from '../kernel';
 import { authorizedXmlFile, CONSUMER_FINAL_ID, SELECTABLE_IVA_RATES, SRI_IVA_RATES } from '../sri';
 import { rideData, type Transport } from '../sri';
+import { orderRefOfDocument } from '../sales';
 import { DOCUMENT_STATUSES, type DocumentStatus } from './status';
 
 // FR-DOC-12 reads. A user restricted to issue points sees only theirs (FR-ROLE-2).
@@ -218,6 +219,8 @@ export type DocumentDetail = {
   authorizationNumber: string | null;
   authorizedAt: Date | null;
   revision: number;
+  // The sale order an invoice was made from (FR-SAL-3).
+  saleOrder: { id: string; number: number } | null;
   lines: {
     code: string;
     name: string;
@@ -319,7 +322,8 @@ export async function getDocument(
   requirePermission(ctx, 'documents.read');
   const id = z.uuid().parse(documentId);
   const { documents, documentLines, documentPayments, documentEvents, documentReissues } = schema;
-  return db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+  return db.withTenant({ tenantId: ctx.tenantId }, async (handle) => {
+    const { db: tx } = handle;
     const [row] = await tx
       .select()
       .from(documents)
@@ -402,6 +406,7 @@ export async function getDocument(
       authorizationNumber: row.authorizationNumber,
       authorizedAt: row.authorizedAt,
       revision: row.revision,
+      saleOrder: row.documentType === '01' ? await orderRefOfDocument(handle, row.id) : null,
       lines: lines.map((line) => ({
         code: line.code,
         name: line.name,

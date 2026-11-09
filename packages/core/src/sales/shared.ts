@@ -41,3 +41,9 @@ export async function lockOrder(tx: Tx, id: string): Promise<SaleOrder> {
   if (!order) throw new DomainError('NOT_FOUND', 'Sale order not found');
   return order;
 }
+
+export async function readOrder(tx: Tx, id: string): Promise<SaleOrder> {
+  const [order] = await tx.db.select().from(schema.saleOrders).where(eq(schema.saleOrders.id, id));
+  if (!order) throw new DomainError('NOT_FOUND', 'Sale order not found');
+  return order;
+}
