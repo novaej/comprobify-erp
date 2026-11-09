@@ -1914,10 +1914,12 @@
       "notesHint": "Opcional. Por ejemplo, el número de la guía o la factura del proveedor.",
       "submit": "Registrar recepción",
       "cancel": "Cancelar",
-      "nothing": "Indica cuánto llegó de al menos un producto, sin pasar lo pendiente.",
+      "nothing": "Indica cuánto llegó de al menos un producto.",
       "confirmTitle": "¿Registrar la recepción?",
       "confirmDescription": "Las existencias entran a la bodega ahora y una recepción no se puede deshacer. Un error se corrige con un ajuste de inventario.",
-      "done": "Recepción registrada."
+      "done": "Recepción registrada.",
+      "tooMuch": "Puedes recibir hasta {left}.",
+      "fixQuantities": "Una cantidad pasa lo pendiente o no es un número. Corrígela antes de registrar."
     }
   },
   "purchaseOrdersError": {

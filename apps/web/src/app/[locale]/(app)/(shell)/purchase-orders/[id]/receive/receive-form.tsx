@@ -107,7 +107,7 @@ export function ReceiveForm({
         event.preventDefault();
         setError(undefined);
         if (ready) setConfirming(true);
-        else setError(t('nothing'));
+        else setError(parsed.some((item) => !item.valid) ? t('fixQuantities') : t('nothing'));
       }}
       className="space-y-6"
     >
@@ -162,6 +162,7 @@ export function ReceiveForm({
                     <Input
                       aria-label={t('nowFor', { name: line.name })}
                       aria-invalid={!valid || undefined}
+                      aria-describedby={valid ? undefined : `${line.id}-error`}
                       inputMode="decimal"
                       autoComplete="off"
                       className="text-right tabular-nums"
@@ -173,6 +174,11 @@ export function ReceiveForm({
                         }))
                       }
                     />
+                    {!valid && (
+                      <p id={`${line.id}-error`} className="mt-1 text-xs text-destructive">
+                        {t('tooMuch', { left: shown(line.left, mark) })}
+                      </p>
+                    )}
                   </StackCell>
                 </StackRow>
               ))}

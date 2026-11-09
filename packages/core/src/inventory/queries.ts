@@ -162,26 +162,25 @@ export async function productStock(
     if (!product || product.kind !== 'GOOD' || !product.tracksStock)
       throw new DomainError('NOT_FOUND', 'Product not found');
     const { stockMovements } = schema;
-    const [warehouses, levels, moved, [count], movements, negativeStock] = await Promise.all([
-      warehousesOf(tx),
-      levelsOf(tx, [id], null),
-      tx.db
-        .selectDistinct({ warehouseId: stockMovements.warehouseId })
-        .from(stockMovements)
-        .where(eq(stockMovements.productId, id)),
-      tx.db
-        .select({ total: sql<number>`count(*)::int` })
-        .from(stockMovements)
-        .where(eq(stockMovements.productId, id)),
-      tx.db
-        .select()
-        .from(stockMovements)
-        .where(eq(stockMovements.productId, id))
-        .orderBy(desc(stockMovements.createdAt), desc(stockMovements.id))
-        .limit(MOVEMENTS_PAGE_SIZE)
-        .offset((page - 1) * MOVEMENTS_PAGE_SIZE),
-      negativeStockRule(tx, ctx.tenantId),
-    ]);
+    // One after another: a transaction is one connection, which runs one query at a time.
+    const warehouses = await warehousesOf(tx);
+    const levels = await levelsOf(tx, [id], null);
+    const moved = await tx.db
+      .selectDistinct({ warehouseId: stockMovements.warehouseId })
+      .from(stockMovements)
+      .where(eq(stockMovements.productId, id));
+    const [count] = await tx.db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(stockMovements)
+      .where(eq(stockMovements.productId, id));
+    const movements = await tx.db
+      .select()
+      .from(stockMovements)
+      .where(eq(stockMovements.productId, id))
+      .orderBy(desc(stockMovements.createdAt), desc(stockMovements.id))
+      .limit(MOVEMENTS_PAGE_SIZE)
+      .offset((page - 1) * MOVEMENTS_PAGE_SIZE);
+    const negativeStock = await negativeStockRule(tx, ctx.tenantId);
     const movedIn = new Set(moved.map((row) => row.warehouseId));
     const names = new Map(warehouses.map((warehouse) => [warehouse.id, warehouse.name]));
     return {
@@ -244,14 +243,12 @@ export async function stockValuation(ctx: ActorContext, db: Database): Promise<V
   canRead(ctx);
   return db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
     const { stockLevels } = schema;
-    const [warehouses, levels] = await Promise.all([
-      warehousesOf(tx),
-      tx.db
-        .select()
-        .from(stockLevels)
-        .where(sql`${stockLevels.onHand} <> 0 OR ${stockLevels.reserved} <> 0`)
-        .orderBy(asc(stockLevels.warehouseId)),
-    ]);
+    const warehouses = await warehousesOf(tx);
+    const levels = await tx.db
+      .select()
+      .from(stockLevels)
+      .where(sql`${stockLevels.onHand} <> 0 OR ${stockLevels.reserved} <> 0`)
+      .orderBy(asc(stockLevels.warehouseId));
     const productIds = [...new Set(levels.map((level) => level.productId))];
     const products =
       productIds.length === 0

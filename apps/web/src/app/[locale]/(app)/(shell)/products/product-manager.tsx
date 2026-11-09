@@ -5,7 +5,7 @@ import { Input } from '@comprobify/ui/components/input';
 import { Switch } from '@comprobify/ui/components/switch';
 import { Textarea } from '@comprobify/ui/components/textarea';
 import { cn } from '@comprobify/ui/lib/utils';
-import { Archive, Boxes, Pencil, Plus, RotateCcw } from 'lucide-react';
+import { Boxes, CircleOff, Pencil, Plus, RotateCcw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
 import { ChoiceSelect, type Choice } from '@/components/choice-select';
@@ -150,7 +150,7 @@ export function ProductManager({
                           className={iconButton}
                         >
                           {product.active ? (
-                            <Archive className="h-4 w-4" aria-hidden />
+                            <CircleOff className="h-4 w-4" aria-hidden />
                           ) : (
                             <RotateCcw className="h-4 w-4" aria-hidden />
                           )}

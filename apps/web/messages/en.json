@@ -1914,10 +1914,12 @@
       "notesHint": "Optional. For example, the provider's delivery note or invoice number.",
       "submit": "Record receipt",
       "cancel": "Cancel",
-      "nothing": "Enter how much arrived for at least one product, no more than is left.",
+      "nothing": "Enter how much arrived for at least one product.",
       "confirmTitle": "Record the receipt?",
       "confirmDescription": "The stock enters the warehouse now, and a receipt can't be undone. A mistake is fixed with a stock adjustment.",
-      "done": "Receipt recorded."
+      "done": "Receipt recorded.",
+      "tooMuch": "You can receive up to {left}.",
+      "fixQuantities": "A quantity is more than is left, or isn't a number. Fix it before recording."
     }
   },
   "purchaseOrdersError": {
