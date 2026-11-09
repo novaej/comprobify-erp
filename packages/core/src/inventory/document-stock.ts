@@ -10,6 +10,9 @@ import { lockLevel, moveStock, type Mover } from './ledger';
 
 export type StockLine = { productId: string | null; quantity: string };
 
+// What can hold goods: a document, or a sale order before it is invoiced (ADR-021).
+export type HoldSource = 'DOCUMENT' | 'SALE_ORDER';
+
 type Key = { productId: string; warehouseId: string };
 type Held = Key & { quantity: Dec; reserved: Dec; sold: Dec; soldValue: Dec };
 
@@ -17,7 +20,12 @@ const byKey = (a: Key, b: Key) =>
   a.productId.localeCompare(b.productId) || a.warehouseId.localeCompare(b.warehouseId);
 
 // The sums of the movements these documents caused, per product and warehouse.
-async function movedBy(tx: Tx, tenantId: string, documentIds: string[]): Promise<Held[]> {
+async function movedBy(
+  tx: Tx,
+  tenantId: string,
+  documentIds: string[],
+  sourceType: HoldSource = 'DOCUMENT',
+): Promise<Held[]> {
   const { stockMovements: m } = schema;
   const rows = await tx.db
     .select({
@@ -30,7 +38,7 @@ async function movedBy(tx: Tx, tenantId: string, documentIds: string[]): Promise
     })
     .from(m)
     .where(
-      and(eq(m.tenantId, tenantId), eq(m.sourceType, 'DOCUMENT'), inArray(m.sourceId, documentIds)),
+      and(eq(m.tenantId, tenantId), eq(m.sourceType, sourceType), inArray(m.sourceId, documentIds)),
     )
     .groupBy(m.productId, m.warehouseId);
   return rows
@@ -59,14 +67,22 @@ async function stockedTotals(tx: Tx, lines: StockLine[]): Promise<Map<string, De
   return totals;
 }
 
-const source = (documentId: string) => ({ type: 'DOCUMENT' as const, id: documentId });
+const source = (documentId: string, type: HoldSource = 'DOCUMENT') => ({
+  type,
+  id: documentId,
+});
 
 // When an invoice is created or corrected: its goods are held in its issue point's warehouse,
 // under the company's negative-stock rule. Without Inventario nothing is held, then or later.
 export async function reserveDocumentStock(
   ctx: ActorContext,
   tx: Tx,
-  input: { documentId: string; warehouseId: string; lines: StockLine[] },
+  input: {
+    documentId: string;
+    warehouseId: string;
+    lines: StockLine[];
+    sourceType?: HoldSource;
+  },
 ): Promise<void> {
   if (!hasFeature(ctx, 'INVENTORY')) return;
   const totals = await stockedTotals(tx, input.lines);
@@ -80,7 +96,7 @@ export async function reserveDocumentStock(
         productId,
         warehouseId: input.warehouseId,
         quantity: totals.get(productId)!.toFixed(6),
-        source: source(input.documentId),
+        source: source(input.documentId, input.sourceType),
       },
     );
 }
@@ -90,15 +106,16 @@ export async function releaseDocumentStock(
   tx: Tx,
   mover: Mover,
   documentId: string,
+  sourceType: HoldSource = 'DOCUMENT',
 ): Promise<void> {
-  for (const held of await movedBy(tx, mover.tenantId, [documentId]))
+  for (const held of await movedBy(tx, mover.tenantId, [documentId], sourceType))
     if (held.reserved.gt(0))
       await moveStock(tx, mover, {
         type: 'RELEASE',
         productId: held.productId,
         warehouseId: held.warehouseId,
         quantity: held.reserved.toFixed(6),
-        source: source(documentId),
+        source: source(documentId, sourceType),
       });
 }
 

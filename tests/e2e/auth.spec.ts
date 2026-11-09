@@ -992,6 +992,75 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(movements.getByRole('row', { name: /Devolución/ })).toContainText('+1');
   });
 
+  test('takes a sale order: draft, confirm to hold the goods, cancel to let them go (FR-SAL-1, FR-SAL-2)', async ({
+    page,
+  }) => {
+    await grantFeature(email, 'SALE_ORDERS', 'e2e sale orders');
+    await signIn(page, email, newPassword);
+    const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
+    const heading = page.getByRole('heading', { level: 1 });
+    await nav.getByRole('link', { name: 'Pedidos de venta' }).click();
+    await expect(heading).toHaveText('Pedidos de venta');
+    await look(page, 'sale-orders-empty');
+    await page.getByRole('link', { name: 'Nuevo pedido' }).first().click();
+    await expect(heading).toHaveText('Nuevo pedido');
+
+    const client = page.getByRole('combobox', {
+      name: 'Buscar cliente por nombre o identificación',
+    });
+    await client.fill('María');
+    await client.press('Enter');
+    await expect(page.getByText('María López')).toBeVisible();
+    const line = page.getByRole('group', { name: 'Línea 1' });
+    await line.getByRole('combobox', { name: 'Producto' }).fill('CAF-001');
+    await page.keyboard.press('Enter');
+    await expect(line.getByRole('textbox', { name: 'Precio unitario' })).toHaveValue('5');
+    await line.getByRole('textbox', { name: 'Cantidad' }).fill('4');
+    await expect(page.getByRole('region', { name: 'Totales' })).toContainText('$23,00');
+    await look(page, 'sale-order-new');
+    await page.getByRole('button', { name: 'Guardar borrador' }).click();
+
+    await expect(heading).toContainText('Pedido PV-000001');
+    await expect(heading).toContainText('Borrador');
+    await expect(page.getByRole('main')).toContainText('María López');
+    await look(page, 'sale-order-draft');
+    await page.getByRole('button', { name: 'Confirmar pedido' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Confirmar el pedido?' })
+      .getByRole('button', { name: 'Confirmar pedido' })
+      .click();
+    await expect(heading).toContainText('Confirmado');
+    await look(page, 'sale-order-confirmed');
+
+    // Held: 4 of the 9 on hand are reserved.
+    await nav.getByRole('link', { name: 'Inventario' }).click();
+    await page.getByRole('link', { name: 'Café molido', exact: true }).click();
+    const movements = page.getByRole('table', { name: 'Movimientos' });
+    await expect(movements.getByRole('row', { name: /Reserva/ }).first()).toContainText(
+      '+4 reservado',
+    );
+    await movements
+      .getByRole('row', { name: /Reserva/ })
+      .first()
+      .getByRole('link', { name: 'Pedido de venta' })
+      .click();
+    await expect(heading).toContainText('Pedido PV-000001');
+
+    await page.getByRole('button', { name: 'Anular' }).click();
+    const cancel = page.getByRole('dialog', { name: 'Anular el pedido' });
+    await cancel.getByRole('textbox', { name: 'Motivo' }).fill('El cliente desistió');
+    await cancel.getByRole('button', { name: 'Anular pedido' }).click();
+    await expect(heading).toContainText('Anulado');
+    await expect(page.getByRole('main')).toContainText('El cliente desistió');
+
+    await nav.getByRole('link', { name: 'Inventario' }).click();
+    await page.getByRole('link', { name: 'Café molido', exact: true }).click();
+    await expect(movements.getByRole('row', { name: /Liberación/ })).toContainText('-4 reservado');
+    await nav.getByRole('link', { name: 'Pedidos de venta' }).click();
+    await expect(page.getByRole('table', { name: 'Pedidos de venta' })).toContainText('Anulado');
+    await look(page, 'sale-orders');
+  });
+
   test('finds no drift between the stock levels and their ledger after the day (FR-INV-2, Milestone 5 gate)', async () => {
     // What the nightly inventory.verify job runs, over everything the tests above stocked.
     const silent = { debug() {}, info() {}, warn() {}, error() {}, child: () => silent };

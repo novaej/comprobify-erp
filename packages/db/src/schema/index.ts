@@ -6,5 +6,6 @@ export * from './identity';
 export * from './inventory';
 export * from './master-data';
 export * from './purchasing';
+export * from './sales';
 export * from './sri';
 export * from './tenancy';

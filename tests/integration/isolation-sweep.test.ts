@@ -8,6 +8,8 @@ import {
   createProduct,
   createProvider,
   createPurchaseOrder,
+  createSaleOrder,
+  confirmSaleOrder,
   getPurchaseOrder,
   markPurchaseOrderSent,
   receivePurchaseOrder,
@@ -133,12 +135,16 @@ describe('isolation sweep over every tenant table', () => {
       realTenantId: org.realTenantId,
       moduleKey: 'PURCHASING',
     });
+    await addModule(await superAdmin(db), db, {
+      realTenantId: org.realTenantId,
+      moduleKey: 'SALES',
+    });
     await acceptAgreements(ctx, db, { ipAddress: '203.0.113.9', userAgent: 'Sweep' }, parties);
     for (const tenantId of [org.realTenantId, org.twinTenantId]) {
       await recordSessionStart(db, { tenantId, userId: owner, sessionId: randomUUID() });
       // Clients and products: each tenant, the twin included, keeps its own (FR-MD-1, FR-MD-2).
       const actor = await resolveActor(db, { userId: owner, tenantId, clock });
-      await createClient(actor, db, {
+      const client = await createClient(actor, db, {
         idType: '05',
         identification: '1710034065',
         name: 'Cliente',
@@ -221,6 +227,13 @@ describe('isolation sweep over every tenant table', () => {
         orderId: order.id,
         lines: [{ lineId: orderLine!.id, quantity: '1' }],
       });
+      // A sale order, confirmed so it holds stock (FR-SAL-1, FR-SAL-2).
+      const sale = await createSaleOrder(actor, db, {
+        clientId: client.id,
+        warehouseId: warehouse!.id,
+        lines: [{ productId: product.id, quantity: '1', unitPrice: '1.50', discount: '0' }],
+      });
+      await confirmSaleOrder(actor, db, sale.id);
     }
     return org;
   };
@@ -283,6 +296,8 @@ describe('isolation sweep over every tenant table', () => {
         'purchase_orders',
         'purchase_receipt_lines',
         'purchase_receipts',
+        'sale_order_lines',
+        'sale_orders',
         'sri_exchanges',
         'stock_levels',
         'stock_movements',

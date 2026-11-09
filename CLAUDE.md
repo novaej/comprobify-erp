@@ -187,6 +187,8 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/parties/`, `packages/core/src/catalog/` | Clients and providers with identification checks; products and services (FR-MD-1, FR-MD-2, FR-MD-3) |
 | `packages/core/src/purchasing/` | Purchase orders: numbers, revisions, receiving into stock (`receipts.ts`), the PDF and its email (`order-pdf.ts`, `email.ts`), the status machine (`status.ts`; the tables and transitions are in `packages/db/src/schema/purchasing.ts`, ADR-019) |
 | `apps/web/src/app/[locale]/(app)/(shell)/purchase-orders/` | The order list, form (new and edit), detail, receive screen and PDF route |
+| `packages/core/src/sales/` | Sale orders: numbers, revisions, holding goods on confirm and releasing them on cancel (`orders.ts`), the status machine (`status.ts`; the tables and transitions are in `packages/db/src/schema/sales.ts`, ADR-021) |
+| `apps/web/src/app/[locale]/(app)/(shell)/sale-orders/` | The order list, form (new and edit) and detail |
 | `packages/core/src/agreements/` | Legal texts (`texts/*.md`, published by the migrate step), personalization, acceptance |
 | `docs/legal/review-notes.md` | What changed in the legal texts and the open legal questions |
 | `packages/core/src/audit/` | `recordAudit` (same transaction as the change), the activity list, sign-ins |

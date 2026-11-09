@@ -281,13 +281,14 @@ export default async function ProductStockPage({
                     </StackCell>
                     <StackCell label={t('table.reason')} className="pr-4">
                       {!movement.reason &&
-                      movement.sourceType === 'DOCUMENT' &&
+                      (movement.sourceType === 'DOCUMENT' ||
+                        movement.sourceType === 'SALE_ORDER') &&
                       movement.sourceId ? (
                         <Link
-                          href={`/documents/${movement.sourceId}`}
+                          href={`/${movement.sourceType === 'DOCUMENT' ? 'documents' : 'sale-orders'}/${movement.sourceId}`}
                           className="font-medium text-primary hover:underline"
                         >
-                          {t('sources.DOCUMENT')}
+                          {t(`sources.${movement.sourceType}`)}
                         </Link>
                       ) : (
                         <span className="break-words text-muted-foreground">

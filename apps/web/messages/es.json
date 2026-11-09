@@ -205,7 +205,8 @@
     "documents": "Comprobantes",
     "inventory": "Inventario",
     "providers": "Proveedores",
-    "purchaseOrders": "Órdenes de compra"
+    "purchaseOrders": "Órdenes de compra",
+    "saleOrders": "Pedidos de venta"
   },
   "shell": {
     "sandboxTitle": "Estás en el ambiente de pruebas",
@@ -653,7 +654,11 @@
     "newPurchaseOrder": "Nueva orden de compra",
     "purchaseOrder": "Orden de compra",
     "editPurchaseOrder": "Editar orden de compra",
-    "receivePurchaseOrder": "Recibir mercadería"
+    "receivePurchaseOrder": "Recibir mercadería",
+    "saleOrders": "Pedidos de venta",
+    "newSaleOrder": "Nuevo pedido de venta",
+    "saleOrder": "Pedido de venta",
+    "editSaleOrder": "Editar pedido de venta"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -1563,7 +1568,8 @@
       "ADJUSTMENT": "Ajuste",
       "OPENING_IMPORT": "Importado de un archivo",
       "PURCHASE_RECEIPT": "Recepción",
-      "DOCUMENT": "Comprobante"
+      "DOCUMENT": "Comprobante",
+      "SALE_ORDER": "Pedido de venta"
     },
     "product": {
       "description": "Código {code}. Existencias, costo promedio y movimientos.",
@@ -1943,5 +1949,158 @@
     "INVALID_INPUT": "Revisa los datos: cada correo debe ser una dirección válida, cada cantidad mayor que cero, y los números admiten hasta 6 decimales.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
     "ORDER_NOT_EMAILABLE": "Esta orden ya no se envía al proveedor."
+  },
+  "saleOrders": {
+    "title": "Pedidos de venta",
+    "description": "Lo que tus clientes piden: se reserva la mercadería hasta facturarla.",
+    "new": "Nuevo pedido",
+    "search": "Buscar por cliente o número",
+    "searchButton": "Buscar",
+    "filters": {
+      "status": "Estado",
+      "allStatuses": "Todos los estados",
+      "apply": "Filtrar",
+      "clear": "Quitar filtros"
+    },
+    "emptyTitle": "Aún no hay pedidos de venta",
+    "empty": "Crea un pedido para reservar productos para un cliente y facturarlos después.",
+    "noMatchesTitle": "Sin resultados",
+    "noMatches": "Ningún pedido coincide con los filtros.",
+    "finalConsumer": "Consumidor final",
+    "table": {
+      "number": "Número",
+      "date": "Fecha",
+      "client": "Cliente",
+      "total": "Total",
+      "status": "Estado",
+      "open": "Abrir pedido {number}"
+    },
+    "statuses": {
+      "DRAFT": "Borrador",
+      "CONFIRMED": "Confirmado",
+      "PARTIALLY_INVOICED": "Facturado en parte",
+      "INVOICED": "Facturado",
+      "CANCELLED": "Anulado"
+    },
+    "statusHelp": {
+      "DRAFT": "Aún puedes editarlo. No reserva mercadería hasta que lo confirmes.",
+      "CONFIRMED": "La mercadería está reservada para el cliente. Puedes editarlo o anularlo.",
+      "PARTIALLY_INVOICED": "Una parte ya se facturó.",
+      "INVOICED": "Todo el pedido está facturado.",
+      "CANCELLED": "Anulado: la mercadería reservada volvió a estar disponible."
+    },
+    "pagination": {
+      "label": "Páginas",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page": "Página {page} de {pages}"
+    },
+    "noWarehouses": "Tu empresa no tiene bodegas activas. Cada establecimiento tiene una.",
+    "form": {
+      "back": "Pedidos de venta",
+      "backOrder": "Pedido {number}",
+      "newDescription": "Pide productos de tu catálogo para un cliente, al precio que acuerden.",
+      "editDescription": "Mientras es un borrador puedes cambiarlo todo.",
+      "editConfirmed": "Al guardar, la reserva pasa a las nuevas cantidades. Si no alcanzan las existencias, no se guarda.",
+      "client": {
+        "title": "Cliente",
+        "description": "Opcional: sin cliente, el pedido es para consumidor final.",
+        "search": "Buscar cliente por nombre o identificación",
+        "none": "No hay clientes que coincidan.",
+        "list": "Clientes",
+        "change": "Cambiar",
+        "finalConsumer": "Sin elegir un cliente, el pedido es para consumidor final."
+      },
+      "delivery": {
+        "title": "Salida",
+        "warehouse": "Bodega de salida",
+        "notes": "Notas",
+        "notesHint": "Opcional, hasta 1000 caracteres."
+      },
+      "lines": {
+        "title": "Productos",
+        "description": "Del catálogo. El IVA es el de cada producto y el precio puedes cambiarlo.",
+        "product": "Producto",
+        "products": "Productos",
+        "noProducts": "No hay productos que coincidan.",
+        "quantity": "Cantidad",
+        "unitPrice": "Precio unitario",
+        "discount": "Descuento",
+        "iva": "IVA",
+        "total": "Subtotal",
+        "add": "Agregar producto",
+        "remove": "Quitar la línea {number}",
+        "line": "Línea {number}",
+        "added": "Línea {number} agregada.",
+        "removed": "Línea {number} quitada.",
+        "pick": "Busca un producto por código o nombre"
+      },
+      "totals": {
+        "title": "Totales",
+        "subtotal": "Subtotal",
+        "iva": "IVA",
+        "total": "Total"
+      },
+      "create": "Guardar borrador",
+      "save": "Guardar cambios",
+      "cancel": "Cancelar",
+      "incomplete": "Completa cada línea con un producto, una cantidad y un precio."
+    },
+    "detail": {
+      "back": "Pedidos de venta",
+      "title": "Pedido {number}",
+      "summary": "Resumen",
+      "client": "Cliente",
+      "identification": "Identificación",
+      "warehouse": "Bodega",
+      "orderDate": "Fecha",
+      "confirmedAt": "Confirmado",
+      "cancelledAt": "Anulado",
+      "cancelReason": "Motivo de anulación",
+      "notes": "Notas",
+      "lines": {
+        "title": "Productos",
+        "product": "Producto",
+        "quantity": "Cantidad",
+        "unitPrice": "Precio unitario",
+        "discount": "Descuento",
+        "iva": "IVA",
+        "total": "Subtotal"
+      },
+      "totals": {
+        "title": "Totales",
+        "subtotal": "Subtotal",
+        "iva": "IVA",
+        "total": "Total"
+      }
+    },
+    "actions": {
+      "edit": "Editar",
+      "confirm": "Confirmar pedido",
+      "confirmTitle": "¿Confirmar el pedido?",
+      "confirmDescription": "Se reserva la mercadería que controla inventario. Si no hay suficiente disponible, el pedido no se confirma.",
+      "confirmed": "Pedido confirmado.",
+      "cancel": "Anular",
+      "cancelTitle": "Anular el pedido",
+      "cancelDescription": "El pedido queda anulado y la mercadería reservada vuelve a estar disponible. No se puede deshacer.",
+      "cancelReason": "Motivo",
+      "cancelReasonHint": "Por ejemplo: el cliente desistió.",
+      "cancelSubmit": "Anular pedido",
+      "cancelled": "Pedido anulado."
+    }
+  },
+  "saleOrdersError": {
+    "ORDER_NOT_EDITABLE": "El pedido ya no se puede editar.",
+    "CLIENT_INACTIVE": "El cliente está inactivo. Actívalo o elige otro.",
+    "PRODUCT_INACTIVE": "Un producto del pedido está inactivo. Quítalo o actívalo.",
+    "WAREHOUSE_INACTIVE": "La bodega está inactiva. Elige otra.",
+    "LINE_DISCOUNT_TOO_LARGE": "Un descuento supera el valor de su línea.",
+    "INSUFFICIENT_STOCK": "No hay suficientes existencias disponibles para reservar el pedido.",
+    "INVALID_TRANSITION": "El pedido cambió mientras tanto. Recarga la página.",
+    "FORBIDDEN": "Tu rol no permite esta acción.",
+    "FEATURE_NOT_ENABLED": "Tu plan no incluye pedidos de venta.",
+    "NOT_FOUND": "No se encontró el pedido, el cliente o el producto.",
+    "INVALID_INPUT": "Revisa los datos: cada cantidad debe ser mayor que cero, el descuento no puede pasar de su línea y los números admiten hasta 6 decimales.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
   }
 }

@@ -41,6 +41,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [018](018-inventory-ledger-and-costing.md) | The inventory ledger and weighted average cost | Accepted |
 | [019](019-purchase-orders.md) | Purchase orders | Accepted |
 | [020](020-documents-move-stock.md) | Invoices and credit notes move stock | Accepted |
+| [021](021-sale-orders.md) | Sale orders | Accepted |
 
 ## Old ADRs to read before each milestone
 

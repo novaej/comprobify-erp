@@ -351,8 +351,8 @@ export const issuePointAccess = pgTable(
   ],
 );
 
-// Numbers a company gives its own records, one counter each (FR-PUR-1). Sale orders add theirs.
-export const COUNTER_KINDS = ['PURCHASE_ORDER'] as const;
+// Numbers a company gives its own records, one counter each (FR-PUR-1, FR-SAL-1).
+export const COUNTER_KINDS = ['PURCHASE_ORDER', 'SALE_ORDER'] as const;
 
 // Taken with an upsert that returns the new value, so two at once never share a number.
 export const tenantCounters = pgTable(

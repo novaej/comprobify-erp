@@ -33,6 +33,7 @@ export const STOCK_SOURCE_TYPES = [
   'OPENING_IMPORT',
   'PURCHASE_RECEIPT',
   'DOCUMENT',
+  'SALE_ORDER',
 ] as const;
 
 const id = () =>

@@ -28,6 +28,9 @@ export {
   PURCHASE_ORDER_STATUSES,
   PURCHASE_ORDER_TRANSITIONS,
   purchaseOrderStatusTriggerBody,
+  SALE_ORDER_STATUSES,
+  SALE_ORDER_TRANSITIONS,
+  saleOrderStatusTriggerBody,
   PLATFORM_AUDIT_ACTIONS,
   SRI_DOCUMENT_TYPES,
   SRI_ID_TYPES,
@@ -44,7 +47,7 @@ export {
   TENANT_MODES,
   TENANT_STATUSES,
 } from './schema';
-export type { DocumentStatus, PurchaseOrderStatus } from './schema';
+export type { DocumentStatus, PurchaseOrderStatus, SaleOrderStatus } from './schema';
 // Re-exported so callers share this package's drizzle-orm instance and types.
 export {
   and,

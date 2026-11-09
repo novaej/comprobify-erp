@@ -10,7 +10,7 @@ export {
   sellDocumentStock,
   undoReturn,
 } from './document-stock';
-export type { StockLine } from './document-stock';
+export type { HoldSource, StockLine } from './document-stock';
 export {
   adjustmentInput,
   adjustStock,

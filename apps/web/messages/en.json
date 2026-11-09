@@ -205,7 +205,8 @@
     "documents": "Documents",
     "inventory": "Inventory",
     "providers": "Providers",
-    "purchaseOrders": "Purchase orders"
+    "purchaseOrders": "Purchase orders",
+    "saleOrders": "Sale orders"
   },
   "shell": {
     "sandboxTitle": "You're in the test environment",
@@ -653,7 +654,11 @@
     "newPurchaseOrder": "New purchase order",
     "purchaseOrder": "Purchase order",
     "editPurchaseOrder": "Edit purchase order",
-    "receivePurchaseOrder": "Receive goods"
+    "receivePurchaseOrder": "Receive goods",
+    "saleOrders": "Sale orders",
+    "newSaleOrder": "New sale order",
+    "saleOrder": "Sale order",
+    "editSaleOrder": "Edit sale order"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -1563,7 +1568,8 @@
       "ADJUSTMENT": "Adjustment",
       "OPENING_IMPORT": "Imported from a file",
       "PURCHASE_RECEIPT": "Receipt",
-      "DOCUMENT": "Document"
+      "DOCUMENT": "Document",
+      "SALE_ORDER": "Sale order"
     },
     "product": {
       "description": "Code {code}. Stock, average cost and movements.",
@@ -1943,5 +1949,158 @@
     "INVALID_INPUT": "Check the data: each address must be valid, each quantity more than zero, and numbers take up to 6 decimals.",
     "UNKNOWN": "Something unexpected went wrong. Try again.",
     "ORDER_NOT_EMAILABLE": "This order is no longer sent to the provider."
+  },
+  "saleOrders": {
+    "title": "Sale orders",
+    "description": "What clients ask for: goods are held until they are invoiced.",
+    "new": "New order",
+    "search": "Search by client or number",
+    "searchButton": "Search",
+    "filters": {
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "apply": "Filter",
+      "clear": "Clear filters"
+    },
+    "emptyTitle": "No sale orders yet",
+    "empty": "Create an order to hold products for a client and invoice them later.",
+    "noMatchesTitle": "No results",
+    "noMatches": "No order matches the filters.",
+    "finalConsumer": "Final consumer",
+    "table": {
+      "number": "Number",
+      "date": "Date",
+      "client": "Client",
+      "total": "Total",
+      "status": "Status",
+      "open": "Open order {number}"
+    },
+    "statuses": {
+      "DRAFT": "Draft",
+      "CONFIRMED": "Confirmed",
+      "PARTIALLY_INVOICED": "Partly invoiced",
+      "INVOICED": "Invoiced",
+      "CANCELLED": "Cancelled"
+    },
+    "statusHelp": {
+      "DRAFT": "You can still edit it. It holds no goods until you confirm it.",
+      "CONFIRMED": "The goods are held for the client. You can edit or cancel it.",
+      "PARTIALLY_INVOICED": "Part of it has been invoiced.",
+      "INVOICED": "The whole order is invoiced.",
+      "CANCELLED": "Cancelled: the goods it held are available again."
+    },
+    "pagination": {
+      "label": "Pages",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page} of {pages}"
+    },
+    "noWarehouses": "Your company has no active warehouses. Each branch has one.",
+    "form": {
+      "back": "Sale orders",
+      "backOrder": "Order {number}",
+      "newDescription": "Order products from your catalogue for a client, at the price you agree.",
+      "editDescription": "While it is a draft you can change all of it.",
+      "editConfirmed": "On saving, the hold moves to the new quantities. If there isn't enough stock, it isn't saved.",
+      "client": {
+        "title": "Client",
+        "description": "Optional: with no client, the order is for a final consumer.",
+        "search": "Search client by name or identification",
+        "none": "No clients match.",
+        "list": "Clients",
+        "change": "Change",
+        "finalConsumer": "Without a client, the order is for a final consumer."
+      },
+      "delivery": {
+        "title": "Dispatch",
+        "warehouse": "Warehouse",
+        "notes": "Notes",
+        "notesHint": "Optional, up to 1000 characters."
+      },
+      "lines": {
+        "title": "Products",
+        "description": "From the catalogue. IVA is each product's, and you can change the price.",
+        "product": "Product",
+        "products": "Products",
+        "noProducts": "No products match.",
+        "quantity": "Quantity",
+        "unitPrice": "Unit price",
+        "discount": "Discount",
+        "iva": "IVA",
+        "total": "Subtotal",
+        "add": "Add product",
+        "remove": "Remove line {number}",
+        "line": "Line {number}",
+        "added": "Line {number} added.",
+        "removed": "Line {number} removed.",
+        "pick": "Search a product by code or name"
+      },
+      "totals": {
+        "title": "Totals",
+        "subtotal": "Subtotal",
+        "iva": "IVA",
+        "total": "Total"
+      },
+      "create": "Save draft",
+      "save": "Save changes",
+      "cancel": "Cancel",
+      "incomplete": "Complete each line with a product, a quantity and a price."
+    },
+    "detail": {
+      "back": "Sale orders",
+      "title": "Order {number}",
+      "summary": "Summary",
+      "client": "Client",
+      "identification": "Identification",
+      "warehouse": "Warehouse",
+      "orderDate": "Date",
+      "confirmedAt": "Confirmed",
+      "cancelledAt": "Cancelled",
+      "cancelReason": "Cancellation reason",
+      "notes": "Notes",
+      "lines": {
+        "title": "Products",
+        "product": "Product",
+        "quantity": "Quantity",
+        "unitPrice": "Unit price",
+        "discount": "Discount",
+        "iva": "IVA",
+        "total": "Subtotal"
+      },
+      "totals": {
+        "title": "Totals",
+        "subtotal": "Subtotal",
+        "iva": "IVA",
+        "total": "Total"
+      }
+    },
+    "actions": {
+      "edit": "Edit",
+      "confirm": "Confirm order",
+      "confirmTitle": "Confirm the order?",
+      "confirmDescription": "The goods that track stock are held. If there isn't enough available, the order isn't confirmed.",
+      "confirmed": "Order confirmed.",
+      "cancel": "Cancel order",
+      "cancelTitle": "Cancel the order",
+      "cancelDescription": "The order is cancelled and the goods it held are available again. This can't be undone.",
+      "cancelReason": "Reason",
+      "cancelReasonHint": "For example: the client changed their mind.",
+      "cancelSubmit": "Cancel order",
+      "cancelled": "Order cancelled."
+    }
+  },
+  "saleOrdersError": {
+    "ORDER_NOT_EDITABLE": "The order can no longer be edited.",
+    "CLIENT_INACTIVE": "The client is inactive. Activate it or choose another.",
+    "PRODUCT_INACTIVE": "A product on the order is inactive. Remove or activate it.",
+    "WAREHOUSE_INACTIVE": "The warehouse is inactive. Choose another.",
+    "LINE_DISCOUNT_TOO_LARGE": "A discount is more than its line.",
+    "INSUFFICIENT_STOCK": "There isn't enough stock available to hold the order.",
+    "INVALID_TRANSITION": "The order changed in the meantime. Reload the page.",
+    "FORBIDDEN": "Your role doesn't allow this action.",
+    "FEATURE_NOT_ENABLED": "Your plan doesn't include sale orders.",
+    "NOT_FOUND": "The order, client or product was not found.",
+    "INVALID_INPUT": "Check the data: each quantity must be more than zero, a discount can't pass its line, and numbers take up to 6 decimals.",
+    "UNKNOWN": "An unexpected error occurred. Try again."
   }
 }
