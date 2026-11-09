@@ -9,6 +9,7 @@ import {
   Contact,
   ChevronRight,
   ClipboardList,
+  HandCoins,
   ShoppingCart,
   FileText,
   LayoutDashboard,
@@ -44,6 +45,7 @@ type NavItem = {
     | 'providers'
     | 'purchaseOrders'
     | 'saleOrders'
+    | 'receivables'
     | 'company'
     | 'users'
     | 'activity'
@@ -118,6 +120,14 @@ const NAV_ITEMS: NavItem[] = [
     group: 'operate',
     permission: 'sales.read',
     feature: 'SALE_ORDERS',
+  },
+  {
+    href: '/receivables',
+    icon: HandCoins,
+    labelKey: 'receivables',
+    group: 'operate',
+    permission: 'sales.read',
+    feature: 'RECEIVABLES',
   },
   {
     href: '/settings',

@@ -36,3 +36,31 @@ export function ecuadorDateTimeDisplay(at: Date): string {
   const [year, month, day] = date.split('-');
   return `${day}/${month}/${year} ${time.slice(0, 8)}`;
 }
+
+const parts = (date: string) => date.split('-').map(Number) as [number, number, number];
+const iso = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+
+// Calendar days after a YYYY-MM-DD date. Dates are plain days, so there is no time zone to get
+// wrong here.
+export function addDays(date: string, days: number): string {
+  const [year, month, day] = parts(date);
+  return iso(Date.UTC(year, month - 1, day + days));
+}
+
+// Calendar months after a date, held to the end of a shorter month: 31 Jan + 1 month is 28 or
+// 29 Feb, never March (CLAUDE.md mistake 1).
+export function addMonths(date: string, months: number): string {
+  const [year, month, day] = parts(date);
+  const first = Date.UTC(year, month - 1 + months, 1);
+  const last = new Date(
+    Date.UTC(new Date(first).getUTCFullYear(), new Date(first).getUTCMonth() + 1, 0),
+  );
+  return iso(Math.min(first + (day - 1) * 86_400_000, last.getTime()));
+}
+
+// Whole days from one date to a later one; negative when it is earlier.
+export function daysBetween(from: string, to: string): number {
+  const [fy, fm, fd] = parts(from);
+  const [ty, tm, td] = parts(to);
+  return Math.round((Date.UTC(ty, tm - 1, td) - Date.UTC(fy, fm - 1, fd)) / 86_400_000);
+}

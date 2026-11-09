@@ -992,6 +992,80 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(movements.getByRole('row', { name: /Devolución/ })).toContainText('+1');
   });
 
+  test('collects an invoice: a partial payment, the rest, a voided payment, and the aging report (FR-SAL-10)', async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    await grantFeature(email, 'RECEIVABLES', 'e2e receivables');
+    await signIn(page, email, newPassword);
+    const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
+    await expect(nav).toBeVisible();
+    const heading = page.getByRole('heading', { level: 1 });
+
+    const invoice = await issueInvoice(page, '40');
+    await runSri(invoice, 'authorize');
+    await page.reload();
+    await expect(heading).toContainText('Autorizado');
+    const number = /001-001-\d{9}/.exec((await heading.textContent()) ?? '')![0];
+    const card = page.getByRole('region', { name: 'Cobros' });
+    await expect(card).toContainText('Sin cobrar');
+    await expect(card).toContainText('$46,00');
+    await look(page, 'invoice-receivable');
+
+    // A part first: 20 of the 46.
+    await card.getByRole('button', { name: 'Registrar cobro' }).click();
+    const pay = page.getByRole('dialog', { name: 'Registrar un cobro' });
+    await expect(pay.getByRole('textbox', { name: 'Valor' })).toHaveValue('46,00');
+    await pay.getByRole('textbox', { name: 'Valor' }).fill('50');
+    await pay.getByRole('button', { name: 'Registrar cobro' }).click();
+    // Never more than is owed.
+    await expect(pay.getByRole('alert')).toContainText('supera lo que se debe');
+    await pay.getByRole('textbox', { name: 'Valor' }).fill('20');
+    await pay.getByRole('textbox', { name: 'Referencia' }).fill('Transferencia 123');
+    await look(page, 'receivable-payment');
+    await pay.getByRole('button', { name: 'Registrar cobro' }).click();
+    await expect(page.getByText('Cobro registrado.')).toBeVisible();
+    await expect(card).toContainText('Cobro parcial');
+    await expect(card).toContainText('Transferencia 123');
+    await expect(card).toContainText('$26,00');
+
+    // It is on the aging report, with what is left.
+    await nav.getByRole('link', { name: 'Cuentas por cobrar' }).click();
+    await expect(heading).toHaveText('Cuentas por cobrar');
+    const owed = page.getByRole('table', { name: 'Cuentas por cobrar' });
+    await expect(owed.getByRole('row', { name: new RegExp(number) })).toContainText('$26,00');
+    await look(page, 'receivables');
+
+    // The rest, and it leaves the report.
+    await page.goto(`/es/documents/${invoice}`);
+    await card.getByRole('button', { name: 'Registrar cobro' }).click();
+    await expect(pay.getByRole('textbox', { name: 'Valor' })).toHaveValue('26,00');
+    await pay.getByRole('button', { name: 'Registrar cobro' }).click();
+    await expect(card).toContainText('Cobrada');
+    await expect(card.getByRole('button', { name: 'Registrar cobro' })).toHaveCount(0);
+    await nav.getByRole('link', { name: 'Cuentas por cobrar' }).click();
+    await expect(heading).toHaveText('Cuentas por cobrar');
+    await expect(page.getByRole('link', { name: number })).toHaveCount(0);
+
+    // A mistaken payment is voided, and its amount is owed again.
+    await page.goto(`/es/documents/${invoice}`);
+    await card.getByRole('button', { name: 'Anular el cobro de $20,00' }).click();
+    const voiding = page.getByRole('dialog', { name: 'Anular el cobro' });
+    await voiding.getByRole('textbox', { name: 'Motivo' }).fill('Se registró dos veces');
+    await look(page, 'receivable-void');
+    await voiding.getByRole('button', { name: 'Anular cobro' }).click();
+    await expect(page.getByText('Cobro anulado.')).toBeVisible();
+    await expect(card).toContainText('Cobro parcial');
+    await expect(card).toContainText('Se registró dos veces');
+    await expect(card).toContainText('$20,00');
+    await nav.getByRole('link', { name: 'Cuentas por cobrar' }).click();
+    await expect(
+      page
+        .getByRole('table', { name: 'Cuentas por cobrar' })
+        .getByRole('row', { name: new RegExp(number) }),
+    ).toContainText('$20,00');
+  });
+
   test('takes a sale order: draft, confirm to hold the goods, cancel to let them go (FR-SAL-1, FR-SAL-2)', async ({
     page,
   }) => {

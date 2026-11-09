@@ -206,7 +206,8 @@
     "inventory": "Inventario",
     "providers": "Proveedores",
     "purchaseOrders": "Órdenes de compra",
-    "saleOrders": "Pedidos de venta"
+    "saleOrders": "Pedidos de venta",
+    "receivables": "Cuentas por cobrar"
   },
   "shell": {
     "sandboxTitle": "Estás en el ambiente de pruebas",
@@ -659,7 +660,8 @@
     "newSaleOrder": "Nuevo pedido de venta",
     "saleOrder": "Pedido de venta",
     "editSaleOrder": "Editar pedido de venta",
-    "invoiceSaleOrder": "Facturar pedido de venta"
+    "invoiceSaleOrder": "Facturar pedido de venta",
+    "receivables": "Cuentas por cobrar"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -2169,5 +2171,78 @@
     "PAYMENT_AMOUNT_REQUIRED": "Con varias formas de pago, cada una necesita su valor.",
     "INVOICE_FROM_ORDER": "Esta factura se corrige desde su pedido.",
     "NOT_ORDER_INVOICE": "Esta factura no se hizo desde un pedido."
+  },
+  "receivables": {
+    "title": "Cuentas por cobrar",
+    "description": "Lo que te deben tus clientes por facturas autorizadas, al {date}.",
+    "summary": "Resumen por antigüedad",
+    "buckets": {
+      "CURRENT": "Por vencer",
+      "D1_30": "1 a 30 días",
+      "D31_60": "31 a 60 días",
+      "D61_90": "61 a 90 días",
+      "D90_PLUS": "Más de 90 días"
+    },
+    "invoices": "{count, plural, =0 {Sin facturas} one {# factura} other {# facturas}}",
+    "total": "Total por cobrar",
+    "clear": "Quitar filtros",
+    "emptyTitle": "Nada por cobrar",
+    "empty": "Las facturas autorizadas que se cobren completas salen de esta lista.",
+    "noMatchesTitle": "Sin resultados",
+    "noMatches": "Ninguna factura coincide con el filtro.",
+    "table": {
+      "invoice": "Factura",
+      "client": "Cliente",
+      "due": "Vence",
+      "late": "Atraso",
+      "total": "Total",
+      "balance": "Saldo"
+    },
+    "daysLate": "{days, plural, one {# día} other {# días}}",
+    "notDue": "Por vencer",
+    "card": {
+      "title": "Cobros",
+      "statuses": {
+        "UNPAID": "Sin cobrar",
+        "PARTIAL": "Cobro parcial",
+        "PAID": "Cobrada"
+      },
+      "due": "Vence el {date}",
+      "total": "Total de la factura",
+      "credited": "Notas de crédito",
+      "paid": "Cobrado",
+      "balance": "Saldo",
+      "payments": "Cobros registrados",
+      "none": "Aún no se registra ningún cobro.",
+      "voided": "Anulado",
+      "void": "Anular el cobro de {amount}",
+      "record": "Registrar cobro",
+      "recordTitle": "Registrar un cobro",
+      "recordDescription": "Anota lo que recibiste. El saldo de la factura es {balance}.",
+      "recordSubmit": "Registrar cobro",
+      "recorded": "Cobro registrado.",
+      "amount": "Valor",
+      "paidOn": "Fecha del cobro",
+      "method": "Forma de pago",
+      "reference": "Referencia",
+      "referenceHint": "Opcional: número de transferencia, de cheque o de comprobante.",
+      "voidTitle": "Anular el cobro",
+      "voidDescription": "El cobro deja de contar y su valor vuelve al saldo de la factura. No se puede deshacer.",
+      "voidSubmit": "Anular cobro",
+      "voidedDone": "Cobro anulado.",
+      "voidReason": "Motivo",
+      "voidReasonHint": "Por ejemplo: se registró dos veces."
+    }
+  },
+  "receivablesError": {
+    "PAYMENT_EXCEEDS_BALANCE": "El cobro supera lo que se debe. Recarga la página: puede que ya se haya registrado otro.",
+    "PAYMENT_DATE_INVALID": "La fecha del cobro va desde la emisión de la factura hasta hoy.",
+    "NOT_RECEIVABLE": "Solo se cobra una factura autorizada.",
+    "PAYMENT_VOIDED": "Ese cobro ya está anulado.",
+    "FORBIDDEN": "Tu rol no permite esta acción.",
+    "FEATURE_NOT_ENABLED": "Tu plan no incluye cuentas por cobrar.",
+    "NOT_FOUND": "No se encontró la factura o el cobro.",
+    "INVALID_INPUT": "Revisa los datos: el valor debe ser mayor que cero, con hasta 2 decimales.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
   }
 }

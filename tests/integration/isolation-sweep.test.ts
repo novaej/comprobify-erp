@@ -235,6 +235,16 @@ describe('isolation sweep over every tenant table', () => {
         lines: [{ productId: product.id, quantity: '1', unitPrice: '1.50', discount: '0' }],
       });
       await confirmSaleOrder(actor, db, sale.id);
+      // A payment received for an invoice (FR-SAL-10).
+      await db.withSystem('test: record a payment received', ({ db: tx }) =>
+        tx.insert(schema.invoicePayments).values({
+          tenantId,
+          documentId: document.id,
+          amount: '1.00',
+          paidOn: '2026-11-10',
+          method: '01',
+        }),
+      );
       // And an invoice covering part of it (FR-SAL-3).
       const [saleLine] = (await getSaleOrder(actor, db, sale.id)).lines;
       await db.withSystem('test: link an invoice to a sale order', ({ db: tx }) =>
@@ -301,6 +311,7 @@ describe('isolation sweep over every tenant table', () => {
         'invitations',
         'issue_point_document_types',
         'issue_point_access',
+        'invoice_payments',
         'issue_points',
         'memberships',
         'products',

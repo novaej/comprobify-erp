@@ -206,7 +206,8 @@
     "inventory": "Inventory",
     "providers": "Providers",
     "purchaseOrders": "Purchase orders",
-    "saleOrders": "Sale orders"
+    "saleOrders": "Sale orders",
+    "receivables": "Receivables"
   },
   "shell": {
     "sandboxTitle": "You're in the test environment",
@@ -659,7 +660,8 @@
     "newSaleOrder": "New sale order",
     "saleOrder": "Sale order",
     "editSaleOrder": "Edit sale order",
-    "invoiceSaleOrder": "Invoice sale order"
+    "invoiceSaleOrder": "Invoice sale order",
+    "receivables": "Receivables"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -2169,5 +2171,78 @@
     "PAYMENT_AMOUNT_REQUIRED": "With several payment methods, each needs its amount.",
     "INVOICE_FROM_ORDER": "This invoice is corrected from its order.",
     "NOT_ORDER_INVOICE": "This invoice wasn't made from an order."
+  },
+  "receivables": {
+    "title": "Receivables",
+    "description": "What clients owe you for authorized invoices, as of {date}.",
+    "summary": "Summary by age",
+    "buckets": {
+      "CURRENT": "Not yet due",
+      "D1_30": "1 to 30 days",
+      "D31_60": "31 to 60 days",
+      "D61_90": "61 to 90 days",
+      "D90_PLUS": "Over 90 days"
+    },
+    "invoices": "{count, plural, =0 {No invoices} one {# invoice} other {# invoices}}",
+    "total": "Total receivable",
+    "clear": "Clear filters",
+    "emptyTitle": "Nothing to collect",
+    "empty": "Authorized invoices that are paid in full leave this list.",
+    "noMatchesTitle": "No results",
+    "noMatches": "No invoice matches the filter.",
+    "table": {
+      "invoice": "Invoice",
+      "client": "Client",
+      "due": "Due",
+      "late": "Late",
+      "total": "Total",
+      "balance": "Balance"
+    },
+    "daysLate": "{days, plural, one {# day} other {# days}}",
+    "notDue": "Not yet due",
+    "card": {
+      "title": "Payments",
+      "statuses": {
+        "UNPAID": "Unpaid",
+        "PARTIAL": "Partly paid",
+        "PAID": "Paid"
+      },
+      "due": "Due on {date}",
+      "total": "Invoice total",
+      "credited": "Credit notes",
+      "paid": "Paid",
+      "balance": "Balance",
+      "payments": "Recorded payments",
+      "none": "No payment has been recorded yet.",
+      "voided": "Voided",
+      "void": "Void the payment of {amount}",
+      "record": "Record payment",
+      "recordTitle": "Record a payment",
+      "recordDescription": "Note what you received. The invoice's balance is {balance}.",
+      "recordSubmit": "Record payment",
+      "recorded": "Payment recorded.",
+      "amount": "Amount",
+      "paidOn": "Payment date",
+      "method": "Payment method",
+      "reference": "Reference",
+      "referenceHint": "Optional: a transfer, cheque or receipt number.",
+      "voidTitle": "Void the payment",
+      "voidDescription": "The payment stops counting and its amount goes back to the invoice's balance. This can't be undone.",
+      "voidSubmit": "Void payment",
+      "voidedDone": "Payment voided.",
+      "voidReason": "Reason",
+      "voidReasonHint": "For example: it was recorded twice."
+    }
+  },
+  "receivablesError": {
+    "PAYMENT_EXCEEDS_BALANCE": "The payment is more than is owed. Reload the page: another may already have been recorded.",
+    "PAYMENT_DATE_INVALID": "A payment is dated from the invoice's issue date to today.",
+    "NOT_RECEIVABLE": "Only an authorized invoice is collected.",
+    "PAYMENT_VOIDED": "That payment is already voided.",
+    "FORBIDDEN": "Your role doesn't allow this action.",
+    "FEATURE_NOT_ENABLED": "Your plan doesn't include receivables.",
+    "NOT_FOUND": "The invoice or the payment was not found.",
+    "INVALID_INPUT": "Check the data: the amount must be more than zero, with up to 2 decimals.",
+    "UNKNOWN": "An unexpected error occurred. Try again."
   }
 }

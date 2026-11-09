@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  addDays,
+  addMonths,
   DomainError,
+  daysBetween,
   fixedClock,
   isDomainError,
   limitOf,
@@ -115,5 +118,29 @@ describe('startOfNextEcuadorMonth', () => {
     expect(startOfNextEcuadorMonth(new Date('2027-02-01T04:59:00Z')).toISOString()).toBe(
       '2027-02-01T05:00:00.000Z',
     );
+  });
+});
+
+// FR-SAL-10: due dates are calendar arithmetic on plain days.
+describe('calendar days', () => {
+  it('adds days across months and years', () => {
+    expect(addDays('2026-11-10', 30)).toBe('2026-12-10');
+    expect(addDays('2026-12-25', 10)).toBe('2027-01-04');
+    expect(addDays('2028-02-28', 1)).toBe('2028-02-29');
+    expect(addDays('2026-11-10', 0)).toBe('2026-11-10');
+  });
+
+  it('adds months and holds a short month to its last day', () => {
+    expect(addMonths('2026-11-10', 1)).toBe('2026-12-10');
+    expect(addMonths('2026-01-31', 1)).toBe('2026-02-28');
+    expect(addMonths('2028-01-31', 1)).toBe('2028-02-29');
+    expect(addMonths('2026-12-15', 2)).toBe('2027-02-15');
+    expect(addMonths('2026-03-31', 12)).toBe('2027-03-31');
+  });
+
+  it('counts the days between dates, negative when earlier', () => {
+    expect(daysBetween('2026-11-10', '2026-12-10')).toBe(30);
+    expect(daysBetween('2026-12-10', '2026-11-10')).toBe(-30);
+    expect(daysBetween('2026-11-10', '2026-11-10')).toBe(0);
   });
 });

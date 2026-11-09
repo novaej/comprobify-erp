@@ -2,7 +2,10 @@ import {
   saleOrderNumber,
   ecuadorDate,
   getDocument,
+  getReceivable,
+  hasFeature,
   isDomainError,
+  SRI_PAYMENT_METHODS,
   systemClock,
   voidDeadline,
   type DocumentDetail,
@@ -37,6 +40,7 @@ import { DocumentActions } from './document-actions';
 import { DocumentProgress } from './document-progress';
 import { EventMark } from './event-mark';
 import { LiveStatus } from './live-status';
+import { ReceivableCard } from './receivable-card';
 
 export const generateMetadata = pageTitle('document');
 
@@ -71,6 +75,14 @@ export default async function DocumentPage({
   }
   const t = await getTranslations('documents');
   const tSri = await getTranslations('sri');
+  // FR-SAL-10: an authorized invoice is owed until it is paid.
+  const receivable =
+    document.documentType === '01' &&
+    document.status === 'AUTHORIZED' &&
+    hasFeature(actor, 'RECEIVABLES') &&
+    actor.permissions.includes('sales.read')
+      ? await getReceivable(actor, db, id)
+      : null;
   const format = await getFormatter();
   const money = new Intl.NumberFormat(locale === 'en' ? 'en' : 'es-EC', {
     style: 'currency',
@@ -308,6 +320,36 @@ export default async function DocumentPage({
           )}
 
           {document.transport && <TransportCard transport={document.transport} />}
+
+          {receivable && (
+            <ReceivableCard
+              canManage={actor.permissions.includes('sales.manage')}
+              methods={SRI_PAYMENT_METHODS.map((code) => ({
+                value: code,
+                label: tSri(`paymentMethods.${code}`),
+              }))}
+              data={{
+                documentId: document.id,
+                status: receivable.status,
+                total: receivable.invoice.total,
+                credited: receivable.invoice.credited,
+                paid: receivable.paid,
+                balance: receivable.balance,
+                dueDate: receivable.invoice.dueDate,
+                issueDate: receivable.invoice.issueDate,
+                today: ecuadorDate(systemClock.now()),
+                payments: receivable.payments.map((payment) => ({
+                  id: payment.id,
+                  paidOn: payment.paidOn,
+                  method: payment.method,
+                  methodLabel: tSri(`paymentMethods.${payment.method}`),
+                  reference: payment.reference,
+                  amount: payment.amount,
+                  voidedReason: payment.voidReason,
+                })),
+              }}
+            />
+          )}
 
           {(document.origin || document.derived.length > 0 || document.saleOrder) && (
             <SectionCard title={t('detail.related.title')}>

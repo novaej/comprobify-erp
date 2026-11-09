@@ -67,6 +67,8 @@ export { enqueueReissues, reissueDocument, requestReissue } from './reissue';
 export type { ReissueDeps } from './reissue';
 export { voidDeadline, voidDocument, voidInput } from './void';
 export type { VoidInput } from './void';
+export { receivableInvoice, receivableInvoices } from './receivables';
+export type { ReceivableInvoice } from './receivables';
 export { findByAccessKey } from './lookup';
 export { documentRide, emailDocument, resendDocumentEmail } from './ride';
 export type { DocumentEmailDeps } from './ride';
