@@ -174,6 +174,12 @@ function checkOrigin(ctx: ActorContext, origin: Row | undefined): asserts origin
     );
 }
 
+// Whether the invoice has any value left to credit: once every line is credited, the action
+// goes away instead of opening a form with nothing to pick (FR-SAL-8).
+export async function hasCreditLeft(tx: Tx, origin: Row): Promise<boolean> {
+  return (await balanceOf(tx, origin, null)).some((entry) => entry.base.gt(0));
+}
+
 // What is left to credit on each line of an authorized invoice, for the credit note form.
 export async function creditBalance(
   ctx: ActorContext,

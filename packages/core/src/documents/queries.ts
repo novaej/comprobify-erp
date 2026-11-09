@@ -24,6 +24,7 @@ import {
 import { authorizedXmlFile, CONSUMER_FINAL_ID, SELECTABLE_IVA_RATES, SRI_IVA_RATES } from '../sri';
 import { rideData, type Transport } from '../sri';
 import { orderRefOfDocument } from '../sales';
+import { hasCreditLeft } from './credit-note';
 import { DOCUMENT_STATUSES, type DocumentStatus } from './status';
 
 // FR-DOC-12 reads. A user restricted to issue points sees only theirs (FR-ROLE-2).
@@ -359,6 +360,9 @@ export async function getDocument(
       .from(documentReissues)
       .where(eq(documentReissues.documentId, id))
       .orderBy(asc(documentReissues.createdAt));
+    const allowed = documentActions(ctx, row);
+    // Nothing left to credit: no nota de crédito to offer (FR-SAL-8).
+    if (allowed.credit && !(await hasCreditLeft(handle, row))) allowed.credit = false;
     const link = (other: typeof row): DocumentLink => ({
       id: other.id,
       documentType: other.documentType,
@@ -438,7 +442,7 @@ export async function getDocument(
       derived: derived.map(link),
       transport:
         row.documentType === '06' && row.signedXml ? rideData(row.signedXml).transport : null,
-      allowed: documentActions(ctx, row),
+      allowed,
     };
   });
 }

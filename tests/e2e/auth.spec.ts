@@ -678,6 +678,8 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     // The invoice shows its note, and has nothing left to credit.
     await page.goto(`/es/documents/${invoice}`);
     await expect(page.getByRole('main')).toContainText('Nota de crédito 001-001-');
+    // Everything is credited: the action is gone, not a form with nothing to pick.
+    await expect(page.getByRole('link', { name: 'Nota de crédito', exact: true })).toHaveCount(0);
     await look(page, 'document-credited');
   });
 
@@ -1370,6 +1372,8 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     ).toBeVisible();
     // Coming from another provider: the real company continues at 101 (FR-ONB-5).
     await page.getByLabel('Siguiente número de 001-001 · Factura').fill('101');
+    // The test copy's clients, products, providers and templates come along, unless unchecked.
+    await expect(page.getByRole('checkbox', { name: /Llevar tus datos de pruebas/ })).toBeChecked();
     await look(page, 'go-live');
     await page.getByLabel('Entiendo que este paso no se puede deshacer.').check();
     await page.getByRole('button', { name: 'Pasar a producción' }).click();
@@ -1383,6 +1387,12 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
       'aria-pressed',
       'true',
     );
+
+    // What was entered while testing is now in the real company.
+    await nav.getByRole('link', { name: 'Clientes' }).click();
+    await expect(page.getByRole('main')).toContainText('María López');
+    await nav.getByRole('link', { name: 'Productos' }).click();
+    await expect(page.getByRole('main')).toContainText('Café molido');
 
     await nav.getByRole('link', { name: 'Actividad' }).click();
     const log = page.getByRole('table', { name: 'Actividad' });

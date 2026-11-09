@@ -191,6 +191,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `apps/web/src/app/[locale]/(app)/(shell)/sale-orders/` | The order list, form (new and edit), detail and the form that invoices it |
 | `packages/core/src/receivables/` | Payments received for invoices, the balance and status, and the aging report (`payments.ts`, `aging.ts`; ADR-024); the table is in `packages/db/src/schema/receivables.ts` |
 | `apps/web/src/app/[locale]/(app)/(shell)/receivables/` | The aging report and the actions that record and void a payment (shown on the invoice's page) |
+| `packages/core/src/masterdata/` | What go-live copies from the twin to the real company: products, clients, providers, templates (ADR-025) |
 | `packages/core/src/agreements/` | Legal texts (`texts/*.md`, published by the migrate step), personalization, acceptance |
 | `docs/legal/review-notes.md` | What changed in the legal texts and the open legal questions |
 | `packages/core/src/audit/` | `recordAudit` (same transaction as the change), the activity list, sign-ins |

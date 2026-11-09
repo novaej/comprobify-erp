@@ -184,7 +184,10 @@ describe('audit log and go-live', () => {
 
     it('takes the real company live once, from the test copy too, and opens production', async () => {
       const fromTwin = await resolveActor(db, { userId: owner, tenantId: org.twinTenantId, clock });
-      await expect(goLive(fromTwin, db)).resolves.toEqual({ realTenantId: org.realTenantId });
+      await expect(goLive(fromTwin, db)).resolves.toEqual({
+        realTenantId: org.realTenantId,
+        copied: null,
+      });
       await expect(goLive(ownerCtx, db)).rejects.toMatchObject({ code: 'ALREADY_LIVE' });
 
       const entries = await listOrganizations(db, owner);

@@ -13,7 +13,7 @@ Read FR-SAL-1 to FR-SAL-10, FR-INV-1, FR-INV-2, FR-INV-4 and ADR-018 before each
 - [x] 3. Invoicing an order (ADR-022, migration 0045, `documents/order-invoice.ts`; FR-SAL-3, FR-SAL-4, FR-SAL-6, FR-SAL-7): pick lines and quantities up to what is uninvoiced, and the payment; `sale_order_invoice_lines`; the order's reservation passes to the invoice in the same transaction as the document, quota and send job; `INVOICED` once authorized invoices cover every line; a failed invoice keeps its quantities and is corrected from the order; a void gives them back to the order with its reservation. The direct invoice calls the same function.
 - [x] 4. The guía for a sale order (FR-SAL-9, ADR-023): from each of its invoices; the order lists them. Dispatch before invoicing is left until a client needs it.
 - [x] 5. Receivables, basic (FR-SAL-10, ADR-024, migration 0046, `receivables/`): payments recorded by hand on an invoice (unpaid, partial, paid) and the aging report.
-- [ ] 6. Loose ends: hide "Nota de crédito" once an invoice has nothing left to credit; go-live offers to copy master data from the twin (FR-ONB-5).
+- [x] 6. Loose ends: "Nota de crédito" is hidden once an invoice has nothing left to credit; go-live offers to copy master data from the twin (FR-ONB-5, ADR-025, `masterdata/`).
 - [ ] 7. Gate: E2E for the order invoiced 4 + 6, the correction through the order and the void; stock right after each. Then the owner tries it locally.
 
 ## Carried forward

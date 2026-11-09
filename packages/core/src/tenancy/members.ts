@@ -11,6 +11,7 @@ import {
 } from '@comprobify/db';
 import { z } from 'zod';
 import { agreementsAccepted } from '../agreements';
+import { copyMasterData, countMasterData, type MasterData } from '../masterdata';
 import { loadEntitlements } from '../entitlements';
 import { recordAudit } from '../audit';
 import type { RateLimiter } from '../identity';
@@ -545,10 +546,13 @@ export async function goLive(
     requireAgreements: boolean;
     // FR-ONB-5: the next numbers, when the company comes from another provider.
     startingSequentials?: z.input<typeof startingSequentialInput>[];
+    // FR-ONB-5: the twin's products, clients, providers and templates, once (never transactions).
+    copyMasterData?: boolean;
   } = { requireAgreements: false },
-): Promise<{ realTenantId: string }> {
+): Promise<{ realTenantId: string; copied: MasterData | null }> {
   requirePermission(ctx, 'organization.go_live');
-  return db.withSystem('take an organization live', async ({ db: tx }) => {
+  return db.withSystem('take an organization live', async (handle) => {
+    const { db: tx } = handle;
     const pair = await pairOf(tx, ctx.tenantId);
     // FR-ONB-5: with agreements enabled, the company must have accepted every current text.
     if (options.requireAgreements && !(await agreementsAccepted(tx, pair.realTenantId))) {
@@ -561,10 +565,20 @@ export async function goLive(
       .where(sql`${schema.tenants.id} = ${pair.realTenantId} AND ${schema.tenants.liveAt} IS NULL`)
       .returning({ id: schema.tenants.id });
     if (!updated[0]) throw new DomainError('ALREADY_LIVE', 'This organization is already live');
+    // The copy is in the same transaction: a go-live that fails copies nothing.
+    const copied =
+      options.copyMasterData && pair.twinTenantId
+        ? await copyMasterData(handle, {
+            fromTenantId: pair.twinTenantId,
+            toTenantId: pair.realTenantId,
+          })
+        : null;
     await recordAudit(tx, {
       tenantId: pair.realTenantId,
       actorUserId: ctx.userId ?? null,
       action: 'organization.went_live',
+      // How many of each kind the copy added, when it was asked for.
+      details: copied ? { ...copied } : {},
     });
     const started = await setStartingSequentials(
       tx,
@@ -578,6 +592,17 @@ export async function goLive(
         action: 'sequence.starting_set',
         details: { sequences: started },
       });
-    return { realTenantId: pair.realTenantId };
+    return { realTenantId: pair.realTenantId, copied };
+  });
+}
+
+// What copying the twin's master data at go-live would bring: its active rows (FR-ONB-5).
+export async function masterDataToCopy(ctx: ActorContext, db: Database): Promise<MasterData> {
+  requirePermission(ctx, 'organization.go_live');
+  return db.withSystem('count the master data a go-live could copy from the twin', async (tx) => {
+    const pair = await pairOf(tx.db, ctx.tenantId);
+    return pair.twinTenantId
+      ? countMasterData(tx, pair.twinTenantId)
+      : { products: 0, clients: 0, providers: 0, templates: 0 };
   });
 }

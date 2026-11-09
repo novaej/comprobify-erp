@@ -445,7 +445,10 @@
     "whatChanges": "Qué cambia",
     "startingTitle": "Números iniciales",
     "startingDescription": "Si ya emitías comprobantes electrónicos con otro proveedor, pon el siguiente número de cada uno. Si empiezas ahora, deja 1.",
-    "startingFor": "Siguiente número de {point}"
+    "startingFor": "Siguiente número de {point}",
+    "copyTitle": "Llevar tus datos de pruebas",
+    "copyLabel": "Copiar {products, plural, one {# producto} other {# productos}}, {clients, plural, one {# cliente} other {# clientes}}, {providers, plural, one {# proveedor} other {# proveedores}} y {templates, plural, one {# plantilla} other {# plantillas}} de tu copia de pruebas a la empresa real.",
+    "copyNote": "Solo lo activo y que aún no esté en la empresa real. Nunca comprobantes, existencias ni pedidos. Se hace una sola vez, ahora."
   },
   "goLiveError": {
     "CONFIRM_REQUIRED": "Marca la casilla para confirmar.",

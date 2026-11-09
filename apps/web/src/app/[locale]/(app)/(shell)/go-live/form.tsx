@@ -8,14 +8,44 @@ import { FormActionBar } from '@/components/form-action-bar';
 import { goLiveAction } from './actions';
 
 export type StartingPoint = { key: string; label: string };
+export type MasterDataCounts = {
+  products: number;
+  clients: number;
+  providers: number;
+  templates: number;
+};
 
 // The box is the confirmation: it can't be undone, so it is read before the button.
-export function GoLiveForm({ points }: { points: StartingPoint[] }) {
+export function GoLiveForm({
+  points,
+  masterData,
+}: {
+  points: StartingPoint[];
+  // What the twin holds, active rows only; none hides the offer.
+  masterData: MasterDataCounts;
+}) {
   const t = useTranslations('goLive');
   return (
     <ActionForm action={goLiveAction} errors="goLiveError">
       {(pending) => (
         <>
+          {Object.values(masterData).some((count) => count > 0) && (
+            <div className="mt-6 border-t border-border pt-6">
+              <label className="flex items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  name="copyMasterData"
+                  defaultChecked
+                  className="mt-0.5 h-4 w-4 accent-primary"
+                />
+                <span>
+                  <span className="block font-semibold">{t('copyTitle')}</span>
+                  <span className="block">{t('copyLabel', masterData)}</span>
+                  <span className="mt-1 block text-muted-foreground">{t('copyNote')}</span>
+                </span>
+              </label>
+            </div>
+          )}
           {points.length > 0 && (
             // The border is on a wrapper: a fieldset draws its legend across its own border.
             <div className="mt-6 border-t border-border pt-6">

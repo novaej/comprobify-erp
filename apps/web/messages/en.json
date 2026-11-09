@@ -445,7 +445,10 @@
     "whatChanges": "What changes",
     "startingTitle": "Starting numbers",
     "startingDescription": "If you already issued electronic documents with another provider, enter the next number of each. If you are starting now, leave 1.",
-    "startingFor": "Next number for {point}"
+    "startingFor": "Next number for {point}",
+    "copyTitle": "Bring your test data",
+    "copyLabel": "Copy {products, plural, one {# product} other {# products}}, {clients, plural, one {# client} other {# clients}}, {providers, plural, one {# provider} other {# providers}} and {templates, plural, one {# template} other {# templates}} from your test copy to the real company.",
+    "copyNote": "Only what is active and not already in the real company. Never documents, stock or orders. It is done once, now."
   },
   "goLiveError": {
     "CONFIRM_REQUIRED": "Check the box to confirm.",

@@ -1,4 +1,4 @@
-import { companySettings } from '@comprobify/core';
+import { companySettings, masterDataToCopy } from '@comprobify/core';
 import { CheckCircle2, FlaskConical, Hash, Lock } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { NoAccess } from '@/components/no-access';
@@ -30,6 +30,10 @@ export default async function GoLivePage({ params }: { params: Promise<{ locale:
   // FR-ONB-5: one starting number per issue point and document type it issues.
   const { db } = await getRuntime();
   const settings = active.entry.live ? null : await companySettings(actor, db);
+  // FR-ONB-5: what the test copy holds, which going live can copy over once.
+  const masterData = active.entry.live
+    ? { products: 0, clients: 0, providers: 0, templates: 0 }
+    : await masterDataToCopy(actor, db);
   const points = (settings?.branches ?? []).flatMap((branch) =>
     branch.issuePoints.flatMap((point) =>
       point.documentTypes.map((type) => ({
@@ -60,7 +64,7 @@ export default async function GoLivePage({ params }: { params: Promise<{ locale:
                 </li>
               ))}
             </ul>
-            <GoLiveForm points={points} />
+            <GoLiveForm points={points} masterData={masterData} />
           </>
         )}
       </SectionCard>

@@ -420,6 +420,27 @@ describe('credit notes', () => {
     expect((await row(note)).signedXml).toContain('<motivo>Corregido</motivo>');
   });
 
+  it('stops offering a credit note once every line is credited', async () => {
+    const origin = await authorized();
+    expect((await getDocument(await owner(), db, origin.id)).allowed.credit).toBe(true);
+    await issueCredit(origin, [{ sourcePosition: 1, quantity: '3' }]);
+    // Something is left, so it is still offered.
+    expect((await getDocument(await owner(), db, origin.id)).allowed.credit).toBe(true);
+    await issueCredit(origin, [
+      { sourcePosition: 1, quantity: '1' },
+      { sourcePosition: 2, quantity: '1' },
+    ]);
+    // Everything is credited, even with the notes still waiting for SRI.
+    expect((await getDocument(await owner(), db, origin.id)).allowed.credit).toBe(false);
+    // An amount-only credit uses up the value of a line too.
+    const other = await authorized();
+    await issueCredit(other, [
+      { sourcePosition: 1, kind: 'AMOUNT', unitPrice: '40.00' },
+      { sourcePosition: 2, kind: 'AMOUNT', unitPrice: '5.00' },
+    ]);
+    expect((await getDocument(await owner(), db, other.id)).allowed.credit).toBe(false);
+  });
+
   it('offers a credit note on an authorized invoice, a draft to correct, and the RIDE', async () => {
     const origin = await authorized();
     expect((await getDocument(await owner(), db, origin.id)).allowed.credit).toBe(true);

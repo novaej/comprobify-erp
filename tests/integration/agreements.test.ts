@@ -145,6 +145,7 @@ describe('legal agreements', () => {
   it('opens go-live once accepted', async () => {
     await expect(goLive(ownerCtx, db, { requireAgreements: true })).resolves.toEqual({
       realTenantId: org.realTenantId,
+      copied: null,
     });
   });
 

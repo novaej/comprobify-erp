@@ -25,6 +25,8 @@ export async function goLiveAction(_: ActionState, form: FormData): Promise<Acti
     const { realTenantId } = await goLive(actor, db, {
       requireAgreements: env.AGREEMENTS_ENABLED,
       startingSequentials,
+      // FR-ONB-5: the twin's master data, when the box was left checked.
+      copyMasterData: form.get('copyMasterData') === 'on',
     });
     await switchOrganization(db, {
       userId: session.user.id,
