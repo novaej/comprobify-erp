@@ -16,7 +16,7 @@ Read FR-MD-3, FR-MD-4, FR-INV-1 to FR-INV-6 and FR-PUR-1 to FR-PUR-3 before each
 - [x] 6. Purchase orders (FR-PUR-1, ADR-019, `purchasing/`, migration 0040): `DRAFT → SENT → PARTIALLY_RECEIVED → RECEIVED → CLOSED`, `CANCELLED` from DRAFT or SENT, closing short from PARTIALLY_RECEIVED, with the CHECK and trigger generated from the TypeScript transitions (FR-DOC-3); a number per company (`tenant_counters`); catalogue lines at cost without IVA; drafts edited as revisions; list, form and detail screens.
 - [x] 7. Receiving (FR-PUR-2, `purchasing/receipts.ts`, migration 0041): full or partial per line, never more than is left; a `PURCHASE_RECEIPT` movement per stocked line in the same transaction, updating the average; the order's status follows. Services, goods that track no stock, and any line without Inventario are received without a movement. Receipts are append-only.
 - [x] 8. The order as a PDF, emailed to the provider (FR-PUR-3, `purchasing/email.ts`, the `purchasing.email` job, migration 0042): the PDF on the order; emailing a draft sends it, with the job enqueued in the same transaction; a sent order can be emailed again.
-- [ ] 9. Gate: E2E for an opening balance, a receipt and an adjustment with the levels and cost they leave; the nightly check over seeded data finds no drift. Then the owner tries it locally.
+- [ ] 9. Gate: E2E for an opening balance, a receipt and an adjustment with the levels and cost they leave; the nightly check over seeded data finds no drift (done: `tests/e2e/auth.spec.ts`, the inventory, purchase order and drift tests). Then the owner tries it locally.
 
 ## Carried forward
 

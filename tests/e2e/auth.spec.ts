@@ -2,7 +2,13 @@ import { randomUUID } from 'node:crypto';
 import { expect, test, type Page } from '@playwright/test';
 import { base32 } from '@better-auth/utils/base32';
 import { createOTP } from '@better-auth/utils/otp';
-import { checkAuthorization, createMockSri, createSriClient, sendDocument } from '@comprobify/core';
+import {
+  checkAuthorization,
+  createMockSri,
+  createSriClient,
+  sendDocument,
+  verifyStockLevels,
+} from '@comprobify/core';
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { createDatabase } from '@comprobify/db';
 import { Client } from 'pg';
@@ -888,7 +894,14 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
       .click();
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Recibida en parte');
     await page.getByRole('link', { name: 'Recibir mercadería' }).click();
-    await expect(page.getByRole('textbox', { name: 'Recibe ahora: Café molido' })).toHaveValue('3');
+    const rest = page.getByRole('textbox', { name: 'Recibe ahora: Café molido' });
+    await expect(rest).toHaveValue('3');
+    // More than is left says so beside the field, and on submit.
+    await rest.fill('4');
+    await expect(page.getByText('Puedes recibir hasta 3.')).toBeVisible();
+    await page.getByRole('button', { name: 'Registrar recepción' }).click();
+    await expect(page.getByText(/^Una cantidad pasa lo pendiente/)).toBeVisible();
+    await page.getByRole('button', { name: 'Todo lo pendiente' }).click();
     await page.getByRole('button', { name: 'Registrar recepción' }).click();
     await page
       .getByRole('dialog', { name: '¿Registrar la recepción?' })
@@ -911,6 +924,19 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
       'Distribuidora Andina S.A.',
     );
     await look(page, 'purchase-orders');
+  });
+
+  test('finds no drift between the stock levels and their ledger after the day (FR-INV-2, Milestone 5 gate)', async () => {
+    // What the nightly inventory.verify job runs, over everything the tests above stocked.
+    const silent = { debug() {}, info() {}, warn() {}, error() {}, child: () => silent };
+    const db = createDatabase({ connectionString: process.env.DATABASE_URL!, logger: silent });
+    try {
+      const { checked, drifts } = await verifyStockLevels({ db, logger: silent });
+      expect(checked).toBeGreaterThan(0);
+      expect(drifts).toEqual([]);
+    } finally {
+      await db.close();
+    }
   });
 
   test('invites a read-only member who joins and sees only what the role allows (FR-USR-1, FR-ROLE-3)', async ({
