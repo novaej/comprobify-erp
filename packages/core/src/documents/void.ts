@@ -10,6 +10,7 @@ import {
 } from '../sri';
 import { recordExchange } from './exchanges';
 import { locked, transition } from './sending';
+import { stockOnVoided } from './stock';
 
 // FR-DOC-8: SRI has no service to void; the company voids on SRI's portal, and the
 // document is marked VOIDED here once Consulta de validez says so.
@@ -92,7 +93,7 @@ export async function voidDocument(
     const current = await locked(tx, { tenantId: ctx.tenantId, documentId: id });
     if (current?.status !== 'AUTHORIZED')
       throw new DomainError('NOT_VOIDABLE', 'Only an authorized document can be voided');
-    await transition(
+    const voided = await transition(
       tx,
       current,
       'VOIDED',
@@ -108,6 +109,7 @@ export async function voidDocument(
         actorUserId: ctx.userId ?? null,
       },
     );
+    await stockOnVoided(tx, voided, ctx.userId ?? null);
   });
   return { status: 'VOIDED', attested: validity === null };
 }

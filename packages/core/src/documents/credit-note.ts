@@ -7,6 +7,7 @@ import {
   DomainError,
   ecuadorDate,
   preciseInput,
+  hasFeature,
   requireFeature,
   requirePermission,
   toSriAmount,
@@ -38,6 +39,7 @@ import { correctDocument } from './create-invoice';
 import { recordVersion } from './exchanges';
 import { documentActions, documentNumber } from './queries';
 import { locked } from './sending';
+import { invoiceHasGoodsOut } from './stock';
 import { takeSequential } from './sequence';
 
 type Row = typeof schema.documents.$inferSelect;
@@ -69,6 +71,9 @@ export const creditNoteInput = z.object({
     .min(1)
     .max(500),
   additionalInfo: z.array(nameValue).max(10).default([]),
+  // FR-SAL-8: the return lines' goods come back to stock once SRI authorizes the note, up to
+  // what the invoice sold (ADR-020). Needs Inventario.
+  returnStock: z.boolean().default(false),
   idempotencyKey: z.string().trim().min(1).max(100).nullable().default(null),
 });
 export type CreditNoteInput = z.input<typeof creditNoteInput>;
@@ -83,6 +88,12 @@ export type CreditNoteCorrectionInput = z.input<typeof creditNoteCorrectionInput
 // A credit note that SRI returned or rejected holds nothing: it is corrected, and then has to fit
 // what is left. Anything else, even one still in flight, holds its share (FR-SAL-8).
 const RELEASED = ['RETURNED', 'NOT_AUTHORIZED', 'VOIDED'] as const;
+
+export type CreditBalance = {
+  lines: CreditBalanceLine[];
+  // The invoice sold goods that haven't all come back, and the company has Inventario.
+  canReturnStock: boolean;
+};
 
 export type CreditBalanceLine = {
   position: number;
@@ -168,13 +179,15 @@ export async function creditBalance(
   ctx: ActorContext,
   db: Database,
   originId: string,
-): Promise<CreditBalanceLine[]> {
+): Promise<CreditBalance> {
   requirePermission(ctx, 'documents.read');
   const id = z.uuid().parse(originId);
   return db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
     const [origin] = await tx.db.select().from(schema.documents).where(eq(schema.documents.id, id));
     checkOrigin(ctx, origin);
-    return (await balanceOf(tx, origin, null)).map(({ line, quantity, base }) => ({
+    const balance = await balanceOf(tx, origin, null);
+    const canReturnStock = hasFeature(ctx, 'INVENTORY') && (await invoiceHasGoodsOut(tx, origin));
+    const lines = balance.map(({ line, quantity, base }) => ({
       position: line.position,
       code: line.code,
       name: line.name,
@@ -186,6 +199,7 @@ export async function creditBalance(
       remainingQuantity: quantity.toString(),
       remainingBase: toSriAmount(base),
     }));
+    return { lines, canReturnStock };
   });
 }
 
@@ -203,6 +217,7 @@ async function composeCreditNote(
   deps: IssueDeps,
   except: string | null,
 ) {
+  if (input.returnStock) requireFeature(ctx, 'INVENTORY');
   const balance = await balanceOf(tx, origin, except);
   const byPosition = new Map(balance.map((entry) => [entry.line.position, entry]));
 
@@ -301,6 +316,7 @@ async function composeCreditNote(
     ...totalsColumns(totals),
     signedXml,
     retryUntil: retryDeadline(numbering.issueDate),
+    returnsStock: input.returnStock,
   };
 
   // Lines are never updated: each revision adds its own. A credit note has no payments.
@@ -467,6 +483,7 @@ export type CreditNoteDraft = {
   originId: string;
   originNumber: string;
   reason: string;
+  returnStock: boolean;
   // Only the lines that were credited, as the form starts from them.
   lines: {
     sourcePosition: number;
@@ -517,6 +534,7 @@ export async function creditNoteDraft(
       originId: row.relatedDocumentId,
       originNumber: origin ? documentNumber(origin.series, origin.sequential) : '',
       reason: data?.modification?.reason ?? '',
+      returnStock: row.returnsStock,
       lines: lines.flatMap((line) =>
         line.sourcePosition === null
           ? []

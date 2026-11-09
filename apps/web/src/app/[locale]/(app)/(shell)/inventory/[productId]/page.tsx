@@ -257,8 +257,21 @@ export default async function ProductStockPage({
                       <StackCell label={t('table.warehouse')}>{movement.warehouseName}</StackCell>
                     )}
                     <StackCell label={t('table.quantity')} className="text-right tabular-nums">
-                      {movement.quantity.startsWith('-') ? '' : '+'}
-                      {quantity.format(movement.quantity as Intl.StringNumericLiteral)}
+                      {Number(movement.quantity) === 0 && Number(movement.reserved) !== 0 ? (
+                        // A reservation moves nothing on hand: show what it held or let go.
+                        <span className="text-muted-foreground">
+                          {t('table.reservedChange', {
+                            quantity: `${movement.reserved.startsWith('-') ? '' : '+'}${quantity.format(
+                              movement.reserved as Intl.StringNumericLiteral,
+                            )}`,
+                          })}
+                        </span>
+                      ) : (
+                        <>
+                          {movement.quantity.startsWith('-') ? '' : '+'}
+                          {quantity.format(movement.quantity as Intl.StringNumericLiteral)}
+                        </>
+                      )}
                     </StackCell>
                     <StackCell label={t('table.unitCost')} className="text-right tabular-nums">
                       {cost.format(movement.unitCost as Intl.StringNumericLiteral)}
@@ -267,12 +280,23 @@ export default async function ProductStockPage({
                       {money.format(movement.value as Intl.StringNumericLiteral)}
                     </StackCell>
                     <StackCell label={t('table.reason')} className="pr-4">
-                      <span className="break-words text-muted-foreground">
-                        {movement.reason ??
-                          (movement.sourceType
-                            ? t(`sources.${movement.sourceType as 'ADJUSTMENT'}`)
-                            : '—')}
-                      </span>
+                      {!movement.reason &&
+                      movement.sourceType === 'DOCUMENT' &&
+                      movement.sourceId ? (
+                        <Link
+                          href={`/documents/${movement.sourceId}`}
+                          className="font-medium text-primary hover:underline"
+                        >
+                          {t('sources.DOCUMENT')}
+                        </Link>
+                      ) : (
+                        <span className="break-words text-muted-foreground">
+                          {movement.reason ??
+                            (movement.sourceType
+                              ? t(`sources.${movement.sourceType as 'ADJUSTMENT'}`)
+                              : '—')}
+                        </span>
+                      )}
                     </StackCell>
                   </StackRow>
                 ))}

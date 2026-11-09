@@ -40,6 +40,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [017](017-delivery-guides.md) | Delivery guides | Accepted |
 | [018](018-inventory-ledger-and-costing.md) | The inventory ledger and weighted average cost | Accepted |
 | [019](019-purchase-orders.md) | Purchase orders | Accepted |
+| [020](020-documents-move-stock.md) | Invoices and credit notes move stock | Accepted |
 
 ## Old ADRs to read before each milestone
 

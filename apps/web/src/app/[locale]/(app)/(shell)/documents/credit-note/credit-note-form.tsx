@@ -2,10 +2,11 @@
 
 import { Button } from '@comprobify/ui/components/button';
 import { Input } from '@comprobify/ui/components/input';
+import { Switch } from '@comprobify/ui/components/switch';
 import { Textarea } from '@comprobify/ui/components/textarea';
 import { AlertCircle, Send } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useMemo, useState, useTransition } from 'react';
+import { useId, useMemo, useState, useTransition } from 'react';
 import { Banner } from '@/components/banner';
 import { ChoiceSelect, type Choice } from '@/components/choice-select';
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -40,6 +41,7 @@ type Kind = 'RETURN' | 'AMOUNT';
 export type CreditDraft = {
   documentId: string;
   reason: string;
+  returnStock: boolean;
   lines: {
     sourcePosition: number;
     kind: Kind;
@@ -58,6 +60,7 @@ export function CreditNoteForm({
   originNumber,
   issuePoints,
   balance,
+  canReturnStock,
   percents,
   draft,
 }: {
@@ -65,6 +68,8 @@ export function CreditNoteForm({
   originNumber: string;
   issuePoints: Choice[];
   balance: BalanceLine[];
+  // The invoice sold goods that haven't all come back (FR-SAL-8).
+  canReturnStock: boolean;
   // IVA rate code → percent, for the live total.
   percents: Record<string, string>;
   draft?: CreditDraft;
@@ -75,6 +80,8 @@ export function CreditNoteForm({
   const [pending, startTransition] = useTransition();
   const [issuePointId, setIssuePointId] = useState(issuePoints[0]?.value ?? '');
   const [reason, setReason] = useState(draft?.reason ?? '');
+  const [returnStock, setReturnStock] = useState(draft?.returnStock ?? false);
+  const uid = useId();
   const [entries, setEntries] = useState<Record<number, Entry>>(() =>
     Object.fromEntries(
       balance.map((line) => {
@@ -175,7 +182,7 @@ export function CreditNoteForm({
         discount: normalizeDecimal(entry.discount) || '0',
       };
     });
-    const content = { reason: reason.trim(), lines };
+    const content = { reason: reason.trim(), lines, returnStock: canReturnStock && returnStock };
     form.set(
       'payload',
       JSON.stringify(
@@ -230,6 +237,21 @@ export function CreditNoteForm({
                 />
               )}
             </FormField>
+            {canReturnStock && (
+              <div className="mt-4 flex items-start justify-between gap-4">
+                <div>
+                  <p id={`${uid}-stock`} className="text-sm font-medium">
+                    {t('returnStock.label')}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">{t('returnStock.hint')}</p>
+                </div>
+                <Switch
+                  checked={returnStock}
+                  onCheckedChange={setReturnStock}
+                  aria-labelledby={`${uid}-stock`}
+                />
+              </div>
+            )}
           </SectionCard>
 
           <section aria-labelledby="credit-lines-title">

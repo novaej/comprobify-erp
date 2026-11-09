@@ -11,6 +11,7 @@ import {
   toSriAmount,
   type ActorContext,
 } from '../kernel';
+import { releaseDocumentStock, reserveDocumentStock } from '../inventory';
 import { buyerChangesInput, buyerForDocument, updateBuyerDetails } from '../parties';
 import {
   accessKey,
@@ -23,7 +24,13 @@ import {
   SRI_PAYMENT_METHODS,
   SRI_TERM_UNITS,
 } from '../sri';
-import { ambienteFor, issuingContext, type Ambiente, type IssuingContext } from '../tenancy';
+import {
+  ambienteFor,
+  issuePointWarehouse,
+  issuingContext,
+  type Ambiente,
+  type IssuingContext,
+} from '../tenancy';
 import {
   consumeQuota,
   findIdempotent,
@@ -276,6 +283,12 @@ export async function createInvoice(
       })
       .returning();
     await insertParts(document!.id, 1);
+    // ADR-020: the goods are held from now; SRI's authorization sells them.
+    await reserveDocumentStock(ctx, tx, {
+      documentId: document!.id,
+      warehouseId: await issuePointWarehouse(tx, input.issuePointId),
+      lines: input.lines,
+    });
     await recordVersion(tx, {
       tenantId: ctx.tenantId,
       documentId: document!.id,
@@ -434,7 +447,21 @@ export async function correctInvoice(
     db,
     documentId,
     '01',
-    (tx, row, issuer, numbering) => composeInvoice(ctx, tx, input, issuer, numbering, deps),
+    async (tx, row, issuer, numbering) => {
+      const composed = await composeInvoice(ctx, tx, input, issuer, numbering, deps);
+      // The new lines are held instead of the old ones (ADR-020).
+      await releaseDocumentStock(
+        tx,
+        { tenantId: ctx.tenantId, userId: ctx.userId ?? null },
+        row.id,
+      );
+      await reserveDocumentStock(ctx, tx, {
+        documentId: row.id,
+        warehouseId: await issuePointWarehouse(tx, row.issuePointId),
+        lines: input.lines,
+      });
+      return composed;
+    },
     deps,
   );
 }

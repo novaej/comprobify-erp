@@ -302,6 +302,13 @@
       "when": 1794091800645,
       "tag": "0042_purchase_order_email",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1794223421370,
+      "tag": "0043_credit_note_stock_return",
+      "breakpoints": true
     }
   ]
 }

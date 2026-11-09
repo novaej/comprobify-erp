@@ -2,7 +2,7 @@
 
 Primary guide for AI assistants and developers. Every rule here takes precedence over defaults. `docs/PRD.md` is the source of truth for what to build; this file is how to build it. Keep it current: it changes with every milestone.
 
-**Status:** Milestones 1 (Identity and tenancy), 2 (Entitlements and plans), 3 (SRI engine: factura) and 4 (Other SRI documents) done. Milestone 5 (Inventory and purchasing) is next; see `NEXT_STEPS.md`. Decisions are in [docs/adr/](docs/adr/README.md).
+**Status:** Milestones 1 (Identity and tenancy), 2 (Entitlements and plans), 3 (SRI engine: factura), 4 (Other SRI documents) and 5 (Inventory and purchasing) done. Milestone 6 (Sales) is in progress; see `NEXT_STEPS.md`. Decisions are in [docs/adr/](docs/adr/README.md).
 
 ---
 
@@ -179,11 +179,11 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/platform/` | The super admin's workflows: companies, their plans, add-ons, Personalizado, complimentary, overrides; editing plans and modules |
 | `apps/web/src/app/[locale]/(admin)/` | The platform area, outside any company (`loadPlatform`) |
 | `packages/core/src/sri/` | SRI catalogues (from `packages/db/src/schema/sri.ts`), totals and rounding (ADR-012), access keys, the factura builder, XSD validation and the XAdES-BES signer (ADR-013), the SOAP client and the mock SRI (ADR-014) |
-| `packages/core/src/documents/` | `createInvoice` (the FR-DOC-2 pipeline), the send and authorize handlers and their calendar (`sending.ts`, `calendar.ts`), the next-day and manual re-issue (`reissue.ts`), correction (in `create-invoice.ts`), void (`void.ts`), the RIDE and buyer's copy (`ride.ts`; drawing in `sri/ride-*.ts`), status machine checks and sequentials; the table, transitions and trigger generator are in `packages/db/src/schema/documents.ts` (FR-DOC-3) |
+| `packages/core/src/documents/` | `createInvoice` (the FR-DOC-2 pipeline), the send and authorize handlers and their calendar (`sending.ts`, `calendar.ts`), the next-day and manual re-issue (`reissue.ts`), correction (in `create-invoice.ts`), void (`void.ts`), the stock side of SRI's answers (`stock.ts`, ADR-020), the RIDE and buyer's copy (`ride.ts`; drawing in `sri/ride-*.ts`), status machine checks and sequentials; the table, transitions and trigger generator are in `packages/db/src/schema/documents.ts` (FR-DOC-3) |
 | `apps/web/src/app/[locale]/(app)/(shell)/documents/` | The document list, invoice form and detail, with the RIDE and XML routes |
 | `apps/web/src/app/[locale]/(app)/(shell)/inventory/` | Stock list, a product's stock and movements, adjustments, the opening import, valuation and its CSV |
 | `apps/web/src/lib/invoice-totals.ts` | The form's exact totals, held to core's by a test |
-| `packages/core/src/inventory/` | The stock ledger: `applyMovement` (the one way stock changes) and the weighted average cost rules (`cost.ts`, ADR-018); the tables are in `packages/db/src/schema/inventory.ts` |
+| `packages/core/src/inventory/` | The stock ledger: `applyMovement` (the one way stock changes; `moveStock` for the worker), the weighted average cost rules (`cost.ts`, ADR-018), and what documents do to stock (`document-stock.ts`, ADR-020); the tables are in `packages/db/src/schema/inventory.ts` |
 | `packages/core/src/parties/`, `packages/core/src/catalog/` | Clients and providers with identification checks; products and services (FR-MD-1, FR-MD-2, FR-MD-3) |
 | `packages/core/src/purchasing/` | Purchase orders: numbers, revisions, receiving into stock (`receipts.ts`), the PDF and its email (`order-pdf.ts`, `email.ts`), the status machine (`status.ts`; the tables and transitions are in `packages/db/src/schema/purchasing.ts`, ADR-019) |
 | `apps/web/src/app/[locale]/(app)/(shell)/purchase-orders/` | The order list, form (new and edit), detail, receive screen and PDF route |

@@ -215,6 +215,19 @@ export async function stockedProduct(
   return { id: row.id, cost: row.cost };
 }
 
+// Which of these products are goods that track stock, read in the caller's transaction.
+export async function stockedAmong(tx: Tx, ids: string[]): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  const { products } = schema;
+  const rows = await tx.db
+    .select({ id: products.id })
+    .from(products)
+    .where(
+      and(inArray(products.id, ids), eq(products.kind, 'GOOD'), eq(products.tracksStock, true)),
+    );
+  return new Set(rows.map((row) => row.id));
+}
+
 // Products by code for an import, read in the caller's transaction.
 export async function productsByCode(
   tx: Tx,

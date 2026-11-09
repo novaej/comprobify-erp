@@ -1373,7 +1373,8 @@
     "CREDIT_LINE_UNKNOWN": "A line does not belong to the invoice.",
     "CREDIT_EXCEEDS_BALANCE": "A line is more than what is left to credit on the invoice.",
     "TRANSPORT_START_BEFORE_ISSUE": "The transport cannot start before the issue day. Use today or a later date.",
-    "TRANSPORT_END_BEFORE_START": "The transport cannot end before it starts."
+    "TRANSPORT_END_BEFORE_START": "The transport cannot end before it starts.",
+    "INSUFFICIENT_STOCK": "A product doesn’t have enough stock available in this branch’s warehouse. Check the inventory or change the quantity."
   },
   "creditNoteForm": {
     "title": "Credit note for {number}",
@@ -1430,6 +1431,10 @@
       "submit": "Correct and send",
       "confirmTitle": "Correct and resend the credit note?",
       "confirmDescription": "It is signed again and sent to SRI with the same number."
+    },
+    "returnStock": {
+      "label": "Return the goods to stock",
+      "hint": "When SRI authorizes the note, the returned quantities go back to the invoice’s warehouse at the cost they left at. Never more than the invoice sold."
     }
   },
   "guideForm": {
@@ -1535,7 +1540,8 @@
       "quantity": "Quantity",
       "unitCost": "Unit cost",
       "reason": "Reason",
-      "open": "Open {name}"
+      "open": "Open {name}",
+      "reservedChange": "{quantity} reserved"
     },
     "pagination": {
       "label": "Pages",

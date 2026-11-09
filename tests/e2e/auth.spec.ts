@@ -926,6 +926,72 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await look(page, 'purchase-orders');
   });
 
+  test('holds stock for an invoice, sells it on authorization and takes a return (FR-SAL-2, FR-SAL-8, ADR-020)', async ({
+    page,
+  }) => {
+    await signIn(page, email, newPassword);
+    const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
+    const heading = page.getByRole('heading', { level: 1 });
+
+    await expect(nav).toBeVisible();
+
+    // 11 of Café molido on hand, from the order above: 3 of them invoiced.
+    await page.goto('/es/documents/new');
+    const client = page.getByRole('combobox', {
+      name: 'Buscar cliente por nombre o identificación',
+    });
+    await client.fill('María');
+    await client.press('Enter');
+    const line = page.getByRole('group', { name: 'Línea 1' });
+    await line.getByRole('combobox', { name: 'Código' }).fill('CAF-001');
+    await page.keyboard.press('Enter');
+    await expect(line.getByRole('textbox', { name: 'Descripción' })).toHaveValue('Café molido');
+    await line.getByRole('textbox', { name: 'Cantidad' }).fill('3');
+    await page.getByRole('button', { name: 'Emitir factura' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Emitir la factura?' })
+      .getByRole('button', { name: 'Emitir factura' })
+      .click();
+    await expect(heading).toContainText('Factura 001-001-');
+    const invoice = page.url().split('/').at(-1)!;
+
+    // Held, not gone: on hand stays at 11 until SRI authorizes.
+    await nav.getByRole('link', { name: 'Inventario' }).click();
+    await page.getByRole('link', { name: 'Café molido', exact: true }).click();
+    const movements = page.getByRole('table', { name: 'Movimientos' });
+    await expect(movements.getByRole('row', { name: /Reserva/ })).toContainText('+3 reservado');
+    await look(page, 'inventory-product-reserved');
+    await runSri(invoice, 'authorize');
+    await page.reload();
+    await expect(movements.getByRole('row', { name: /Venta/ })).toContainText('-3');
+    await movements
+      .getByRole('row', { name: /Venta/ })
+      .getByRole('link', { name: 'Comprobante' })
+      .click();
+    await expect(heading).toContainText('Autorizado');
+
+    // One comes back with a credit note that returns its goods.
+    await page.getByRole('link', { name: 'Nota de crédito' }).click();
+    await page.getByRole('textbox', { name: /Cantidad a acreditar de Café molido/ }).fill('1');
+    await page.getByRole('textbox', { name: 'Motivo' }).fill('Producto devuelto');
+    await page.getByRole('switch', { name: 'Devolver los productos al inventario' }).click();
+    await look(page, 'credit-note-return-stock');
+    await page.getByRole('button', { name: 'Emitir nota de crédito' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Emitir la nota de crédito?' })
+      .getByRole('button', { name: 'Emitir nota de crédito' })
+      .click();
+    await expect(heading).toContainText('Nota de crédito 001-001-');
+    await runSri(page.url().split('/').at(-1)!, 'authorize');
+
+    await nav.getByRole('link', { name: 'Inventario' }).click();
+    const stock = page.getByRole('row', { name: /Café molido/ });
+    // 11 − 3 + 1.
+    await expect(stock).toContainText('9');
+    await page.getByRole('link', { name: 'Café molido', exact: true }).click();
+    await expect(movements.getByRole('row', { name: /Devolución/ })).toContainText('+1');
+  });
+
   test('finds no drift between the stock levels and their ledger after the day (FR-INV-2, Milestone 5 gate)', async () => {
     // What the nightly inventory.verify job runs, over everything the tests above stocked.
     const silent = { debug() {}, info() {}, warn() {}, error() {}, child: () => silent };

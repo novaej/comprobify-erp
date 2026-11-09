@@ -1373,7 +1373,8 @@
     "CREDIT_LINE_UNKNOWN": "Una línea no pertenece a la factura.",
     "CREDIT_EXCEEDS_BALANCE": "Una línea supera lo que queda por acreditar de la factura.",
     "TRANSPORT_START_BEFORE_ISSUE": "El transporte no puede empezar antes del día de emisión. Usa la fecha de hoy o una posterior.",
-    "TRANSPORT_END_BEFORE_START": "El transporte no puede terminar antes de empezar."
+    "TRANSPORT_END_BEFORE_START": "El transporte no puede terminar antes de empezar.",
+    "INSUFFICIENT_STOCK": "Un producto no tiene suficientes existencias disponibles en la bodega de esta sucursal. Revisa el inventario o cambia la cantidad."
   },
   "creditNoteForm": {
     "title": "Nota de crédito de {number}",
@@ -1430,6 +1431,10 @@
       "submit": "Corregir y enviar",
       "confirmTitle": "¿Corregir y reenviar la nota de crédito?",
       "confirmDescription": "Se firma de nuevo y se envía al SRI con el mismo número."
+    },
+    "returnStock": {
+      "label": "Devolver los productos al inventario",
+      "hint": "Cuando el SRI autorice la nota, las cantidades devueltas regresan a la bodega de la factura al costo con que salieron. Nunca más de lo que la factura vendió."
     }
   },
   "guideForm": {
@@ -1535,7 +1540,8 @@
       "quantity": "Cantidad",
       "unitCost": "Costo unitario",
       "reason": "Motivo",
-      "open": "Ver {name}"
+      "open": "Ver {name}",
+      "reservedChange": "{quantity} reservado"
     },
     "pagination": {
       "label": "Páginas",

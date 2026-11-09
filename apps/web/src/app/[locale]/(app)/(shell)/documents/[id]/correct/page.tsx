@@ -122,6 +122,7 @@ async function CorrectCreditNote({ locale, id }: { locale: string; id: string })
         draft={{
           documentId: draft.id,
           reason: draft.reason,
+          returnStock: draft.returnStock,
           lines: draft.lines,
         }}
       />

@@ -33,6 +33,7 @@ export {
   creditNoteInput,
 } from './credit-note';
 export type {
+  CreditBalance,
   CreditBalanceLine,
   CreditNoteCorrectionInput,
   CreditNoteDraft,

@@ -122,6 +122,8 @@ export const documents = pgTable(
     // The document this one comes from: a credit note's invoice, a guía's optional invoice.
     // Set when it's created and never changed; the XML carries the origin's number and date.
     relatedDocumentId: uuid('related_document_id'),
+    // A credit note whose return lines bring the goods back to stock when SRI authorizes it.
+    returnsStock: boolean('returns_stock').default(false).notNull(),
     buyerIdType: text('buyer_id_type', { enum: SRI_ID_TYPES }).notNull(),
     buyerIdentification: text('buyer_identification').notNull(),
     buyerName: text('buyer_name').notNull(),

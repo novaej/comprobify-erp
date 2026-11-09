@@ -119,6 +119,8 @@ export type MovementRow = {
   type: string;
   warehouseName: string;
   quantity: string;
+  // A reservation or release changes what is held, not what is on hand.
+  reserved: string;
   unitCost: string;
   value: string;
   reason: string | null;
@@ -207,6 +209,7 @@ export async function productStock(
         type: row.type,
         warehouseName: names.get(row.warehouseId) ?? '',
         quantity: row.quantity,
+        reserved: row.reserved,
         unitCost: row.unitCost,
         value: toSriAmount(new Dec(row.value).toDecimalPlaces(2)),
         reason: row.reason,

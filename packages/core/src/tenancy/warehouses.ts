@@ -51,6 +51,24 @@ export async function warehousesOf(tx: Tx): Promise<Warehouse[]> {
     .orderBy(asc(branches.code));
 }
 
+// The warehouse of an issue point's branch: where its documents take goods from (ADR-020).
+export async function issuePointWarehouse(tx: Tx, issuePointId: string): Promise<string> {
+  const { warehouses, issuePoints } = schema;
+  const [row] = await tx.db
+    .select({ id: warehouses.id })
+    .from(issuePoints)
+    .innerJoin(
+      warehouses,
+      and(
+        eq(warehouses.tenantId, issuePoints.tenantId),
+        eq(warehouses.branchId, issuePoints.branchId),
+      ),
+    )
+    .where(eq(issuePoints.id, issuePointId));
+  if (!row) throw new Error('An issue point without its branch warehouse');
+  return row.id;
+}
+
 // The company's next number of a kind, taken in the caller's transaction: an upsert holds
 // the row until commit, so two at once wait and never share one, and a rollback gives it back.
 export async function nextNumber(

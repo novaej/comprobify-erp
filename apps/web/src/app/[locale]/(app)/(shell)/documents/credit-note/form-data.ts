@@ -7,7 +7,7 @@ import { getRuntime } from '@/server/runtime';
 // issue points enabled for the type. Throws core's refusal if the invoice can't be credited.
 export async function creditFormData(actor: ActorContext, originId: string) {
   const { db } = await getRuntime();
-  const [options, lines, tSri] = await Promise.all([
+  const [options, balance, tSri] = await Promise.all([
     issuingOptions(actor, db, '04'),
     creditBalance(actor, db, originId),
     getTranslations('sri'),
@@ -17,7 +17,8 @@ export async function creditFormData(actor: ActorContext, originId: string) {
       value: point.id,
       label: `${point.code} ${point.branchName}`,
     })),
-    balance: lines.map((line) => ({
+    canReturnStock: balance.canReturnStock,
+    balance: balance.lines.map((line) => ({
       position: line.position,
       code: line.code,
       name: line.name,

@@ -1,7 +1,16 @@
 export { applyCost } from './cost';
 export type { CostChange, CostResult, LevelState } from './cost';
-export { applyMovement, movementInput, STOCK_IN, STOCK_OUT } from './ledger';
-export type { MovementInput, StockLevel, StockMovement } from './ledger';
+export { applyMovement, movementInput, STOCK_HOLD, STOCK_IN, STOCK_OUT } from './ledger';
+export type { MovementInput, Mover, StockLevel, StockMovement } from './ledger';
+export {
+  goodsStillOut,
+  releaseDocumentStock,
+  reserveDocumentStock,
+  returnSoldStock,
+  sellDocumentStock,
+  undoReturn,
+} from './document-stock';
+export type { StockLine } from './document-stock';
 export {
   adjustmentInput,
   adjustStock,

@@ -110,7 +110,7 @@ describe('credit notes', () => {
   const issueCredit = async (origin: IssuedDocument, lines: CreditNoteInput['lines']) =>
     createCreditNote(await owner(), db, credit(origin, lines), issueDeps);
   const remaining = async (origin: IssuedDocument) =>
-    (await creditBalance(await owner(), db, origin.id)).map((line) => line.remainingQuantity);
+    (await creditBalance(await owner(), db, origin.id)).lines.map((line) => line.remainingQuantity);
 
   beforeAll(async () => {
     db = appDatabase();
@@ -248,7 +248,7 @@ describe('credit notes', () => {
     await expect(validateXml(stored.signedXml!, '04')).resolves.toEqual({ valid: true });
     expect(stored.signedXml).toContain('<cantidad>1.000000</cantidad>');
     // The quantity is untouched, the amount is not.
-    const [first] = await creditBalance(await owner(), db, origin.id);
+    const [first] = (await creditBalance(await owner(), db, origin.id)).lines;
     expect(first).toMatchObject({ remainingQuantity: '4', remainingBase: '30.00' });
 
     // Three units come back at the invoice's price: 4 units cannot, the amount is 30.00 left.
@@ -263,7 +263,7 @@ describe('credit notes', () => {
       ),
     ).toBe('CREDIT_EXCEEDS_BALANCE');
     await issueCredit(origin, [{ sourcePosition: 1, quantity: '3' }]);
-    expect((await creditBalance(await owner(), db, origin.id))[0]).toMatchObject({
+    expect((await creditBalance(await owner(), db, origin.id)).lines[0]).toMatchObject({
       remainingQuantity: '1',
       remainingBase: '0.00',
     });

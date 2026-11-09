@@ -5,6 +5,7 @@ import { endOfEcuadorDay, type Clock } from '../kernel';
 import { SRI_SEQUENTIAL_TAKEN, SriTransportError, type SriClient, type SriMessage } from '../sri';
 import { AUTHORIZATION_OVERDUE_AFTER, nextAuthorizationCheck, nextSendAttempt } from './calendar';
 import { recordExchange } from './exchanges';
+import { stockOnAuthorized } from './stock';
 import { assertTransition, type DocumentStatus } from './status';
 
 // FR-DOC-4 and FR-DOC-5. Each handler re-reads the document under a row lock, acts only
@@ -193,7 +194,8 @@ export async function applyFinalAnswer(
   return transition(tx, received, 'NOT_AUTHORIZED', {}, { details });
 }
 
-// FR-DOC-11: the buyer's copy goes out in the same transaction as the authorization.
+// FR-DOC-11: the buyer's copy goes out in the same transaction as the authorization, and the
+// stock moves with it (ADR-020).
 async function authorize(
   jobs: SendingDeps['jobs'],
   tx: Tx,
@@ -212,6 +214,7 @@ async function authorize(
     },
     { details },
   );
+  await stockOnAuthorized(tx, authorized);
   await jobs.enqueue(tx, 'documents.email', {
     tenantId: row.tenantId,
     documentId: row.id,
