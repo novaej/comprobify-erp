@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { and, asc, eq, inArray, schema, type Database } from '@comprobify/db';
+import { and, asc, eq, inArray, schema, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
 import { returnHoldToOrder, transferOrderHold } from '../inventory';
 import {
@@ -23,7 +23,7 @@ import {
   syncSaleOrder,
   type LineCoverage,
 } from '../sales';
-import { findIdempotent, type IssueDeps, type IssuedDocument } from './compose';
+import { findIdempotent, findIssuedByKey, type IssueDeps, type IssuedDocument } from './compose';
 import {
   composeInvoice,
   correctDocument,
@@ -145,35 +145,85 @@ export async function invoiceSaleOrder(
   requireFeature(ctx, 'SALE_ORDERS');
   requirePermission(ctx, 'sales.manage');
   const input = orderInvoiceInput.parse(raw);
-  const payloadHash = createHash('sha256').update(JSON.stringify(input)).digest('hex');
-  return db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
-    // A retry with the same key finds its document before the quantities are checked again.
-    const existing = await findIdempotent(tx, ctx, input.idempotencyKey, payloadHash);
-    if (existing) return existing;
+  return db.withTenant({ tenantId: ctx.tenantId }, (tx) => invoiceOrderIn(ctx, tx, input, deps));
+}
 
-    const { order, lines: coverage } = await orderForInvoicing(tx, input.orderId);
-    const built = invoiceLines(coverage, input.lines);
-    const content = invoiceInput.parse({
-      issuePointId: input.issuePointId,
-      clientId: order.clientId,
-      lines: built.lines,
-      payments: resolvePayments(input.payments, built.lines),
-      additionalInfo: input.additionalInfo,
-      idempotencyKey: input.idempotencyKey,
-    });
-    const issued = await issueInvoice(
-      ctx,
-      tx,
-      content,
-      payloadHash,
-      deps,
-      { orderId: order.id, warehouseId: order.warehouseId },
-      (document) =>
-        linkInvoice(tx, { order, documentId: document.id, revision: 1, lines: built.links }),
-    );
-    await syncSaleOrder(tx, order.id);
-    return issued;
+type ParsedOrderInvoice = z.output<typeof orderInvoiceInput>;
+
+async function invoiceOrderIn(
+  ctx: ActorContext,
+  tx: Tx,
+  input: ParsedOrderInvoice,
+  deps: IssueDeps,
+): Promise<IssuedDocument> {
+  const payloadHash = createHash('sha256').update(JSON.stringify(input)).digest('hex');
+  // A retry with the same key finds its document before the quantities are checked again.
+  const existing = await findIdempotent(tx, ctx, input.idempotencyKey, payloadHash);
+  if (existing) return existing;
+
+  const { order, lines: coverage } = await orderForInvoicing(tx, input.orderId);
+  const built = invoiceLines(coverage, input.lines);
+  const content = invoiceInput.parse({
+    issuePointId: input.issuePointId,
+    clientId: order.clientId,
+    lines: built.lines,
+    payments: resolvePayments(input.payments, built.lines),
+    additionalInfo: input.additionalInfo,
+    idempotencyKey: input.idempotencyKey,
   });
+  const issued = await issueInvoice(
+    ctx,
+    tx,
+    content,
+    payloadHash,
+    deps,
+    { orderId: order.id, warehouseId: order.warehouseId },
+    (document) =>
+      linkInvoice(tx, { order, documentId: document.id, revision: 1, lines: built.links }),
+  );
+  await syncSaleOrder(tx, order.id);
+  return issued;
+}
+
+// FR-BULK-2 (ADR-026): what a batch does for each order: one invoice for everything the order
+// has left, in the caller's transaction so the item and its invoice commit together. The key
+// makes a retried job find the invoice it already made.
+export async function invoiceOrderRemainder(
+  ctx: ActorContext,
+  tx: Tx,
+  input: {
+    orderId: string;
+    issuePointId: string;
+    payment: OrderInvoiceInput['payments'][number];
+    idempotencyKey: string;
+  },
+  deps: IssueDeps,
+): Promise<IssuedDocument> {
+  requirePermission(ctx, 'documents.issue');
+  requireFeature(ctx, 'SALE_ORDERS');
+  requirePermission(ctx, 'sales.manage');
+  // A retry finds the invoice its first try made, though the order has nothing left now.
+  const made = await findIssuedByKey(tx, ctx, input.idempotencyKey);
+  if (made) return made;
+  const { lines } = await orderForInvoicing(tx, input.orderId, null, false);
+  const left = lines.filter((entry) => entry.left.gt(0));
+  if (left.length === 0)
+    throw new DomainError('ORDER_NOTHING_LEFT', 'The order has nothing left to invoice');
+  return invoiceOrderIn(
+    ctx,
+    tx,
+    orderInvoiceInput.parse({
+      orderId: input.orderId,
+      issuePointId: input.issuePointId,
+      lines: left.map((entry) => ({
+        orderLineId: entry.line.id,
+        quantity: entry.left.toFixed(6),
+      })),
+      payments: [input.payment],
+      idempotencyKey: input.idempotencyKey,
+    }),
+    deps,
+  );
 }
 
 // FR-DOC-7 for an invoice made from an order: the same row and number, with lines picked from

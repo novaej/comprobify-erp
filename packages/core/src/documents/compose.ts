@@ -138,6 +138,23 @@ export const retryDeadline = (issueDate: string) => endOfEcuadorDay(issueDate);
 
 // FR-DOC-2 step 1: the same key and payload return the same document; the same key with another
 // payload is a conflict. Two requests with one key wait for each other here, so one creates.
+// The document a key already made, whatever it said: for a caller whose content depends on
+// state the first try changed, such as what an order has left (ADR-026).
+export async function findIssuedByKey(
+  tx: Tx,
+  ctx: ActorContext,
+  key: string,
+): Promise<IssuedDocument | null> {
+  await lock(tx, `idempotency:${ctx.tenantId}:${key}`);
+  const [existing] = await tx.db
+    .select()
+    .from(schema.documents)
+    .where(
+      and(eq(schema.documents.tenantId, ctx.tenantId), eq(schema.documents.idempotencyKey, key)),
+    );
+  return existing ? issued(existing, false) : null;
+}
+
 export async function findIdempotent(
   tx: Tx,
   ctx: ActorContext,

@@ -27,6 +27,7 @@ export {
 } from './status';
 export type { SaleOrderStatus } from './status';
 export {
+  countSaleOrders,
   documentIdsOfOrder,
   invoiceContent,
   linkInvoice,

@@ -10,6 +10,7 @@ export { takeSequential } from './sequence';
 export { correctInvoice, correctionInput, createInvoice, invoiceInput } from './create-invoice';
 export {
   correctOrderInvoice,
+  invoiceOrderRemainder,
   invoiceSaleOrder,
   orderInvoiceCorrectionInput,
   orderInvoiceDraft,

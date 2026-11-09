@@ -24,7 +24,7 @@ Open work only. Tick steps as they land. When a milestone's gate passes, remove 
 Gate: a 1,000-item batch locally on the mock SRI with the quota cutting it off, and another company's single invoice within NFR-PERF-3 while it runs. Decisions are in [ADR-026](docs/adr/026-bulk-invoicing.md). The 10,000-item run is Milestone 10's load test.
 
 - [x] 1. Tables, migration 0047, ADR-026
-- [ ] 2. Core: start a batch from orders, the item job, quota cut-off, retry, completion sweep
+- [x] 2. Core: start a batch from orders, the item job, quota cut-off, retry, completion sweep
 - [ ] 3. Pacing: the feeder with per-company and global caps, and a test that a big batch doesn't starve a small one
 - [ ] 4. Web: batch list and stack view with live progress, starting a batch from orders, the platform queue page
 - [ ] 5. CSV upload (format in the ADR)

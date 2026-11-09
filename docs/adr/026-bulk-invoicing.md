@@ -8,7 +8,7 @@ Accepted
 
 ## Context
 
-FR-BULK-1 to FR-BULK-4 ask for batches of invoices made by the worker, one by one, from confirmed sale orders or a CSV, with a quota that cuts the batch item by item, a stack view, and pacing so that a large batch never delays another company's single invoice (NFR-PERF-3). Questions the PRD leaves open:
+FR-BULK-1 to FR-BULK-4 ask for batches of invoices made by the worker, one by one, from confirmed sale orders or a CSV, with a quota that cuts the batch item by item, a stack view, and pacing so that a large batch never delays another company's single invoice (NFR-PERF-3). The worker issues these invoices, so it needs the settings issuing needs (`OPERATOR_RUC`, `CONSUMER_FINAL_MAX_AMOUNT`) that only the web had. Questions the PRD leaves open:
 
 - What does an item's status mean once the invoice exists and SRI answers on its own schedule?
 - How is the work fed to the worker so that companies take turns?
@@ -27,7 +27,7 @@ FR-BULK-1 to FR-BULK-4 ask for batches of invoices made by the worker, one by on
 
 **A retry is for what the batch failed to make.** It puts `FAILED` items back in the queue (quota left, a product now active, a client fixed). An invoice SRI rejected is not retried: it is corrected and resent as the same row and number (FR-DOC-7), from its link in the stack view, as for any invoice.
 
-**The completion notification is logged until Milestone 9.** `BATCH_COMPLETED` is written to the audit log and logged, as the overdue-authorization alert is (FR-DOC-5); the in-app notification is added with the notifications module, together with the alerts already waiting for it.
+**The completion notification is logged until Milestone 9.** `BATCH_COMPLETED` is logged, as the overdue-authorization alert is (FR-DOC-5); the in-app notification is added with the notifications module, together with the alerts already waiting for it.
 
 **Who and what.** Starting a batch needs `documents.issue`, `sales.manage` (for orders) and the `BULK_INVOICING` feature; reading batches needs `documents.read`. The platform area has a read-only queue page, built from the same tables, to watch the caps work.
 

@@ -1,4 +1,4 @@
-import { and, asc, eq, ne, schema, sql, type Tx } from '@comprobify/db';
+import { and, asc, eq, inArray, ne, schema, sql, type Tx } from '@comprobify/db';
 import { Dec, DomainError } from '../kernel';
 import { lockOrder, readOrder, type SaleOrder } from './shared';
 import { assertSaleOrderTransition, type SaleOrderStatus } from './status';
@@ -176,4 +176,14 @@ export async function documentIdsOfOrder(tx: Tx, orderId: string): Promise<strin
     .from(links)
     .where(eq(links.orderId, orderId));
   return rows.map((row) => row.documentId);
+}
+
+// How many of these ids are orders of this company (the tenant's own, by RLS): a batch checks
+// its list is whole before queuing anything (ADR-026).
+export async function countSaleOrders(tx: Tx, orderIds: string[]): Promise<number> {
+  const [row] = await tx.db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(schema.saleOrders)
+    .where(inArray(schema.saleOrders.id, orderIds));
+  return row!.count;
 }

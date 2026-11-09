@@ -72,6 +72,14 @@ describe('env loading', () => {
     expect(failure(load)).toContain('SRI_MOCK_MODE: must be false');
   });
 
+  it('needs the operator RUC in production for the worker too, which issues for batches', () => {
+    const production = { ...worker, APP_ENV: 'production', EMAIL_PROVIDER: 'none' };
+    expect(failure(() => loadWorkerEnv(production))).toContain('OPERATOR_RUC: is required');
+    expect(loadWorkerEnv({ ...production, OPERATOR_RUC: '1712345678001' }).OPERATOR_RUC).toBe(
+      '1712345678001',
+    );
+  });
+
   it('allows SRI mock mode outside production', () => {
     const env = loadWebEnv({ ...web, APP_ENV: 'staging', SRI_MOCK_MODE: 'true' });
     expect(env.SRI_MOCK_MODE).toBe(true);

@@ -99,6 +99,31 @@ const sriShape = {
   SRI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120_000).default(20_000),
 };
 
+// What issuing a document needs from the deployment: the operator's RUC, printed as "RUC
+// Proveedor" (Anexo 26), and the most a consumidor final invoice may total (FR-DOC-9, in
+// dollars). The worker issues too, for batches (ADR-026).
+const operatorRuc = z
+  .string()
+  .regex(/^[0-9]{13}$/, 'must be 13 digits')
+  .optional();
+const consumerFinalMaxAmount = z
+  .string()
+  .regex(/^\d{1,9}(\.\d{1,2})?$/, 'must be an amount such as 50.00')
+  .default('50.00');
+
+function requireOperatorRuc(
+  env: { APP_ENV: string; OPERATOR_RUC?: string | undefined },
+  ctx: z.RefinementCtx,
+): void {
+  if (env.APP_ENV === 'production' && !env.OPERATOR_RUC) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['OPERATOR_RUC'],
+      message: 'is required when APP_ENV is production (printed as "RUC Proveedor")',
+    });
+  }
+}
+
 export const webEnvSchema = z
   .object({
     ...runtimeShape,
@@ -111,28 +136,14 @@ export const webEnvSchema = z
     AGREEMENTS_ENABLED: flag.default(false),
     // The operator named in the legal texts; required once agreements are on.
     OPERATOR_NAME: z.string().optional(),
-    OPERATOR_RUC: z
-      .string()
-      .regex(/^[0-9]{13}$/, 'must be 13 digits')
-      .optional(),
+    OPERATOR_RUC: operatorRuc,
     OPERATOR_ADDRESS: z.string().optional(),
     SUPPORT_EMAIL: z.email().optional(),
-    // FR-DOC-9: the most a consumidor final invoice may total, in dollars.
-    CONSUMER_FINAL_MAX_AMOUNT: z
-      .string()
-      .regex(/^\d{1,9}(\.\d{1,2})?$/, 'must be an amount such as 50.00')
-      .default('50.00'),
+    CONSUMER_FINAL_MAX_AMOUNT: consumerFinalMaxAmount,
   })
   .superRefine((env, ctx) => {
     refuseMockInProduction(env, ctx);
-    // Anexo 26: documents issued through our software name its provider's RUC.
-    if (env.APP_ENV === 'production' && !env.OPERATOR_RUC) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['OPERATOR_RUC'],
-        message: 'is required when APP_ENV is production (printed as "RUC Proveedor")',
-      });
-    }
+    requireOperatorRuc(env, ctx);
     if (!env.AGREEMENTS_ENABLED) return;
     for (const name of [
       'OPERATOR_NAME',
@@ -150,9 +161,17 @@ export const webEnvSchema = z
   });
 
 export const workerEnvSchema = z
-  .object({ ...runtimeShape, ...mailShape, ...sriShape, CERT_ENCRYPTION_KEY: certificateKey })
+  .object({
+    ...runtimeShape,
+    ...mailShape,
+    ...sriShape,
+    CERT_ENCRYPTION_KEY: certificateKey,
+    OPERATOR_RUC: operatorRuc,
+    CONSUMER_FINAL_MAX_AMOUNT: consumerFinalMaxAmount,
+  })
   .superRefine((env, ctx) => {
     refuseMockInProduction(env, ctx);
+    requireOperatorRuc(env, ctx);
     checkMail(env, ctx);
   });
 

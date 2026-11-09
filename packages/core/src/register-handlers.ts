@@ -9,12 +9,14 @@ import {
   reissueDocument,
   sendDocument,
 } from './documents';
+import { completeBatches, processItem } from './bulk';
 import { sendEmailHandler, type EmailProvider } from './email';
 import { createRateLimiter, pruneIdentityTables } from './identity';
 import { verifyStockLevels } from './inventory';
 import { heartbeatHandler, type Jobs } from './jobs';
 import { sendPurchaseOrderEmail } from './purchasing';
 import type { KeyCipher } from './certificates';
+import type { IssueDeps } from './documents';
 import type { Clock } from './kernel';
 import type { SriClient } from './sri';
 
@@ -26,6 +28,8 @@ export type HandlerDeps = {
   sri: SriClient;
   keyCipher: KeyCipher;
   clock: Clock;
+  // What issuing a document needs, for the invoices a batch makes (ADR-026).
+  issue: Omit<IssueDeps, 'jobs' | 'keyCipher'>;
 };
 
 // Every job handler the worker runs.
@@ -59,6 +63,21 @@ export async function registerHandlers(jobs: Jobs, deps: HandlerDeps): Promise<v
   );
   await jobs.work('inventory.verify', async () => {
     await verifyStockLevels({ db: deps.db, logger });
+  });
+  await jobs.work('bulk.item', (job) =>
+    processItem(
+      {
+        db: deps.db,
+        jobs,
+        clock,
+        logger,
+        issue: { ...deps.issue, keyCipher: deps.keyCipher },
+      },
+      job.data,
+    ),
+  );
+  await jobs.work('bulk.complete', async () => {
+    await completeBatches({ db: deps.db, clock, logger });
   });
   await jobs.work('sri.overdue', async () => {
     await alertOverdueAuthorizations(sending);

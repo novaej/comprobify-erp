@@ -81,6 +81,11 @@ await registerHandlers(jobs, {
   sri,
   keyCipher: createKeyCipher(env.CERT_ENCRYPTION_KEY),
   clock: systemClock,
+  issue: {
+    appEnv: env.APP_ENV,
+    providerRuc: env.OPERATOR_RUC ?? null,
+    consumerFinalMaxAmount: env.CONSUMER_FINAL_MAX_AMOUNT,
+  },
 });
 logger.info('Worker started', { event: 'worker.started' });
 

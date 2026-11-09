@@ -11,6 +11,13 @@ export {
   SRI_SOURCES,
   VERSION_REASONS,
   AUDIT_ACTIONS,
+  BATCH_ITEM_STATUSES,
+  BATCH_ITEM_TRANSITIONS,
+  BATCH_SOURCES,
+  BATCH_STATUSES,
+  BATCH_TRANSITIONS,
+  batchItemStatusTriggerBody,
+  batchStatusTriggerBody,
   CLIENT_ID_TYPES,
   COUNTER_KINDS,
   CONSUMER_FINAL_ID,
@@ -47,7 +54,14 @@ export {
   TENANT_MODES,
   TENANT_STATUSES,
 } from './schema';
-export type { DocumentStatus, PurchaseOrderStatus, SaleOrderStatus } from './schema';
+export type {
+  BatchItemStatus,
+  BatchSource,
+  BatchStatus,
+  DocumentStatus,
+  PurchaseOrderStatus,
+  SaleOrderStatus,
+} from './schema';
 // Re-exported so callers share this package's drizzle-orm instance and types.
 export {
   and,

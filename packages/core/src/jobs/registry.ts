@@ -84,6 +84,19 @@ export const queues = {
     options: { retryLimit: 1, expireInSeconds: 900 },
     concurrency: 1,
   },
+  // FR-BULK-2 (ADR-026): one invoice of a batch. Refusals fail the item; pg-boss retries only a
+  // crash or an outage, which the handler survives by reading the item's status.
+  'bulk.item': {
+    payload: z.object({ tenantId: z.uuid(), itemId: z.uuid() }),
+    options: { retryLimit: 3, retryDelay: 30, retryBackoff: true, expireInSeconds: 300 },
+    concurrency: 3,
+  },
+  // FR-BULK-3: marks the batches whose invoices have all been answered.
+  'bulk.complete': {
+    payload: z.object({}),
+    options: { retryLimit: 1, expireInSeconds: 120 },
+    concurrency: 1,
+  },
   'identity.prune': {
     payload: z.object({}),
     options: { retryLimit: 2, expireInSeconds: 300 },
@@ -107,6 +120,7 @@ export const schedules: readonly {
   { queue: 'identity.prune', cron: '15 3 * * *', tz: JOB_TIME_ZONE, data: {} },
   // Quiet hours in Quito, after the day's receipts and adjustments.
   { queue: 'inventory.verify', cron: '45 2 * * *', tz: JOB_TIME_ZONE, data: {} },
+  { queue: 'bulk.complete', cron: '* * * * *', tz: JOB_TIME_ZONE, data: {} },
   { queue: 'sri.overdue', cron: '*/15 * * * *', tz: JOB_TIME_ZONE, data: {} },
   // After midnight in Quito, once yesterday's deadline checks have run.
   { queue: 'sri.reissue-sweep', cron: '30 0 * * *', tz: JOB_TIME_ZONE, data: {} },
