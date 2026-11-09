@@ -3,6 +3,7 @@ import {
   getSaleOrder,
   hasFeature,
   isDomainError,
+  saleOrderGuides,
   saleOrderInvoices,
   saleOrderNumber,
   type SaleOrderView,
@@ -83,9 +84,12 @@ export default async function SaleOrderPage({
   };
   const discounted = order.lines.some((line) => Number(line.discount) > 0);
   const invoicedAny = order.lines.some((line) => Number(line.invoiced) > 0);
-  const invoices = actor.permissions.includes('documents.read')
-    ? await saleOrderInvoices(actor, db, order.id)
-    : [];
+  const canDocuments = actor.permissions.includes('documents.read');
+  const invoices = canDocuments ? await saleOrderInvoices(actor, db, order.id) : [];
+  const guides = canDocuments ? await saleOrderGuides(actor, db, order.id) : [];
+  // FR-SAL-9: a guía goes with an invoice, so it is offered on each one that isn't voided.
+  const canGuide =
+    hasFeature(actor, 'DOC_TYPE_06') && actor.permissions.includes('documents.issue');
 
   return (
     <div className="max-w-6xl space-y-6">
@@ -259,6 +263,37 @@ export default async function SaleOrderPage({
                   {date(invoice.issueDate)}
                 </span>
                 <span className="ml-auto tabular-nums">{amount(invoice.total)}</span>
+                {canGuide && invoice.status !== 'VOIDED' && (
+                  <Link
+                    href={{ pathname: '/documents/guide/new', query: { from: invoice.id } }}
+                    className="text-sm underline-offset-4 hover:underline"
+                  >
+                    {t('detail.invoices.guide')}
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        </SectionCard>
+      )}
+
+      {guides.length > 0 && (
+        <SectionCard title={t('detail.guides.title')}>
+          <ul className="space-y-2 text-sm">
+            {guides.map((guide) => (
+              <li key={guide.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <Link
+                  href={`/documents/${guide.id}`}
+                  className="font-medium tabular-nums underline-offset-4 hover:underline"
+                >
+                  {t('detail.guides.guide', { number: guide.number })}
+                </Link>
+                <ToneBadge tone={STATUS_TONE[guide.status as keyof typeof STATUS_TONE]}>
+                  {tDocuments(`statuses.${guide.status as 'SIGNED'}`)}
+                </ToneBadge>
+                <span className="ml-auto text-muted-foreground tabular-nums">
+                  {date(guide.issueDate)}
+                </span>
               </li>
             ))}
           </ul>

@@ -2078,7 +2078,12 @@
       },
       "invoices": {
         "title": "Invoices",
-        "invoice": "Invoice {number}"
+        "invoice": "Invoice {number}",
+        "guide": "Delivery guide"
+      },
+      "guides": {
+        "title": "Delivery guides",
+        "guide": "Guide {number}"
       }
     },
     "actions": {

@@ -366,3 +366,34 @@ export async function orderInvoiceDraft(
     };
   });
 }
+
+// FR-SAL-9: the guías de remisión that go with the order's invoices, oldest first. A guía is made
+// from an invoice, so the order's are the ones that name one of its invoices (ADR-023).
+export async function saleOrderGuides(
+  ctx: ActorContext,
+  db: Database,
+  orderId: string,
+): Promise<OrderInvoiceRow[]> {
+  requirePermission(ctx, 'documents.read');
+  const id = z.uuid().parse(orderId);
+  const { documents } = schema;
+  return db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
+    const invoiceIds = await documentIdsOfOrder(tx, id);
+    if (invoiceIds.length === 0) return [];
+    const rows = await tx.db
+      .select()
+      .from(documents)
+      .where(
+        and(eq(documents.documentType, '06'), inArray(documents.relatedDocumentId, invoiceIds)),
+      );
+    return rows
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+      .map((row) => ({
+        id: row.id,
+        number: documentNumber(row.series, row.sequential),
+        status: row.status,
+        issueDate: row.issueDate,
+        total: row.total,
+      }));
+  });
+}

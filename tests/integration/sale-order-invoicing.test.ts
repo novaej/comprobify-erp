@@ -7,6 +7,7 @@ import {
   correctInvoice,
   correctOrderInvoice,
   createClient,
+  createGuide,
   createJobs,
   createKeyCipher,
   createMockSri,
@@ -21,8 +22,10 @@ import {
   onboardOrganization,
   orderInvoiceDraft,
   resolveActor,
+  saleOrderGuides,
   saleOrderInvoices,
   sendDocument,
+  setIssuePointDocumentType,
   setOpeningBalance,
   setOverride,
   updateSaleOrder,
@@ -187,6 +190,19 @@ describe('invoicing a sale order', () => {
       effect: 'GRANT',
       limitValue: null,
       reason: 'test',
+    });
+    await setOverride(admin, db, {
+      realTenantId: org.realTenantId,
+      featureKey: 'DOC_TYPE_06',
+      effect: 'GRANT',
+      limitValue: null,
+      reason: 'test',
+    });
+    const real = await resolveActor(db, { userId: ownerId, tenantId: org.realTenantId, clock });
+    await setIssuePointDocumentType(real, db, {
+      issuePointId: (await companySettings(real, db)).branches[0]!.issuePoints[0]!.id,
+      documentType: '06',
+      enabled: true,
     });
     pointId = (await companySettings(await owner(), db)).branches[0]!.issuePoints[0]!.id;
     const [warehouse] = await db.withTenant({ tenantId: tenantId() }, ({ db: tx }) =>
@@ -518,6 +534,60 @@ describe('invoicing a sale order', () => {
         ),
       ),
     ).toBe('FORBIDDEN');
+  });
+
+  it("lists the guías that go with the order's invoices, and the guía names the order (FR-SAL-9)", async () => {
+    const coffee = await product();
+    const created = await order(coffee, '6');
+    const lineId = (await view(created.id)).lines[0]!.id;
+    const first = await invoice(created.id, lineId, '2');
+    const second = await invoice(created.id, lineId, '4');
+    const actor = await owner();
+    expect(await saleOrderGuides(actor, db, created.id)).toEqual([]);
+    const guideFor = (originId: string) =>
+      createGuide(
+        actor,
+        db,
+        {
+          issuePointId: pointId,
+          originId,
+          departureAddress: 'Quito',
+          carrier: {
+            idType: '04',
+            identification: '1790012345001',
+            name: 'Transportes Andes S.A.',
+          },
+          transportStart: '2026-11-10',
+          transportEnd: '2026-11-11',
+          plate: 'PCQ-1234',
+          recipients: [
+            {
+              identification: '1710034065',
+              name: 'María López',
+              address: 'Guayaquil',
+              reason: 'Venta',
+              lines: [{ name: 'Café molido', code: 'A', quantity: '2' }],
+            },
+          ],
+        },
+        issueDeps,
+      );
+    // A guía goes with an invoice that isn't voided, authorized or not.
+    const guideOne = await guideFor(first.id);
+    const guideTwo = await guideFor(second.id);
+    expect((await saleOrderGuides(actor, db, created.id)).map((row) => row.id)).toEqual([
+      guideOne.id,
+      guideTwo.id,
+    ]);
+    expect((await getDocument(actor, db, guideOne.id)).saleOrder).toMatchObject({
+      id: created.id,
+      number: created.number,
+    });
+    // One from an invoice of another order isn't listed.
+    const other = await order(await product(), '1');
+    const otherInvoice = await invoice(other.id, (await view(other.id)).lines[0]!.id, '1');
+    await guideFor(otherInvoice.id);
+    expect(await saleOrderGuides(actor, db, created.id)).toHaveLength(2);
   });
 
   it('leaves every level equal to its ledger', async () => {

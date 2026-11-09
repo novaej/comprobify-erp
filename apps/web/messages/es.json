@@ -2078,7 +2078,12 @@
       },
       "invoices": {
         "title": "Facturas",
-        "invoice": "Factura {number}"
+        "invoice": "Factura {number}",
+        "guide": "Guía de remisión"
+      },
+      "guides": {
+        "title": "Guías de remisión",
+        "guide": "Guía de remisión {number}"
       }
     },
     "actions": {

@@ -1144,6 +1144,34 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await look(page, 'sale-order-invoiced');
     await expect(page.getByRole('button', { name: 'Anular' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Confirmar pedido' })).toHaveCount(0);
+
+    // A guía goes with one of its invoices, started from the order's list.
+    await page.getByRole('link', { name: 'Guía de remisión' }).first().click();
+    await expect(heading).toContainText('Guía de remisión de 001-001-');
+    await expect(
+      page.getByRole('textbox', { name: 'Razón social o nombres', exact: true }),
+    ).toHaveValue('María López');
+    await expect(page.getByRole('textbox', { name: 'Descripción' })).toHaveValue('Café molido');
+    await page
+      .getByRole('textbox', { name: 'Punto de partida' })
+      .fill('Av. Amazonas N24-03, Quito');
+    await page
+      .getByRole('textbox', { name: 'Identificación del transportista' })
+      .fill('1790012345001');
+    await page
+      .getByRole('textbox', { name: 'Razón social o nombres del transportista' })
+      .fill('Transportes Andes S.A.');
+    await page.getByRole('textbox', { name: 'Placa' }).fill('PCQ-1234');
+    await page.getByRole('button', { name: 'Emitir guía de remisión' }).click();
+    await page
+      .getByRole('dialog', { name: '¿Emitir la guía de remisión?' })
+      .getByRole('button', { name: 'Emitir guía de remisión' })
+      .click();
+    await expect(heading).toContainText('Guía de remisión 001-001-');
+    // The guía names its order through the invoice, and the order lists the guía.
+    await page.getByRole('link', { name: 'PV-000002' }).click();
+    await expect(heading).toContainText('Pedido PV-000002');
+    await expect(page.getByRole('link', { name: /^Guía de remisión 001-001-/ })).toHaveCount(1);
   });
 
   test('finds no drift between the stock levels and their ledger after the day (FR-INV-2, Milestone 5 gate)', async () => {

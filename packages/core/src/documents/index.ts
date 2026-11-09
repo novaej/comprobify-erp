@@ -14,6 +14,7 @@ export {
   orderInvoiceCorrectionInput,
   orderInvoiceDraft,
   orderInvoiceInput,
+  saleOrderGuides,
   saleOrderInvoices,
 } from './order-invoice';
 export type {

@@ -219,7 +219,7 @@ export type DocumentDetail = {
   authorizationNumber: string | null;
   authorizedAt: Date | null;
   revision: number;
-  // The sale order an invoice was made from (FR-SAL-3).
+  // The sale order an invoice was made from, or a guía's through its invoice (FR-SAL-3, FR-SAL-9).
   saleOrder: { id: string; number: number } | null;
   lines: {
     code: string;
@@ -406,7 +406,13 @@ export async function getDocument(
       authorizationNumber: row.authorizationNumber,
       authorizedAt: row.authorizedAt,
       revision: row.revision,
-      saleOrder: row.documentType === '01' ? await orderRefOfDocument(handle, row.id) : null,
+      // An invoice's order, and a guía's through the invoice it goes with.
+      saleOrder:
+        row.documentType === '01'
+          ? await orderRefOfDocument(handle, row.id)
+          : row.documentType === '06' && row.relatedDocumentId
+            ? await orderRefOfDocument(handle, row.relatedDocumentId)
+            : null,
       lines: lines.map((line) => ({
         code: line.code,
         name: line.name,
