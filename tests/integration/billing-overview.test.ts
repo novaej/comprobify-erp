@@ -15,7 +15,7 @@ import {
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, superAdmin } from './helpers';
+import { appDatabase, superAdmin, testNotice } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
 
@@ -100,7 +100,7 @@ describe('the billing overview', () => {
         reference: 'SPI-1',
         files: [{ filename: 'p.png', content: PNG }],
       });
-      await reviewPayment(operator, db, { paymentId: id, decision: 'VERIFIED' });
+      await reviewPayment(operator, db, { paymentId: id, decision: 'VERIFIED' }, testNotice);
     };
     const initial = await startPaidPlan(await owner(), db, {
       planKey: 'STARTER',

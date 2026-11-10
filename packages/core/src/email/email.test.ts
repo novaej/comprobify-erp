@@ -21,6 +21,7 @@ describe('renderEmail', () => {
           date: '10/12/2026',
           amount: '$11.50',
           rate: '15 %',
+          reason: 'AMOUNT_MISMATCH',
         });
         expect(message.subject).not.toBe('');
         // Every placeholder a template uses is filled.

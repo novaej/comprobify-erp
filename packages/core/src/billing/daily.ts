@@ -19,9 +19,9 @@ import {
 } from '../entitlements';
 import type { Jobs } from '../jobs';
 import { addDays, Dec, ecuadorDate, type Clock } from '../kernel';
+import { notify } from '../notifications';
 import { companyRow } from '../tenancy';
 import { ivaRateOn } from './iva';
-import { notifyBilling } from './notify';
 import {
   amountsOf,
   applyDueRenewal,
@@ -63,8 +63,6 @@ export type BillingDayResult = {
 };
 
 type Step = Exclude<keyof BillingDayResult, 'repriced'>;
-
-const notify = notifyBilling;
 
 async function openRenewalOf(tx: Tx['db'], tenantId: string) {
   const [row] = await tx
@@ -130,7 +128,11 @@ async function runCompany(deps: BillingDayDeps, realTenantId: string): Promise<S
       });
       await applyDropAllAddOns(tx.db, company);
       await record('subscription.moved_to_free', { periodEnd: end, reason });
-      await notify(tx, deps, realTenantId, { template: 'movedToFree', date: today, amount: null });
+      await notify(tx, deps, {
+        tenantId: realTenantId,
+        type: 'MOVED_TO_FREE',
+        params: { date: today },
+      });
       return 'movedToFree';
     };
 
@@ -167,10 +169,10 @@ async function runCompany(deps: BillingDayDeps, realTenantId: string): Promise<S
       const opened = await openRenewal(tx.db, realTenantId, now);
       if (!opened) return null;
       await record('subscription.renewal_due', { periodEnd: end, code: opened.code });
-      await notify(tx, deps, realTenantId, {
-        template: 'renewalDue',
-        date: end,
-        amount: opened.totalAmount,
+      await notify(tx, deps, {
+        tenantId: realTenantId,
+        type: 'RENEWAL_DUE',
+        params: { date: end, amount: opened.totalAmount },
       });
       return 'renewalsOpened';
     }
@@ -178,20 +180,20 @@ async function runCompany(deps: BillingDayDeps, realTenantId: string): Promise<S
     if (today >= graceEnds) {
       await applySubscriptionTerm(tx.db, company, { ...termOf(subscription), status: 'PAST_DUE' });
       await record('subscription.past_due', { periodEnd: end, since: today });
-      await notify(tx, deps, realTenantId, {
-        template: 'pastDue',
-        date: addDays(today, BILLING_DAYS.pastDue),
-        amount: open.totalAmount,
+      await notify(tx, deps, {
+        tenantId: realTenantId,
+        type: 'PAST_DUE',
+        params: { date: addDays(today, BILLING_DAYS.pastDue), amount: open.totalAmount },
       });
       return 'pastDue';
     }
     if (await findAuditEvent(tx.db, realTenantId, 'subscription.grace_started', { periodEnd: end }))
       return null;
     await record('subscription.grace_started', { periodEnd: end });
-    await notify(tx, deps, realTenantId, {
-      template: 'graceStarted',
-      date: graceEnds,
-      amount: open.totalAmount,
+    await notify(tx, deps, {
+      tenantId: realTenantId,
+      type: 'GRACE_STARTED',
+      params: { date: graceEnds, amount: open.totalAmount },
     });
     return 'graceStarted';
   });
@@ -262,11 +264,10 @@ async function repriceForIva(
             toTotal: amounts.totalAmount,
           },
         });
-        await notify(tx, deps, payment.tenantId, {
-          template: 'paymentRepriced',
-          date: today,
-          amount: amounts.totalAmount,
-          rate: amounts.ivaRate,
+        await notify(tx, deps, {
+          tenantId: payment.tenantId,
+          type: 'PAYMENT_REPRICED',
+          params: { date: today, amount: amounts.totalAmount, rate: amounts.ivaRate },
         });
         return true;
       })

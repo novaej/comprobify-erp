@@ -2027,5 +2027,34 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await move.getByRole('button', { name: 'Cancelar' }).click();
     await page.goto('/es/plan');
     await expect(page.getByRole('alert').filter({ hasText: 'Empresa suspendida' })).toHaveCount(0);
+
+    // FR-NOT-1 (ADR-036): the operator's decision reached the payer, in the bell and the list.
+    const bell = page.getByRole('button', { name: /^Notificaciones, \d+ sin leer$/ });
+    await expect(bell).toBeVisible();
+    await bell.click();
+    const panel = page.getByRole('list', { name: 'Notificaciones' });
+    await expect(panel).toContainText('Pago confirmado');
+    await look(page, 'notifications-bell');
+    await page.getByRole('button', { name: 'Marcar todas como leídas' }).click();
+    await expect(page.getByRole('button', { name: 'Notificaciones', exact: true })).toBeVisible();
+    await page.keyboard.press('Escape');
+
+    await page.goto('/es/notifications');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Notificaciones');
+    const list = page.getByRole('table', { name: 'Tus notificaciones' });
+    await expect(list.getByRole('row', { name: /Pago confirmado/ })).toContainText('Leída');
+    await look(page, 'notifications');
+    await page.getByRole('link', { name: 'Sin leer' }).click();
+    await expect(page.getByText('No tienes notificaciones sin leer')).toBeVisible();
+
+    // What the member chooses to receive: each channel on its own.
+    const emailSwitch = page.getByRole('switch', { name: 'Pago confirmado: Por correo' });
+    await expect(emailSwitch).toBeChecked();
+    await emailSwitch.click();
+    await expect(page.getByText('Preferencia guardada.')).toBeVisible();
+    await expect(emailSwitch).not.toBeChecked();
+    await look(page, 'notifications-preferences');
+    await emailSwitch.click();
+    await expect(emailSwitch).toBeChecked();
   });
 });

@@ -23,14 +23,26 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 - **Milestone 9:** CSV import and export of clients and products (FR-MD-1), before the CSV batches that need it.
 - **Not scheduled:** ownership transfer (PRD section 3). Today nobody can change or remove the owner.
 
+## Milestone 9: Notifications, reports, admin
+
+Gate: reports match seeded data; templates editable (PRD section 15). Pruning old notifications waits for the retention work (below), which needs a narrow exception to the no-delete rule.
+
+- [ ] 2. Email templates in the database, versioned per language and editable by the super admin, with the Spanish fallback; the existing account and billing emails move out of code (FR-NOT-3, FR-ADM-4)
+- [ ] 3. The other notification types: document rejected, send failed or re-issued, authorization overdue, certificate expiring and expired, quota at 80 % and 100 %, batch completed, document authorized (aggregated per minute), the mandatory price-rise notice and modules or limits leaving a plan; the operator's own (a transfer reported, a card payment applied), which need platform-side tables
+- [ ] 4. The dashboard (FR-REP-1)
+- [ ] 5. Reports with CSV export, and the accountant's ZIP of a month's authorized XMLs (FR-REP-2, FR-REP-3)
+- [ ] 6. CSV import and export of clients and products (FR-MD-1), then CSV batches for bulk invoicing
+- [ ] 7. The rest of the platform area: a jobs view with a retry of failed ones and the documents overdue at SRI across companies, the platform activity log, a document's SRI exchanges with their retention, closing a payment that needs no invoice (FR-ADM-5)
+- [ ] 8. Gate
+
 ## Upcoming milestones
 
-- [ ] 9. Notifications, reports, admin
 - [ ] 10. Production readiness and cutover
 - [ ] 11+. Post-MVP: retención, liquidación de compra and received XML import; public API, API keys, webhooks, MCP, OAuth, developer docs, Integración plans With webhooks, a `WEBHOOKS_DISABLED` switch so a restored copy of real data never calls the real endpoints it holds (CLAUDE.md mistake 13).
 
 ## Before agreements are switched on
 
+- [ ] After the MVP, update the legal texts for the retention periods Milestone 9 introduces; nothing is edited before then. What the texts must say: the document, its signed and authorized XML, the authorization number and date, its timeline and one summary row per SRI exchange are kept for the tax period (the legally required record, 7 years per the Reglamento de Comprobantes de Venta, art. 41, to be confirmed by the accountant); the raw copy of SRI's answer (`sri_exchanges.raw`) is kept 90 days, being a technical duplicate used only for support; payment proofs are named and kept with the payment history, and a company removing one only hides it from its own view; the activity log is kept for the tax period; in-app notifications are kept 180 days; technical logs with IP addresses stay at 3 days (open question 2 in `docs/legal/review-notes.md`); Mailgun's delivery records follow its own policy. Define each period once, in one `RETENTION` object in core read by the pruning jobs, with a table in `docs/legal/`.
 - [ ] Owner, or a lawyer, approves the legal texts and answers the open questions in [docs/legal/review-notes.md](docs/legal/review-notes.md); then set `AGREEMENTS_ENABLED=true` and the operator details.
 
 ## Hardening backlog

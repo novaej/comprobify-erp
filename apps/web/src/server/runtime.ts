@@ -20,6 +20,7 @@ import {
   type SriClient,
   type KeyCipher,
   createPayphoneGateway,
+  type NotifyDeps,
   type PayphoneDeps,
 } from '@comprobify/core';
 import { createDatabase, type Database } from '@comprobify/db';
@@ -45,6 +46,8 @@ export type Runtime = {
   issueDeps: IssueDeps;
   // Null when Payphone isn't set up: card payments are refused (ADR-033).
   payphoneDeps: PayphoneDeps;
+  // What notifying a company needs: the queue and where emails link back to (ADR-036).
+  notice: NotifyDeps;
   // The operator's account for transfers; null when not configured.
   bankTransfer: BankTransfer | null;
   // For voiding: Consulta de validez (FR-DOC-8).
@@ -123,6 +126,7 @@ async function start(): Promise<Runtime> {
           },
           timeoutMs: env.SRI_TIMEOUT_MS,
         }),
+    notice: { jobs, appUrl: env.APP_URL },
     bankTransfer: env.BANK_TRANSFER_BANK_NAME
       ? {
           bankName: env.BANK_TRANSFER_BANK_NAME,

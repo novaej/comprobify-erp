@@ -28,7 +28,7 @@ import {
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, superAdmin } from './helpers';
+import { appDatabase, superAdmin, testNotice } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
 
@@ -81,10 +81,15 @@ describe('plan changes', () => {
       reference: 'SPI-1',
       files: [{ filename: 'p.png', content: PNG }],
     });
-    await reviewPayment({ ...operator, clock }, db, {
-      paymentId: payment!.id,
-      decision: 'VERIFIED',
-    });
+    await reviewPayment(
+      { ...operator, clock },
+      db,
+      {
+        paymentId: payment!.id,
+        decision: 'VERIFIED',
+      },
+      testNotice,
+    );
   };
   const paymentOf = (result: ChangeResult) => (result.applied === 'NOW' ? result.payment : null);
   const renewal = () =>
@@ -283,11 +288,16 @@ describe('plan changes', () => {
     expect(await failure(requestSeats(await owner(), db, { extraSeats: 0 }))).toBe(
       'RENEWAL_IN_REVIEW',
     );
-    await reviewPayment({ ...operator, clock }, db, {
-      paymentId: next!.id,
-      decision: 'REJECTED',
-      reason: 'TRANSFER_NOT_FOUND',
-    });
+    await reviewPayment(
+      { ...operator, clock },
+      db,
+      {
+        paymentId: next!.id,
+        decision: 'REJECTED',
+        reason: 'TRANSFER_NOT_FOUND',
+      },
+      testNotice,
+    );
   });
 
   it('moves to yearly now with the unused month credited, and back to monthly at the end', async () => {

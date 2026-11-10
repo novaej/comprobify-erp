@@ -116,5 +116,3 @@ export {
   startCustomBillingInput,
 } from './custom';
 export type { MoveToCustom } from './custom';
-export { notifyBilling } from './notify';
-export type { BillingNotice } from './notify';

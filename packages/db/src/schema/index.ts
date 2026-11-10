@@ -7,6 +7,7 @@ export * from './entitlements';
 export * from './identity';
 export * from './inventory';
 export * from './master-data';
+export * from './notifications';
 export * from './purchasing';
 export * from './receivables';
 export * from './sales';

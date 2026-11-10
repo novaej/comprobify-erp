@@ -17,6 +17,9 @@ export const emailTemplate = z.enum([
   'paymentRepriced',
   // ADR-035: the operator changed what the next period costs.
   'renewalRepriced',
+  // FR-BILL-3 (ADR-036): the operator's decision on a transfer, or a card payment applied.
+  'paymentVerified',
+  'paymentRejected',
 ]);
 export type EmailTemplate = z.output<typeof emailTemplate>;
 
@@ -89,6 +92,20 @@ const COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       button: 'Ver el pago',
       footer: 'Si tienes preguntas sobre este valor, responde a quien te atiende en Comprobify.',
     },
+    paymentVerified: {
+      subject: 'Recibimos el pago de {organization}',
+      heading: 'Tu pago está confirmado',
+      body: 'Confirmamos tu pago de {amount}, IVA incluido. Lo que pagaste ya está activo en {organization}.',
+      button: 'Ver el plan',
+      footer: 'Te enviaremos la factura de este pago aparte.',
+    },
+    paymentRejected: {
+      subject: 'No pudimos aceptar el comprobante de {organization}',
+      heading: 'Tu comprobante fue rechazado',
+      body: 'Revisamos el comprobante de tu pago de {amount} y no lo pudimos aceptar: {reason}. Envía uno nuevo o paga con tarjeta.',
+      button: 'Ver el pago',
+      footer: 'Si ya corregiste el problema, envía el comprobante otra vez desde el pago.',
+    },
   },
   en: {
     verifyEmail: {
@@ -154,6 +171,20 @@ const COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       button: 'View the payment',
       footer: 'If you have questions about this amount, reply to your contact at Comprobify.',
     },
+    paymentVerified: {
+      subject: "We received {organization}'s payment",
+      heading: 'Your payment is confirmed',
+      body: 'We confirmed your payment of {amount}, VAT included. What you paid for is now active in {organization}.',
+      button: 'View the plan',
+      footer: "We'll send you the invoice for this payment separately.",
+    },
+    paymentRejected: {
+      subject: "We couldn't accept {organization}'s proof",
+      heading: 'Your proof was rejected',
+      body: "We reviewed the proof for your payment of {amount} and couldn't accept it: {reason}. Send a new one or pay by card.",
+      button: 'View the payment',
+      footer: 'If you already fixed the problem, send the proof again from the payment.',
+    },
   },
 };
 
@@ -172,6 +203,27 @@ export type EmailParams = {
   date?: string | undefined;
   amount?: string | undefined;
   rate?: string | undefined;
+  // A rejection's code, written out in the reader's language.
+  reason?: string | undefined;
+};
+
+const REJECTION_REASONS: Record<EmailLocale, Record<string, string>> = {
+  es: {
+    AMOUNT_MISMATCH: 'el valor no coincide',
+    TRANSFER_NOT_FOUND: 'no encontramos la transferencia',
+    WRONG_ACCOUNT: 'se transfirió a otra cuenta',
+    ILLEGIBLE_PROOF: 'el comprobante no se lee',
+    DUPLICATE_SUBMISSION: 'ese comprobante ya se usó',
+    OTHER: 'escríbenos para saber más',
+  },
+  en: {
+    AMOUNT_MISMATCH: "the amount doesn't match",
+    TRANSFER_NOT_FOUND: "we couldn't find the transfer",
+    WRONG_ACCOUNT: 'it went to another account',
+    ILLEGIBLE_PROOF: "the proof can't be read",
+    DUPLICATE_SUBMISSION: 'that proof was already used',
+    OTHER: 'write to us to find out more',
+  },
 };
 
 export function renderEmail(
@@ -186,7 +238,11 @@ export function renderEmail(
       .replaceAll('{organization}', params.organization ?? '')
       .replaceAll('{date}', params.date ?? '')
       .replaceAll('{amount}', params.amount ?? '')
-      .replaceAll('{rate}', params.rate ?? '');
+      .replaceAll('{rate}', params.rate ?? '')
+      .replaceAll(
+        '{reason}',
+        params.reason ? (REJECTION_REASONS[locale][params.reason] ?? params.reason) : '',
+      );
   const base = COPY[locale][template];
   const copy = {
     subject: fill(base.subject),

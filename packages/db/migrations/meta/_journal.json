@@ -414,6 +414,13 @@
       "when": 1794335497735,
       "tag": "0058_custom_billing",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1794347659754,
+      "tag": "0059_notifications",
+      "breakpoints": true
     }
   ]
 }

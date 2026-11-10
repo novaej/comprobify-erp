@@ -27,7 +27,7 @@ import {
   X,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useState, useSyncExternalStore, type ComponentType } from 'react';
+import { useState, useSyncExternalStore, type ComponentType, type ReactNode } from 'react';
 import { signOutAction } from '@/app/[locale]/(app)/actions';
 import { Link, usePathname } from '@/i18n/navigation';
 import { LocaleSwitcher } from '../locale-switcher';
@@ -208,6 +208,8 @@ export type NavProps = {
   // The platform area, outside any company (ADR-010).
   isSuperAdmin: boolean;
   user: { name: string; email: string; roleLabel: string };
+  // The notification bell, shown in the mobile bar; desktop has it in the top bar.
+  bell?: ReactNode;
 };
 
 const initialsOf = (name: string) =>
@@ -226,6 +228,7 @@ export function Nav({
   features,
   isSuperAdmin,
   user,
+  bell,
 }: NavProps) {
   const t = useTranslations('nav');
   const tTheme = useTranslations('theme');
@@ -359,6 +362,7 @@ export function Nav({
           <Menu className="h-5 w-5" aria-hidden />
         </button>
         <Logomark className="h-6 w-6 shrink-0" />
+        {bell && <div className="ml-auto">{bell}</div>}
       </div>
 
       {mobileOpen && (

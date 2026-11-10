@@ -26,7 +26,7 @@ import {
 import { createFakePayphone, createTestP12, testRuc } from '@comprobify/core/testing';
 import { schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, insertTestDocument, superAdmin, testLogger } from './helpers';
+import { appDatabase, insertTestDocument, superAdmin, testLogger, testNotice } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
 
@@ -72,7 +72,12 @@ describe('Milestone 8 gate: upgrade, renewal and expiry on a fake clock', () => 
       reference: `SPI-${paymentId.slice(0, 6)}`,
       files: [{ filename: 'p.png', content: PNG }],
     });
-    await reviewPayment({ ...operator, clock }, db, { paymentId, decision: 'VERIFIED' });
+    await reviewPayment(
+      { ...operator, clock },
+      db,
+      { paymentId, decision: 'VERIFIED' },
+      testNotice,
+    );
   };
   const byCard = async (paymentId: string) => {
     const session = await startCardPayment(await owner(), db, { paymentId }, card);
@@ -85,6 +90,7 @@ describe('Milestone 8 gate: upgrade, renewal and expiry on a fake clock', () => 
       },
       card,
       testLogger(),
+      testNotice,
     );
   };
   const paymentOf = (result: ChangeResult) => (result.applied === 'NOW' ? result.payment! : null);

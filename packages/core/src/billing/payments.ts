@@ -39,6 +39,7 @@ import {
   type PlatformActor,
 } from '../kernel';
 import { companyRow, realTenantOf } from '../tenancy';
+import { notify, type NotifyDeps } from '../notifications';
 import { ivaRateOn } from './iva';
 import { grantPack, refundPack } from './packs';
 import { priceOn, YEARLY_MONTHS } from './prices';
@@ -987,10 +988,12 @@ export async function reviewPayment(
   actor: PlatformActor,
   db: Database,
   raw: ReviewPaymentInput,
+  notice: NotifyDeps,
 ): Promise<void> {
   await assertSuperAdmin(db.identity, actor);
   const input = reviewPaymentInput.parse(raw);
-  await db.withSystem('super admin: review a payment', async ({ db: tx }) => {
+  await db.withSystem('super admin: review a payment', async (txAll) => {
+    const tx = txAll.db;
     const payment = await lockPayment(tx, input.paymentId);
     // Settled once: verifying twice would extend a period twice.
     if (!OPEN.includes(payment.status))
@@ -1024,6 +1027,17 @@ export async function reviewPayment(
       details: {
         code: payment.code,
         purpose: payment.purpose,
+        ...(input.decision === 'REJECTED' ? { reason: input.reason } : {}),
+      },
+    });
+    // The payer hears of the decision (FR-NOT-2, ADR-036).
+    await notify(txAll, notice, {
+      tenantId: payment.tenantId,
+      type: input.decision === 'VERIFIED' ? 'PAYMENT_VERIFIED' : 'PAYMENT_REJECTED',
+      params: {
+        amount: payment.totalAmount,
+        date: ecuadorDate(now),
+        code: payment.code,
         ...(input.decision === 'REJECTED' ? { reason: input.reason } : {}),
       },
     });

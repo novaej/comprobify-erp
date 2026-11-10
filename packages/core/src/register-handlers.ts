@@ -92,7 +92,14 @@ export async function registerHandlers(jobs: Jobs, deps: HandlerDeps): Promise<v
   });
   const payphone = deps.payphone;
   await jobs.work('payphone.reconcile', async () => {
-    if (payphone) await reconcileCardPayments({ db: deps.db, gateway: payphone, clock, logger });
+    if (payphone)
+      await reconcileCardPayments({
+        db: deps.db,
+        gateway: payphone,
+        clock,
+        logger,
+        notice: { jobs, appUrl: deps.billing.appUrl },
+      });
   });
   await jobs.work('sri.overdue', async () => {
     await alertOverdueAuthorizations(sending);

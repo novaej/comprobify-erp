@@ -1,3 +1,4 @@
+import type { NotifyDeps } from '@comprobify/core';
 import { randomUUID } from 'node:crypto';
 import { loadTestEnv } from '@comprobify/config/env';
 import type { Logger } from '@comprobify/config/logger';
@@ -189,3 +190,9 @@ export async function insertTestDocument(
     return { id: document!.id, accessKey: key, sequential };
   });
 }
+
+// What `notify` needs, with nothing sent: the queue takes the email and drops it (ADR-036).
+export const testNotice: NotifyDeps = {
+  appUrl: 'https://app.test',
+  jobs: { enqueue: () => Promise.resolve(null) },
+};

@@ -3,11 +3,11 @@ import { z } from 'zod';
 import { recordAudit } from '../audit';
 import { applySubscriptionTerm, CUSTOM_PLAN_KEY } from '../entitlements';
 import { assertSuperAdmin } from '../identity';
+import { notify, type NotifyDeps } from '../notifications';
 import { Dec, DomainError, ecuadorDate, type PlatformActor } from '../kernel';
 import { companyRow } from '../tenancy';
 import { remainingShare } from './changes';
 import { ivaRateOn } from './iva';
-import { notifyBilling, type BillingNotice } from './notify';
 import {
   amountsOf,
   monthlyCharge,
@@ -100,7 +100,7 @@ export async function moveToCustom(
   actor: PlatformActor,
   db: Database,
   raw: z.input<typeof moveToCustomInput>,
-  notice: BillingNotice,
+  notice: NotifyDeps,
 ): Promise<MoveToCustom> {
   await assertSuperAdmin(db.identity, actor);
   const input = moveToCustomInput.parse(raw);
@@ -209,7 +209,7 @@ export async function repriceAndTell(
   txAll: Tx,
   tenantId: string,
   now: Date,
-  notice: BillingNotice,
+  notice: NotifyDeps,
 ): Promise<void> {
   const tx = txAll.db;
   const [open] = await tx
@@ -235,9 +235,9 @@ export async function repriceAndTell(
       ),
     );
   if (renewal)
-    await notifyBilling(txAll, notice, tenantId, {
-      template: 'renewalRepriced',
-      date: ecuadorDate(now),
-      amount: renewal.total,
+    await notify(txAll, notice, {
+      tenantId,
+      type: 'RENEWAL_REPRICED',
+      params: { date: ecuadorDate(now), amount: renewal.total },
     });
 }

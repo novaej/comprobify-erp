@@ -956,7 +956,8 @@
     "adminPayments": "Payments",
     "adminPayment": "Payment",
     "adminInvoicing": "To invoice",
-    "adminCards": "Card charges"
+    "adminCards": "Card charges",
+    "notifications": "Notifications"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -2910,5 +2911,102 @@
     "note": "What was done",
     "noteHint": "For example, the reversal's reference in Payphone.",
     "resolved": "Charge settled."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "description": "What your company tells you, newest first, and what you choose to receive.",
+    "bell": "Notifications",
+    "bellUnread": "Notifications, {count, plural, one {# unread} other {# unread}}",
+    "emptyBell": "No notifications.",
+    "viewAll": "View all",
+    "markAll": "Mark all as read",
+    "markRead": "Mark as read",
+    "new": "New",
+    "read": "Read",
+    "test": "Test",
+    "listTitle": "Your notifications",
+    "emptyTitle": "No notifications yet",
+    "empty": "Your company's notices appear here: payments, renewals and more.",
+    "emptyUnreadTitle": "You have no unread notifications",
+    "filter": {
+      "label": "Filter",
+      "all": "All",
+      "unread": "Unread"
+    },
+    "table": {
+      "message": "Notice",
+      "when": "When",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "pagination": {
+      "label": "Notification pages",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page}"
+    },
+    "channels": {
+      "IN_APP": "In the app",
+      "EMAIL": "By email"
+    },
+    "preferences": {
+      "title": "What you want to receive",
+      "description": "Choose how we tell you about each thing. What isn't listed isn't for your role; mandatory ones can't be turned off.",
+      "type": "Notice",
+      "mandatory": "Mandatory",
+      "switch": "{type}: {channel}",
+      "noChannel": "Not available",
+      "none": "Your role receives no notices you can choose.",
+      "saved": "Preference saved."
+    },
+    "types": {
+      "RENEWAL_DUE": {
+        "label": "Renewal coming up",
+        "title": "Your renewal is coming up",
+        "body": "Your plan renews for ${amount}, VAT included, on {date}."
+      },
+      "GRACE_STARTED": {
+        "label": "Renewal unpaid",
+        "title": "The renewal isn't paid",
+        "body": "You can keep working as usual until {date}. Pay ${amount} to keep your access."
+      },
+      "PAST_DUE": {
+        "label": "Subscription past due",
+        "title": "The subscription is past due",
+        "body": "You can only view your data and pay. If ${amount} isn't paid by {date}, the company moves to the Free plan."
+      },
+      "MOVED_TO_FREE": {
+        "label": "Moved to the Free plan",
+        "title": "The company moved to the Free plan",
+        "body": "Since {date} the company is on the Free plan. You can return to a paid plan whenever you like."
+      },
+      "PAYMENT_REPRICED": {
+        "label": "VAT change on an open payment",
+        "title": "The VAT on your open payment changed",
+        "body": "Since {date}, VAT is {rate} %. Your open payment is now ${amount}."
+      },
+      "RENEWAL_REPRICED": {
+        "label": "Renewal amount change",
+        "title": "Your renewal has a new amount",
+        "body": "Since {date}, the renewal is ${amount}, VAT included."
+      },
+      "PAYMENT_VERIFIED": {
+        "label": "Payment confirmed",
+        "title": "Payment confirmed",
+        "body": "We confirmed your payment of ${amount}. What you paid for is now active."
+      },
+      "PAYMENT_REJECTED": {
+        "label": "Proof rejected",
+        "title": "Proof rejected",
+        "body": "We couldn't accept the proof for your payment of ${amount}: {reason}. Send a new one or pay by card."
+      }
+    }
+  },
+  "notificationsError": {
+    "UNKNOWN": "That couldn't be saved. Try again.",
+    "FORBIDDEN": "You can't change this.",
+    "NOTIFICATION_NOT_AVAILABLE": "That notice isn't for your role.",
+    "NOTIFICATION_MANDATORY": "That notice is mandatory: it can't be turned off.",
+    "NOTIFICATION_CHANNEL_UNAVAILABLE": "That notice isn't sent that way."
   }
 }

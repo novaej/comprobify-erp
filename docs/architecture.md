@@ -75,6 +75,10 @@ The super admin edits the catalog from the platform area (`platform/catalog.ts` 
 
 The web app only hides or locks: nav items carry a feature key, a page behind one renders `FeatureLocked`, and the plan page shows the plan, its modules and each limit with its usage (`planOverview`, `companyUsage`).
 
+## Notifications
+
+`notify` (ADR-036) is the one way to tell a company something, in the caller's transaction. The catalogue in code gives each type its channels, defaults, audience permission and whether it is mandatory; `notify` finds the members whose role holds that permission, applies what each chose, writes a notification and a receipt per member for the app, and enqueues `email.send` for those with the email channel. Text is never stored: a notification keeps its type and plain parameters and is written when shown, in the reader's language. The bell and the Notificaciones page read the member's own receipts.
+
 ## Billing
 
 The `billing` module prices what is sold (ADR-027), charges it through `payments` (ADR-029), changes plans, seats and add-ons (ADR-030), and sells document packs (ADR-031). `applyVerifiedPayment` is the one place a payment becomes access.

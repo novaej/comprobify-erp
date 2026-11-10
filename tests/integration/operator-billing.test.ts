@@ -21,7 +21,7 @@ import {
 import { createFakePayphone, createTestP12, testRuc } from '@comprobify/core/testing';
 import { schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, insertTestDocument, superAdmin, testLogger } from './helpers';
+import { appDatabase, insertTestDocument, superAdmin, testLogger, testNotice } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
 
@@ -116,7 +116,7 @@ describe("the operator's billing work", () => {
       reference: 'SPI-1',
       files: [{ filename: 'p.png', content: PNG }],
     });
-    await reviewPayment(operator, db, { paymentId, decision: 'VERIFIED' });
+    await reviewPayment(operator, db, { paymentId, decision: 'VERIFIED' }, testNotice);
   });
 
   afterAll(async () => {
@@ -180,6 +180,7 @@ describe("the operator's billing work", () => {
         },
         deps,
         testLogger(),
+        testNotice,
       );
 
     const open = await cardAttemptsToResolve(operator, db);

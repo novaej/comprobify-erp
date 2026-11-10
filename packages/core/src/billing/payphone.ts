@@ -13,7 +13,14 @@ import {
 } from '@comprobify/db';
 import { z } from 'zod';
 import { recordAudit } from '../audit';
-import { DomainError, requirePermission, type ActorContext, type Clock } from '../kernel';
+import { notify, type NotifyDeps } from '../notifications';
+import {
+  DomainError,
+  ecuadorDate,
+  requirePermission,
+  type ActorContext,
+  type Clock,
+} from '../kernel';
 import { applyVerifiedPayment, inCompany, lockPayment } from './payments';
 import { PAYPHONE_APPROVED, type ConfirmBody, type PayphoneGateway } from './payphone-gateway';
 
@@ -237,6 +244,7 @@ export async function confirmCardPayment(
   raw: ConfirmCardInput,
   deps: PayphoneDeps,
   logger: Logger,
+  notice: NotifyDeps,
 ): Promise<CardOutcome> {
   requirePermission(ctx, 'billing.manage');
   const payphone = requireConfigured(deps);
@@ -290,7 +298,7 @@ export async function confirmCardPayment(
     throw error;
   }
   if (outcome.status === 'APPROVED') {
-    const applied = await applyCardAttempt(db, attemptId!, now, logger);
+    const applied = await applyCardAttempt(db, attemptId!, now, logger, notice);
     return { ...outcome, status: applied };
   }
   return outcome;
@@ -324,8 +332,10 @@ export async function applyCardAttempt(
   attemptId: string,
   now: Date,
   logger: Logger,
+  notice: NotifyDeps,
 ): Promise<CardAttemptStatus> {
-  return db.withSystem('payphone: apply an approved card charge', async ({ db: tx }) => {
+  return db.withSystem('payphone: apply an approved card charge', async (txAll) => {
+    const tx = txAll.db;
     const [attempt] = await tx
       .select()
       .from(schema.payphoneTransactions)
@@ -354,6 +364,12 @@ export async function applyCardAttempt(
       action: 'payment.verified',
       details: { code: payment.code, purpose: payment.purpose, method: 'PAYPHONE_CARD' },
     });
+    // The payer is told, and the operator's invoice is now owed (FR-NOT-2, ADR-036).
+    await notify(txAll, notice, {
+      tenantId: payment.tenantId,
+      type: 'PAYMENT_VERIFIED',
+      params: { amount: payment.totalAmount, date: ecuadorDate(now), code: payment.code },
+    });
     return 'APPROVED';
   });
 }
@@ -363,6 +379,7 @@ export type ReconcileDeps = {
   gateway: PayphoneGateway;
   clock: Clock;
   logger: Logger;
+  notice: NotifyDeps;
 };
 
 // `payphone.reconcile`, every 5 minutes. First, attempts whose answer never arrived: with no
@@ -417,7 +434,8 @@ export async function reconcileCardPayments(
   let applied = 0;
   for (const { id } of unapplied) {
     try {
-      if ((await applyCardAttempt(deps.db, id, now, deps.logger)) === 'APPROVED') applied += 1;
+      if ((await applyCardAttempt(deps.db, id, now, deps.logger, deps.notice)) === 'APPROVED')
+        applied += 1;
     } catch (error) {
       deps.logger.error(`Could not apply an approved card charge: ${String(error)}`, {
         event: 'payphone.apply_failed',

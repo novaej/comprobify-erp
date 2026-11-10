@@ -298,6 +298,29 @@ describe('isolation sweep over every tenant table', () => {
           amountCents: 1150,
         });
       });
+      // A notification, its receipt and a choice about it (FR-NOT-1).
+      await db.withSystem('test: notify a member', async ({ db: tx }) => {
+        const [notification] = await tx
+          .insert(schema.notifications)
+          .values({
+            tenantId,
+            type: 'RENEWAL_DUE',
+            params: { date: '2026-12-10' },
+            link: '/plan',
+            environment: 'PRODUCTION',
+          })
+          .returning({ id: schema.notifications.id });
+        await tx
+          .insert(schema.notificationReceipts)
+          .values({ tenantId, notificationId: notification!.id, userId: owner });
+        await tx.insert(schema.notificationPreferences).values({
+          tenantId,
+          userId: owner,
+          type: 'RENEWAL_DUE',
+          channel: 'EMAIL',
+          enabled: false,
+        });
+      });
       // A batch with an item that made an invoice, and one still waiting (FR-BULK-1).
       await db.withSystem('test: start a batch', async ({ db: tx, executeSql }) => {
         const { rows } = await executeSql<{ id: string }>(
@@ -386,6 +409,9 @@ describe('isolation sweep over every tenant table', () => {
         'invoice_payments',
         'issue_points',
         'memberships',
+        'notification_preferences',
+        'notification_receipts',
+        'notifications',
         'payment_proofs',
         'payments',
         'payphone_transactions',

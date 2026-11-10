@@ -18,7 +18,7 @@ import {
 import { createFakePayphone, createTestP12, testRuc } from '@comprobify/core/testing';
 import { schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, testLogger } from './helpers';
+import { appDatabase, testLogger, testNotice } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
 
@@ -65,10 +65,16 @@ describe('card payments through Payphone', () => {
       response: Record<string, unknown> | null;
     };
   const confirm = async (id: number, clientTransactionId: string) =>
-    confirmCardPayment(await owner(), db, { id, clientTransactionId }, deps, logger);
+    confirmCardPayment(await owner(), db, { id, clientTransactionId }, deps, logger, testNotice);
   const pack = async () => buyPack(await owner(), db, { packSize: 100 });
   const reconcile = () =>
-    reconcileCardPayments({ db, gateway: fake.gateway, clock: later(), logger });
+    reconcileCardPayments({
+      db,
+      gateway: fake.gateway,
+      clock: later(),
+      logger,
+      notice: testNotice,
+    });
 
   beforeAll(async () => {
     db = appDatabase();
@@ -236,7 +242,7 @@ describe('card payments through Payphone', () => {
       payphoneId: id,
     });
     // Not stale yet: the sweep leaves it to the payer's own page.
-    await reconcileCardPayments({ db, gateway: fake.gateway, clock, logger });
+    await reconcileCardPayments({ db, gateway: fake.gateway, clock, logger, notice: testNotice });
     expect(await attempt(session.clientTransactionId)).toMatchObject({ status: 'PENDING' });
     // Still unreachable once, then answered.
     await reconcile();

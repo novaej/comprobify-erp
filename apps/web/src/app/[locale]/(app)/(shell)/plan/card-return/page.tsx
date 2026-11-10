@@ -41,7 +41,7 @@ export default async function CardReturnPage({
     );
 
   const { actor } = await loadShell(locale);
-  const { db, payphoneDeps, logger } = await getRuntime();
+  const { db, payphoneDeps, logger, notice } = await getRuntime();
   let status: string;
   try {
     ({ status } = await confirmCardPayment(
@@ -50,6 +50,7 @@ export default async function CardReturnPage({
       { id, clientTransactionId },
       payphoneDeps,
       logger,
+      notice,
     ));
   } catch (error) {
     const code = isDomainError(error)

@@ -956,7 +956,8 @@
     "adminPayments": "Pagos",
     "adminPayment": "Pago",
     "adminInvoicing": "Por facturar",
-    "adminCards": "Cobros con tarjeta"
+    "adminCards": "Cobros con tarjeta",
+    "notifications": "Notificaciones"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -2910,5 +2911,102 @@
     "note": "Qué se hizo",
     "noteHint": "Por ejemplo, la referencia del reverso en Payphone.",
     "resolved": "Cobro resuelto."
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "description": "Lo que tu empresa te avisa, lo más reciente primero, y lo que eliges recibir.",
+    "bell": "Notificaciones",
+    "bellUnread": "Notificaciones, {count, plural, one {# sin leer} other {# sin leer}}",
+    "emptyBell": "No hay notificaciones.",
+    "viewAll": "Ver todas",
+    "markAll": "Marcar todas como leídas",
+    "markRead": "Marcar como leída",
+    "new": "Nueva",
+    "read": "Leída",
+    "test": "Pruebas",
+    "listTitle": "Tus notificaciones",
+    "emptyTitle": "Todavía no hay notificaciones",
+    "empty": "Aquí aparecen los avisos de tu empresa: pagos, renovaciones y más.",
+    "emptyUnreadTitle": "No tienes notificaciones sin leer",
+    "filter": {
+      "label": "Filtro",
+      "all": "Todas",
+      "unread": "Sin leer"
+    },
+    "table": {
+      "message": "Aviso",
+      "when": "Cuándo",
+      "status": "Estado",
+      "actions": "Acciones"
+    },
+    "pagination": {
+      "label": "Páginas de notificaciones",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page": "Página {page}"
+    },
+    "channels": {
+      "IN_APP": "En la aplicación",
+      "EMAIL": "Por correo"
+    },
+    "preferences": {
+      "title": "Qué quieres recibir",
+      "description": "Elige cómo te avisamos de cada cosa. Lo que no aparece aquí no es para tu rol; lo obligatorio no se puede apagar.",
+      "type": "Aviso",
+      "mandatory": "Obligatoria",
+      "switch": "{type}: {channel}",
+      "noChannel": "No disponible",
+      "none": "Tu rol no recibe avisos que puedas elegir.",
+      "saved": "Preferencia guardada."
+    },
+    "types": {
+      "RENEWAL_DUE": {
+        "label": "Se acerca la renovación",
+        "title": "Se acerca la renovación",
+        "body": "La renovación de tu plan es de ${amount}, IVA incluido, el {date}."
+      },
+      "GRACE_STARTED": {
+        "label": "Renovación sin pagar",
+        "title": "La renovación no está pagada",
+        "body": "Sigues trabajando con normalidad hasta el {date}. Paga ${amount} para no perder el acceso."
+      },
+      "PAST_DUE": {
+        "label": "Suscripción vencida",
+        "title": "La suscripción está vencida",
+        "body": "Solo puedes consultar tus datos y pagar. Si no pagas ${amount} hasta el {date}, la empresa pasa al plan Gratis."
+      },
+      "MOVED_TO_FREE": {
+        "label": "Paso al plan Gratis",
+        "title": "La empresa pasó al plan Gratis",
+        "body": "Desde el {date} la empresa está en el plan Gratis. Puedes volver a un plan de pago cuando quieras."
+      },
+      "PAYMENT_REPRICED": {
+        "label": "Cambio de IVA en un pago pendiente",
+        "title": "Cambió el IVA de tu pago pendiente",
+        "body": "Desde el {date} el IVA es del {rate} %. Tu pago pendiente ahora es de ${amount}."
+      },
+      "RENEWAL_REPRICED": {
+        "label": "Cambio de valor de la renovación",
+        "title": "Tu renovación tiene un nuevo valor",
+        "body": "Desde el {date}, la renovación es de ${amount}, IVA incluido."
+      },
+      "PAYMENT_VERIFIED": {
+        "label": "Pago confirmado",
+        "title": "Pago confirmado",
+        "body": "Confirmamos tu pago de ${amount}. Ya está activo lo que pagaste."
+      },
+      "PAYMENT_REJECTED": {
+        "label": "Comprobante rechazado",
+        "title": "Comprobante rechazado",
+        "body": "No pudimos aceptar el comprobante de tu pago de ${amount}: {reason}. Envía uno nuevo o paga con tarjeta."
+      }
+    }
+  },
+  "notificationsError": {
+    "UNKNOWN": "No se pudo guardar. Inténtalo de nuevo.",
+    "FORBIDDEN": "No puedes cambiar esto.",
+    "NOTIFICATION_NOT_AVAILABLE": "Ese aviso no es para tu rol.",
+    "NOTIFICATION_MANDATORY": "Ese aviso es obligatorio: no se puede apagar.",
+    "NOTIFICATION_CHANNEL_UNAVAILABLE": "Ese aviso no se envía por ese medio."
   }
 }

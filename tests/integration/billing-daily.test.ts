@@ -20,7 +20,7 @@ import {
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { appDatabase, superAdmin, testLogger } from './helpers';
+import { appDatabase, superAdmin, testLogger, testNotice } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
 
@@ -72,7 +72,12 @@ describe('the daily billing job', () => {
     });
   const pay = async (company: Company, paymentId: string) => {
     await report(company, paymentId);
-    await reviewPayment({ ...operator, clock }, db, { paymentId, decision: 'VERIFIED' });
+    await reviewPayment(
+      { ...operator, clock },
+      db,
+      { paymentId, decision: 'VERIFIED' },
+      testNotice,
+    );
   };
   const paymentOf = (result: ChangeResult) => (result.applied === 'NOW' ? result.payment! : null);
 
@@ -181,6 +186,14 @@ describe('the daily billing job', () => {
     expect(emailsTo(leaving)).toEqual([]);
     await run();
     expect(emailsTo(late)).toEqual(['renewalDue']);
+    // The same step is in the app for the owner (ADR-036), once.
+    const { rows } = await sql(
+      `SELECT n.type, count(r.id)::int AS receipts FROM notifications n
+       LEFT JOIN notification_receipts r ON r.notification_id = n.id
+       WHERE n.tenant_id = $1 AND n.type = 'RENEWAL_DUE' GROUP BY n.type`,
+      [late.org.realTenantId],
+    );
+    expect(rows).toEqual([{ type: 'RENEWAL_DUE', receipts: 1 }]);
   });
 
   it('starts the grace at the period end, with full access, and says so once', async () => {
@@ -241,11 +254,16 @@ describe('the daily billing job', () => {
 
   it('lets the reviewed company follow the cycle once its transfer is rejected', async () => {
     const renewal = (await renewalOf(inReview))!;
-    await reviewPayment({ ...operator, clock }, db, {
-      paymentId: renewal.id,
-      decision: 'REJECTED',
-      reason: 'TRANSFER_NOT_FOUND',
-    });
+    await reviewPayment(
+      { ...operator, clock },
+      db,
+      {
+        paymentId: renewal.id,
+        decision: 'REJECTED',
+        reason: 'TRANSFER_NOT_FOUND',
+      },
+      testNotice,
+    );
     await run();
     expect(emailsTo(inReview)).toEqual(['pastDue']);
     // Its 14 days run from today, not from the end of a grace the review held open.

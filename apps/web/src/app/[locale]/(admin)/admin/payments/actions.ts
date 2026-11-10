@@ -31,23 +31,28 @@ async function run(
 }
 async function context(form: FormData) {
   const { actor } = await loadPlatform(localeOf(form));
-  const { db } = await getRuntime();
-  return { actor, db };
+  const { db, notice } = await getRuntime();
+  return { actor, db, notice };
 }
 
 export async function verifyPaymentAction(_: ActionState, form: FormData): Promise<ActionState> {
-  return run(form, ({ actor, db }) =>
-    reviewPayment(actor, db, { paymentId: text(form, 'paymentId'), decision: 'VERIFIED' }),
+  return run(form, ({ actor, db, notice }) =>
+    reviewPayment(actor, db, { paymentId: text(form, 'paymentId'), decision: 'VERIFIED' }, notice),
   );
 }
 
 export async function rejectPaymentAction(_: ActionState, form: FormData): Promise<ActionState> {
-  return run(form, ({ actor, db }) =>
-    reviewPayment(actor, db, {
-      paymentId: text(form, 'paymentId'),
-      decision: 'REJECTED',
-      reason: text(form, 'reason') as PaymentRejectionReason,
-    }),
+  return run(form, ({ actor, db, notice }) =>
+    reviewPayment(
+      actor,
+      db,
+      {
+        paymentId: text(form, 'paymentId'),
+        decision: 'REJECTED',
+        reason: text(form, 'reason') as PaymentRejectionReason,
+      },
+      notice,
+    ),
   );
 }
 

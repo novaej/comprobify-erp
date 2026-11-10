@@ -26,7 +26,7 @@ import {
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { and, eq, schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, appUrl, superAdmin, testLogger } from './helpers';
+import { appDatabase, appUrl, superAdmin, testLogger, testNotice } from './helpers';
 
 // FR-DOC-2, FR-DOC-9, FR-ONB-5, FR-ONB-6a, FR-BILL-7, FR-ROLE-2, SRI rules 5, 6, 8 and 9.
 describe('creating an invoice', () => {
@@ -322,10 +322,15 @@ describe('creating an invoice', () => {
         { filename: 'p.png', content: Buffer.from([0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10]) },
       ],
     });
-    await reviewPayment({ ...(await superAdmin(db)), clock }, db, {
-      paymentId: pack.id,
-      decision: 'VERIFIED',
-    });
+    await reviewPayment(
+      { ...(await superAdmin(db)), clock },
+      db,
+      {
+        paymentId: pack.id,
+        decision: 'VERIFIED',
+      },
+      testNotice,
+    );
     await createInvoice(live, db, invoice(point), deps);
     await expect(quotaUsage(live, db)).resolves.toMatchObject({ used: 2, limit: 1, packs: 99 });
 

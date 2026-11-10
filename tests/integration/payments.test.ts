@@ -28,7 +28,7 @@ import {
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, superAdmin } from './helpers';
+import { appDatabase, superAdmin, testNotice } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
 const PDF = Buffer.from('%PDF-1.4 proof');
@@ -210,17 +210,22 @@ describe('payments', () => {
     const [payment] = (await listPayments(await owner(), db)).filter(
       (row) => row.status === 'REPORTED',
     );
-    await reviewPayment(operator, db, {
-      paymentId: payment!.id,
-      decision: 'REJECTED',
-      reason: 'AMOUNT_MISMATCH',
-    });
+    await reviewPayment(
+      operator,
+      db,
+      {
+        paymentId: payment!.id,
+        decision: 'REJECTED',
+        reason: 'AMOUNT_MISMATCH',
+      },
+      testNotice,
+    );
     expect(await getPayment(await owner(), db, payment!.id)).toMatchObject({
       status: 'REJECTED',
       rejectionReason: 'AMOUNT_MISMATCH',
     });
     await report(payment!.id);
-    await reviewPayment(operator, db, { paymentId: payment!.id, decision: 'VERIFIED' });
+    await reviewPayment(operator, db, { paymentId: payment!.id, decision: 'VERIFIED' }, testNotice);
     // The first period starts the day it is paid, for the company and its twin.
     for (const tenantId of [org.realTenantId, org.twinTenantId])
       expect(await subscriptionOf(tenantId)).toEqual({
@@ -239,7 +244,9 @@ describe('payments', () => {
     });
     // Settled once: verifying again would extend a period twice.
     expect(
-      await failure(reviewPayment(operator, db, { paymentId: payment!.id, decision: 'VERIFIED' })),
+      await failure(
+        reviewPayment(operator, db, { paymentId: payment!.id, decision: 'VERIFIED' }, testNotice),
+      ),
     ).toBe('PAYMENT_NOT_REVIEWABLE');
   });
 
@@ -257,7 +264,7 @@ describe('payments', () => {
       'PAYMENT_NOT_CANCELLABLE',
     );
     await report(renewal!.id);
-    await reviewPayment(operator, db, { paymentId: renewal!.id, decision: 'VERIFIED' });
+    await reviewPayment(operator, db, { paymentId: renewal!.id, decision: 'VERIFIED' }, testNotice);
     // Paid ahead: the company keeps its period until the next one starts (ADR-035).
     expect(await subscriptionOf(org.realTenantId)).toMatchObject({
       start: '2026-11-10',

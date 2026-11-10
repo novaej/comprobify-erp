@@ -1,4 +1,4 @@
-import { agreementStatus } from '@comprobify/core';
+import { agreementStatus, notificationSummary } from '@comprobify/core';
 import { buttonVariants } from '@comprobify/ui/components/button';
 import { AlertCircle, AlertTriangle, Ban, FileText, FlaskConical } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
@@ -6,6 +6,7 @@ import { getRuntime } from '@/server/runtime';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { Banner } from '@/components/banner';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 import { Nav } from '@/components/shell/nav';
 import { TopBar } from '@/components/shell/top-bar';
 import { SkipToContent } from '@/components/skip-to-content';
@@ -23,6 +24,18 @@ export async function AppShell({ locale, children }: { locale: string; children:
     actor.permissions.includes('organization.accept_agreements') &&
     (await agreementStatus(actor, db)).some((row) => !row.accepted);
   const tRoles = await getTranslations('roles');
+  // FR-NOT-1: the bell, read with the page.
+  const summary = actor.userId ? await notificationSummary(actor, db) : null;
+  const bell = summary ? (
+    <NotificationBell
+      unread={summary.unread}
+      items={summary.items.map((item) => ({
+        ...item,
+        createdAt: item.createdAt.toISOString(),
+        readAt: item.readAt?.toISOString() ?? null,
+      }))}
+    />
+  ) : null;
 
   return (
     <>
@@ -41,6 +54,7 @@ export async function AppShell({ locale, children }: { locale: string; children:
           permissions={actor.permissions}
           features={actor.entitlements.features}
           isSuperAdmin={session.user.isSuperAdmin}
+          bell={bell}
           user={{
             name: session.user.name,
             email: session.user.email,
@@ -48,7 +62,7 @@ export async function AppShell({ locale, children }: { locale: string; children:
           }}
         />
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <TopBar />
+          <TopBar bell={bell} />
           <main
             id="main-content"
             // In the tab order: it scrolls, and a read-only screen may have nothing else to reach.

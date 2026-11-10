@@ -21,7 +21,8 @@ import {
   type CompanyTenants,
   type SubscriptionSummary,
 } from '../entitlements';
-import { repriceAndTell, type BillingNotice } from '../billing';
+import { repriceAndTell } from '../billing';
+import type { NotifyDeps } from '../notifications';
 import { assertSuperAdmin } from '../identity';
 import { startOfEcuadorDay, type PlatformActor } from '../kernel';
 import {
@@ -147,7 +148,7 @@ export const setNegotiatedPrice = (
   db: Database,
   input: { realTenantId: string; monthlyPrice: string | null },
   // ADR-035: a renewal not paid yet is priced again at the new price, and the payer told.
-  notice: BillingNotice,
+  notice: NotifyDeps,
 ) =>
   change(
     actor,
