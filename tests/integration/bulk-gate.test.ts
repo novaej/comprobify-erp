@@ -222,6 +222,7 @@ gate('Milestone 7 gate: a big batch beside another company’s single invoices',
         consumerFinalMaxAmount: '50.00',
       },
       billing: { ivaRate: '15', appUrl: 'http://localhost:3000' },
+      payphone: null,
     });
   });
 

@@ -53,6 +53,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [030](030-plan-changes-seats-and-add-ons.md) | Plan changes, seats and add-ons | Accepted |
 | [031](031-document-packs-and-the-write-block.md) | Document packs and the write block | Accepted |
 | [032](032-the-renewal-cycle.md) | The renewal cycle | Accepted |
+| [033](033-card-payments-through-payphone.md) | Card payments through Payphone | Accepted |
 
 ## Old ADRs to read before each milestone
 

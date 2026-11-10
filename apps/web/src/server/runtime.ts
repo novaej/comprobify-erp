@@ -1,4 +1,5 @@
 import 'server-only';
+import { hostname } from 'node:os';
 import { loadWebEnv, type WebEnv } from '@comprobify/config/env';
 import { createLogger, type Logger } from '@comprobify/config/logger';
 import {
@@ -19,6 +20,8 @@ import {
   type SriClient,
   type KeyCipher,
   type BillingDeps,
+  createPayphoneGateway,
+  type PayphoneDeps,
 } from '@comprobify/core';
 import { createDatabase, type Database } from '@comprobify/db';
 import { nextCookies } from 'better-auth/next-js';
@@ -34,6 +37,8 @@ export type Runtime = {
   // What createInvoice and correctInvoice need from config (FR-DOC-2, FR-DOC-9).
   issueDeps: IssueDeps;
   billingDeps: BillingDeps;
+  // Null when Payphone isn't set up: card payments are refused (ADR-033).
+  payphoneDeps: PayphoneDeps;
   // For voiding: Consulta de validez (FR-DOC-8).
   sri: SriClient;
   // Null while the legal texts are under review (AGREEMENTS_ENABLED=false).
@@ -111,6 +116,19 @@ async function start(): Promise<Runtime> {
           timeoutMs: env.SRI_TIMEOUT_MS,
         }),
     billingDeps: { ivaRate: env.IVA_RATE },
+    payphoneDeps: env.PAYPHONE_TOKEN
+      ? {
+          gateway: createPayphoneGateway({
+            token: env.PAYPHONE_TOKEN,
+            baseUrl: env.PAYPHONE_API_URL,
+            timeoutMs: env.PAYPHONE_CONFIRM_TIMEOUT_MS,
+          }),
+          token: env.PAYPHONE_TOKEN,
+          storeId: env.PAYPHONE_STORE_ID!,
+          production: env.APP_ENV === 'production',
+          instance: hostname(),
+        }
+      : null,
     issueDeps: {
       jobs,
       keyCipher,

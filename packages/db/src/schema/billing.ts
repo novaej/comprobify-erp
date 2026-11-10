@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  bigint,
   boolean,
   check,
   customType,
@@ -327,3 +328,77 @@ export const documentPacks = pgTable(
 // The trigger that enforces PACK_TRANSITIONS; migration 0053 holds its output.
 export const packStatusTriggerBody = (): string =>
   transitionTriggerBody('Pack', PACK_STATUSES, PACK_TRANSITIONS);
+
+// FR-BILL-3 (ADR-033): one Payphone card attempt, never reused. PENDING is the only state whose
+// outcome is unknown; every other one is final. DUPLICATE is captured money that was not applied
+// (the payment was already paid or cancelled): the operator refunds it by hand.
+export const CARD_ATTEMPT_STATUSES = [
+  'PENDING',
+  'APPROVED',
+  'CANCELLED',
+  'EXPIRED',
+  'DUPLICATE',
+  'ERROR',
+] as const;
+export type CardAttemptStatus = (typeof CARD_ATTEMPT_STATUSES)[number];
+export const CARD_ATTEMPT_TRANSITIONS: Record<CardAttemptStatus, readonly CardAttemptStatus[]> = {
+  PENDING: ['APPROVED', 'CANCELLED', 'EXPIRED', 'DUPLICATE', 'ERROR'],
+  // Approved, then found to be a second charge when applied.
+  APPROVED: ['DUPLICATE'],
+  CANCELLED: [],
+  EXPIRED: [],
+  DUPLICATE: [],
+  ERROR: [],
+};
+
+export const payphoneTransactions = pgTable(
+  'payphone_transactions',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`uuidv7()`),
+    tenantId: uuid('tenant_id').notNull(),
+    paymentId: uuid('payment_id').notNull(),
+    // Ours, sent to Payphone and echoed on the return redirect: short, opaque, one per attempt.
+    clientTransactionId: text('client_transaction_id').notNull().unique(),
+    // Payphone's, known from the return redirect. Kept even when nothing else could be saved: a
+    // charge it captured can only be looked up again by it.
+    payphoneTransactionId: bigint('payphone_transaction_id', { mode: 'number' }),
+    status: text('status', { enum: CARD_ATTEMPT_STATUSES }).default('PENDING').notNull(),
+    // Integer cents, as Payphone takes them; a confirmed amount must match it.
+    amountCents: integer('amount_cents').notNull(),
+    statusCode: integer('status_code'),
+    // Vendor display data with no length promise, so text.
+    authorizationCode: text('authorization_code'),
+    cardBrand: text('card_brand'),
+    cardLastDigits: text('card_last_digits'),
+    // Payphone's answer, allow-listed: the payer's email, phone and id are dropped.
+    confirmResponse: jsonb('confirm_response').$type<Record<string, unknown>>(),
+    confirmedAt: timestamp('confirmed_at', { withTimezone: true }),
+    // The second phase: the payment applied. APPROVED without it is swept and finished.
+    appliedAt: timestamp('applied_at', { withTimezone: true }),
+    createdBy: uuid('created_by').references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      name: 'payphone_transactions_payment_fk',
+      columns: [table.tenantId, table.paymentId],
+      foreignColumns: [payments.tenantId, payments.id],
+    }),
+    index('payphone_transactions_payment').on(table.tenantId, table.paymentId),
+    index('payphone_transactions_pending')
+      .on(table.createdAt)
+      .where(sql`status = 'PENDING'`),
+    index('payphone_transactions_unapplied')
+      .on(table.confirmedAt)
+      .where(sql`status = 'APPROVED' AND applied_at IS NULL`),
+    check('payphone_transactions_status_check', oneOf('status', CARD_ATTEMPT_STATUSES)),
+    check('payphone_transactions_amount_check', sql`amount_cents >= 100`),
+  ],
+);
+
+// The trigger that enforces CARD_ATTEMPT_TRANSITIONS; migration 0055 holds its output.
+export const cardAttemptStatusTriggerBody = (): string =>
+  transitionTriggerBody('Card attempt', CARD_ATTEMPT_STATUSES, CARD_ATTEMPT_TRANSITIONS);

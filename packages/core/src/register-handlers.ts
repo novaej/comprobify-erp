@@ -1,6 +1,11 @@
 import type { Logger } from '@comprobify/config/logger';
 import type { Database, IdentityDb } from '@comprobify/db';
-import { runBillingDay, type BillingDeps } from './billing';
+import {
+  reconcileCardPayments,
+  runBillingDay,
+  type BillingDeps,
+  type PayphoneGateway,
+} from './billing';
 import {
   alertOverdueAuthorizations,
   checkAfterDeadline,
@@ -33,6 +38,8 @@ export type HandlerDeps = {
   issue: Omit<IssueDeps, 'jobs' | 'keyCipher'>;
   // The daily billing job's IVA rate and the URL its emails point to (ADR-032).
   billing: BillingDeps & { appUrl: string };
+  // Null when Payphone isn't set up: the sweep has nothing to ask (ADR-033).
+  payphone: PayphoneGateway | null;
 };
 
 // Every job handler the worker runs.
@@ -87,6 +94,10 @@ export async function registerHandlers(jobs: Jobs, deps: HandlerDeps): Promise<v
   });
   await jobs.work('billing.daily', async () => {
     await runBillingDay({ db: deps.db, jobs, clock, logger, ...deps.billing });
+  });
+  const payphone = deps.payphone;
+  await jobs.work('payphone.reconcile', async () => {
+    if (payphone) await reconcileCardPayments({ db: deps.db, gateway: payphone, clock, logger });
   });
   await jobs.work('sri.overdue', async () => {
     await alertOverdueAuthorizations(sending);

@@ -440,7 +440,8 @@
         "cancelled": "Pago cancelado",
         "verified": "Pago verificado",
         "rejected": "Pago rechazado",
-        "refunded": "Pago reembolsado"
+        "refunded": "Pago reembolsado",
+        "card_duplicate": "registró un cobro con tarjeta duplicado, por devolver"
       }
     },
     "complimentary": "cortesía",

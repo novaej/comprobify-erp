@@ -7,6 +7,7 @@ import {
   createMailgunProvider,
   createMockSri,
   createNoEmailProvider,
+  createPayphoneGateway,
   createSriClient,
   registerHandlers,
   systemClock,
@@ -87,6 +88,13 @@ await registerHandlers(jobs, {
     consumerFinalMaxAmount: env.CONSUMER_FINAL_MAX_AMOUNT,
   },
   billing: { ivaRate: env.IVA_RATE, appUrl: env.APP_URL },
+  payphone: env.PAYPHONE_TOKEN
+    ? createPayphoneGateway({
+        token: env.PAYPHONE_TOKEN,
+        baseUrl: env.PAYPHONE_API_URL,
+        timeoutMs: env.PAYPHONE_CONFIRM_TIMEOUT_MS,
+      })
+    : null,
 });
 logger.info('Worker started', { event: 'worker.started' });
 

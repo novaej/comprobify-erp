@@ -440,7 +440,8 @@
         "cancelled": "Payment cancelled",
         "verified": "Payment verified",
         "rejected": "Payment rejected",
-        "refunded": "Payment refunded"
+        "refunded": "Payment refunded",
+        "card_duplicate": "recorded a duplicate card charge, to refund"
       }
     },
     "complimentary": "complimentary",

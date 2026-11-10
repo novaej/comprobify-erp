@@ -112,6 +112,12 @@ export const queues = {
     options: { policy: 'short', retryLimit: 2, retryDelay: 600, expireInSeconds: 1800 },
     concurrency: 1,
   },
+  // FR-BILL-3 (ADR-033): card attempts whose answer was lost, and approved charges not applied.
+  'payphone.reconcile': {
+    payload: z.object({}),
+    options: { policy: 'short', retryLimit: 1, expireInSeconds: 240 },
+    concurrency: 1,
+  },
   'identity.prune': {
     payload: z.object({}),
     options: { retryLimit: 2, expireInSeconds: 300 },
@@ -143,4 +149,5 @@ export const schedules: readonly {
   { queue: 'sri.reissue-sweep', cron: '30 0 * * *', tz: JOB_TIME_ZONE, data: {} },
   // Early morning in Quito, so the day's emails arrive before work starts.
   { queue: 'billing.daily', cron: '0 6 * * *', tz: JOB_TIME_ZONE, data: {} },
+  { queue: 'payphone.reconcile', cron: '*/5 * * * *', tz: JOB_TIME_ZONE, data: {} },
 ];

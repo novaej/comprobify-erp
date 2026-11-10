@@ -118,6 +118,28 @@ const ivaRate = z
   .regex(/^\d{1,2}(\.\d{1,2})?$/, 'must be a percent such as 15')
   .default('15');
 
+// FR-BILL-3 (ADR-033): card payments through Payphone, optional. Without the token and store id
+// they are refused and transfers carry on. The web starts and confirms charges; the worker's
+// sweep asks again about the ones whose answer was lost.
+const payphoneShape = {
+  PAYPHONE_TOKEN: z.string().min(20).optional(),
+  PAYPHONE_STORE_ID: z.string().min(1).optional(),
+  PAYPHONE_API_URL: z.url().default('https://paymentbox.payphonetodoesposible.com'),
+  PAYPHONE_CONFIRM_TIMEOUT_MS: z.coerce.number().int().min(1000).max(30_000).default(10_000),
+};
+
+function requirePayphonePair(
+  env: { PAYPHONE_TOKEN?: string | undefined; PAYPHONE_STORE_ID?: string | undefined },
+  ctx: z.RefinementCtx,
+): void {
+  if (Boolean(env.PAYPHONE_TOKEN) !== Boolean(env.PAYPHONE_STORE_ID))
+    ctx.addIssue({
+      code: 'custom',
+      path: ['PAYPHONE_STORE_ID'],
+      message: 'PAYPHONE_TOKEN and PAYPHONE_STORE_ID are set together, or neither',
+    });
+}
+
 function requireOperatorRuc(
   env: { APP_ENV: string; OPERATOR_RUC?: string | undefined },
   ctx: z.RefinementCtx,
@@ -148,10 +170,12 @@ export const webEnvSchema = z
     SUPPORT_EMAIL: z.email().optional(),
     CONSUMER_FINAL_MAX_AMOUNT: consumerFinalMaxAmount,
     IVA_RATE: ivaRate,
+    ...payphoneShape,
   })
   .superRefine((env, ctx) => {
     refuseMockInProduction(env, ctx);
     requireOperatorRuc(env, ctx);
+    requirePayphonePair(env, ctx);
     if (!env.AGREEMENTS_ENABLED) return;
     for (const name of [
       'OPERATOR_NAME',
@@ -179,10 +203,12 @@ export const workerEnvSchema = z
     OPERATOR_RUC: operatorRuc,
     CONSUMER_FINAL_MAX_AMOUNT: consumerFinalMaxAmount,
     IVA_RATE: ivaRate,
+    ...payphoneShape,
   })
   .superRefine((env, ctx) => {
     refuseMockInProduction(env, ctx);
     requireOperatorRuc(env, ctx);
+    requirePayphonePair(env, ctx);
     checkMail(env, ctx);
   });
 

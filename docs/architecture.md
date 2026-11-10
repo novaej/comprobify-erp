@@ -83,6 +83,8 @@ The `billing` module prices what is sold (ADR-027), charges it through `payments
 
 **The renewal cycle** (`billing.daily`, 06:00 Quito time, ADR-032) opens renewals 7 days before the period ends. An unpaid company keeps full access for a 7-day grace, is past due for 14 days, then moves to Gratis; a cancelled one moves to Gratis at its period end. Each step is emailed to the owners and admins and recorded in the activity log, which is also what keeps a step from being emailed twice.
 
+**Cards** (ADR-033). The web starts an attempt for Payphone's widget and confirms it from the return page: Payphone's answer commits first, then the payment is applied. `payphone.reconcile` (every 5 minutes) asks again about attempts whose answer was lost and applies approved charges that weren't. A second charge for one payment is flagged `DUPLICATE` for a refund by hand.
+
 ## Company settings
 
 The company's tax data (accounting flag, contribuyente especial and agente de retención resolutions, the RIMPE regime), its branches and issue points, and the document types each issue point issues are edited from the Empresa page and written to the company and its twin together, matched by code (`tenancy/settings.ts`). New branches and issue points count against the plan's `MAX_BRANCHES` and `MAX_ISSUE_POINTS_PER_BRANCH`. Enabling a document type needs its `DOC_TYPE_*` feature and a builder for it; one already enabled keeps working if the plan loses it (FR-PLAN-3). Every enabled type has a row in `document_sequences`, per issue point: the twin counts its own. At go-live the owner can set the real company's next numbers, for a company coming from another provider; a sequence only moves forward.

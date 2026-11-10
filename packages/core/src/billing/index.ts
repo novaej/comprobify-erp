@@ -70,3 +70,29 @@ export type { ChangeQuote, ChangeResult, PlanChangeInput } from './changes';
 export { consumePack, packBalance } from './packs';
 export { BILLING_DAYS, runBillingDay } from './daily';
 export type { BillingDayDeps, BillingDayResult } from './daily';
+export {
+  applyCardAttempt,
+  CARD_MAX_PENDING_ATTEMPTS,
+  CARD_MIN_CENTS,
+  CARD_STALE_MINUTES,
+  cardAmounts,
+  cardPaymentInput,
+  confirmCardInput,
+  confirmCardPayment,
+  reconcileCardPayments,
+  startCardPayment,
+} from './payphone';
+export type {
+  CardOutcome,
+  CardSession,
+  ConfirmCardInput,
+  PayphoneDeps,
+  ReconcileDeps,
+} from './payphone';
+export {
+  createFakePayphone,
+  createPayphoneGateway,
+  keepFields,
+  PAYPHONE_APPROVED,
+} from './payphone-gateway';
+export type { ConfirmResult, FakeCharge, PayphoneGateway } from './payphone-gateway';

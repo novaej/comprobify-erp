@@ -75,6 +75,10 @@ The area also requires two-step verification, so set it up on that account befor
 | `AGREEMENTS_ENABLED` | web | `false` until the owner approves the legal texts (`docs/legal/review-notes.md`). When `true`, go-live requires acceptance. |
 | `OPERATOR_NAME`, `OPERATOR_RUC`, `OPERATOR_ADDRESS`, `SUPPORT_EMAIL` | web | The operator named in the legal texts. Required when `AGREEMENTS_ENABLED` is `true`. `OPERATOR_RUC` is also printed on every document as "RUC Proveedor" (Anexo 26, ADR-013), so it is required in production whether or not agreements are on. |
 | `CONSUMER_FINAL_MAX_AMOUNT` | web | The most a consumidor final invoice may total, `50.00` by default (FR-DOC-9). |
+| `IVA_RATE` | web, worker | IVA charged on subscriptions, in percent, `15` by default. Each payment keeps the rate it was created with (FR-BILL-2). |
+| `PAYPHONE_TOKEN`, `PAYPHONE_STORE_ID` | web, worker | Card payments through Payphone (ADR-033): both or neither. Unset, card payments are refused and transfers carry on. Leave them unset in a restored copy of real data. The token reaches the payer's browser (Payphone's widget needs it), so it is rotatable, not secret from a company. |
+| `PAYPHONE_API_URL` | web, worker | Payphone's API, `https://paymentbox.payphonetodoesposible.com` by default |
+| `PAYPHONE_CONFIRM_TIMEOUT_MS` | web, worker | The confirm call's limit, `10000` by default; it holds the attempt's lock |
 | `AUTH_SECRET` | web | At least 32 characters. Signs session cookies and tokens; rotating it signs everyone out. |
 | `MAILGUN_API_KEY`, `MAILGUN_DOMAIN` | worker | Required outside `local`. Locally, emails are logged instead. |
 | `MAILGUN_REGION` | worker | `us` (default) or `eu` |

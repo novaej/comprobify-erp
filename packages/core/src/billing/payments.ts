@@ -174,7 +174,7 @@ export async function subscriptionOf(tx: Tx['db'], tenantId: string) {
   return row;
 }
 
-async function lockPayment(tx: Tx['db'], id: string): Promise<PaymentRow> {
+export async function lockPayment(tx: Tx['db'], id: string): Promise<PaymentRow> {
   const [row] = await tx
     .select()
     .from(schema.payments)

@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import {
   acceptAgreements,
   acceptInvitation,
@@ -290,6 +290,13 @@ describe('isolation sweep over every tenant table', () => {
         await tx
           .insert(schema.documentPacks)
           .values({ tenantId, paymentId: payment!.id, size: 100 });
+        // A card attempt at it (FR-BILL-3).
+        await tx.insert(schema.payphoneTransactions).values({
+          tenantId,
+          paymentId: payment!.id,
+          clientTransactionId: randomBytes(8).toString('hex'),
+          amountCents: 1150,
+        });
       });
       // A batch with an item that made an invoice, and one still waiting (FR-BULK-1).
       await db.withSystem('test: start a batch', async ({ db: tx, executeSql }) => {
@@ -381,6 +388,7 @@ describe('isolation sweep over every tenant table', () => {
         'memberships',
         'payment_proofs',
         'payments',
+        'payphone_transactions',
         'products',
         'providers',
         'purchase_order_lines',
