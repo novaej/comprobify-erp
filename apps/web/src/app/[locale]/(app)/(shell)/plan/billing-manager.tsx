@@ -380,7 +380,7 @@ export function AddOnsSection({
               {addOn.state === 'ACTIVE' && <ToneBadge tone="success">{t('active')}</ToneBadge>}
               {addOn.state === 'LEAVING' && (
                 <ToneBadge tone="warning">
-                  {t('leaving', { date: day(subscription.periodEnd ?? '') })}
+                  {t('leaving', { date: day(addOn.leavesOn ?? '') })}
                 </ToneBadge>
               )}
               {flags.canManage && active && (

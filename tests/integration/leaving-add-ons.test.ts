@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   addModule,
+  billingOverview,
   createKeyCipher,
   fixedClock,
   onboardOrganization,
@@ -78,6 +79,12 @@ describe('add-ons leaving during the period they would be charged for', () => {
     clock.set('2026-11-10T15:00:00Z');
     await removeModule(operator, db, { ...company, moduleKey: 'INVENTORY' });
     expect((await owner()).entitlements.features).toContain('INVENTORY');
+    // The page says when it leaves: its own date, as Gratis has no period end.
+    const view = await billingOverview(await owner(), db);
+    expect(view.addOns.find((row) => row.key === 'INVENTORY')).toMatchObject({
+      state: 'LEAVING',
+      leavesOn: '2026-12-05',
+    });
 
     const initial = await startPaidPlan(await owner(), db, {
       planKey: 'STARTER',

@@ -43,6 +43,7 @@ export default async function AdminPaymentsPage({
   const rows = await paymentsToReview(actor, db, { status });
   const t = await getTranslations('adminPayments');
   const tStatus = await getTranslations('plan.payment.status');
+  const tMethods = await getTranslations('plan.history.methods');
   const when = new Intl.DateTimeFormat(locale === 'en' ? 'en' : 'es-EC', {
     dateStyle: 'medium',
     timeStyle: 'short',
@@ -80,6 +81,7 @@ export default async function AdminPaymentsPage({
                 <StackHead className="pl-4">{t('table.company')}</StackHead>
                 <StackHead>{t('table.what')}</StackHead>
                 <StackHead>{t('table.when')}</StackHead>
+                <StackHead>{t('table.method')}</StackHead>
                 <StackHead>{t('table.proofs')}</StackHead>
                 <StackHead className="text-right">{t('table.total')}</StackHead>
                 <StackHead>{t('table.status')}</StackHead>
@@ -104,6 +106,9 @@ export default async function AdminPaymentsPage({
                   </StackCell>
                   <StackCell label={t('table.when')}>
                     {when.format(row.reportedAt ?? row.verifiedAt ?? row.createdAt)}
+                  </StackCell>
+                  <StackCell label={t('table.method')}>
+                    {row.method ? tMethods(row.method) : '—'}
                   </StackCell>
                   <StackCell label={t('table.proofs')} className="tabular-nums">
                     {row.proofs}

@@ -632,7 +632,7 @@
       "chooseTitle": "Choose a plan",
       "chooseDescription": "You pay the full period; the plan starts the day the payment is confirmed.",
       "chooseSubmit": "Continue to payment",
-      "chosen": "Done. Pay below to activate the plan.",
+      "chosen": "Done. You can pay it now to activate the plan.",
       "changeTitle": "Change plan",
       "changeDescription": "Moving up is charged for the days left and applies once paid. Moving down applies at the end of the period.",
       "changeSubmit": "Confirm the change",
@@ -664,7 +664,7 @@
       "title": "Extra users",
       "description": "Each extra user costs ${price} a month plus VAT.",
       "change": "Change",
-      "summary": "{plan, plural, one {# user} other {# users}} in the plan and {extra, plural, =0 {no extra ones} one {# extra} other {# extra}}.",
+      "summary": "Your plan includes {plan, plural, one {# user} other {# users}}{extra, plural, =0 {.} one { and you pay for # extra.} other { and you pay for # extra.}}",
       "pending": "{seats} extra from {date}",
       "needsPlan": "Available with a paid plan.",
       "changeTitle": "Extra users",
@@ -687,19 +687,19 @@
       "buyDescription": "${price} a month plus VAT, for the days left in the period.",
       "dropTitle": "Remove the module",
       "dropDescription": "You keep it until {date}; the renewal no longer includes it.",
-      "bought": "Done. Pay below to activate it.",
+      "bought": "Done. You can pay it now to activate it.",
       "dropped": "The module leaves at the end of the period"
     },
     "packs": {
       "title": "Document packs",
       "description": "Used once the period's quota runs out, oldest first, and they don't expire.",
-      "left": "{count, plural, =0 {You have no pack documents left.} one {You have # pack document left.} other {You have # pack documents left.}}",
+      "left": "{count, plural, =0 {You have no document packs.} one {You have # document in packs, for when the period's quota runs out.} other {You have # documents in packs, for when the period's quota runs out.}}",
       "size": "{size} documents",
       "price": "${price} plus VAT",
       "buy": "Buy",
       "buyTitle": "Buy a pack",
       "buyDescription": "${price} plus VAT, once. You can pay by transfer or card.",
-      "bought": "Done. Pay below to get the documents."
+      "bought": "Done. You can pay it now to get the documents."
     },
     "history": {
       "title": "Payments",
@@ -2830,7 +2830,8 @@
       "when": "Date",
       "proofs": "Proofs",
       "total": "Total",
-      "status": "Status"
+      "status": "Status",
+      "method": "Method"
     },
     "detail": {
       "title": "Payment",

@@ -632,7 +632,7 @@
       "chooseTitle": "Elegir un plan",
       "chooseDescription": "Pagas el periodo completo; el plan empieza el día que se confirma el pago.",
       "chooseSubmit": "Continuar al pago",
-      "chosen": "Listo. Paga abajo para activar el plan.",
+      "chosen": "Listo. Ya puedes pagarlo para activar el plan.",
       "changeTitle": "Cambiar de plan",
       "changeDescription": "Subir de plan se cobra por los días que quedan y aplica al pagar. Bajar de plan aplica al final del periodo.",
       "changeSubmit": "Confirmar el cambio",
@@ -664,7 +664,7 @@
       "title": "Usuarios adicionales",
       "description": "Cada usuario adicional cuesta ${price} al mes más IVA.",
       "change": "Cambiar",
-      "summary": "{plan, plural, one {# usuario} other {# usuarios}} del plan y {extra, plural, =0 {ninguno adicional} one {# adicional} other {# adicionales}}.",
+      "summary": "Tu plan incluye {plan, plural, one {# usuario} other {# usuarios}}{extra, plural, =0 {.} one { y pagas # adicional.} other { y pagas # adicionales.}}",
       "pending": "{seats} adicionales desde el {date}",
       "needsPlan": "Disponibles con un plan de pago.",
       "changeTitle": "Usuarios adicionales",
@@ -687,19 +687,19 @@
       "buyDescription": "${price} al mes más IVA, por los días que quedan del periodo.",
       "dropTitle": "Quitar el módulo",
       "dropDescription": "Lo mantienes hasta el {date}; la renovación ya no lo incluye.",
-      "bought": "Listo. Paga abajo para activarlo.",
+      "bought": "Listo. Ya puedes pagarlo para activarlo.",
       "dropped": "El módulo sale al final del periodo"
     },
     "packs": {
       "title": "Paquetes de comprobantes",
       "description": "Se usan cuando se acaba el cupo del periodo, el más antiguo primero, y no vencen.",
-      "left": "{count, plural, =0 {No te quedan comprobantes de paquetes.} one {Te queda # comprobante de paquetes.} other {Te quedan # comprobantes de paquetes.}}",
+      "left": "{count, plural, =0 {No tienes paquetes de comprobantes.} one {Tienes # comprobante en paquetes, para cuando se acabe el cupo del periodo.} other {Tienes # comprobantes en paquetes, para cuando se acabe el cupo del periodo.}}",
       "size": "{size} comprobantes",
       "price": "${price} más IVA",
       "buy": "Comprar",
       "buyTitle": "Comprar un paquete",
       "buyDescription": "${price} más IVA, una sola vez. Puedes pagar con transferencia o tarjeta.",
-      "bought": "Listo. Paga abajo para recibir los comprobantes."
+      "bought": "Listo. Ya puedes pagarlo para recibir los comprobantes."
     },
     "history": {
       "title": "Pagos",
@@ -2830,7 +2830,8 @@
       "when": "Fecha",
       "proofs": "Comprobantes",
       "total": "Total",
-      "status": "Estado"
+      "status": "Estado",
+      "method": "Forma de pago"
     },
     "detail": {
       "title": "Pago",

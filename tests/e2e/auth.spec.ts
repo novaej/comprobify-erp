@@ -1916,7 +1916,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(choose).toContainText('Total $79.90 más IVA.');
     await look(page, 'plan-choose');
     await choose.getByRole('button', { name: 'Continuar al pago' }).click();
-    await expect(page.getByText('Listo. Paga abajo para activar el plan.')).toBeVisible();
+    await expect(page.getByText('Listo. Ya puedes pagarlo para activar el plan.')).toBeVisible();
 
     const payment = page.getByRole('region', { name: 'Plan Empresa, mensual' });
     await expect(payment).toContainText('Por pagar');

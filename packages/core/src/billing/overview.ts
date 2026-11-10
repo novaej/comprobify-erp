@@ -27,8 +27,10 @@ export type BillingOverview = {
   plans: (Named & { monthly: string; yearly: string })[];
   addOns: (Named & {
     monthly: string;
-    // Bought and kept, bought and leaving at the period end, or not bought.
+    // Bought and kept, bought and leaving, or not bought.
     state: 'ACTIVE' | 'LEAVING' | 'AVAILABLE';
+    // The Ecuador date a leaving one goes: its own, not the period's (Gratis has none).
+    leavesOn: string | null;
   })[];
   seatMonthly: string | null;
   packs: { size: number; price: string }[];
@@ -102,6 +104,7 @@ export async function billingOverview(ctx: ActorContext, db: Database): Promise<
         ...named(module),
         monthly: price.toFixed(2),
         state: !item ? 'AVAILABLE' : item.removesAt ? 'LEAVING' : 'ACTIVE',
+        leavesOn: item?.removesAt ? ecuadorDate(item.removesAt) : null,
       });
     }
 
