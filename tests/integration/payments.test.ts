@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
+  applyDueRenewal,
   addModule,
   cancelPayment,
   createKeyCipher,
@@ -257,10 +258,22 @@ describe('payments', () => {
     );
     await report(renewal!.id);
     await reviewPayment(operator, db, { paymentId: renewal!.id, decision: 'VERIFIED' });
+    // Paid ahead: the company keeps its period until the next one starts (ADR-035).
+    expect(await subscriptionOf(org.realTenantId)).toMatchObject({
+      start: '2026-11-10',
+      end: '2026-12-10',
+    });
+    const roll = (iso: string) =>
+      db.withSystem('test: the day the period starts', ({ db: tx }) =>
+        applyDueRenewal(tx, org.realTenantId, new Date(iso)),
+      );
+    await expect(roll('2026-12-09T15:00:00Z')).resolves.toBe(false);
+    await expect(roll('2026-12-10T11:00:00Z')).resolves.toBe(true);
     expect(await subscriptionOf(org.realTenantId)).toMatchObject({
       start: '2026-12-10',
       end: '2027-01-10',
     });
+    await expect(roll('2026-12-10T12:00:00Z')).resolves.toBe(false);
 
     const [initial] = (await listPayments(await owner(), db)).filter(
       (row) => row.purpose === 'INITIAL' && row.status === 'VERIFIED',

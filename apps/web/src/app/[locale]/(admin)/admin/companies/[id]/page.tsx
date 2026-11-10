@@ -13,6 +13,7 @@ import { pageTitle } from '@/server/page-title';
 import { loadPlatform } from '@/server/platform';
 import { getRuntime } from '@/server/runtime';
 import { CompanyManager } from './company-manager';
+import { CustomBillingCard } from './custom-billing-card';
 import { SuspensionCard } from './suspension-card';
 
 export const generateMetadata = pageTitle('adminCompany');
@@ -55,6 +56,26 @@ export default async function AdminCompanyPage({
         backHref="/admin"
         backLabel={tNav('companies')}
       />
+      <CustomBillingCard
+        realTenantId={company.realTenantId}
+        state={
+          plan.billing === 'COMPLIMENTARY'
+            ? 'COMPLIMENTARY'
+            : plan.period.pendingCustom
+              ? 'PENDING'
+              : plan.planKey === 'CUSTOM'
+                ? plan.period.periodEnd
+                  ? 'BILLED'
+                  : 'UNBILLED'
+                : plan.period.periodEnd && plan.period.status === 'ACTIVE'
+                  ? 'PAYING'
+                  : 'NONE'
+        }
+        price={plan.negotiatedMonthlyPrice}
+        periodEnd={
+          plan.period.periodEnd ? plan.period.periodEnd.split('-').reverse().join('/') : null
+        }
+      />
       <SuspensionCard
         realTenantId={company.realTenantId}
         suspended={
@@ -67,7 +88,12 @@ export default async function AdminCompanyPage({
       <CompanyManager
         company={{
           realTenantId: company.realTenantId,
-          plan: { key: plan.planKey, name: name(plan.plan), custom: plan.planKey === 'CUSTOM' },
+          // A move to Personalizado pending: its modules, limits and price are set ahead.
+          plan: {
+            key: plan.planKey,
+            name: name(plan.plan),
+            custom: plan.planKey === 'CUSTOM' || plan.period.pendingCustom,
+          },
           billing: {
             complimentary: plan.billing === 'COMPLIMENTARY',
             reason: plan.complimentaryReason,
@@ -81,6 +107,8 @@ export default async function AdminCompanyPage({
             key: module.key,
             name: name(module),
             removesAt: module.removesAt ? date.format(module.removesAt) : null,
+            startsAt: module.startsAt ? date.format(module.startsAt) : null,
+            complimentary: module.complimentaryReason,
           })),
           limits: SHOWN_LIMITS.map((key) => ({
             key,

@@ -1,6 +1,6 @@
 import { and, eq, inArray, isNotNull, isNull, schema, sql, type Tx } from '@comprobify/db';
 import { z } from 'zod';
-import { DomainError } from '../kernel';
+import { DomainError, startOfEcuadorDay } from '../kernel';
 import { FEATURE_KEYS, FEATURES, type FeatureKey } from './features';
 import type { CompanyTenants } from './subscriptions';
 
@@ -28,7 +28,15 @@ export const priceInput = z.object({
     .regex(/^\d{1,10}(\.\d{1,2})?$/)
     .nullable(),
 });
-export const moduleInput = z.object({ moduleKey: z.string().min(1).max(60) });
+export const moduleInput = z.object({
+  moduleKey: z.string().min(1).max(60),
+  // Given without charge, and why (ADR-035).
+  complimentaryReason: z.string().trim().min(3).max(300).nullable().optional(),
+});
+export const complimentaryInput = z.object({
+  moduleKey: z.string().min(1).max(60),
+  reason: z.string().trim().min(3).max(300).nullable(),
+});
 export const limitInput = z.object({ featureKey: z.enum(LIMIT_KEYS), value: limitValue });
 export const clearLimitInput = z.object({ featureKey: z.enum(LIMIT_KEYS) });
 export const overrideInput = z.object({
@@ -44,12 +52,14 @@ export const clearOverrideInput = z.object({
 const tenantsOf = (company: CompanyTenants) => [company.realTenantId, company.twinTenantId];
 
 type Subscription = { id: string; tenantId: string; planId: string; planKey: string };
+// A move to Personalizado due at the period end: what the operator sets now starts with it.
+type Pending = { custom: boolean; startsAt: Date | null };
 
 // The real company's subscription; the twin's mirrors it.
 async function subscriptionsOf(
   tx: Tx['db'],
   company: CompanyTenants,
-): Promise<{ real: Subscription; all: Subscription[] }> {
+): Promise<{ real: Subscription; all: Subscription[]; pending: Pending }> {
   const { subscriptions, plans } = schema;
   const rows = await tx
     .select({
@@ -63,12 +73,24 @@ async function subscriptionsOf(
     .where(inArray(subscriptions.tenantId, tenantsOf(company)));
   const real = rows.find((row) => row.tenantId === company.realTenantId);
   if (!real || rows.length !== 2) throw new Error('Company or twin has no subscription');
-  return { real, all: rows };
+  return { real, all: rows, pending: await pendingOf(tx, company.realTenantId) };
+}
+
+async function pendingOf(tx: Tx['db'], realTenantId: string): Promise<Pending> {
+  const { subscriptions, plans } = schema;
+  const [row] = await tx
+    .select({ key: plans.key, periodEnd: subscriptions.periodEnd })
+    .from(subscriptions)
+    .innerJoin(plans, eq(plans.id, subscriptions.pendingPlanId))
+    .where(eq(subscriptions.tenantId, realTenantId));
+  return row?.key === CUSTOM_PLAN_KEY && row.periodEnd
+    ? { custom: true, startsAt: startOfEcuadorDay(row.periodEnd) }
+    : { custom: false, startsAt: null };
 }
 
 async function requireCustom(tx: Tx['db'], company: CompanyTenants): Promise<void> {
-  const { real } = await subscriptionsOf(tx, company);
-  if (real.planKey !== CUSTOM_PLAN_KEY)
+  const { real, pending } = await subscriptionsOf(tx, company);
+  if (real.planKey !== CUSTOM_PLAN_KEY && !pending.custom)
     throw new DomainError('NOT_CUSTOM_PLAN', 'Only Personalizado takes its own limits and price');
 }
 
@@ -163,18 +185,21 @@ export async function applyAddModule(
   // A coming-soon module can't be bought on its own (ADR-011).
   if (module.status !== 'AVAILABLE' || module.isBase)
     throw new DomainError('MODULE_NOT_AVAILABLE', 'That module can not be added');
-  const { real, all } = await subscriptionsOf(tx, company);
+  const { real, all, pending } = await subscriptionsOf(tx, company);
   const { planModules, subscriptionItems } = schema;
-  const [inPlan] = await tx
-    .select({ moduleId: planModules.moduleId })
-    .from(planModules)
-    .where(
-      and(
-        eq(planModules.planId, real.planId),
-        eq(planModules.moduleId, module.id),
-        isNull(planModules.removesAt),
-      ),
-    );
+  // Moving to Personalizado, a module of today's plan may be one it keeps.
+  const [inPlan] = pending.custom
+    ? []
+    : await tx
+        .select({ moduleId: planModules.moduleId })
+        .from(planModules)
+        .where(
+          and(
+            eq(planModules.planId, real.planId),
+            eq(planModules.moduleId, module.id),
+            isNull(planModules.removesAt),
+          ),
+        );
   if (inPlan) throw new DomainError('MODULE_IN_PLAN', 'The plan already includes that module');
   for (const subscription of all) {
     const [item] = await tx
@@ -200,6 +225,9 @@ export async function applyAddModule(
         subscriptionId: subscription.id,
         kind: 'MODULE',
         moduleId: module.id,
+        startsAt: pending.startsAt,
+        complimentary: Boolean(input.complimentaryReason),
+        complimentaryReason: input.complimentaryReason ?? null,
       });
   }
   return { nameEs: module.nameEs, nameEn: module.nameEn };
@@ -241,7 +269,7 @@ export async function applyLimit(
 ): Promise<void> {
   const input = limitInput.parse(raw);
   await requireCustom(tx, company);
-  const { all } = await subscriptionsOf(tx, company);
+  const { all, pending } = await subscriptionsOf(tx, company);
   const { subscriptionItems } = schema;
   for (const subscription of all) {
     await deactivateLimit(tx, subscription.id, input.featureKey);
@@ -251,6 +279,7 @@ export async function applyLimit(
       kind: 'LIMIT',
       featureKey: input.featureKey,
       limitValue: input.value,
+      startsAt: pending.startsAt,
     });
   }
 }
@@ -431,4 +460,34 @@ export async function applyDropLeavingAddOns(tx: Tx['db'], company: CompanyTenan
         isNotNull(subscriptionItems.removesAt),
       ),
     );
+}
+
+// ADR-035: an add-on the operator gives without charge, or charges again; the company and its twin.
+export async function applyComplimentary(
+  tx: Tx['db'],
+  company: CompanyTenants,
+  raw: z.input<typeof complimentaryInput>,
+): Promise<Named> {
+  const input = complimentaryInput.parse(raw);
+  const module = await moduleByKey(tx, input.moduleKey);
+  const { subscriptionItems } = schema;
+  const updated = await tx
+    .update(subscriptionItems)
+    .set({
+      complimentary: input.reason !== null,
+      complimentaryReason: input.reason,
+      updatedAt: sql`now()`,
+    })
+    .where(
+      and(
+        inArray(subscriptionItems.tenantId, tenantsOf(company)),
+        eq(subscriptionItems.moduleId, module.id),
+        eq(subscriptionItems.kind, 'MODULE'),
+        eq(subscriptionItems.active, true),
+      ),
+    )
+    .returning({ id: subscriptionItems.id });
+  if (updated.length === 0)
+    throw new DomainError('MODULE_NOT_ADDED', 'The company has not added that module');
+  return { nameEs: module.nameEs, nameEn: module.nameEn };
 }

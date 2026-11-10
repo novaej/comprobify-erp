@@ -107,6 +107,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - The company's plan page becomes Plan y pagos: choose a paid plan or change it with its price shown first, extra users, add-on modules, document packs, cancel and resume; each open payment is paid by transfer, with the operator's account (`BANK_TRANSFER_*`) and a proof upload, or by card through Payphone's widget, whose return page confirms as it loads; the payment history. A banner across the app says when the company is past due or suspended (FR-BILL-1, FR-BILL-3, FR-BILL-5, FR-BILL-7, FR-BILL-9).
 - The platform's billing screens (migration 0056): Pagos lists transfers to review and opens each with every proof shown, to verify, reject with a reason or refund; Por facturar lists verified payments until the operator records its invoice by access key (an authorized factura for the company's RUC and the payment's total); Cobros con tarjeta lists duplicate and mismatched card charges until settled with a note; a company is suspended with a reason and reactivated from its page (FR-ADM-1, FR-ADM-2, FR-BILL-4, FR-BILL-9).
 - Milestone 8 gate test: one company through Emprende by transfer with its invoice recorded, a prorated upgrade and an extra user by card, a renewal paid in the grace on its old billing day, then an unpaid one through grace, past due and Gratis, on a fake clock. The owner's Payphone test card run is a checklist in `docs/guides/payphone-test-card.md`.
+- Personalizado is billed at its negotiated price (migration 0058, ADR-035): the operator starts its first period, or moves a paying company to it, now with the difference prorated if it costs more, at the period end if it costs the same or less, with the modules and limits set meanwhile starting on that date. Renewals charge the negotiated price; a new price re-prices an unpaid renewal and emails the payer. Add-ons can be given as complimentary, never charged (FR-PLAN-1a, FR-BILL-5).
 
 ### Changed
 
@@ -117,6 +118,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Fixed
 
+- A renewal paid before its period starts no longer applies what was due at the end straight away: the company keeps the plan it paid for until then, and the daily job moves it on that day (ADR-035).
 - A paid plan started while the operator's removal of an add-on is still pending no longer charges that add-on, and the add-on goes as soon as the first payment is verified, instead of staying free until its old date (ADR-030).
 - The RIDE draws a line under the last payment row (FR-DOC-10, ADR-015).
 - A RIMPE negocio popular company can issue invoices: its legend, `CONTRIBUYENTE NEGOCIO POPULAR - RÉGIMEN RIMPE`, is added to the bundled factura XSD's pattern, which SRI publishes with the emprendedor legend only (ADR-013).

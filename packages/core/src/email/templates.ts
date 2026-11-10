@@ -15,6 +15,8 @@ export const emailTemplate = z.enum([
   'movedToFree',
   // ADR-034: a new IVA rate changed an unpaid payment's total.
   'paymentRepriced',
+  // ADR-035: the operator changed what the next period costs.
+  'renewalRepriced',
 ]);
 export type EmailTemplate = z.output<typeof emailTemplate>;
 
@@ -80,6 +82,13 @@ const COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       footer:
         'Si ya enviaste el comprobante de una transferencia, no cambia: lo estamos revisando.',
     },
+    renewalRepriced: {
+      subject: 'Cambió el valor de la renovación de {organization}',
+      heading: 'Tu renovación tiene un nuevo valor',
+      body: 'Desde el {date}, la renovación de tu plan es de {amount}, IVA incluido, como acordamos contigo. Si pagas por transferencia, transfiere este nuevo valor.',
+      button: 'Ver el pago',
+      footer: 'Si tienes preguntas sobre este valor, responde a quien te atiende en Comprobify.',
+    },
   },
   en: {
     verifyEmail: {
@@ -137,6 +146,13 @@ const COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       body: 'Since {date}, VAT is {rate}. Your open payment is now {amount}, VAT included. If you pay by transfer, transfer this new amount.',
       button: 'View the payment',
       footer: "If you already sent a transfer's proof, it doesn't change: we're reviewing it.",
+    },
+    renewalRepriced: {
+      subject: "{organization}'s renewal has a new amount",
+      heading: 'Your renewal has a new amount',
+      body: 'Since {date}, your plan renews for {amount}, VAT included, as agreed with you. If you pay by transfer, transfer this new amount.',
+      button: 'View the payment',
+      footer: 'If you have questions about this amount, reply to your contact at Comprobify.',
     },
   },
 };

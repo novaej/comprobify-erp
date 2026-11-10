@@ -21,6 +21,7 @@ import {
   applyAddModule,
   applyDropAddOn,
   applyDropLeavingAddOns,
+  CUSTOM_PLAN_KEY,
   applySubscriptionTerm,
   periodEndFrom,
   type CompanyTenants,
@@ -210,6 +211,21 @@ export async function monthlyCharge(
 ): Promise<{ total: Dec; lines: { kind: string; key: string; monthly: string }[] }> {
   const { planId, on } = input;
   const [plan] = await tx.select().from(schema.plans).where(eq(schema.plans.id, planId));
+  // ADR-035: Personalizado is the price negotiated with the company, and its modules and users
+  // are the deal, so nothing is charged on top.
+  if (plan?.key === CUSTOM_PLAN_KEY) {
+    const [subscription] = await tx
+      .select({ price: schema.subscriptions.negotiatedMonthlyPrice })
+      .from(schema.subscriptions)
+      .where(eq(schema.subscriptions.id, input.subscriptionId));
+    if (!subscription?.price)
+      throw new DomainError('NO_NEGOTIATED_PRICE', 'Personalizado has no negotiated price yet');
+    const negotiated = new Dec(subscription.price);
+    return {
+      total: negotiated,
+      lines: [{ kind: 'PLAN', key: plan.key, monthly: negotiated.toFixed(2) }],
+    };
+  }
   const planPrice = await priceOn(tx, { kind: 'PLAN', planId }, on);
   if (!plan || planPrice === null) throw new DomainError('PLAN_NOT_SOLD', 'That plan has no price');
   const lines = [{ kind: 'PLAN', key: plan.key, monthly: planPrice.toFixed(2) }];
@@ -225,6 +241,8 @@ export async function monthlyCharge(
     .select({
       moduleId: schema.subscriptionItems.moduleId,
       removesAt: schema.subscriptionItems.removesAt,
+      startsAt: schema.subscriptionItems.startsAt,
+      complimentary: schema.subscriptionItems.complimentary,
       key: schema.modules.key,
     })
     .from(schema.subscriptionItems)
@@ -239,8 +257,15 @@ export async function monthlyCharge(
   const end = startOfEcuadorDay(input.until);
   let total = planPrice;
   for (const addOn of addOns) {
-    // Leaving during the period, or part of the plan: not charged.
-    if ((addOn.removesAt && addOn.removesAt < end) || inPlan.has(addOn.moduleId!)) continue;
+    // Leaving during the period, part of the plan, given by the operator, or due with a move to
+    // Personalizado: not charged.
+    if (
+      (addOn.removesAt && addOn.removesAt < end) ||
+      inPlan.has(addOn.moduleId!) ||
+      addOn.complimentary ||
+      (addOn.startsAt && addOn.startsAt > startOfEcuadorDay(on))
+    )
+      continue;
     const price = await priceOn(tx, { kind: 'MODULE', moduleId: addOn.moduleId! }, on);
     if (price === null) continue;
     total = total.add(price);
@@ -290,43 +315,67 @@ export async function startPaidPlan(
       .where(eq(schema.plans.key, input.planKey));
     if (!plan || plan.status !== 'PUBLISHED' || !plan.selfService)
       throw new DomainError('PLAN_NOT_SOLD', 'That plan is not sold');
-    const open = await tx.db
-      .select({ id: schema.payments.id })
-      .from(schema.payments)
-      .where(and(eq(schema.payments.tenantId, tenantId), inArray(schema.payments.status, OPEN)));
-    if (open.length > 0)
-      throw new DomainError('PAYMENT_IN_PROGRESS', 'Another payment is still open');
-    const monthly = await monthlyCharge(tx.db, {
-      subscriptionId: subscription.id,
-      planId: plan.id,
-      seats: subscription.extraSeats,
-      on: today,
-      until: periodEndFrom(today, input.interval),
+    const row = await openInitialPayment(tx.db, {
+      subscription,
+      plan,
+      interval: input.interval,
+      today,
+      createdBy: ctx.userId ?? null,
     });
-    if (!monthly.total.gt(0)) throw new DomainError('PLAN_NOT_SOLD', 'That plan costs nothing');
-    const months = input.interval === 'YEARLY' ? YEARLY_MONTHS : 1;
-    const [row] = await tx.db
-      .insert(schema.payments)
-      .values({
-        tenantId,
-        subscriptionId: subscription.id,
-        code: paymentCode(),
-        purpose: 'INITIAL',
-        ...amountsOf(monthly.total.mul(months), await ivaRateOn(tx.db, today)),
-        targetPlanId: plan.id,
-        targetInterval: input.interval,
-        pricing: { lines: monthly.lines, months, on: today },
-        createdBy: ctx.userId ?? null,
-      })
-      .returning();
-    await recordAudit(tx.db, {
-      tenantId,
-      actorUserId: ctx.userId ?? null,
-      action: 'payment.created',
-      details: { code: row!.code, purpose: 'INITIAL', plan: plan.key, interval: input.interval },
-    });
-    return (await viewsOf(tx.db, [row!]))[0]!;
+    return (await viewsOf(tx.db, [row]))[0]!;
   });
+}
+
+// The first payment of a paid period, for the company's choice or the operator's Personalizado
+// (ADR-035), in the caller's transaction. One open payment at a time.
+export async function openInitialPayment(
+  tx: Tx['db'],
+  input: {
+    subscription: SubscriptionRow;
+    plan: { id: string; key: string };
+    interval: 'MONTHLY' | 'YEARLY';
+    today: string;
+    createdBy: string | null;
+  },
+): Promise<PaymentRow> {
+  const { subscription, plan, interval, today } = input;
+  const tenantId = subscription.tenantId;
+  const open = await tx
+    .select({ id: schema.payments.id })
+    .from(schema.payments)
+    .where(and(eq(schema.payments.tenantId, tenantId), inArray(schema.payments.status, OPEN)));
+  if (open.length > 0)
+    throw new DomainError('PAYMENT_IN_PROGRESS', 'Another payment is still open');
+  const monthly = await monthlyCharge(tx, {
+    subscriptionId: subscription.id,
+    planId: plan.id,
+    seats: subscription.extraSeats,
+    on: today,
+    until: periodEndFrom(today, interval),
+  });
+  if (!monthly.total.gt(0)) throw new DomainError('PLAN_NOT_SOLD', 'That plan costs nothing');
+  const months = interval === 'YEARLY' ? YEARLY_MONTHS : 1;
+  const [row] = await tx
+    .insert(schema.payments)
+    .values({
+      tenantId,
+      subscriptionId: subscription.id,
+      code: paymentCode(),
+      purpose: 'INITIAL',
+      ...amountsOf(monthly.total.mul(months), await ivaRateOn(tx, today)),
+      targetPlanId: plan.id,
+      targetInterval: interval,
+      pricing: { lines: monthly.lines, months, on: today },
+      createdBy: input.createdBy,
+    })
+    .returning();
+  await recordAudit(tx, {
+    tenantId,
+    actorUserId: input.createdBy,
+    action: 'payment.created',
+    details: { code: row!.code, purpose: 'INITIAL', plan: plan.key, interval },
+  });
+  return row!;
 }
 
 // The renewal of a billed period, at the prices on the day the next period starts (FR-BILL-6),
@@ -356,6 +405,8 @@ export async function openRenewal(
       ),
     );
   if (open) return null;
+  // Paid ahead: nothing more is owed for the next period.
+  if (await paidRenewalFor(tx, tenantId, subscription.periodEnd)) return null;
   const interval = subscription.pendingInterval ?? subscription.interval;
   const monthly = await monthlyCharge(tx, {
     subscriptionId: subscription.id,
@@ -738,6 +789,14 @@ export const termOf = (row: SubscriptionRow): SubscriptionTerm => ({
 
 const NOTHING_PENDING = { pendingPlanId: null, pendingInterval: null, pendingSeats: null };
 
+async function isCustom(tx: Tx['db'], planId: string): Promise<boolean> {
+  const [plan] = await tx
+    .select({ key: schema.plans.key })
+    .from(schema.plans)
+    .where(eq(schema.plans.id, planId));
+  return plan?.key === CUSTOM_PLAN_KEY;
+}
+
 // What a change does to the subscription, paid or free (ADR-029, ADR-030).
 export type Change = Pick<
   PaymentRow,
@@ -779,12 +838,15 @@ export async function applyChange(
       // From the old end, never today: a late payment never moves the billing day. What was
       // due at the end comes with it, as the renewal was priced.
       const interval = current.pendingInterval ?? current.interval;
+      const toCustom =
+        current.pendingPlanId !== null && (await isCustom(tx, current.pendingPlanId));
       term = {
         ...current,
         ...NOTHING_PENDING,
         planId: current.pendingPlanId ?? current.planId,
         interval,
-        extraSeats: current.pendingSeats ?? current.extraSeats,
+        // On Personalizado the operator sets the users; extra ones aren't sold (ADR-035).
+        extraSeats: toCustom ? 0 : (current.pendingSeats ?? current.extraSeats),
         status: 'ACTIVE',
         periodStart: current.periodEnd,
         periodEnd: periodEndFrom(current.periodEnd, interval),
@@ -805,7 +867,14 @@ export async function applyChange(
               periodEnd: periodEndFrom(today, change.targetInterval!),
             }
           : // An upgrade in the same period; any lower plan due at its end is dropped.
-            { ...current, planId: change.targetPlanId!, pendingPlanId: null };
+            {
+              ...current,
+              planId: change.targetPlanId!,
+              pendingPlanId: null,
+              ...((await isCustom(tx, change.targetPlanId!))
+                ? { extraSeats: 0, pendingSeats: null }
+                : {}),
+            };
       break;
     case 'SEAT_CHANGE':
       term = { ...current, extraSeats: change.targetSeats!, pendingSeats: null };
@@ -844,6 +913,22 @@ export async function applyVerifiedPayment(
       .where(eq(schema.payments.id, payment.id));
     return current;
   }
+  // A renewal paid before its period starts waits for it: until then the company keeps the
+  // plan it paid for, and the daily job moves it on that day (applyDueRenewal).
+  if (payment.purpose === 'RENEWAL') {
+    const current = termOf(await subscriptionOf(tx, payment.tenantId));
+    if (current.periodEnd && ecuadorDate(now) < current.periodEnd) {
+      await tx
+        .update(schema.payments)
+        .set({
+          appliedFrom: snapshotOf(current),
+          periodStart: current.periodEnd,
+          periodEnd: periodEndFrom(current.periodEnd, current.pendingInterval ?? current.interval),
+        })
+        .where(eq(schema.payments.id, payment.id));
+      return current;
+    }
+  }
   const { before, term } = await applyChange(tx, payment.tenantId, payment, now);
   if (payment.purpose === 'TIER_CHANGE' && term.periodStart !== before.periodStart)
     await dropOpenRenewal(tx, payment.tenantId, now);
@@ -857,6 +942,33 @@ export async function applyVerifiedPayment(
     })
     .where(eq(schema.payments.id, payment.id));
   return term;
+}
+
+// The renewal already paid for the period that starts on the subscription's end, if any.
+export async function paidRenewalFor(tx: Tx['db'], tenantId: string, periodStart: string) {
+  const [row] = await tx
+    .select()
+    .from(schema.payments)
+    .where(
+      and(
+        eq(schema.payments.tenantId, tenantId),
+        eq(schema.payments.purpose, 'RENEWAL'),
+        eq(schema.payments.status, 'VERIFIED'),
+        eq(schema.payments.periodStart, periodStart),
+      ),
+    );
+  return row ?? null;
+}
+
+// The daily job, on the day a period starts: a renewal paid ahead moves the subscription on,
+// with what was due at the end. True when it did.
+export async function applyDueRenewal(tx: Tx['db'], tenantId: string, now: Date): Promise<boolean> {
+  const subscription = await subscriptionOf(tx, tenantId);
+  if (!subscription.periodEnd || ecuadorDate(now) < subscription.periodEnd) return false;
+  const paid = await paidRenewalFor(tx, tenantId, subscription.periodEnd);
+  if (!paid) return false;
+  await applyChange(tx, tenantId, paid, now);
+  return true;
 }
 
 export const reviewPaymentInput = z.discriminatedUnion('decision', [

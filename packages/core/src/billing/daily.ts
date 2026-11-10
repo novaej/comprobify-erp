@@ -17,12 +17,20 @@ import {
   DEFAULT_PLAN_KEY,
   type CompanyTenants,
 } from '../entitlements';
-import type { EmailTemplate } from '../email';
 import type { Jobs } from '../jobs';
 import { addDays, Dec, ecuadorDate, type Clock } from '../kernel';
-import { billingContacts, companyRow } from '../tenancy';
+import { companyRow } from '../tenancy';
 import { ivaRateOn } from './iva';
-import { amountsOf, lockPayment, OPEN, openRenewal, subscriptionOf, termOf } from './payments';
+import { notifyBilling } from './notify';
+import {
+  amountsOf,
+  applyDueRenewal,
+  lockPayment,
+  OPEN,
+  openRenewal,
+  subscriptionOf,
+  termOf,
+} from './payments';
 
 // FR-BILL-5 (ADR-032): the renewal cycle, once a day. Each step reads the subscription as it is
 // now and does only what is still due, so a second run, or a run after missed days, is harmless
@@ -56,33 +64,7 @@ export type BillingDayResult = {
 
 type Step = Exclude<keyof BillingDayResult, 'repriced'>;
 
-const formatDate = (date: string, locale: 'es' | 'en') =>
-  new Intl.DateTimeFormat(locale === 'es' ? 'es-EC' : 'en-US', {
-    dateStyle: 'long',
-    timeZone: 'UTC',
-  }).format(new Date(`${date}T12:00:00Z`));
-
-async function notify(
-  tx: Tx,
-  deps: BillingDayDeps,
-  realTenantId: string,
-  email: { template: EmailTemplate; date: string; amount: string | null; rate?: string },
-): Promise<void> {
-  const company = await companyRow(tx.db, realTenantId);
-  for (const contact of await billingContacts(tx.db, realTenantId))
-    await deps.jobs.enqueue(tx, 'email.send', {
-      to: contact.email,
-      locale: contact.locale,
-      template: email.template,
-      params: {
-        url: `${deps.appUrl}/${contact.locale}/plan`,
-        organization: company.name,
-        date: formatDate(email.date, contact.locale),
-        ...(email.amount ? { amount: `$${email.amount}` } : {}),
-        ...(email.rate ? { rate: `${new Dec(email.rate).toString()} %` } : {}),
-      },
-    });
-}
+const notify = notifyBilling;
 
 async function openRenewalOf(tx: Tx['db'], tenantId: string) {
   const [row] = await tx
@@ -103,6 +85,8 @@ async function runCompany(deps: BillingDayDeps, realTenantId: string): Promise<S
   const now = deps.clock.now();
   const today = ecuadorDate(now);
   return deps.db.withSystem('billing: the daily renewal cycle', async (tx) => {
+    // A renewal paid ahead starts its period today, with what was due at the end (ADR-035).
+    if (await applyDueRenewal(tx.db, realTenantId, now)) return null;
     const subscription = await subscriptionOf(tx.db, realTenantId);
     const end = subscription.periodEnd;
     if (subscription.billing === 'COMPLIMENTARY' || end === null) return null;

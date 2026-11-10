@@ -421,7 +421,10 @@
         "renewal_due": "opened the renewal payment",
         "grace_started": "warned that the renewal is unpaid",
         "past_due": "marked the subscription past due",
-        "moved_to_free": "moved the company to the Free plan"
+        "moved_to_free": "moved the company to the Free plan",
+        "custom_billing_started": "started billing Custom",
+        "moved_to_custom": "moved the company to Custom",
+        "module_complimentary": "changed a module's complimentary setting"
       },
       "entitlements": {
         "override_set": "set an exception for",
@@ -654,7 +657,8 @@
       "cancelTitle": "Cancel the subscription",
       "cancelDescription": "You keep everything until {date}; then the company moves to the Free plan. You can change your mind until then.",
       "cancelled": "Subscription cancelled",
-      "finishPayment": "Finish or cancel the open payment before asking for another change."
+      "finishPayment": "Finish or cancel the open payment before asking for another change.",
+      "managed": "Comprobify manages your Custom plan. Write to us to change it."
     },
     "seats": {
       "title": "Extra users",
@@ -830,6 +834,32 @@
         "UNPAID_BALANCE": "Unpaid balance",
         "OTHER": "Other"
       }
+    },
+    "startsWithCustom": "With Custom from {date}",
+    "complimentaryAddOn": "Complimentary",
+    "complimentaryAddOnHint": "Not charged: no renewal or paid plan bills it.",
+    "complimentaryFor": "Complimentary {name}",
+    "complimentaryDescription": "A complimentary module isn't charged; without it, the module is charged from the next renewal.",
+    "complimentarySaved": "Complimentary setting saved.",
+    "customBilling": {
+      "title": "Custom billing",
+      "noPrice": "Set the negotiated price to bill it.",
+      "unbilled": "No paid period. Starting billing gives the company a payment of ${price} a month plus VAT, by transfer or card.",
+      "billed": "Billed ${price} a month plus VAT; the current period ends on {date}.",
+      "paying": "The company pays for a plan. Moving it to Custom charges the difference now if it costs more, or switches it at the period end if it costs the same or less.",
+      "pending": "Moves to Custom on {date} for ${price} a month plus VAT. The modules and limits you set now start that day.",
+      "pendingBadge": "From {date}",
+      "start": "Start billing",
+      "startTitle": "Start billing Custom",
+      "startDescription": "The first payment is created, ${price} a month plus VAT; the period starts the day it's confirmed.",
+      "interval": "Billing",
+      "started": "Payment created. The company sees it in Plan and payments.",
+      "move": "Move to Custom",
+      "moveTitle": "Move to Custom",
+      "moveDescription": "At the negotiated price: higher than what it pays now, the difference for the days left is charged now; the same or lower, it keeps its plan until the period ends.",
+      "price": "Negotiated monthly price, before VAT",
+      "priceHint": "For example, 149.90.",
+      "moved": "Change recorded."
     }
   },
   "adminError": {
@@ -837,7 +867,7 @@
     "NOT_FOUND": "Company not found.",
     "PLAN_NOT_AVAILABLE": "That plan isn't published.",
     "SAME_PLAN": "The company is already on that plan.",
-    "NOT_CUSTOM_PLAN": "Only Custom has its own limits and price.",
+    "NOT_CUSTOM_PLAN": "The company isn't on Custom.",
     "MODULE_NOT_FOUND": "No such module.",
     "MODULE_NOT_AVAILABLE": "That module can't be added.",
     "MODULE_IN_PLAN": "The plan already includes that module.",
@@ -859,7 +889,14 @@
     "INVOICE_BUYER_MISMATCH": "That invoice isn't for this company's RUC.",
     "INVOICE_TOTAL_MISMATCH": "That invoice's total doesn't match the payment's.",
     "INVOICE_ALREADY_USED": "That invoice is already recorded for another payment.",
-    "CARD_NOT_TO_RESOLVE": "That charge needs nothing more."
+    "CARD_NOT_TO_RESOLVE": "That charge needs nothing more.",
+    "NO_NEGOTIATED_PRICE": "Set the negotiated price first.",
+    "ALREADY_BILLED": "The company already has a paid period.",
+    "NOT_BILLED": "The company isn't paying an active period.",
+    "SUBSCRIPTION_COMPLIMENTARY": "The company is complimentary: it isn't charged.",
+    "PAYMENT_IN_PROGRESS": "The company has another open payment.",
+    "RENEWAL_ALREADY_PAID": "The company already paid the next period; make the change once it starts.",
+    "RENEWAL_IN_REVIEW": "The renewal is in review; settle it first."
   },
   "pageTitles": {
     "login": "Sign in",
@@ -2776,7 +2813,10 @@
     "PAYMENT_IN_REVIEW": "We're reviewing your transfer; wait until we're done.",
     "CARD_NOT_AVAILABLE": "Card payments aren't available. Pay by transfer.",
     "CARD_AMOUNT_TOO_LOW": "The card minimum is $1.00. Pay this one by transfer.",
-    "CARD_TOO_MANY_ATTEMPTS": "There are several unresolved card attempts. Wait a few minutes or pay by transfer."
+    "CARD_TOO_MANY_ATTEMPTS": "There are several unresolved card attempts. Wait a few minutes or pay by transfer.",
+    "CUSTOM_PLAN_MANAGED": "Comprobify manages your plan. Write to us to change it.",
+    "RENEWAL_ALREADY_PAID": "You already paid the next period; make the change once it starts.",
+    "NO_NEGOTIATED_PRICE": "Your plan has no price yet. Write to us."
   },
   "adminPayments": {
     "title": "Payments",

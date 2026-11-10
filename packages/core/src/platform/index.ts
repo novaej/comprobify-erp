@@ -6,6 +6,7 @@ import {
   applyBilling,
   applyClearLimit,
   applyClearOverride,
+  applyComplimentary,
   applyLimit,
   applyNegotiatedPrice,
   applyOverride,
@@ -20,6 +21,7 @@ import {
   type CompanyTenants,
   type SubscriptionSummary,
 } from '../entitlements';
+import { repriceAndTell, type BillingNotice } from '../billing';
 import { assertSuperAdmin } from '../identity';
 import { startOfEcuadorDay, type PlatformActor } from '../kernel';
 import {
@@ -87,13 +89,18 @@ async function change(
   db: Database,
   realTenantId: string,
   reason: string,
-  fn: (tx: Tx['db'], company: CompanyTenants) => Promise<Change>,
+  fn: (tx: Tx['db'], company: CompanyTenants, txAll: Tx) => Promise<Change>,
 ): Promise<void> {
   await assertSuperAdmin(db.identity, actor);
   const id = tenantId.parse(realTenantId);
-  await db.withSystem(reason, async ({ db: tx }) => {
+  await db.withSystem(reason, async (txAll) => {
+    const tx = txAll.db;
     const row = await companyRow(tx, id);
-    const event = await fn(tx, { realTenantId: row.realTenantId, twinTenantId: row.twinTenantId });
+    const event = await fn(
+      tx,
+      { realTenantId: row.realTenantId, twinTenantId: row.twinTenantId },
+      txAll,
+    );
     await recordAudit(tx, { tenantId: row.realTenantId, actorUserId: actor.userId, ...event });
   });
 }
@@ -139,22 +146,58 @@ export const setNegotiatedPrice = (
   actor: PlatformActor,
   db: Database,
   input: { realTenantId: string; monthlyPrice: string | null },
+  // ADR-035: a renewal not paid yet is priced again at the new price, and the payer told.
+  notice: BillingNotice,
 ) =>
-  change(actor, db, input.realTenantId, 'super admin: set a negotiated price', async (tx, c) => {
-    await applyNegotiatedPrice(tx, c, input);
-    return { action: 'subscription.price_changed', details: { monthlyPrice: input.monthlyPrice } };
-  });
+  change(
+    actor,
+    db,
+    input.realTenantId,
+    'super admin: set a negotiated price',
+    async (tx, c, txAll) => {
+      await applyNegotiatedPrice(tx, c, input);
+      await repriceAndTell(txAll, c.realTenantId, actor.clock.now(), notice);
+      return {
+        action: 'subscription.price_changed',
+        details: { monthlyPrice: input.monthlyPrice },
+      };
+    },
+  );
 
 export const addModule = (
   actor: PlatformActor,
   db: Database,
-  input: { realTenantId: string; moduleKey: string },
+  input: { realTenantId: string; moduleKey: string; complimentaryReason?: string | null },
 ) =>
   change(actor, db, input.realTenantId, 'super admin: add a module to a company', async (tx, c) => {
     const module = await applyAddModule(tx, c, input);
     return {
       action: 'subscription.module_added',
-      details: { module: input.moduleKey, moduleEs: module.nameEs, moduleEn: module.nameEn },
+      details: {
+        module: input.moduleKey,
+        moduleEs: module.nameEs,
+        moduleEn: module.nameEn,
+        complimentary: input.complimentaryReason ?? null,
+      },
+    };
+  });
+
+// ADR-035: an add-on given without charge (a reason), or charged again (null).
+export const setAddOnComplimentary = (
+  actor: PlatformActor,
+  db: Database,
+  input: { realTenantId: string; moduleKey: string; reason: string | null },
+) =>
+  change(actor, db, input.realTenantId, 'super admin: give or charge an add-on', async (tx, c) => {
+    const module = await applyComplimentary(tx, c, input);
+    return {
+      action: 'subscription.module_complimentary',
+      details: {
+        module: input.moduleKey,
+        moduleEs: module.nameEs,
+        moduleEn: module.nameEn,
+        reason: input.reason,
+      },
     };
   });
 

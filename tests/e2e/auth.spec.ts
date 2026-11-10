@@ -2018,6 +2018,13 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
       .getByRole('button', { name: 'Reactivar' })
       .click();
     await expect(page.getByText('Empresa reactivada.')).toBeVisible();
+    // ADR-035: a paying company can be moved to Personalizado from here.
+    await expect(page.getByRole('heading', { name: 'Cobro de Personalizado' })).toBeVisible();
+    await page.getByRole('button', { name: 'Pasar a Personalizado' }).click();
+    const move = page.getByRole('dialog', { name: 'Pasar a Personalizado' });
+    await expect(move.getByLabel('Precio negociado al mes, sin IVA')).toBeVisible();
+    await look(page, 'admin-move-to-custom');
+    await move.getByRole('button', { name: 'Cancelar' }).click();
     await page.goto('/es/plan');
     await expect(page.getByRole('alert').filter({ hasText: 'Empresa suspendida' })).toHaveCount(0);
   });

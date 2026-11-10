@@ -257,6 +257,11 @@ export const subscriptionItems = pgTable(
     limitValue: integer('limit_value'),
     // A removed module stays until this period start (ADR-011).
     removesAt: timestamp('removes_at', { withTimezone: true }),
+    // Set for what a move to Personalizado brings: it starts with that plan (ADR-035).
+    startsAt: timestamp('starts_at', { withTimezone: true }),
+    // A module the operator gives without charge: no renewal or plan start bills it (ADR-035).
+    complimentary: boolean('complimentary').default(false).notNull(),
+    complimentaryReason: text('complimentary_reason'),
     active: boolean('active').default(true).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -283,6 +288,10 @@ export const subscriptionItems = pgTable(
           END`,
     ),
     check('subscription_items_value_check', sql`limit_value IS NULL OR limit_value >= 0`),
+    check(
+      'subscription_items_complimentary_check',
+      sql`complimentary = (complimentary_reason IS NOT NULL) AND (NOT complimentary OR kind = 'MODULE')`,
+    ),
     uniqueIndex('subscription_items_active_module')
       .on(table.subscriptionId, table.moduleId)
       .where(sql`active AND kind = 'MODULE'`),

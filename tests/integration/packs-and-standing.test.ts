@@ -236,7 +236,8 @@ describe('document packs and the write block', () => {
       openRenewal(tx, org.realTenantId, clock.now()),
     );
     expect(renewal).not.toBeNull();
-    // What the daily job does after the grace (step 5).
+    // What the daily job does after the grace (step 5), a week after the period ends.
+    clock.set('2026-12-18T15:00:00Z');
     await sql(`UPDATE subscriptions SET status = 'PAST_DUE' WHERE tenant_id = ANY($1)`, [
       [org.realTenantId, org.twinTenantId],
     ]);

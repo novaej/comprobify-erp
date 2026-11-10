@@ -32,6 +32,8 @@ type Named = { nameEs: string; nameEn: string };
 // What the company may ask for. Core decides; a disabled control only says why first.
 export type BillingFlags = {
   canManage: boolean;
+  // Personalizado or moving to it: plan, users and add-ons are the operator's.
+  managed: boolean;
   // A payment of the company's own making is open: one at a time.
   changeOpen: boolean;
   // The quota is unlimited: nothing to top up.
@@ -124,7 +126,7 @@ export function PlanSection({
       {pendingText && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <ToneBadge tone="info">{pendingText}</ToneBadge>
-          {flags.canManage && active && (
+          {flags.canManage && active && !flags.managed && (
             <Button size="sm" variant="ghost" onClick={() => setUndoing(true)}>
               {t('undo')}
             </Button>
@@ -153,7 +155,8 @@ export function PlanSection({
           )}
         </div>
       )}
-      {flags.canManage && paid && plans.length > 0 && (!billed || active) && (
+      {flags.managed && <p className="mt-3 text-sm text-muted-foreground">{t('managed')}</p>}
+      {flags.canManage && !flags.managed && paid && plans.length > 0 && (!billed || active) && (
         <div className="mt-4 flex flex-wrap gap-2">
           <Button
             size="sm"
@@ -268,7 +271,8 @@ export function SeatsSection({
     subscription.billing === 'PAID' &&
     subscription.periodEnd !== null &&
     subscription.status === 'ACTIVE';
-  if (planUsers === null || seatMonthly === null) return null;
+  // On Personalizado the users are part of the deal.
+  if (flags.managed || planUsers === null || seatMonthly === null) return null;
   return (
     <SectionCard
       title={t('title')}
@@ -358,7 +362,8 @@ export function AddOnsSection({
     onDone: () => setActing(null),
   });
   const run = acting?.drop ? drop : buy;
-  if (addOns.length === 0) return null;
+  // On Personalizado the modules are part of the deal.
+  if (flags.managed || addOns.length === 0) return null;
   return (
     <SectionCard title={t('title')} description={active ? t('description') : t('needsPlan')}>
       <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2" aria-label={t('title')}>

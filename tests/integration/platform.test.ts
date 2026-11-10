@@ -25,6 +25,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appDatabase } from './helpers';
 
 // ADR-010, ADR-011, FR-ADM-1, FR-PLAN-1a, FR-PLAN-1b.
+const notice = { jobs: { enqueue: () => Promise.resolve(null) }, appUrl: 'https://app.test' };
+
 describe('super admin: companies and their plans', () => {
   const clock = fixedClock('2026-11-10T15:00:00Z');
   let db: Database;
@@ -123,14 +125,14 @@ describe('super admin: companies and their plans', () => {
     const org = await newCompany();
     const id = { realTenantId: org.realTenantId };
     await expect(
-      setNegotiatedPrice(operator, db, { ...id, monthlyPrice: '99' }),
+      setNegotiatedPrice(operator, db, { ...id, monthlyPrice: '99' }, notice),
     ).rejects.toMatchObject({ code: 'NOT_CUSTOM_PLAN' });
     await changePlan(operator, db, { ...id, planKey: 'CUSTOM' });
     await setLimit(operator, db, { ...id, featureKey: 'USERS', value: 7 });
     await setLimit(operator, db, { ...id, featureKey: 'DOCUMENT_QUOTA', value: null });
-    await setNegotiatedPrice(operator, db, { ...id, monthlyPrice: '149.90' });
+    await setNegotiatedPrice(operator, db, { ...id, monthlyPrice: '149.90' }, notice);
     await expect(
-      setNegotiatedPrice(operator, db, { ...id, monthlyPrice: '12.345' }),
+      setNegotiatedPrice(operator, db, { ...id, monthlyPrice: '12.345' }, notice),
     ).rejects.toMatchObject({ name: 'ZodError' });
     expect((await entitlements(org.twinTenantId)).limits).toMatchObject({
       USERS: 7,

@@ -53,11 +53,15 @@ export default defineConfig({
         reuseExistingServer: !process.env.CI,
         timeout: 60_000,
         // The server Playwright starts has the legal texts on, so CI covers acceptance. It
-        // never calls SRI, whatever .env says (ADR-014).
+        // never calls SRI or Payphone, whatever .env says (ADR-014, ADR-033).
         env: {
           ...(process.env as Record<string, string>),
           ...AGREEMENTS_ON,
           SRI_MOCK_MODE: 'true',
+          // Never Payphone, whatever .env says: the flows here pay by transfer (ADR-033).
+          // Blank counts as unset, and a set variable wins over the app's own .env.
+          PAYPHONE_TOKEN: '',
+          PAYPHONE_STORE_ID: '',
         },
       },
 });

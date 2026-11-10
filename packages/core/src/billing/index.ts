@@ -15,11 +15,13 @@ export { STARTING_PRICES, STARTING_PRICES_FROM } from './starting-prices';
 export {
   ACTIVE_PROOFS_PER_PAYMENT,
   amountsOf,
+  applyDueRenewal,
   applyVerifiedPayment,
   cancelPayment,
   getPayment,
   listPayments,
   openRenewal,
+  paidRenewalFor,
   paymentCode,
   paymentForReview,
   paymentsToReview,
@@ -106,3 +108,13 @@ export { PAYMENT_REJECTION_REASONS } from '@comprobify/db';
 export type { PaymentRejectionReason } from '@comprobify/db';
 export { ivaRateOn, ivaRates, scheduleIvaInput, scheduleIvaRate, withdrawIvaRate } from './iva';
 export type { IvaRateLine } from './iva';
+export {
+  moveToCustom,
+  moveToCustomInput,
+  repriceAndTell,
+  startCustomBilling,
+  startCustomBillingInput,
+} from './custom';
+export type { MoveToCustom } from './custom';
+export { notifyBilling } from './notify';
+export type { BillingNotice } from './notify';

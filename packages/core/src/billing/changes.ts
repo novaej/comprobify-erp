@@ -10,7 +10,7 @@ import {
 } from '@comprobify/db';
 import { z } from 'zod';
 import { recordAudit } from '../audit';
-import { applyRemoveModule, applySubscriptionTerm } from '../entitlements';
+import { applyRemoveModule, applySubscriptionTerm, CUSTOM_PLAN_KEY } from '../entitlements';
 import {
   daysBetween,
   Dec,
@@ -30,6 +30,7 @@ import {
   inCompany,
   monthlyCharge,
   OPEN,
+  paidRenewalFor,
   paymentCode,
   repriceRenewal,
   subscriptionOf,
@@ -73,6 +74,29 @@ function requireBilledActive(subscription: SubscriptionRow) {
   if (subscription.status === 'PAST_DUE')
     throw new DomainError('ACCOUNT_PAST_DUE', 'Pay the renewal first');
   return subscription as SubscriptionRow & { periodEnd: string };
+}
+
+// ADR-035: Personalizado is the operator's to change, and so is a company moving to it.
+async function requireSelfManaged(tx: Tx['db'], subscription: SubscriptionRow) {
+  const ids = [subscription.planId, subscription.pendingPlanId].filter((id): id is string => !!id);
+  const plans = await tx
+    .select({ key: schema.plans.key })
+    .from(schema.plans)
+    .where(inArray(schema.plans.id, ids));
+  if (plans.some((plan) => plan.key === CUSTOM_PLAN_KEY))
+    throw new DomainError('CUSTOM_PLAN_MANAGED', 'Comprobify manages this plan; ask to change it');
+}
+
+// A renewal paid ahead was priced with what is due at the period end: that stays as paid.
+async function requireRenewalNotPaid(tx: Tx['db'], subscription: SubscriptionRow) {
+  if (
+    subscription.periodEnd &&
+    (await paidRenewalFor(tx, subscription.tenantId, subscription.periodEnd))
+  )
+    throw new DomainError(
+      'RENEWAL_ALREADY_PAID',
+      'The next period is paid; change it after it starts',
+    );
 }
 
 async function requireNoOpenChange(tx: Tx['db'], tenantId: string) {
@@ -226,6 +250,7 @@ export async function previewPlanChange(
   const today = ecuadorDate(ctx.clock.now());
   return inCompany(ctx, db, async (tx, tenantId) => {
     const subscription = requireBilledActive(await subscriptionOf(tx.db, tenantId));
+    await requireSelfManaged(tx.db, subscription);
     const { quote } = await quotePlan(tx.db, subscription, input, today);
     return quote.when === 'NOW'
       ? { when: 'NOW', amounts: amountsOf(quote.amount, await ivaRateOn(tx.db, today)) }
@@ -243,6 +268,7 @@ export async function requestPlanChange(
   const today = ecuadorDate(ctx.clock.now());
   return forCompany(ctx, db, 'company: change its plan', async (tx, tenantId) => {
     const subscription = requireBilledActive(await subscriptionOf(tx.db, tenantId));
+    await requireSelfManaged(tx.db, subscription);
     await requireNoOpenChange(tx.db, tenantId);
     const { planId, quote } = await quotePlan(tx.db, subscription, input, today);
     // A new yearly period from today makes the month's renewal moot once paid; one being
@@ -293,6 +319,7 @@ async function schedule(
   subscription: SubscriptionRow,
   pending: Partial<Pick<SubscriptionRow, 'pendingPlanId' | 'pendingInterval' | 'pendingSeats'>>,
 ) {
+  await requireRenewalNotPaid(tx, subscription);
   const row = await companyRow(tx, subscription.tenantId);
   await applySubscriptionTerm(
     tx,
@@ -323,6 +350,7 @@ export async function cancelScheduledChange(ctx: ActorContext, db: Database): Pr
     'company: drop a change due at the period end',
     async (tx, tenantId) => {
       const subscription = requireBilledActive(await subscriptionOf(tx.db, tenantId));
+      await requireSelfManaged(tx.db, subscription);
       await schedule(ctx, tx.db, subscription, {
         pendingPlanId: null,
         pendingInterval: null,
@@ -346,6 +374,7 @@ export async function requestSeats(
   const today = ecuadorDate(ctx.clock.now());
   return forCompany(ctx, db, 'company: change its extra users', async (tx, tenantId) => {
     const subscription = requireBilledActive(await subscriptionOf(tx.db, tenantId));
+    await requireSelfManaged(tx.db, subscription);
     await requireNoOpenChange(tx.db, tenantId);
     const current = subscription.extraSeats;
     if (input.extraSeats === current) {
@@ -401,6 +430,7 @@ export async function buyAddOn(
   const today = ecuadorDate(ctx.clock.now());
   return forCompany(ctx, db, 'company: buy an add-on', async (tx, tenantId) => {
     const subscription = requireBilledActive(await subscriptionOf(tx.db, tenantId));
+    await requireSelfManaged(tx.db, subscription);
     await requireNoOpenChange(tx.db, tenantId);
     const [module] = await tx.db
       .select()
@@ -471,6 +501,8 @@ export async function dropAddOn(
   const input = addOnInput.parse(raw);
   return forCompany(ctx, db, 'company: drop an add-on at the period end', async (tx, tenantId) => {
     const subscription = requireBilledActive(await subscriptionOf(tx.db, tenantId));
+    await requireRenewalNotPaid(tx.db, subscription);
+    await requireSelfManaged(tx.db, subscription);
     const row = await companyRow(tx.db, tenantId);
     await applyRemoveModule(
       tx.db,
@@ -502,6 +534,7 @@ export async function cancelSubscription(
   requirePermission(ctx, 'billing.manage');
   return forCompany(ctx, db, 'company: cancel its subscription', async (tx, tenantId) => {
     const subscription = requireBilledActive(await subscriptionOf(tx.db, tenantId));
+    await requireRenewalNotPaid(tx.db, subscription);
     await requireNoOpenChange(tx.db, tenantId);
     const row = await companyRow(tx.db, tenantId);
     await applySubscriptionTerm(

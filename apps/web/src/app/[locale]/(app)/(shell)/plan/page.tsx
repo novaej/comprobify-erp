@@ -75,6 +75,8 @@ export default async function PlanPage({ params }: { params: Promise<{ locale: s
   const canManage = actor.permissions.includes('billing.manage') && actor.standing !== 'SUSPENDED';
   const flags = {
     canManage,
+    // Personalizado is changed by Comprobify, not from here (ADR-035).
+    managed: billing.subscription.managed,
     changeOpen: open.some((payment) => payment.purpose !== 'RENEWAL'),
     unlimited: quota.limit === null,
   };

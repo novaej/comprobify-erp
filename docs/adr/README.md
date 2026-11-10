@@ -55,6 +55,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [032](032-the-renewal-cycle.md) | The renewal cycle | Accepted |
 | [033](033-card-payments-through-payphone.md) | Card payments through Payphone | Accepted |
 | [034](034-the-iva-rate-and-its-history.md) | The IVA rate and its history | Accepted |
+| [035](035-personalizado-billing-and-complimentary-add-ons.md) | Personalizado billing and complimentary add-ons | Accepted |
 
 ## Old ADRs to read before each milestone
 

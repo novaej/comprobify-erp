@@ -10,7 +10,10 @@ import {
   setBilling,
   setLimit,
   setNegotiatedPrice,
+  setAddOnComplimentary,
   setOverride,
+  moveToCustom,
+  startCustomBilling,
   suspendCompany,
   type SuspensionReason,
 } from '@comprobify/core';
@@ -44,8 +47,14 @@ async function run(
 }
 async function context(form: FormData) {
   const { actor } = await loadPlatform(localeOf(form));
-  const { db } = await getRuntime();
-  return { actor, db, realTenantId: text(form, 'realTenantId') };
+  const { db, jobs, env } = await getRuntime();
+  // Billing emails: the payer hears of a price that changes what it owes.
+  return {
+    actor,
+    db,
+    realTenantId: text(form, 'realTenantId'),
+    notice: { jobs, appUrl: env.APP_URL },
+  };
 }
 
 export async function changePlanAction(_: ActionState, form: FormData): Promise<ActionState> {
@@ -67,17 +76,23 @@ export async function setBillingAction(_: ActionState, form: FormData): Promise<
 }
 
 export async function setPriceAction(_: ActionState, form: FormData): Promise<ActionState> {
-  return run(form, ({ actor, db, realTenantId }) =>
-    setNegotiatedPrice(actor, db, {
-      realTenantId,
-      monthlyPrice: text(form, 'monthlyPrice') || null,
-    }),
+  return run(form, ({ actor, db, realTenantId, notice }) =>
+    setNegotiatedPrice(
+      actor,
+      db,
+      { realTenantId, monthlyPrice: text(form, 'monthlyPrice').replace(',', '.') || null },
+      notice,
+    ),
   );
 }
 
 export async function addModuleAction(_: ActionState, form: FormData): Promise<ActionState> {
   return run(form, ({ actor, db, realTenantId }) =>
-    addModule(actor, db, { realTenantId, moduleKey: text(form, 'moduleKey') }),
+    addModule(actor, db, {
+      realTenantId,
+      moduleKey: text(form, 'moduleKey'),
+      complimentaryReason: form.get('complimentary') === 'on' ? text(form, 'reason') : null,
+    }),
   );
 }
 
@@ -135,4 +150,40 @@ export async function suspendAction(_: ActionState, form: FormData): Promise<Act
 
 export async function reactivateAction(_: ActionState, form: FormData): Promise<ActionState> {
   return run(form, ({ actor, db, realTenantId }) => reactivateCompany(actor, db, { realTenantId }));
+}
+
+// ADR-035: an add-on given without charge, with its reason, or charged again.
+export async function complimentaryAction(_: ActionState, form: FormData): Promise<ActionState> {
+  return run(form, ({ actor, db, realTenantId }) =>
+    setAddOnComplimentary(actor, db, {
+      realTenantId,
+      moduleKey: text(form, 'moduleKey'),
+      reason: form.get('complimentary') === 'on' ? text(form, 'reason') : null,
+    }),
+  );
+}
+
+// ADR-035: Personalizado's first paid period, at the negotiated price.
+export async function startCustomBillingAction(
+  _: ActionState,
+  form: FormData,
+): Promise<ActionState> {
+  return run(form, async ({ actor, db, realTenantId }) => {
+    await startCustomBilling(actor, db, {
+      realTenantId,
+      interval: text(form, 'interval') === 'YEARLY' ? 'YEARLY' : 'MONTHLY',
+    });
+  });
+}
+
+// ADR-035: a paying company to Personalizado: now if it costs more, else at the period end.
+export async function moveToCustomAction(_: ActionState, form: FormData): Promise<ActionState> {
+  return run(form, async ({ actor, db, realTenantId, notice }) => {
+    await moveToCustom(
+      actor,
+      db,
+      { realTenantId, monthlyPrice: text(form, 'monthlyPrice').replace(',', '.') },
+      notice,
+    );
+  });
 }

@@ -131,3 +131,7 @@ The owner's company, which invoices through Comprobify itself (FR-BILL-4), runs 
 - **The owner's company on overrides alone.** It would show no real plan, and every billing job would need a special case for it. A complimentary subscription is an ordinary subscription that billing skips by status.
 - **Personalizado as a new plan row per company.** It would fill the plans table with one-off rows and duplicate every module edit. Items on the company's own subscription keep plans generic.
 - **Resolving a twin's entitlements through its real organization at request time.** It needs a cross-tenant read on every request, which RLS forbids outside system context. Mirroring is the pattern memberships already use.
+
+## Later
+
+Personalizado's negotiated price is billed since ADR-035: the operator starts its period or moves a paying company to it, renewals charge it, and what it brings may start on a date. An add-on can be complimentary, never charged.

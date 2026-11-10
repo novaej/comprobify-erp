@@ -16,6 +16,8 @@ export {
   applyDropAddOn,
   applyDropAllAddOns,
   applyDropLeavingAddOns,
+  applyComplimentary,
+  complimentaryInput,
   applyLimit,
   applyNegotiatedPrice,
   applyOverride,

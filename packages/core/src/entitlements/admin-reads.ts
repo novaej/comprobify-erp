@@ -42,7 +42,20 @@ export async function subscriptionSummaries(
 export type CompanyPlanDetail = SubscriptionSummary & {
   complimentaryReason: string | null;
   negotiatedMonthlyPrice: string | null;
-  addOns: (Names & { key: string; removesAt: Date | null })[];
+  // The paid period, if any, and a move to Personalizado due at its end (ADR-035).
+  period: {
+    interval: 'MONTHLY' | 'YEARLY';
+    status: 'ACTIVE' | 'CANCELLED' | 'PAST_DUE';
+    periodEnd: string | null;
+    pendingCustom: boolean;
+  };
+  addOns: (Names & {
+    key: string;
+    removesAt: Date | null;
+    // Starts with Personalizado; given without charge (ADR-035).
+    startsAt: Date | null;
+    complimentaryReason: string | null;
+  })[];
   limits: { featureKey: string; value: number | null }[];
   overrides: {
     featureKey: string;
@@ -71,6 +84,10 @@ export async function companyPlanDetail(
       billing: subscriptions.billing,
       complimentaryReason: subscriptions.complimentaryReason,
       negotiatedMonthlyPrice: subscriptions.negotiatedMonthlyPrice,
+      interval: subscriptions.interval,
+      status: subscriptions.status,
+      periodEnd: subscriptions.periodEnd,
+      pendingPlanId: subscriptions.pendingPlanId,
     })
     .from(subscriptions)
     .innerJoin(plans, eq(plans.id, subscriptions.planId))
@@ -86,6 +103,8 @@ export async function companyPlanDetail(
       nameEs: modules.nameEs,
       nameEn: modules.nameEn,
       removesAt: subscriptionItems.removesAt,
+      startsAt: subscriptionItems.startsAt,
+      complimentaryReason: subscriptionItems.complimentaryReason,
     })
     .from(subscriptionItems)
     .innerJoin(modules, eq(modules.id, subscriptionItems.moduleId))
@@ -114,6 +133,19 @@ export async function companyPlanDetail(
     billing: subscription.billing,
     complimentaryReason: subscription.complimentaryReason,
     negotiatedMonthlyPrice: subscription.negotiatedMonthlyPrice,
+    period: {
+      interval: subscription.interval,
+      status: subscription.status,
+      periodEnd: subscription.periodEnd,
+      pendingCustom: subscription.pendingPlanId
+        ? (
+            await tx
+              .select({ key: plans.key })
+              .from(plans)
+              .where(eq(plans.id, subscription.pendingPlanId))
+          )[0]?.key === 'CUSTOM'
+        : false,
+    },
     addOns,
     limits: limits.map((row) => ({ featureKey: row.featureKey!, value: row.value })),
     overrides,

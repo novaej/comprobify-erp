@@ -19,6 +19,8 @@ export type BillingOverview = {
     // Null: not billed (Gratis, or the operator's plan).
     periodEnd: string | null;
     extraSeats: number;
+    // Personalizado, or moving to it: the operator's to change, not the company's (ADR-035).
+    managed: boolean;
     // What the renewal brings in, from the period end (ADR-030).
     pending: { plan: Named | null; interval: 'MONTHLY' | 'YEARLY' | null; seats: number | null };
   };
@@ -124,6 +126,7 @@ export async function billingOverview(ctx: ActorContext, db: Database): Promise<
         periodStart: subscription.periodStart,
         periodEnd: subscription.periodEnd,
         extraSeats: subscription.extraSeats,
+        managed: current!.key === 'CUSTOM' || pendingPlan?.key === 'CUSTOM',
         pending: {
           plan: pendingPlan ? named(pendingPlan) : null,
           interval: subscription.pendingInterval,

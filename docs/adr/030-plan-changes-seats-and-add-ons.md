@@ -41,3 +41,7 @@ Questions settled with the owner before building:
 - Every period is paid by one payment that says what it covered, including what changed at its start.
 - Proration by days makes a February month worth the same as a March one, each against its own length.
 - `ADD_ON` is a payment purpose beside the PRD's five.
+
+## Later
+
+A renewal paid before its period starts now waits for it, and the daily job applies what was due on that day (ADR-035). Deferred changes, dropping an add-on and cancelling wait while the next period is paid ahead. A complimentary add-on is never charged.

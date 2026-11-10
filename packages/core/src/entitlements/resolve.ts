@@ -1,4 +1,4 @@
-import { and, eq, schema, type Tx } from '@comprobify/db';
+import { and, eq, isNull, lte, or, schema, type Tx } from '@comprobify/db';
 import { startOfEcuadorDay, type Entitlements } from '../kernel';
 import type { ModuleStatus } from './catalog';
 import { subscriptionState } from './subscriptions';
@@ -99,6 +99,8 @@ export async function loadEntitlements(
         eq(subscriptionItems.tenantId, tenantId),
         eq(subscriptionItems.subscriptionId, subscription.id),
         eq(subscriptionItems.active, true),
+        // What a move to Personalizado brings starts with it (ADR-035).
+        or(isNull(subscriptionItems.startsAt), lte(subscriptionItems.startsAt, now)),
       ),
     );
   const moduleSource = (moduleId: string, removesAt: Date | null): ModuleSource => ({

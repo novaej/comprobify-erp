@@ -421,7 +421,10 @@
         "renewal_due": "abrió el pago de la renovación",
         "grace_started": "avisó que la renovación está pendiente",
         "past_due": "marcó la suscripción como vencida",
-        "moved_to_free": "pasó la empresa al plan Gratis"
+        "moved_to_free": "pasó la empresa al plan Gratis",
+        "custom_billing_started": "inició el cobro de Personalizado",
+        "moved_to_custom": "pasó la empresa a Personalizado",
+        "module_complimentary": "cambió la cortesía de un módulo"
       },
       "entitlements": {
         "override_set": "puso una excepción a",
@@ -654,7 +657,8 @@
       "cancelTitle": "Cancelar la suscripción",
       "cancelDescription": "Mantienes todo hasta el {date}; después la empresa pasa al plan Gratis. Puedes cambiar de idea hasta entonces.",
       "cancelled": "Suscripción cancelada",
-      "finishPayment": "Termina o cancela el pago pendiente antes de pedir otro cambio."
+      "finishPayment": "Termina o cancela el pago pendiente antes de pedir otro cambio.",
+      "managed": "Comprobify gestiona tu plan Personalizado. Para cambiarlo, escríbenos."
     },
     "seats": {
       "title": "Usuarios adicionales",
@@ -830,6 +834,32 @@
         "UNPAID_BALANCE": "Saldo impago",
         "OTHER": "Otro"
       }
+    },
+    "startsWithCustom": "Con Personalizado desde el {date}",
+    "complimentaryAddOn": "Cortesía",
+    "complimentaryAddOnHint": "Sin cobro: ninguna renovación ni plan de pago lo cobra.",
+    "complimentaryFor": "Cortesía en {name}",
+    "complimentaryDescription": "Una cortesía no se cobra; sin ella, el módulo se cobra desde la próxima renovación.",
+    "complimentarySaved": "Cortesía guardada.",
+    "customBilling": {
+      "title": "Cobro de Personalizado",
+      "noPrice": "Pon el precio negociado para poder cobrarlo.",
+      "unbilled": "Sin periodo pagado. Al iniciar el cobro, la empresa recibe un pago de ${price} al mes más IVA, por transferencia o tarjeta.",
+      "billed": "Se cobra ${price} al mes más IVA; el periodo vigente termina el {date}.",
+      "paying": "La empresa paga un plan. Pasarla a Personalizado cobra la diferencia ahora si cuesta más, o la cambia al final del periodo si cuesta lo mismo o menos.",
+      "pending": "Pasa a Personalizado el {date} por ${price} al mes más IVA. Lo que configures ahora en módulos y límites empieza ese día.",
+      "pendingBadge": "Desde el {date}",
+      "start": "Iniciar el cobro",
+      "startTitle": "Iniciar el cobro de Personalizado",
+      "startDescription": "Se crea el primer pago, de ${price} al mes más IVA; el periodo empieza el día que se confirme.",
+      "interval": "Pago",
+      "started": "Pago creado. La empresa lo ve en Plan y pagos.",
+      "move": "Pasar a Personalizado",
+      "moveTitle": "Pasar a Personalizado",
+      "moveDescription": "Con el precio negociado: si es mayor que lo que paga hoy, la diferencia por los días que quedan se cobra ahora; si es igual o menor, sigue con su plan hasta el final del periodo.",
+      "price": "Precio negociado al mes, sin IVA",
+      "priceHint": "Por ejemplo, 149,90.",
+      "moved": "Cambio registrado."
     }
   },
   "adminError": {
@@ -837,7 +867,7 @@
     "NOT_FOUND": "No se encontró la empresa.",
     "PLAN_NOT_AVAILABLE": "Ese plan no está publicado.",
     "SAME_PLAN": "La empresa ya está en ese plan.",
-    "NOT_CUSTOM_PLAN": "Solo Personalizado tiene límites y precio propios.",
+    "NOT_CUSTOM_PLAN": "La empresa no está en Personalizado.",
     "MODULE_NOT_FOUND": "No existe ese módulo.",
     "MODULE_NOT_AVAILABLE": "Ese módulo no se puede agregar.",
     "MODULE_IN_PLAN": "El plan ya incluye ese módulo.",
@@ -859,7 +889,14 @@
     "INVOICE_BUYER_MISMATCH": "Esa factura no es para el RUC de esta empresa.",
     "INVOICE_TOTAL_MISMATCH": "El total de esa factura no coincide con el del pago.",
     "INVOICE_ALREADY_USED": "Esa factura ya está registrada para otro pago.",
-    "CARD_NOT_TO_RESOLVE": "Ese cobro ya no necesita nada."
+    "CARD_NOT_TO_RESOLVE": "Ese cobro ya no necesita nada.",
+    "NO_NEGOTIATED_PRICE": "Pon el precio negociado primero.",
+    "ALREADY_BILLED": "La empresa ya tiene un periodo pagado.",
+    "NOT_BILLED": "La empresa no está pagando un periodo activo.",
+    "SUBSCRIPTION_COMPLIMENTARY": "La empresa es de cortesía: no se le cobra.",
+    "PAYMENT_IN_PROGRESS": "La empresa tiene otro pago abierto.",
+    "RENEWAL_ALREADY_PAID": "La empresa ya pagó el próximo periodo; haz el cambio cuando empiece.",
+    "RENEWAL_IN_REVIEW": "La renovación está en revisión; resuélvela primero."
   },
   "pageTitles": {
     "login": "Iniciar sesión",
@@ -2776,7 +2813,10 @@
     "PAYMENT_IN_REVIEW": "Estamos revisando tu transferencia; espera a que terminemos.",
     "CARD_NOT_AVAILABLE": "El pago con tarjeta no está disponible. Paga con transferencia.",
     "CARD_AMOUNT_TOO_LOW": "Con tarjeta el mínimo es $1.00. Paga este con transferencia.",
-    "CARD_TOO_MANY_ATTEMPTS": "Hay varios intentos con tarjeta sin resolver. Espera unos minutos o paga con transferencia."
+    "CARD_TOO_MANY_ATTEMPTS": "Hay varios intentos con tarjeta sin resolver. Espera unos minutos o paga con transferencia.",
+    "CUSTOM_PLAN_MANAGED": "Comprobify gestiona tu plan. Escríbenos para cambiarlo.",
+    "RENEWAL_ALREADY_PAID": "Ya pagaste el próximo periodo; haz el cambio cuando empiece.",
+    "NO_NEGOTIATED_PRICE": "Tu plan todavía no tiene precio. Escríbenos."
   },
   "adminPayments": {
     "title": "Pagos",

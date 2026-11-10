@@ -70,6 +70,10 @@ export const AUDIT_ACTIONS = [
   'payment.card_resolved',
   // ADR-034: an unpaid payment charged again at a new IVA rate.
   'payment.repriced',
+  // ADR-035: Personalizado billed, and an add-on given without charge.
+  'subscription.custom_billing_started',
+  'subscription.moved_to_custom',
+  'subscription.module_complimentary',
 ] as const;
 
 // Append-only: the app role may insert and read, never update or delete.

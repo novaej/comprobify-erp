@@ -4,7 +4,7 @@ import { Button } from '@comprobify/ui/components/button';
 import { Input } from '@comprobify/ui/components/input';
 import { Switch } from '@comprobify/ui/components/switch';
 import { cn } from '@comprobify/ui/lib/utils';
-import { Plus, Trash2, Undo2 } from 'lucide-react';
+import { Gift, Plus, Trash2, Undo2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
 import { ChoiceSelect, type Choice } from '@/components/choice-select';
@@ -21,6 +21,7 @@ import {
   changePlanAction,
   clearLimitAction,
   clearOverrideAction,
+  complimentaryAction,
   removeModuleAction,
   setBillingAction,
   setLimitAction,
@@ -35,7 +36,14 @@ export type CompanyView = {
   price: string | null;
   plans: Choice[];
   modules: Choice[];
-  addOns: { key: string; name: string; removesAt: string | null }[];
+  addOns: {
+    key: string;
+    name: string;
+    removesAt: string | null;
+    // Starts with Personalizado; given without charge and why (ADR-035).
+    startsAt: string | null;
+    complimentary: string | null;
+  }[];
   limits: { key: string; label: string; resolved: string; own: number | null | undefined }[];
   overrides: { key: string; value: string; reason: string }[];
   features: { key: string; kind: 'BOOLEAN' | 'LIMIT' }[];
@@ -50,6 +58,7 @@ type Dialogs =
   | { kind: 'billing' }
   | { kind: 'price' }
   | { kind: 'module' }
+  | { kind: 'complimentary'; key: string; name: string; reason: string | null }
   | { kind: 'limit'; key: string; label: string; own: number | null | undefined }
   | { kind: 'override' }
   | null;
@@ -132,32 +141,58 @@ export function CompanyManager({ company }: { company: CompanyView }) {
                       {t('removesAt', { date: module.removesAt })}
                     </ToneBadge>
                   )}
+                  {module.startsAt && (
+                    <ToneBadge tone="info">
+                      {t('startsWithCustom', { date: module.startsAt })}
+                    </ToneBadge>
+                  )}
+                  {module.complimentary && (
+                    <ToneBadge tone="primary">{t('complimentaryAddOn')}</ToneBadge>
+                  )}
                 </span>
-                {module.removesAt ? (
+                <span className="flex items-center gap-1">
                   <button
                     type="button"
-                    disabled={keep.pending}
-                    onClick={() => keep.run({ ...id, moduleKey: module.key })}
-                    title={t('keepModuleFor', { name: module.name })}
-                    aria-label={t('keepModuleFor', { name: module.name })}
+                    onClick={() =>
+                      setDialog({
+                        kind: 'complimentary',
+                        key: module.key,
+                        name: module.name,
+                        reason: module.complimentary,
+                      })
+                    }
+                    title={t('complimentaryFor', { name: module.name })}
+                    aria-label={t('complimentaryFor', { name: module.name })}
                     className={iconButton}
                   >
-                    <Undo2 className="h-4 w-4" aria-hidden />
+                    <Gift className="h-4 w-4" aria-hidden />
                   </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setRemoving({ key: module.key, name: module.name })}
-                    title={t('removeModuleFor', { name: module.name })}
-                    aria-label={t('removeModuleFor', { name: module.name })}
-                    className={cn(
-                      iconButton,
-                      'text-destructive hover:bg-destructive/10 hover:text-destructive',
-                    )}
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden />
-                  </button>
-                )}
+                  {module.removesAt ? (
+                    <button
+                      type="button"
+                      disabled={keep.pending}
+                      onClick={() => keep.run({ ...id, moduleKey: module.key })}
+                      title={t('keepModuleFor', { name: module.name })}
+                      aria-label={t('keepModuleFor', { name: module.name })}
+                      className={iconButton}
+                    >
+                      <Undo2 className="h-4 w-4" aria-hidden />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setRemoving({ key: module.key, name: module.name })}
+                      title={t('removeModuleFor', { name: module.name })}
+                      aria-label={t('removeModuleFor', { name: module.name })}
+                      className={cn(
+                        iconButton,
+                        'text-destructive hover:bg-destructive/10 hover:text-destructive',
+                      )}
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden />
+                    </button>
+                  )}
+                </span>
               </li>
             ))}
           </ul>
@@ -278,6 +313,9 @@ export function CompanyManager({ company }: { company: CompanyView }) {
         </FormField>
       </FormDialog>
       <ModuleDialog company={company} open={dialog?.kind === 'module'} onClose={close} />
+      {dialog?.kind === 'complimentary' && (
+        <ComplimentaryDialog company={company} addOn={dialog} onClose={close} />
+      )}
       {dialog?.kind === 'limit' && <LimitDialog company={company} limit={dialog} onClose={close} />}
       <OverrideDialog company={company} open={dialog?.kind === 'override'} onClose={close} />
 
@@ -418,6 +456,7 @@ function ModuleDialog({
 }) {
   const t = useTranslations('admin');
   const [moduleKey, setModuleKey] = useState(company.modules[0]?.value ?? '');
+  const [complimentary, setComplimentary] = useState(false);
   return (
     <FormDialog
       open={open}
@@ -428,7 +467,11 @@ function ModuleDialog({
       action={addModuleAction}
       errors="adminError"
       success={t('moduleAdded')}
-      extra={{ realTenantId: company.realTenantId, moduleKey }}
+      extra={{
+        realTenantId: company.realTenantId,
+        moduleKey,
+        ...(complimentary ? { complimentary: 'on' } : {}),
+      }}
     >
       <FormField label={t('module')} required>
         {(props) => (
@@ -440,6 +483,85 @@ function ModuleDialog({
           />
         )}
       </FormField>
+      <ComplimentaryFields
+        complimentary={complimentary}
+        onChange={setComplimentary}
+        reason={null}
+      />
+    </FormDialog>
+  );
+}
+
+// ADR-035: given without charge, so no renewal or plan start bills it; a reason says why.
+function ComplimentaryFields({
+  complimentary,
+  onChange,
+  reason,
+}: {
+  complimentary: boolean;
+  onChange: (value: boolean) => void;
+  reason: string | null;
+}) {
+  const t = useTranslations('admin');
+  const uid = useId();
+  return (
+    <>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p id={`${uid}-label`} className="text-sm font-medium">
+            {t('complimentaryAddOn')}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">{t('complimentaryAddOnHint')}</p>
+        </div>
+        <Switch
+          checked={complimentary}
+          onCheckedChange={onChange}
+          aria-labelledby={`${uid}-label`}
+        />
+      </div>
+      {complimentary && (
+        <FormField label={t('reason')} required>
+          {(props) => (
+            <Input {...props} name="reason" defaultValue={reason ?? ''} required minLength={3} />
+          )}
+        </FormField>
+      )}
+    </>
+  );
+}
+
+function ComplimentaryDialog({
+  company,
+  addOn,
+  onClose,
+}: {
+  company: CompanyView;
+  addOn: { key: string; name: string; reason: string | null };
+  onClose: () => void;
+}) {
+  const t = useTranslations('admin');
+  const [complimentary, setComplimentary] = useState(addOn.reason !== null);
+  return (
+    <FormDialog
+      open
+      onOpenChange={(next) => !next && onClose()}
+      title={t('complimentaryFor', { name: addOn.name })}
+      description={t('complimentaryDescription')}
+      submitLabel={t('save')}
+      action={complimentaryAction}
+      errors="adminError"
+      success={t('complimentarySaved')}
+      extra={{
+        realTenantId: company.realTenantId,
+        moduleKey: addOn.key,
+        ...(complimentary ? { complimentary: 'on' } : {}),
+      }}
+    >
+      <ComplimentaryFields
+        complimentary={complimentary}
+        onChange={setComplimentary}
+        reason={addOn.reason}
+      />
     </FormDialog>
   );
 }

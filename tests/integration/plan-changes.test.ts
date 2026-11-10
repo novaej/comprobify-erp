@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
+  applyDueRenewal,
   buyAddOn,
   cancelScheduledChange,
   cancelSubscription,
@@ -247,6 +248,11 @@ describe('plan changes', () => {
     ).rows[0] as { id: string; base_amount: string };
     expect(due.base_amount).toBe('18.90');
     await pay(await getPayment(await owner(), db, due.id));
+    // Paid ahead: Negocio stays until its period ends, then the daily job moves it on (ADR-035).
+    expect(await subscription()).toMatchObject({ plan: 'BUSINESS', seats: 2, end: '2026-12-10' });
+    await db.withSystem('test: the day the period starts', ({ db: tx }) =>
+      applyDueRenewal(tx, org.realTenantId, new Date('2026-12-10T11:00:00Z')),
+    );
     expect(await subscription()).toEqual({
       plan: 'STARTER',
       interval: 'MONTHLY',
