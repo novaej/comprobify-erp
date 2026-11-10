@@ -20,8 +20,8 @@ export type BulkLimits = {
 };
 
 export const BULK_LIMITS: BulkLimits = {
-  perCompany: 10,
-  global: 30,
+  perCompany: 50,
+  global: 150,
   stallMinutes: 15,
   feedDelaySeconds: 5,
 };

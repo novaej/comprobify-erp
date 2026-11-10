@@ -4,7 +4,7 @@ Open work only. Tick steps as they land. When a milestone's gate passes, remove 
 
 ## Carried forward
 
-- **Milestones 5 and 6:** the owner's walkthrough is left for the full review before cutover: the nightly stock check's log and the roles (Compras, Solo lectura) on purchasing and inventory, and sale orders, invoicing in parts, the guía from an invoice, receivables and the go-live copy.
+- **Full review, before deploying (Milestone 10):** one manual QA pass of the whole system, run locally when everything is ready. It needs a written test script (a QA checklist, no code) covering every screen and flow by role (owner, admin, accounting, sales, purchasing, viewer, super admin), the happy paths and the edge cases (quota, SRI rejections, stock shortages, test and production mode, the twin, plans without a module). It takes in what earlier milestones left to walk through: the nightly stock check's log and the Compras and Solo lectura roles on purchasing and inventory; sale orders, invoicing in parts, the guía from an invoice, receivables and the go-live copy; bulk invoicing, its stack view and the platform queue page. Until then the owner hand-tests only when a milestone makes it mandatory.
 - **Milestone 6:** the order's invoice form takes one payment for the whole total; core takes several (ADR-022). Move the payment block of the invoice form into a shared component and offer it on both.
 - **Not scheduled:** a guía that leaves before its invoice (dispatch first): lines and quantities of the order, a shipped-so-far balance, and a way to tie the later invoice to it (ADR-023).
 - **Milestone 4:** only the first guía recipient is searchable by client; the others take their invoice through the invoice search (ADR-017). The guía is not offered by plate catalogue or carrier directory.
@@ -12,6 +12,8 @@ Open work only. Tick steps as they land. When a milestone's gate passes, remove 
 - **Owner, with live email:** the Mailgun webhook for the buyer's copy (delivered, failed, complained), matched by the `document-id` variable each message carries (FR-DOC-11). Needs the Mailgun signing key and a public URL.
 - **Milestone 8:** a switch that stops Payphone charges and callbacks in a restored copy of real data, as `EMAIL_REDIRECT_TO` does for email (CLAUDE.md mistake 13).
 - **Milestone 8 (also):** `DOCUMENT_QUOTA` counts the Ecuador calendar month for now; count it per billing period instead, with packs (FR-BILL-7).
+- **Milestone 10:** the 10,000-item bulk batch of NFR-PERF-3, and the caps (`BULK_LIMITS`: 50 per company, 150 overall) and the feeder's 5-second period tuned against what SRI accepts. At the defaults a lone company's batch moves at about 1 invoice a second (ADR-026, gate result), so 10,000 take about 2.5 hours; `pnpm test:bulk-gate` with `BULK_GATE_ITEMS=10000` is the run.
+- **Milestone 9: CSV batches (FR-BULK-1), after the CSV import of clients and products (FR-MD-1), which it needs and shares its parser, row-numbered errors and upload screen with.** A file starts a batch in one of two ways. The default, on any plan with Bulk invoicing, is invoices: each row (rows with the same reference are the lines of one invoice) is validated up front, with errors by row number and nothing queued if the file is invalid, then made through the single-invoice pipeline (`bulk_batch_items.input` already holds a row). Only when the plan also has Sales (`SALE_ORDERS`) is there a second choice, to import the file as sale orders to invoice from the batch screen. Until then Bulk invoicing starts from sale orders only, so a company with the add-on but not Sales (the module is separate; Business and Enterprise have both) sees a locked page: either the CSV lifts that, or the module gets its dependency on Sales in the catalog.
 - **Milestone 9:** a page in the platform area to read a document's `sri_exchanges` for support, and a retention period for them (they grow with every authorization check).
 - **Milestone 9 (also):** the alerts that are only logged today become notifications: `BATCH_COMPLETED` (FR-BULK-3), no SRI answer 24 hours after RECEIVED, code 45, a re-issue skipped at a month boundary, and "Factura … re-emitida con fecha …" (FR-DOC-5, FR-DOC-6, FR-NOT-2).
 - **Milestone 9 (also):** email the companies on a plan when a module or a lower limit is scheduled to leave it, as with price changes (FR-BILL-6, FR-NOT-2); a page for the platform activity log (`platform_audit_events`).
@@ -19,23 +21,12 @@ Open work only. Tick steps as they land. When a milestone's gate passes, remove 
 - **Not scheduled:** CSV import and export of clients and products (FR-MD-1).
 - **Not scheduled:** ownership transfer (PRD section 3). Today nobody can change or remove the owner.
 
-## Milestone 7: Bulk invoicing
-
-Gate: a 1,000-item batch locally on the mock SRI with the quota cutting it off, and another company's single invoice within NFR-PERF-3 while it runs. Decisions are in [ADR-026](docs/adr/026-bulk-invoicing.md). The 10,000-item run is Milestone 10's load test.
-
-- [x] 1. Tables, migration 0047, ADR-026
-- [x] 2. Core: start a batch from orders, the item job, quota cut-off, retry, completion sweep
-- [x] 3. Pacing: the feeder with per-company and global caps, and a test that a big batch doesn't starve a small one
-- [x] 4. Web: batch list and stack view with live progress, starting a batch from orders, the platform queue page
-- [ ] 5. CSV upload (format in the ADR)
-- [ ] 6. Gate: 1,000 items on the mock with quota cut, latency of another company's invoice
-
 ## Upcoming milestones
 
 - [x] 4. Other SRI documents
 - [x] 5. Inventory and purchasing
 - [x] 6. Sales
-- [ ] 7. Bulk invoicing
+- [x] 7. Bulk invoicing
 - [ ] 8. Billing
 - [ ] 9. Notifications, reports, admin
 - [ ] 10. Production readiness and cutover

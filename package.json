@@ -25,6 +25,7 @@
     "test-certificate": "pnpm --filter @comprobify/worker test-certificate",
     "test:e2e": "pnpm --filter @comprobify/e2e-tests test:e2e",
     "test:integration": "pnpm --filter @comprobify/integration-tests test:integration",
+    "test:bulk-gate": "pnpm --filter @comprobify/integration-tests test:bulk-gate",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {

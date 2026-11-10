@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "test:integration": "vitest run",
+    "test:bulk-gate": "BULK_GATE=1 vitest run bulk-gate",
     "typecheck": "tsc"
   },
   "devDependencies": {

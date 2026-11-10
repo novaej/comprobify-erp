@@ -2,7 +2,7 @@
 
 Primary guide for AI assistants and developers. Every rule here takes precedence over defaults. `docs/PRD.md` is the source of truth for what to build; this file is how to build it. Keep it current: it changes with every milestone.
 
-**Status:** Milestones 1 (Identity and tenancy), 2 (Entitlements and plans), 3 (SRI engine: factura), 4 (Other SRI documents), 5 (Inventory and purchasing) and 6 (Sales) done. Milestone 7 (Bulk invoicing) is next; see `NEXT_STEPS.md`. Decisions are in [docs/adr/](docs/adr/README.md).
+**Status:** Milestones 1 (Identity and tenancy), 2 (Entitlements and plans), 3 (SRI engine: factura), 4 (Other SRI documents), 5 (Inventory and purchasing), 6 (Sales) and 7 (Bulk invoicing) done. Milestone 8 (Billing) is next; see `NEXT_STEPS.md`. Decisions are in [docs/adr/](docs/adr/README.md).
 
 ---
 
@@ -44,6 +44,7 @@ pnpm format              # Prettier; format:check in CI
 pnpm typecheck
 pnpm test                # unit, no database
 pnpm test:integration    # real Postgres, RLS on, app role, database name must end in _test
+pnpm test:bulk-gate      # Milestone 7 gate: 1,000-item batch beside another company's invoices, on the mock SRI; minutes, on a freshly reset test database
 pnpm test:e2e            # Playwright, against the built app or E2E_BASE_URL; its own _e2e database
 pnpm build
 pnpm stack:up            # Docker stack on :8080: caddy, migrate, web, worker, using the postgres18 container
