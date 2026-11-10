@@ -46,15 +46,19 @@ describe('super admin: companies and their plans', () => {
 
   const newCompany = (): Promise<CreatedOrganization & { ruc: string }> => {
     const ruc = testRuc();
-    return createOrganization(db, {
-      ownerUserId: ownerId,
-      ruc,
-      legalName: `Lambda ${ruc}`,
-      tradeName: null,
-      mainAddress: 'Quito',
-      branch: { code: '001', name: 'Matriz', address: null },
-      issuePointCode: '001',
-    }).then((org) => ({ ...org, ruc }));
+    return createOrganization(
+      db,
+      {
+        ownerUserId: ownerId,
+        ruc,
+        legalName: `Lambda ${ruc}`,
+        tradeName: null,
+        mainAddress: 'Quito',
+        branch: { code: '001', name: 'Matriz', address: null },
+        issuePointCode: '001',
+      },
+      { clock },
+    ).then((org) => ({ ...org, ruc }));
   };
 
   const entitlements = async (tenantId: string, at = clock.now().toISOString()) =>
@@ -145,7 +149,7 @@ describe('super admin: companies and their plans', () => {
     expect(view.plan.entitlements.limits.DOCUMENT_QUOTA).toBe(50);
   });
 
-  it('adds only sellable modules, and removes one at the next Ecuador month', async () => {
+  it('adds only sellable modules, and removes one when the company’s next period starts', async () => {
     const org = await newCompany();
     const id = { realTenantId: org.realTenantId };
     for (const [moduleKey, code] of [
@@ -160,11 +164,12 @@ describe('super admin: companies and their plans', () => {
       code: 'MODULE_ALREADY_ADDED',
     });
     await removeModule(operator, db, { ...id, moduleKey: 'INVENTORY' });
-    // Removed on 10 November: kept for the rest of the month, gone from December.
-    expect((await entitlements(org.twinTenantId, '2026-11-30T23:00:00Z')).features).toContain(
+    // Removed on 10 November, in a period that began that day: kept until the next one, on
+    // 10 December (ADR-028).
+    expect((await entitlements(org.twinTenantId, '2026-12-10T04:00:00Z')).features).toContain(
       'INVENTORY',
     );
-    expect((await entitlements(org.twinTenantId, '2026-12-01T05:00:00Z')).features).not.toContain(
+    expect((await entitlements(org.twinTenantId, '2026-12-10T05:00:00Z')).features).not.toContain(
       'INVENTORY',
     );
     // Adding it back before then cancels the removal.

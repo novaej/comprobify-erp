@@ -351,6 +351,13 @@
       "when": 1794273529250,
       "tag": "0049_prices",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1794308246652,
+      "tag": "0050_subscription_periods",
+      "breakpoints": true
     }
   ]
 }

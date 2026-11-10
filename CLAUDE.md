@@ -176,7 +176,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/jobs/` | Queue registry and schedules |
 | `packages/core/src/identity/` | Better Auth setup, rate limits, sessions and idle timeout |
 | `packages/core/src/tenancy/` | Organizations and twins, roles and permissions, actor context, ambiente |
-| `packages/core/src/entitlements/` | Feature key registry, the starting modules and plans, `syncCatalog`, subscriptions, the resolver, the catalog editors' rules on notice (ADR-011) |
+| `packages/core/src/entitlements/` | Feature key registry, the starting modules and plans, `syncCatalog`, subscriptions and their periods (`periods.ts`: `periodEndFrom`, `quotaWindow`, ADR-028), the resolver, the catalog editors' rules on notice (ADR-011) |
 | `packages/core/src/platform/` | The super admin's workflows: companies, their plans, add-ons, Personalizado, complimentary, overrides; editing plans and modules |
 | `apps/web/src/app/[locale]/(admin)/` | The platform area, outside any company (`loadPlatform`); `admin/prices/` is the price editor |
 | `packages/core/src/sri/` | SRI catalogues (from `packages/db/src/schema/sri.ts`), totals and rounding (ADR-012), access keys, the factura builder, XSD validation and the XAdES-BES signer (ADR-013), the SOAP client and the mock SRI (ADR-014) |

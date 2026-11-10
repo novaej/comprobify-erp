@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   check,
+  date,
   foreignKey,
   integer,
   numeric,
@@ -13,7 +14,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { oneOf } from './checks';
+import { oneOf, transitionTriggerBody } from './checks';
 import { users } from './identity';
 import { tenants } from './tenancy';
 
@@ -21,6 +22,20 @@ export const FEATURE_KINDS = ['BOOLEAN', 'LIMIT'] as const;
 export const MODULE_STATUSES = ['AVAILABLE', 'COMING_SOON'] as const;
 export const PLAN_STATUSES = ['DRAFT', 'PUBLISHED', 'RETIRED'] as const;
 export const SUBSCRIPTION_BILLING = ['PAID', 'COMPLIMENTARY'] as const;
+// FR-BILL-1 (ADR-028). Yearly is twelve months for the price of ten.
+export const BILLING_INTERVALS = ['MONTHLY', 'YEARLY'] as const;
+export type BillingInterval = (typeof BILLING_INTERVALS)[number];
+// The one subscription a company has, through its life. A payment that is still owed is the
+// payment's own state (PENDING_PAYMENT in the PRD), and an expired period that wasn't paid is
+// PAST_DUE: it blocks writes and lets the company pay its way back (ADR-028).
+export const SUBSCRIPTION_STATUSES = ['ACTIVE', 'CANCELLED', 'PAST_DUE'] as const;
+export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUSES)[number];
+export const SUBSCRIPTION_TRANSITIONS: Record<SubscriptionStatus, readonly SubscriptionStatus[]> = {
+  // Cancelled runs to the end of its period; the company may change its mind until then.
+  ACTIVE: ['CANCELLED', 'PAST_DUE'],
+  CANCELLED: ['ACTIVE'],
+  PAST_DUE: ['ACTIVE'],
+};
 // Milestone 8 adds extra seats and document packs.
 export const SUBSCRIPTION_ITEM_KINDS = ['MODULE', 'LIMIT'] as const;
 export const OVERRIDE_EFFECTS = ['GRANT', 'REVOKE', 'LIMIT'] as const;
@@ -173,6 +188,12 @@ export const subscriptions = pgTable(
     complimentaryReason: text('complimentary_reason'),
     // Personalizado's negotiated price before IVA; yearly is 10x (FR-BILL-1).
     negotiatedMonthlyPrice: numeric('negotiated_monthly_price', { precision: 12, scale: 2 }),
+    interval: text('interval', { enum: BILLING_INTERVALS }).default('MONTHLY').notNull(),
+    status: text('status', { enum: SUBSCRIPTION_STATUSES }).default('ACTIVE').notNull(),
+    // Ecuador dates. A billed period runs [start, end); with no end the company isn't billed
+    // (a free plan or complimentary) and its quota renews monthly from `start` (ADR-028).
+    periodStart: date('period_start').notNull(),
+    periodEnd: date('period_end'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
@@ -188,8 +209,15 @@ export const subscriptions = pgTable(
       'subscriptions_negotiated_price_check',
       sql`negotiated_monthly_price IS NULL OR negotiated_monthly_price >= 0`,
     ),
+    check('subscriptions_interval_check', oneOf('interval', BILLING_INTERVALS)),
+    check('subscriptions_status_check', oneOf('status', SUBSCRIPTION_STATUSES)),
+    check('subscriptions_period_check', sql`period_end IS NULL OR period_end > period_start`),
   ],
 );
+
+// The trigger that enforces SUBSCRIPTION_TRANSITIONS; migration 0050 holds its output.
+export const subscriptionStatusTriggerBody = (): string =>
+  transitionTriggerBody('Subscription', SUBSCRIPTION_STATUSES, SUBSCRIPTION_TRANSITIONS);
 
 // A module on top of the plan, or one of Personalizado's limits (null = unlimited).
 export const subscriptionItems = pgTable(

@@ -13,6 +13,7 @@ import {
   applyRemoveModule,
   catalogChoices,
   companyPlanDetail,
+  subscriptionState,
   subscriptionSummaries,
   type CatalogChoices,
   type CompanyPlanDetail,
@@ -20,7 +21,7 @@ import {
   type SubscriptionSummary,
 } from '../entitlements';
 import { assertSuperAdmin } from '../identity';
-import { startOfNextEcuadorMonth, type PlatformActor } from '../kernel';
+import { startOfEcuadorDay, type PlatformActor } from '../kernel';
 import { companyRow, listCompanyRows, type CompanyRow } from '../tenancy';
 
 export * from './catalog';
@@ -150,14 +151,16 @@ export const addModule = (
     };
   });
 
-// The company keeps it until the next period starts (ADR-011).
+// The company keeps it until its next period starts: the end of its quota window (ADR-011,
+// ADR-028).
 export const removeModule = (
   actor: PlatformActor,
   db: Database,
   input: { realTenantId: string; moduleKey: string },
 ) =>
   change(actor, db, input.realTenantId, 'super admin: remove a module', async (tx, c) => {
-    const removesAt = startOfNextEcuadorMonth(actor.clock.now());
+    const { window } = await subscriptionState(tx, c.realTenantId, actor.clock.now());
+    const removesAt = startOfEcuadorDay(window.end);
     const module = await applyRemoveModule(tx, c, input, removesAt);
     return {
       action: 'subscription.module_removed',

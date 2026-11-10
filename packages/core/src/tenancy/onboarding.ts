@@ -51,5 +51,6 @@ export async function onboardOrganization(
       notAfter: parsed.notAfter,
     },
     logo: logo ? sniffLogo(Buffer.from(logo)) : undefined,
+    clock: deps.clock,
   });
 }

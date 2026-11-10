@@ -1,6 +1,14 @@
-import { and, eq, schema, type Database, type SUBSCRIPTION_BILLING } from '@comprobify/db';
-import { limitOf, requirePermission, type ActorContext } from '../kernel';
-import { currentPeriodStart } from './resolve';
+import {
+  and,
+  eq,
+  schema,
+  type BillingInterval,
+  type Database,
+  type SUBSCRIPTION_BILLING,
+  type SubscriptionStatus,
+} from '@comprobify/db';
+import { limitOf, requirePermission, startOfEcuadorDay, type ActorContext } from '../kernel';
+import { subscriptionState } from './subscriptions';
 import type { ModuleStatus } from './catalog';
 
 export type PlanModule = {
@@ -23,6 +31,13 @@ export const SHOWN_LIMITS = [
 export type PlanOverview = {
   plan: { key: string; nameEs: string; nameEn: string; selfService: boolean };
   billing: (typeof SUBSCRIPTION_BILLING)[number];
+  // FR-BILL-1 (ADR-028). No end: not billed.
+  subscription: {
+    interval: BillingInterval;
+    status: SubscriptionStatus;
+    periodStart: string;
+    periodEnd: string | null;
+  };
   modules: PlanModule[];
   // As resolved for this request, overrides included; null is unlimited.
   limits: Record<(typeof SHOWN_LIMITS)[number], number | null>;
@@ -71,7 +86,8 @@ export async function planOverview(ctx: ActorContext, db: Database): Promise<Pla
         ),
       );
     // A removal whose period has started is gone; the resolver agrees.
-    const periodStart = currentPeriodStart(ctx.clock.now());
+    const state = await subscriptionState(tx, ctx.tenantId, ctx.clock.now());
+    const periodStart = startOfEcuadorDay(state.window.start);
     const current = <T extends { removesAt: Date | null }>(rows: T[]) =>
       rows.filter((row) => row.removesAt === null || row.removesAt > periodStart);
     const inPlan = new Set(current(fromPlan).map((module) => module.key));
@@ -85,6 +101,12 @@ export async function planOverview(ctx: ActorContext, db: Database): Promise<Pla
     return {
       plan: { key: row.key, nameEs: row.nameEs, nameEn: row.nameEn, selfService: row.selfService },
       billing: row.billing,
+      subscription: {
+        interval: state.interval,
+        status: state.status,
+        periodStart: state.periodStart,
+        periodEnd: state.periodEnd,
+      },
       modules: listed.map((module) => ({
         key: module.key,
         nameEs: module.nameEs,

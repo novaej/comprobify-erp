@@ -1,12 +1,14 @@
-import { and, eq, gte, schema, sql, type Tx } from '@comprobify/db';
+import { and, eq, gte, schema, sql, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
 import type { KeyCipher } from '../certificates';
+import { subscriptionState } from '../entitlements';
 import type { Jobs } from '../jobs';
 import {
   DomainError,
   endOfEcuadorDay,
   limitOf,
-  startOfEcuadorMonth,
+  requirePermission,
+  startOfEcuadorDay,
   toSriAmount,
   type ActorContext,
 } from '../kernel';
@@ -72,26 +74,50 @@ export const issued = (
   created,
 });
 
-// Until billing periods exist (Milestone 8) a quota counts the Ecuador calendar month.
-// The twin and a company still in test never use quota (FR-ONB-6a, FR-BILL-7).
-export async function consumeQuota(ctx: ActorContext, tx: Tx) {
-  if (ctx.tenantMode !== 'PRODUCTION') return;
-  const limit = limitOf(ctx.entitlements, QUOTA_FEATURE);
-  if (limit === null) return;
-  await lock(tx, `quota:${ctx.tenantId}`);
+// FR-BILL-7 (ADR-028): the quota counts the documents made in the subscription's quota window,
+// which a yearly period fills with twelve months of it. The twin and a company still in test
+// never use quota (FR-ONB-6a). Document packs top it up from step 4 of Milestone 8.
+async function quotaIn(ctx: ActorContext, tx: Tx) {
+  const monthly = limitOf(ctx.entitlements, QUOTA_FEATURE);
+  const { window } = await subscriptionState(tx.db, ctx.tenantId, ctx.clock.now());
   const [row] = await tx.db
     .select({ used: sql<number>`count(*)::int` })
     .from(schema.documents)
     .where(
       and(
         eq(schema.documents.tenantId, ctx.tenantId),
-        gte(schema.documents.createdAt, startOfEcuadorMonth(ctx.clock.now())),
+        gte(schema.documents.createdAt, startOfEcuadorDay(window.start)),
       ),
     );
-  if (row!.used >= limit)
+  return { used: row!.used, limit: monthly === null ? null : monthly * window.months, window };
+}
+
+export async function consumeQuota(ctx: ActorContext, tx: Tx) {
+  if (ctx.tenantMode !== 'PRODUCTION') return;
+  if (limitOf(ctx.entitlements, QUOTA_FEATURE) === null) return;
+  await lock(tx, `quota:${ctx.tenantId}`);
+  const { used, limit } = await quotaIn(ctx, tx);
+  if (limit !== null && used >= limit)
     throw new DomainError('QUOTA_EXCEEDED', 'The document quota for this period is used up', {
       limit,
     });
+}
+
+// What the plan page shows: documents made in the window and what it allows (null: unlimited).
+// A company in test counts nothing against it, so it reads as unused (FR-ONB-6a).
+export type QuotaUsage = { used: number; limit: number | null; start: string; end: string };
+
+export async function quotaUsage(ctx: ActorContext, db: Database): Promise<QuotaUsage> {
+  requirePermission(ctx, 'billing.read');
+  return db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
+    const { used, limit, window } = await quotaIn(ctx, tx);
+    return {
+      used: ctx.tenantMode === 'PRODUCTION' ? used : 0,
+      limit,
+      start: window.start,
+      end: window.end,
+    };
+  });
 }
 
 // SRI rule 8: never sign what the XSD refuses. Then the size SRI accepts (FR-DOC-9).

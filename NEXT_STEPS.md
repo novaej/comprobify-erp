@@ -11,7 +11,6 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 - **Milestone 3:** certificate renewal (FR-ONB-3); twin reset.
 - **Owner, with live email:** the Mailgun webhook for the buyer's copy (delivered, failed, complained), matched by the `document-id` variable each message carries (FR-DOC-11). Needs the Mailgun signing key and a public URL.
 - **Milestone 8:** a switch that stops Payphone charges and callbacks in a restored copy of real data, as `EMAIL_REDIRECT_TO` does for email (CLAUDE.md mistake 13).
-- **Milestone 8 (also):** `DOCUMENT_QUOTA` counts the Ecuador calendar month for now; count it per billing period instead, with packs (FR-BILL-7).
 - **Milestone 10:** the 10,000-item bulk batch of NFR-PERF-3, and the caps (`BULK_LIMITS`: 50 per company, 150 overall) and the feeder's 5-second period tuned against what SRI accepts. At the defaults a lone company's batch moves at about 1 invoice a second (ADR-026, gate result), so 10,000 take about 2.5 hours; `pnpm test:bulk-gate` with `BULK_GATE_ITEMS=10000` is the run.
 - **Milestone 9: CSV batches (FR-BULK-1), after the CSV import of clients and products (FR-MD-1), which it needs and shares its parser, row-numbered errors and upload screen with.** A file starts a batch in one of two ways. The default, on any plan with Bulk invoicing, is invoices: each row (rows with the same reference are the lines of one invoice) is validated up front, with errors by row number and nothing queued if the file is invalid, then made through the single-invoice pipeline (`bulk_batch_items.input` already holds a row). Only when the plan also has Sales (`SALE_ORDERS`) is there a second choice, to import the file as sale orders to invoice from the batch screen. Until then Bulk invoicing starts from sale orders only, so a company with the add-on but not Sales (the module is separate; Business and Enterprise have both) sees a locked page: either the CSV lifts that, or the module gets its dependency on Sales in the catalog.
 - **Milestone 9:** a page in the platform area to read a document's `sri_exchanges` for support, and a retention period for them (they grow with every authorization check).
@@ -26,7 +25,6 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 Gate: the full upgrade, renewal and expiry cycle on a fake clock, and a Payphone test card run by the owner. Prices, pack sizes and limits start as placeholders the super admin replaces with the real ones.
 
-- [ ] 2. Subscription lifecycle: interval, periods, statuses, the document quota per period (yearly pools 12 months)
 - [ ] 3. Payments and SPI transfers: base, IVA (`IVA_RATE`) and total, payment code, proofs, review with reason codes, refund by snapshot
 - [ ] 4. Plan changes: upgrades, downgrades, interval changes, seats, document packs (they roll over until used), cancellation; past-due and suspended companies can't write
 - [ ] 5. The daily job: renewals, reminders, grace, expiry, on a fake clock

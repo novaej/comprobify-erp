@@ -59,7 +59,7 @@ Milestone 2 creates the subscription and its items without payments, so the bill
 **Editing a published plan or module.**
 
 - An addition reaches every tenant on it immediately.
-- A removal is dated at least 30 days ahead, like a price change (FR-BILL-6). A tenant keeps a module while it is in the plan now or was at the start of the tenant's current period, so the removal reaches each tenant at their first renewal after that date. Until billing exists, the period is the calendar month.
+- A removal is dated at least 30 days ahead, like a price change (FR-BILL-6). A tenant keeps a module while it is in the plan now or was at the start of the tenant's current period, so the removal reaches each tenant at their first renewal after that date. The period is the subscription's own (ADR-028).
 
 **Editing the catalog** (FR-ADM-3). The super admin edits modules and plans from the platform area:
 
@@ -106,7 +106,7 @@ Milestone 2 creates the subscription and its items without payments, so the bill
 **Complimentary subscriptions.** A subscription is `PAID` or `COMPLIMENTARY`. Only the operator sets complimentary, with a reason, and it is recorded in the activity log. A complimentary subscription is a normal subscription to any plan, usually Personalizado, so the tenant's plan page and entitlements work as usual, but:
 
 - It is never charged, never renews, never goes past due and never expires.
-- Its document period is the calendar month.
+- Its document quota renews every month from the day its period started (ADR-028).
 - It is left out of revenue figures.
 
 The owner's company, which invoices through Comprobify itself (FR-BILL-4), runs on one, so the operator's own invoicing never depends on a payment. It also serves demos and partners. At cutover the owner's company gets it, and migrated documents don't use quota.

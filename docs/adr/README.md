@@ -48,6 +48,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [025](025-master-data-at-go-live.md) | Copying master data at go-live | Accepted |
 | [026](026-bulk-invoicing.md) | Bulk invoicing | Accepted |
 | [027](027-prices-and-their-history.md) | Prices and their history | Accepted |
+| [028](028-subscription-periods-and-the-quota.md) | Subscription periods and the quota | Accepted |
 
 ## Old ADRs to read before each milestone
 

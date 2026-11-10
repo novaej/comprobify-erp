@@ -513,11 +513,18 @@
     "unlimited": "Ilimitado",
     "usedOf": "{used} de {limit}",
     "limits": {
-      "DOCUMENT_QUOTA": "Comprobantes por mes",
+      "DOCUMENT_QUOTA": "Comprobantes del periodo",
       "USERS": "Usuarios",
       "MAX_BRANCHES": "Sucursales",
       "MAX_ISSUE_POINTS_PER_BRANCH": "Puntos de emisión por sucursal"
-    }
+    },
+    "period": "Periodo {interval} del {start} al {end}.",
+    "notBilled": "Sin cobro: el cupo de comprobantes se renueva cada mes.",
+    "intervals": {
+      "MONTHLY": "mensual",
+      "YEARLY": "anual"
+    },
+    "quotaWindow": "Los comprobantes cuentan del {start} al {end}. En la empresa de pruebas no se descuentan."
   },
   "admin": {
     "companiesTitle": "Empresas",
@@ -556,7 +563,7 @@
     "priceHint": "En dólares, con hasta dos decimales. Vacío quita el precio.",
     "priceSaved": "Precio guardado.",
     "addOnsTitle": "Módulos adicionales",
-    "addOnsDescription": "Se agregan al instante. Al quitarlos, la empresa los conserva hasta el inicio del próximo mes.",
+    "addOnsDescription": "Se agregan al instante. Al quitarlos, la empresa los conserva hasta que empiece su siguiente periodo.",
     "addModule": "Agregar módulo",
     "addModuleDescription": "La empresa lo tendrá de inmediato, además de lo que incluye su plan.",
     "moduleAdded": "Módulo agregado.",
@@ -566,7 +573,7 @@
     "moduleKept": "Se canceló el retiro del módulo.",
     "removeModuleFor": "Quitar {name}",
     "removeModuleTitle": "¿Quitar el módulo?",
-    "removeModuleDescription": "La empresa lo conserva hasta el inicio del próximo mes. Puedes cancelarlo antes.",
+    "removeModuleDescription": "La empresa lo conserva hasta que empiece su siguiente periodo. Puedes cancelarlo antes.",
     "removeModule": "Quitar",
     "moduleRemovalScheduled": "Retiro programado.",
     "module": "Módulo",
@@ -737,7 +744,7 @@
     "remove": "Quitar",
     "modulesTitle": "Módulos del plan",
     "modulesDraft": "Es un borrador sin empresas: los cambios se aplican al instante.",
-    "modulesNotice": "Agregar se aplica al instante. Quitar se anuncia con 30 días y llega a cada empresa en su siguiente mes.",
+    "modulesNotice": "Agregar se aplica al instante. Quitar se anuncia con 30 días y llega a cada empresa en su siguiente periodo.",
     "addModule": "Agregar módulo",
     "addModuleNow": "Las empresas del plan lo tendrán de inmediato.",
     "moduleAdded": "Módulo agregado al plan.",
@@ -748,7 +755,7 @@
     "removeModule": "Quitar {name}",
     "removeModuleTitle": "¿Quitar el módulo del plan?",
     "removeModuleDraft": "Es un borrador, así que se quita al instante.",
-    "removeModuleNotice": "Las empresas lo conservan 30 días y luego hasta el inicio de su siguiente mes. Puedes cancelarlo antes.",
+    "removeModuleNotice": "Las empresas lo conservan 30 días y luego hasta que empiece su siguiente periodo. Puedes cancelarlo antes.",
     "moduleRemoved": "Módulo quitado.",
     "moduleRemovalScheduled": "Retiro programado en 30 días.",
     "limitsTitle": "Límites del plan",
@@ -771,7 +778,7 @@
     "removeFeature": "Quitar {feature}",
     "removeFeatureTitle": "¿Quitar la función del módulo?",
     "removeFeatureSoon": "El módulo es próximamente, así que se quita al instante.",
-    "removeFeatureNotice": "Las empresas la conservan 30 días y luego hasta el inicio de su siguiente mes.",
+    "removeFeatureNotice": "Las empresas la conservan 30 días y luego hasta que empiece su siguiente periodo.",
     "featureRemoved": "Función quitada.",
     "featureRemovalScheduled": "Retiro programado en 30 días."
   },

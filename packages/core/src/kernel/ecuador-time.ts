@@ -13,6 +13,12 @@ export function startOfNextEcuadorMonth(at: Date): Date {
   return startOfEcuadorMonth(new Date(start.getTime() + 32 * 24 * 60 * 60 * 1000));
 }
 
+// The instant an Ecuador calendar day (YYYY-MM-DD) begins.
+export function startOfEcuadorDay(date: string): Date {
+  const [year, month, day] = date.split('-').map(Number) as [number, number, number];
+  return new Date(Date.UTC(year, month - 1, day) + OFFSET_MS);
+}
+
 // The Ecuador calendar day of an instant, as YYYY-MM-DD: the issue date of a document
 // sent at that instant (SRI rule 6).
 export function ecuadorDate(at: Date): string {

@@ -1,6 +1,7 @@
 import { and, eq, schema, type Tx } from '@comprobify/db';
-import { startOfEcuadorMonth, type Entitlements } from '../kernel';
+import { startOfEcuadorDay, type Entitlements } from '../kernel';
 import type { ModuleStatus } from './catalog';
+import { subscriptionState } from './subscriptions';
 
 export type ModuleSource = {
   status: ModuleStatus;
@@ -45,11 +46,6 @@ export function resolveEntitlements(sources: EntitlementSources, periodStart: Da
   return { features: [...features].sort(), limits };
 }
 
-// Until billing has periods (Milestone 8), the period is the Ecuador calendar month.
-export function currentPeriodStart(now: Date): Date {
-  return startOfEcuadorMonth(now);
-}
-
 // Filters by tenant_id itself, so it also works in system context.
 export async function loadEntitlements(
   tx: Tx['db'],
@@ -64,6 +60,8 @@ export async function loadEntitlements(
     .where(eq(subscriptions.tenantId, tenantId));
   // Every company gets one when created, and the migrate step fills any gap.
   if (!subscription) throw new Error(`Tenant ${tenantId} has no subscription`);
+  // Dated removals reach the company when its own period starts (ADR-011, ADR-028).
+  const { window } = await subscriptionState(tx, tenantId, now);
 
   // The catalog is small platform data: read it whole.
   const allModules = await tx.select({ id: modules.id, status: modules.status }).from(modules);
@@ -149,6 +147,6 @@ export async function loadEntitlements(
       ),
       overrides,
     },
-    currentPeriodStart(now),
+    startOfEcuadorDay(window.start),
   );
 }

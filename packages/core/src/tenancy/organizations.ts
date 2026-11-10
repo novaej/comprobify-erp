@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { recordAudit } from '../audit';
 import { loadEntitlements, startDefaultSubscriptions } from '../entitlements';
 import { setActiveTenant } from '../identity';
-import { DomainError, type ActorContext, type Clock } from '../kernel';
+import { DomainError, ecuadorDate, systemClock, type ActorContext, type Clock } from '../kernel';
 import type { Logo } from './logo';
 import { permissionsFor, type Role } from './roles';
 
@@ -59,7 +59,7 @@ const isUniqueViolation = (error: unknown, constraint: string): boolean => {
 export async function createOrganization(
   db: Database,
   raw: z.input<typeof createOrganizationInput>,
-  extras: { certificate?: StoredCertificate; logo?: Logo } = {},
+  extras: { certificate?: StoredCertificate; logo?: Logo; clock?: Clock } = {},
 ): Promise<CreatedOrganization> {
   const input = createOrganizationInput.parse(raw);
   try {
@@ -136,7 +136,11 @@ export async function createOrganization(
         }
       }
       const created = { realTenantId: real!.id, twinTenantId: twin!.id };
-      await startDefaultSubscriptions(tx, [created]);
+      await startDefaultSubscriptions(
+        tx,
+        [created],
+        ecuadorDate((extras.clock ?? systemClock).now()),
+      );
       return created;
     });
   } catch (error) {
@@ -159,6 +163,7 @@ export async function assignDefaultPlans(db: Database): Promise<number> {
     return startDefaultSubscriptions(
       tx,
       twins.map((twin) => ({ realTenantId: twin.realTenantId!, twinTenantId: twin.twinTenantId })),
+      ecuadorDate(systemClock.now()),
     );
   });
 }

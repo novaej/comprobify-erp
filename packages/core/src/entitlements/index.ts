@@ -6,7 +6,8 @@ export { FEATURES, FEATURE_KEYS } from './features';
 export type { BooleanFeature, FeatureKey, FeatureKind, LimitFeature } from './features';
 export { STARTING_MODULES, STARTING_PLANS } from './catalog';
 export type { ModuleKey, ModuleStatus, PlanLimits, PlanStatus } from './catalog';
-export { DEFAULT_PLAN_KEY, startDefaultSubscriptions } from './subscriptions';
+export { DEFAULT_PLAN_KEY, startDefaultSubscriptions, subscriptionState } from './subscriptions';
+export type { SubscriptionState } from './subscriptions';
 export {
   applyAddModule,
   applyBilling,
@@ -45,7 +46,9 @@ export {
 export type { CatalogView, LimitChange } from './catalog-admin';
 export { planOverview, SHOWN_LIMITS } from './overview';
 export type { PlanModule, PlanOverview } from './overview';
-export { currentPeriodStart, loadEntitlements, resolveEntitlements } from './resolve';
+export { loadEntitlements, resolveEntitlements } from './resolve';
+export { MONTHS_IN, periodEndFrom, quotaWindow } from './periods';
+export type { SubscriptionPeriod } from './periods';
 export type { EntitlementSources, ModuleSource } from './resolve';
 
 export type CatalogSync = { features: string[]; modules: string[]; plans: string[] };

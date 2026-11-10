@@ -37,15 +37,19 @@ describe('super admin: plan and module editors', () => {
 
   // A company on the plan, and what it has on a given day.
   const companyOn = async (planKey: string) => {
-    const org = await createOrganization(db, {
-      ownerUserId: ownerId,
-      ruc: testRuc(),
-      legalName: 'Mu S.A.',
-      tradeName: null,
-      mainAddress: 'Quito',
-      branch: { code: '001', name: 'Matriz', address: null },
-      issuePointCode: '001',
-    });
+    const org = await createOrganization(
+      db,
+      {
+        ownerUserId: ownerId,
+        ruc: testRuc(),
+        legalName: 'Mu S.A.',
+        tradeName: null,
+        mainAddress: 'Quito',
+        branch: { code: '001', name: 'Matriz', address: null },
+        issuePointCode: '001',
+      },
+      { clock },
+    );
     await changePlan(operator, db, { realTenantId: org.realTenantId, planKey });
     return async (at: string) =>
       (
@@ -135,13 +139,14 @@ describe('super admin: plan and module editors', () => {
     expect((await has('2026-11-10T16:00:00Z')).features).toContain('INVENTORY');
 
     await removePlanModule(operator, db, { planKey, moduleKey: 'INVENTORY' });
-    // Removed on 10 November, dated 10 December: kept in December, gone from January.
+    // Removed on 10 November, dated 10 December at 10:00: the company's period that began that
+    // morning still has it, and the one from 10 January doesn't (ADR-028).
     expect((await plan(planKey)).modules).toContainEqual({
       key: 'INVENTORY',
       removesAt: new Date('2026-12-10T15:00:00Z'),
     });
     expect((await has('2026-12-20T12:00:00Z')).features).toContain('INVENTORY');
-    expect((await has('2027-01-02T12:00:00Z')).features).not.toContain('INVENTORY');
+    expect((await has('2027-01-11T12:00:00Z')).features).not.toContain('INVENTORY');
   });
 
   it('removes a key from a coming-soon module at once, and from an available one with notice', async () => {
@@ -169,7 +174,7 @@ describe('super admin: plan and module editors', () => {
     );
   });
 
-  it('raises a limit at once, and lowers it from the first month 30 days on', async () => {
+  it('raises a limit at once, and lowers it from the company’s first period 30 days on', async () => {
     const planKey = `P_${unique()}`;
     await createPlan(operator, db, { key: planKey, nameEs: 'E', nameEn: 'E', selfService: true });
     // A draft has no companies, so lowering is immediate.
@@ -192,11 +197,11 @@ describe('super admin: plan and module editors', () => {
       pendingFrom: new Date('2026-12-10T15:00:00Z'),
     });
     expect((await has('2026-12-20T12:00:00Z')).limits.USERS).toBe(10);
-    expect((await has('2027-01-02T12:00:00Z')).limits.USERS).toBe(3);
+    expect((await has('2027-01-11T12:00:00Z')).limits.USERS).toBe(3);
 
     // Raising again cancels the lowering.
     await setPlanLimit(operator, db, { planKey, featureKey: 'USERS', value: null });
-    expect((await has('2027-01-02T12:00:00Z')).limits.USERS).toBeNull();
+    expect((await has('2027-01-11T12:00:00Z')).limits.USERS).toBeNull();
   });
 
   it('records every change in the platform log, which nobody can rewrite', async () => {

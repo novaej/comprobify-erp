@@ -1,4 +1,4 @@
-import { companyUsage, planOverview, SHOWN_LIMITS } from '@comprobify/core';
+import { companyUsage, planOverview, quotaUsage, SHOWN_LIMITS } from '@comprobify/core';
 import { CheckCircle2, Clock } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { NoAccess } from '@/components/no-access';
@@ -11,8 +11,8 @@ import { pageTitle } from '@/server/page-title';
 
 export const generateMetadata = pageTitle('plan');
 
-// FR-PLAN-4: what the company's plan includes and how much of each limit it uses.
-// Changing plan arrives with billing (Milestone 8).
+// FR-PLAN-4: what the company's plan includes and how much of each limit it uses, in its
+// current period (FR-BILL-7). Changing plan arrives later in Milestone 8.
 export default async function PlanPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
@@ -20,7 +20,11 @@ export default async function PlanPage({ params }: { params: Promise<{ locale: s
   if (!actor.permissions.includes('billing.read')) return <NoAccess />;
 
   const { db } = await getRuntime();
-  const [overview, usage] = await Promise.all([planOverview(actor, db), companyUsage(actor, db)]);
+  const [overview, usage, quota] = await Promise.all([
+    planOverview(actor, db),
+    companyUsage(actor, db),
+    quotaUsage(actor, db),
+  ]);
   const t = await getTranslations('plan');
   const english = locale === 'en';
   const name = (row: { nameEs: string; nameEn: string }) => (english ? row.nameEn : row.nameEs);
@@ -29,7 +33,15 @@ export default async function PlanPage({ params }: { params: Promise<{ locale: s
     timeZone: 'America/Guayaquil',
   });
   const number = new Intl.NumberFormat(english ? 'en' : 'es-EC');
-  const used: Partial<Record<(typeof SHOWN_LIMITS)[number], number>> = usage;
+  const used: Partial<Record<(typeof SHOWN_LIMITS)[number], number>> = {
+    ...usage,
+    DOCUMENT_QUOTA: quota.used,
+  };
+  // The quota shown is the period's: a yearly period holds twelve months of it.
+  const limitOf = (key: (typeof SHOWN_LIMITS)[number]) =>
+    key === 'DOCUMENT_QUOTA' ? quota.limit : overview.limits[key];
+  const day = (iso: string) => iso.split('-').reverse().join('/');
+  const billed = overview.subscription.periodEnd !== null;
 
   return (
     <div className="max-w-3xl space-y-4">
@@ -44,13 +56,25 @@ export default async function PlanPage({ params }: { params: Promise<{ locale: s
         }
       >
         <p className="text-2xl font-semibold tracking-tight">{name(overview.plan)}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {billed
+            ? t('period', {
+                interval: t(`intervals.${overview.subscription.interval}`),
+                start: day(overview.subscription.periodStart),
+                end: day(overview.subscription.periodEnd!),
+              })
+            : t('notBilled')}
+        </p>
         <p className="mt-1 text-sm text-muted-foreground">{t('changeSoon')}</p>
       </SectionCard>
 
-      <SectionCard title={t('limitsTitle')}>
+      <SectionCard
+        title={t('limitsTitle')}
+        description={t('quotaWindow', { start: day(quota.start), end: day(quota.end) })}
+      >
         <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {SHOWN_LIMITS.map((key) => {
-            const limit = overview.limits[key];
+            const limit = limitOf(key);
             const value = limit === null ? t('unlimited') : number.format(limit);
             const count = used[key];
             return (

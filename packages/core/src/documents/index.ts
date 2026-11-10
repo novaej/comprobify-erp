@@ -103,3 +103,5 @@ export {
   templateContentInput,
 } from './templates';
 export type { DocumentTemplate, TemplateContent } from './templates';
+export { quotaUsage } from './compose';
+export type { QuotaUsage } from './compose';

@@ -9,6 +9,7 @@ export {
   ecuadorDateTime,
   ecuadorDateTimeDisplay,
   endOfEcuadorDay,
+  startOfEcuadorDay,
   startOfEcuadorMonth,
   startOfNextEcuadorMonth,
 } from './ecuador-time';

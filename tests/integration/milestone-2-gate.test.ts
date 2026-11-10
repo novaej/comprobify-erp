@@ -47,7 +47,7 @@ describe('Milestone 2 gate: a feature switched per company', () => {
         branch: { code: '001', name: 'Matriz', address: null },
         issuePointCode: '001',
       },
-      { logo: { content: PNG, contentType: 'image/png' } },
+      { logo: { content: PNG, contentType: 'image/png' }, clock },
     );
   const actor = (tenantId: string, at = '2026-11-10T16:00:00Z') =>
     resolveActor(db, { userId: ownerId, tenantId, clock: fixedClock(at) });
@@ -124,16 +124,16 @@ describe('Milestone 2 gate: a feature switched per company', () => {
     await expect(invite(other)).rejects.toMatchObject({ code: 'LIMIT_REACHED' });
   });
 
-  it('switches them off again: an exception at once, an add-on at the next month', async () => {
+  it('switches them off again: an exception at once, an add-on at the next period', async () => {
     const id = { realTenantId: one.realTenantId };
     await clearOverride(operator, db, { ...id, featureKey: 'RIDE_LOGO' });
     await removeModule(operator, db, { ...id, moduleKey: 'INVENTORY' });
 
     const now = await actor(one.realTenantId);
     await expect(companyLogo(now, db)).resolves.toBeNull();
-    // Removed on 10 November: kept for the rest of the month.
+    // Removed on 10 November: kept for the rest of the company's period, which began that day.
     expect(() => requireFeature(now, 'INVENTORY')).not.toThrow();
-    const december = await actor(one.realTenantId, '2026-12-01T05:00:00Z');
+    const december = await actor(one.realTenantId, '2026-12-10T05:00:00Z');
     expect(() => requireFeature(december, 'INVENTORY')).toThrow(
       expect.objectContaining({ code: 'FEATURE_NOT_ENABLED' }),
     );

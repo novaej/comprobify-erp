@@ -513,11 +513,18 @@
     "unlimited": "Unlimited",
     "usedOf": "{used} of {limit}",
     "limits": {
-      "DOCUMENT_QUOTA": "Documents per month",
+      "DOCUMENT_QUOTA": "Documents this period",
       "USERS": "Users",
       "MAX_BRANCHES": "Branches",
       "MAX_ISSUE_POINTS_PER_BRANCH": "Issue points per branch"
-    }
+    },
+    "period": "{interval} period from {start} to {end}.",
+    "notBilled": "Not billed: the document quota renews every month.",
+    "intervals": {
+      "MONTHLY": "Monthly",
+      "YEARLY": "Yearly"
+    },
+    "quotaWindow": "Documents count from {start} to {end}. The test company doesn't use any."
   },
   "admin": {
     "companiesTitle": "Companies",
@@ -556,7 +563,7 @@
     "priceHint": "In dollars, up to two decimals. Empty removes the price.",
     "priceSaved": "Price saved.",
     "addOnsTitle": "Add-on modules",
-    "addOnsDescription": "Added at once. When removed, the company keeps them until next month starts.",
+    "addOnsDescription": "Added at once. When removed, the company keeps them until its next period starts.",
     "addModule": "Add module",
     "addModuleDescription": "The company gets it at once, on top of what its plan includes.",
     "moduleAdded": "Module added.",
@@ -566,7 +573,7 @@
     "moduleKept": "The module removal was cancelled.",
     "removeModuleFor": "Remove {name}",
     "removeModuleTitle": "Remove the module?",
-    "removeModuleDescription": "The company keeps it until next month starts. You can cancel before then.",
+    "removeModuleDescription": "The company keeps it until its next period starts. You can cancel before then.",
     "removeModule": "Remove",
     "moduleRemovalScheduled": "Removal scheduled.",
     "module": "Module",
@@ -737,7 +744,7 @@
     "remove": "Remove",
     "modulesTitle": "Plan modules",
     "modulesDraft": "A draft with no companies: changes apply at once.",
-    "modulesNotice": "Adding applies at once. Removing is announced 30 days ahead and reaches each company at its next month.",
+    "modulesNotice": "Adding applies at once. Removing is announced 30 days ahead and reaches each company at its next period.",
     "addModule": "Add module",
     "addModuleNow": "The plan's companies get it at once.",
     "moduleAdded": "Module added to the plan.",
@@ -748,7 +755,7 @@
     "removeModule": "Remove {name}",
     "removeModuleTitle": "Remove the module from the plan?",
     "removeModuleDraft": "It's a draft, so it is removed at once.",
-    "removeModuleNotice": "Companies keep it for 30 days, then until their next month starts. You can cancel before then.",
+    "removeModuleNotice": "Companies keep it for 30 days, then until their next period starts. You can cancel before then.",
     "moduleRemoved": "Module removed.",
     "moduleRemovalScheduled": "Removal scheduled in 30 days.",
     "limitsTitle": "Plan limits",
@@ -771,7 +778,7 @@
     "removeFeature": "Remove {feature}",
     "removeFeatureTitle": "Remove the feature from the module?",
     "removeFeatureSoon": "The module is coming soon, so it is removed at once.",
-    "removeFeatureNotice": "Companies keep it for 30 days, then until their next month starts.",
+    "removeFeatureNotice": "Companies keep it for 30 days, then until their next period starts.",
     "featureRemoved": "Feature removed.",
     "featureRemovalScheduled": "Removal scheduled in 30 days."
   },

@@ -73,7 +73,8 @@ describe('subscriptions', () => {
   it('allows one subscription per tenant, and complimentary only with a reason', async () => {
     await expect(
       write(
-        `INSERT INTO subscriptions (tenant_id, plan_id) SELECT $1, id FROM plans WHERE key = 'CUSTOM'`,
+        `INSERT INTO subscriptions (tenant_id, plan_id, period_start)
+         SELECT $1, id, '2026-11-10' FROM plans WHERE key = 'CUSTOM'`,
         [org.realTenantId],
       ),
     ).rejects.toMatchObject({ code: '23505' });
