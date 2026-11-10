@@ -4,6 +4,8 @@ export {
   confirmSaleOrder,
   createSaleOrder,
   getSaleOrder,
+  invoiceableOrderIds,
+  listInvoiceableOrders,
   listSaleOrders,
   saleOrderFilters,
   saleOrderInput,

@@ -11,6 +11,7 @@ import {
   type Tx,
 } from '@comprobify/db';
 import { z } from 'zod';
+import { documentNumber } from '../documents';
 import { DomainError, requireFeature, requirePermission, type ActorContext } from '../kernel';
 import type { Jobs } from '../jobs';
 import { countSaleOrders } from '../sales';
@@ -189,6 +190,7 @@ export type BatchItemRow = {
   saleOrderId: string | null;
   saleOrderNumber: number | null;
   documentId: string | null;
+  documentNumber: string | null;
   documentStatus: string | null;
   attempts: number;
   errorCode: string | null;
@@ -216,6 +218,8 @@ export async function getBatch(
       .select({
         item: items,
         document: documents.status,
+        series: documents.series,
+        sequential: documents.sequential,
         orderNumber: saleOrders.number,
       })
       .from(items)
@@ -233,13 +237,14 @@ export async function getBatch(
       .offset(page.offset ?? 0);
     return {
       ...batchRow(batch, counts.get(batch.id)),
-      items: rows.map(({ item, document, orderNumber }) => ({
+      items: rows.map(({ item, document, series, sequential, orderNumber }) => ({
         id: item.id,
         position: item.position,
         view: itemView(item.status, document),
         saleOrderId: item.saleOrderId,
         saleOrderNumber: orderNumber,
         documentId: item.documentId,
+        documentNumber: series && sequential ? documentNumber(series, sequential) : null,
         documentStatus: document,
         attempts: item.attempts,
         errorCode: item.errorCode,

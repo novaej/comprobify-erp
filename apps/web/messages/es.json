@@ -207,7 +207,8 @@
     "providers": "Proveedores",
     "purchaseOrders": "Órdenes de compra",
     "saleOrders": "Pedidos de venta",
-    "receivables": "Cuentas por cobrar"
+    "receivables": "Cuentas por cobrar",
+    "bulkInvoicing": "Facturación masiva"
   },
   "shell": {
     "sandboxTitle": "Estás en el ambiente de pruebas",
@@ -664,7 +665,11 @@
     "saleOrder": "Pedido de venta",
     "editSaleOrder": "Editar pedido de venta",
     "invoiceSaleOrder": "Facturar pedido de venta",
-    "receivables": "Cuentas por cobrar"
+    "receivables": "Cuentas por cobrar",
+    "bulkInvoicing": "Facturación masiva",
+    "newBulkBatch": "Nueva facturación masiva",
+    "bulkBatch": "Facturación masiva",
+    "adminQueue": "Cola de facturación masiva"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -677,7 +682,8 @@
     "companies": "Empresas",
     "backToApp": "Volver a la aplicación",
     "plans": "Planes",
-    "modules": "Módulos"
+    "modules": "Módulos",
+    "queue": "Cola de facturación"
   },
   "catalog": {
     "plansTitle": "Planes",
@@ -2153,7 +2159,8 @@
         "confirmTitle": "¿Corregir la factura?",
         "confirmDescription": "Se reenvía al SRI con el mismo número y las cantidades que elegiste."
       }
-    }
+    },
+    "bulk": "Facturación masiva"
   },
   "saleOrdersError": {
     "ORDER_NOT_EDITABLE": "El pedido ya no se puede editar.",
@@ -2247,5 +2254,138 @@
     "NOT_FOUND": "No se encontró la factura o el cobro.",
     "INVALID_INPUT": "Revisa los datos: el valor debe ser mayor que cero, con hasta 2 decimales.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+  },
+  "liveRefresh": {
+    "updating": "Actualizando automáticamente…"
+  },
+  "bulkInvoicing": {
+    "title": "Facturación masiva",
+    "description": "Factura muchos pedidos de venta a la vez. Las facturas se crean en segundo plano, una por una, y puedes seguir trabajando.",
+    "new": "Nueva facturación masiva",
+    "newDescription": "Elige los pedidos confirmados que quieres facturar. Cada pedido se factura completo, con lo que le quede por facturar.",
+    "back": "Volver a facturación masiva",
+    "emptyTitle": "Aún no hay facturaciones masivas",
+    "empty": "Cuando factures varios pedidos a la vez, aparecerán aquí con su avance.",
+    "table": {
+      "started": "Inicio",
+      "source": "Origen",
+      "progress": "Avance",
+      "failed": "Con error",
+      "status": "Estado",
+      "open": "Abrir la facturación masiva del {date}"
+    },
+    "sources": {
+      "SALE_ORDERS": "Pedidos de venta",
+      "CSV": "Archivo CSV"
+    },
+    "statuses": {
+      "PROCESSING": "En proceso",
+      "COMPLETED": "Terminada"
+    },
+    "items": {
+      "QUEUED": "En cola",
+      "CREATING": "Creando",
+      "SENT": "Enviada al SRI",
+      "AUTHORIZED": "Autorizada",
+      "FAILED": "Con error"
+    },
+    "progress": "{done} de {total} autorizadas",
+    "progressLabel": "Avance de la facturación masiva del {date}",
+    "pagination": {
+      "label": "Paginación",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page": "Página {page} de {pages}"
+    },
+    "detail": {
+      "title": "Facturación masiva del {date}",
+      "progress": "Avance",
+      "completedAt": "terminó el {date}",
+      "items": "Facturas de la facturación masiva",
+      "position": "N.º",
+      "order": "Pedido",
+      "invoice": "Factura",
+      "status": "Estado",
+      "reason": "Detalle"
+    },
+    "rejected": "El SRI no aceptó la factura. Corrígela desde la factura y se reenvía con el mismo número.",
+    "retry": {
+      "button": "Reintentar los {count} con error",
+      "title": "¿Reintentar los que fallaron?",
+      "description": "Los pedidos con error vuelven a la cola y se facturan de nuevo. Las facturas que el SRI rechazó no se reintentan: se corrigen desde su factura.",
+      "detail": "{count} pedidos",
+      "confirm": "Reintentar",
+      "done": "Los pedidos con error volvieron a la cola."
+    },
+    "form": {
+      "title": "Cómo se facturan",
+      "description": "Todas las facturas salen del mismo punto de emisión y se pagan de la misma forma, por el total del pedido.",
+      "issuePoint": "Punto de emisión",
+      "method": "Forma de pago",
+      "term": "Plazo",
+      "termUnit": "Unidad del plazo",
+      "termInvalid": "Usa solo números."
+    },
+    "issuing": {
+      "none": "No tienes un punto de emisión disponible para facturar.",
+      "noneAction": "Ir a configuración"
+    },
+    "search": "Buscar por cliente, identificación o número",
+    "searchButton": "Buscar",
+    "finalConsumer": "Consumidor final",
+    "noOrdersTitle": "No hay pedidos para facturar",
+    "noOrders": "Aquí aparecen los pedidos confirmados que aún tienen algo por facturar.",
+    "noMatchesTitle": "Sin resultados",
+    "noMatches": "Ningún pedido por facturar coincide con la búsqueda.",
+    "orders": {
+      "title": "Pedidos por facturar ({matching})",
+      "select": "Elegir el pedido {number}",
+      "selectPage": "Elegir todos los pedidos de esta página",
+      "number": "Pedido",
+      "date": "Fecha",
+      "client": "Cliente",
+      "total": "Total"
+    },
+    "selected": "{count, plural, =0 {Ningún pedido elegido} one {1 pedido elegido} other {# pedidos elegidos}}",
+    "submit": "Facturar {count, plural, one {el pedido elegido} other {los # elegidos}}",
+    "submitAll": "Facturar los {count} que coinciden",
+    "confirm": {
+      "title": "¿Facturar estos pedidos?",
+      "description": "Se crea una factura por cada pedido, en segundo plano, y se envía al SRI. Una factura autorizada solo se puede anular después.",
+      "detail": "{count, plural, one {1 pedido} other {# pedidos}}",
+      "submit": "Facturar {count, plural, one {1 pedido} other {# pedidos}}"
+    }
+  },
+  "bulkInvoicingError": {
+    "FORBIDDEN": "Tu rol no permite esta acción.",
+    "FEATURE_NOT_ENABLED": "Tu plan no incluye la facturación masiva.",
+    "NOT_FOUND": "No se encontró la facturación, el punto de emisión o alguno de los pedidos.",
+    "INVALID_INPUT": "Revisa los datos: elige al menos un pedido, un punto de emisión y un plazo con solo números.",
+    "QUOTA_EXCEEDED": "Se acabó el cupo de documentos del periodo.",
+    "ORDER_NOT_INVOICEABLE": "El pedido ya no se puede facturar (solo los confirmados).",
+    "ORDER_NOTHING_LEFT": "El pedido ya está facturado por completo.",
+    "INSUFFICIENT_STOCK": "No hay suficientes existencias para este pedido.",
+    "NOT_A_MEMBER": "Quien inició la facturación ya no pertenece a la empresa.",
+    "BATCH_ITEM_INVALID": "El elemento no tiene un pedido de venta.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+  },
+  "adminQueue": {
+    "title": "Cola de facturación masiva",
+    "description": "Lo que se está procesando, empresa por empresa, frente a los límites que reparten el turno.",
+    "inFlight": "En proceso en toda la plataforma",
+    "waiting": "Esperando turno",
+    "perCompany": "Límite por empresa",
+    "ofCap": "{count} de {cap}",
+    "emptyTitle": "La cola está vacía",
+    "empty": "Ninguna empresa tiene facturación masiva en proceso.",
+    "twin": "Pruebas",
+    "table": {
+      "company": "Empresa",
+      "batches": "Lotes",
+      "waiting": "Esperando",
+      "inFlight": "En proceso",
+      "failed": "Con error",
+      "oldest": "Espera desde"
+    }
   }
 }

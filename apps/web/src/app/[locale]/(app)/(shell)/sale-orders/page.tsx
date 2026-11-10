@@ -7,7 +7,7 @@ import {
   type SaleOrderFilters,
 } from '@comprobify/core';
 import { buttonVariants } from '@comprobify/ui/components/button';
-import { ChevronRight, ShoppingCart, Plus } from 'lucide-react';
+import { ChevronRight, Layers, Plus, ShoppingCart } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { EmptyState } from '@/components/empty-state';
 import { FeatureLocked } from '@/components/feature-locked';
@@ -78,10 +78,22 @@ export default async function SaleOrdersPage({
         description={t('description')}
         action={
           canManage && (
-            <Link href="/sale-orders/new" className={buttonVariants({ size: 'sm' })}>
-              <Plus className="mr-1.5 h-4 w-4" aria-hidden />
-              {t('new')}
-            </Link>
+            <>
+              {hasFeature(actor, 'BULK_INVOICING') &&
+                actor.permissions.includes('documents.issue') && (
+                  <Link
+                    href="/bulk-invoicing/new"
+                    className={buttonVariants({ size: 'sm', variant: 'outline' })}
+                  >
+                    <Layers className="mr-1.5 h-4 w-4" aria-hidden />
+                    {t('bulk')}
+                  </Link>
+                )}
+              <Link href="/sale-orders/new" className={buttonVariants({ size: 'sm' })}>
+                <Plus className="mr-1.5 h-4 w-4" aria-hidden />
+                {t('new')}
+              </Link>
+            </>
           )
         }
       />

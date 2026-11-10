@@ -4,8 +4,12 @@ import { base32 } from '@better-auth/utils/base32';
 import { createOTP } from '@better-auth/utils/otp';
 import {
   checkAuthorization,
+  completeBatches,
+  createKeyCipher,
   createMockSri,
   createSriClient,
+  feedBatches,
+  processItem,
   sendDocument,
   verifyStockLevels,
 } from '@comprobify/core';
@@ -131,6 +135,56 @@ async function runSri(
       await deps.sri.send(row!.signed_xml, row!.ambiente);
       await checkAuthorization(deps, ref);
     }
+  } finally {
+    await db.close();
+  }
+}
+
+// What the worker does for a batch, run here: the app Playwright starts has no worker. The
+// feeder hands out the items, the item jobs make the invoices; SRI's answers come from runSri.
+async function runBulk(batchId: string, step: 'make' | 'complete'): Promise<string[]> {
+  const silent = { debug() {}, info() {}, warn() {}, error() {}, child: () => silent };
+  const db = createDatabase({ connectionString: process.env.DATABASE_URL!, logger: silent });
+  try {
+    const deps = {
+      db,
+      jobs: { enqueue: () => Promise.resolve(null) },
+      clock: { now: () => new Date() },
+      logger: silent,
+      issue: {
+        appEnv: 'local' as const,
+        providerRuc: null,
+        consumerFinalMaxAmount: '50.00',
+        keyCipher: createKeyCipher(process.env.CERT_ENCRYPTION_KEY!),
+      },
+    };
+    const [batch] = await db.withSystem('e2e: find the batch', ({ executeSql }) =>
+      executeSql<{ tenant_id: string }>('SELECT tenant_id FROM bulk_batches WHERE id = $1', [
+        batchId,
+      ]).then((result) => result.rows),
+    );
+    const tenantId = batch!.tenant_id;
+    if (step === 'complete') {
+      await completeBatches(deps);
+      return [];
+    }
+    // Only this company: other runs may have left batches in the shared database.
+    await feedBatches(deps, undefined, [tenantId]);
+    const items = await db.withSystem('e2e: find the dispatched items', ({ executeSql }) =>
+      executeSql<{ id: string }>(
+        `SELECT id FROM bulk_batch_items
+         WHERE batch_id = $1 AND dispatched_at IS NOT NULL AND status IN ('QUEUED', 'CREATING')`,
+        [batchId],
+      ).then((result) => result.rows),
+    );
+    for (const item of items) await processItem(deps, { tenantId, itemId: item.id });
+    const made = await db.withSystem('e2e: find the invoices', ({ executeSql }) =>
+      executeSql<{ document_id: string }>(
+        'SELECT document_id FROM bulk_batch_items WHERE batch_id = $1 AND document_id IS NOT NULL',
+        [batchId],
+      ).then((result) => result.rows),
+    );
+    return made.map((row) => row.document_id);
   } finally {
     await db.close();
   }
@@ -1377,6 +1431,88 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await look(page, 'sale-order-gate');
   });
 
+  test('invoices several sale orders at once and follows them on the stack view (FR-BULK-1 to FR-BULK-3)', async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await grantFeature(email, 'BULK_INVOICING', 'e2e bulk invoicing');
+    await signIn(page, email, newPassword);
+    const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
+    await expect(nav).toBeVisible();
+    const heading = page.getByRole('heading', { level: 1 });
+    const main = page.getByRole('main');
+
+    // Two confirmed orders of one unit each.
+    const confirmedOrder = async () => {
+      await page.goto('/es/sale-orders/new');
+      const client = page.getByRole('combobox', {
+        name: 'Buscar cliente por nombre o identificación',
+      });
+      await client.fill('María');
+      await client.press('Enter');
+      const line = page.getByRole('group', { name: 'Línea 1' });
+      await line.getByRole('combobox', { name: 'Producto' }).fill('CAF-001');
+      await page.keyboard.press('Enter');
+      await line.getByRole('textbox', { name: 'Cantidad' }).fill('1');
+      await page.getByRole('button', { name: 'Guardar borrador' }).click();
+      await expect(heading).toContainText('Pedido PV-');
+      const number = /PV-\d+/.exec((await heading.textContent()) ?? '')![0];
+      await page.getByRole('button', { name: 'Confirmar pedido' }).click();
+      await page
+        .getByRole('dialog', { name: '¿Confirmar el pedido?' })
+        .getByRole('button', { name: 'Confirmar pedido' })
+        .click();
+      await expect(heading).toContainText('Confirmado');
+      return number;
+    };
+    const first = await confirmedOrder();
+    const second = await confirmedOrder();
+
+    await nav.getByRole('link', { name: 'Facturación masiva' }).click();
+    await expect(heading).toHaveText('Facturación masiva');
+    await expect(main).toContainText('Aún no hay facturaciones masivas');
+    await look(page, 'bulk-empty');
+    await page.getByRole('link', { name: 'Nueva facturación masiva' }).first().click();
+    await expect(heading).toHaveText('Nueva facturación masiva');
+    await page.getByRole('checkbox', { name: `Elegir el pedido ${first}` }).check();
+    await page.getByRole('checkbox', { name: `Elegir el pedido ${second}` }).check();
+    await expect(main).toContainText('2 pedidos elegidos');
+    await look(page, 'bulk-new');
+    await page.getByRole('button', { name: 'Facturar los 2 elegidos' }).click();
+    const ask = page.getByRole('dialog', { name: '¿Facturar estos pedidos?' });
+    await look(page, 'bulk-confirm');
+    await ask.getByRole('button', { name: 'Facturar 2 pedidos' }).click();
+
+    // The stack view: both wait their turn.
+    await expect(heading).toContainText('Facturación masiva del');
+    const batchId = page.url().split('/').at(-1)!;
+    await expect(main).toContainText('0 de 2 autorizadas');
+    await expect(main.getByText('En cola', { exact: true }).first()).toBeVisible();
+    await look(page, 'bulk-batch-queued');
+
+    // The worker makes the invoices; the page follows by itself.
+    const documents = await runBulk(batchId, 'make');
+    expect(documents).toHaveLength(2);
+    await expect(main.getByText('Enviada al SRI', { exact: true }).first()).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(main.getByRole('link', { name: /001-001-/ }).first()).toBeVisible();
+    await look(page, 'bulk-batch-sent');
+
+    // SRI authorizes them, and the sweep closes the batch.
+    for (const document of documents) await runSri(document, 'authorize');
+    await runBulk(batchId, 'complete');
+    await expect(main).toContainText('2 de 2 autorizadas', { timeout: 30_000 });
+    await expect(main).toContainText('Terminada');
+    await look(page, 'bulk-batch-done');
+
+    await page.goto('/es/bulk-invoicing');
+    await expect(page.getByRole('table', { name: 'Facturación masiva' })).toContainText(
+      'Terminada',
+    );
+    await look(page, 'bulk-list');
+  });
+
   test('finds no drift between the stock levels and their ledger after the day (FR-INV-2, Milestone 5 gate)', async () => {
     // What the nightly inventory.verify job runs, over everything the tests above stocked.
     const silent = { debug() {}, info() {}, warn() {}, error() {}, child: () => silent };
@@ -1601,6 +1737,11 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
       .click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Empresas');
     await look(page, 'admin-companies');
+    // ADR-026: the queue page, empty once the batch above has been worked through.
+    await page.goto('/es/admin/queue');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Cola de facturación masiva');
+    await look(page, 'admin-queue');
+    await page.goto('/es/admin');
     await page.getByRole('searchbox', { name: 'Buscar por RUC o nombre' }).fill(companyRuc);
     await page.getByRole('button', { name: 'Buscar' }).click();
     await page

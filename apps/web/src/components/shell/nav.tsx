@@ -6,20 +6,21 @@ import {
   Boxes,
   Building2,
   ChevronLeft,
-  Contact,
   ChevronRight,
   ClipboardList,
-  HandCoins,
-  ShoppingCart,
+  Contact,
   FileText,
+  HandCoins,
+  Layers,
   LayoutDashboard,
   LogOut,
   Menu,
   Package,
   Receipt,
-  Truck,
   ScrollText,
   ShieldCheck,
+  ShoppingCart,
+  Truck,
   UserRound,
   UsersRound,
   Warehouse,
@@ -46,6 +47,7 @@ type NavItem = {
     | 'purchaseOrders'
     | 'saleOrders'
     | 'receivables'
+    | 'bulkInvoicing'
     | 'company'
     | 'users'
     | 'activity'
@@ -120,6 +122,14 @@ const NAV_ITEMS: NavItem[] = [
     group: 'operate',
     permission: 'sales.read',
     feature: 'SALE_ORDERS',
+  },
+  {
+    href: '/bulk-invoicing',
+    icon: Layers,
+    labelKey: 'bulkInvoicing',
+    group: 'operate',
+    permission: 'documents.read',
+    feature: 'BULK_INVOICING',
   },
   {
     href: '/receivables',

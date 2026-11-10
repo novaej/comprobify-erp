@@ -207,7 +207,8 @@
     "providers": "Providers",
     "purchaseOrders": "Purchase orders",
     "saleOrders": "Sale orders",
-    "receivables": "Receivables"
+    "receivables": "Receivables",
+    "bulkInvoicing": "Bulk invoicing"
   },
   "shell": {
     "sandboxTitle": "You're in the test environment",
@@ -664,7 +665,11 @@
     "saleOrder": "Sale order",
     "editSaleOrder": "Edit sale order",
     "invoiceSaleOrder": "Invoice sale order",
-    "receivables": "Receivables"
+    "receivables": "Receivables",
+    "bulkInvoicing": "Bulk invoicing",
+    "newBulkBatch": "New bulk invoicing",
+    "bulkBatch": "Bulk invoicing",
+    "adminQueue": "Bulk invoicing queue"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -677,7 +682,8 @@
     "companies": "Companies",
     "backToApp": "Back to the app",
     "plans": "Plans",
-    "modules": "Modules"
+    "modules": "Modules",
+    "queue": "Invoicing queue"
   },
   "catalog": {
     "plansTitle": "Plans",
@@ -2153,7 +2159,8 @@
         "confirmTitle": "Correct the invoice?",
         "confirmDescription": "It is sent to SRI again with the same number and the quantities you chose."
       }
-    }
+    },
+    "bulk": "Bulk invoicing"
   },
   "saleOrdersError": {
     "ORDER_NOT_EDITABLE": "The order can no longer be edited.",
@@ -2247,5 +2254,138 @@
     "NOT_FOUND": "The invoice or the payment was not found.",
     "INVALID_INPUT": "Check the data: the amount must be more than zero, with up to 2 decimals.",
     "UNKNOWN": "An unexpected error occurred. Try again."
+  },
+  "liveRefresh": {
+    "updating": "Updating automatically…"
+  },
+  "bulkInvoicing": {
+    "title": "Bulk invoicing",
+    "description": "Invoice many sale orders at once. The invoices are made in the background, one by one, and you can keep working.",
+    "new": "New bulk invoicing",
+    "newDescription": "Choose the confirmed orders to invoice. Each order is invoiced in full, with whatever it has left.",
+    "back": "Back to bulk invoicing",
+    "emptyTitle": "No bulk invoicing yet",
+    "empty": "When you invoice several orders at once, they show up here with their progress.",
+    "table": {
+      "started": "Started",
+      "source": "Source",
+      "progress": "Progress",
+      "failed": "Failed",
+      "status": "Status",
+      "open": "Open the bulk invoicing of {date}"
+    },
+    "sources": {
+      "SALE_ORDERS": "Sale orders",
+      "CSV": "CSV file"
+    },
+    "statuses": {
+      "PROCESSING": "In progress",
+      "COMPLETED": "Finished"
+    },
+    "items": {
+      "QUEUED": "Queued",
+      "CREATING": "Creating",
+      "SENT": "Sent to SRI",
+      "AUTHORIZED": "Authorized",
+      "FAILED": "Failed"
+    },
+    "progress": "{done} of {total} authorized",
+    "progressLabel": "Progress of the bulk invoicing of {date}",
+    "pagination": {
+      "label": "Pagination",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page} of {pages}"
+    },
+    "detail": {
+      "title": "Bulk invoicing of {date}",
+      "progress": "Progress",
+      "completedAt": "finished {date}",
+      "items": "Invoices of the bulk invoicing",
+      "position": "No.",
+      "order": "Order",
+      "invoice": "Invoice",
+      "status": "Status",
+      "reason": "Detail"
+    },
+    "rejected": "SRI did not accept the invoice. Correct it from the invoice and it is resent with the same number.",
+    "retry": {
+      "button": "Retry the {count} that failed",
+      "title": "Retry the ones that failed?",
+      "description": "Orders that failed go back to the queue and are invoiced again. Invoices SRI rejected are not retried: correct them from their invoice.",
+      "detail": "{count} orders",
+      "confirm": "Retry",
+      "done": "The failed orders went back to the queue."
+    },
+    "form": {
+      "title": "How they are invoiced",
+      "description": "Every invoice goes out from the same issue point and is paid the same way, for the order's whole total.",
+      "issuePoint": "Issue point",
+      "method": "Payment method",
+      "term": "Term",
+      "termUnit": "Term unit",
+      "termInvalid": "Use numbers only."
+    },
+    "issuing": {
+      "none": "You have no issue point available to invoice from.",
+      "noneAction": "Go to settings"
+    },
+    "search": "Search by client, identification or number",
+    "searchButton": "Search",
+    "finalConsumer": "Final consumer",
+    "noOrdersTitle": "No orders to invoice",
+    "noOrders": "Confirmed orders that still have something to invoice appear here.",
+    "noMatchesTitle": "No results",
+    "noMatches": "No order waiting to be invoiced matches the search.",
+    "orders": {
+      "title": "Orders to invoice ({matching})",
+      "select": "Choose order {number}",
+      "selectPage": "Choose all the orders on this page",
+      "number": "Order",
+      "date": "Date",
+      "client": "Client",
+      "total": "Total"
+    },
+    "selected": "{count, plural, =0 {No orders chosen} one {1 order chosen} other {# orders chosen}}",
+    "submit": "Invoice {count, plural, one {the chosen order} other {the # chosen}}",
+    "submitAll": "Invoice all {count} that match",
+    "confirm": {
+      "title": "Invoice these orders?",
+      "description": "One invoice is made for each order, in the background, and sent to SRI. An authorized invoice can only be voided afterwards.",
+      "detail": "{count, plural, one {1 order} other {# orders}}",
+      "submit": "Invoice {count, plural, one {1 order} other {# orders}}"
+    }
+  },
+  "bulkInvoicingError": {
+    "FORBIDDEN": "Your role does not allow this action.",
+    "FEATURE_NOT_ENABLED": "Your plan does not include bulk invoicing.",
+    "NOT_FOUND": "The batch, the issue point or some of the orders were not found.",
+    "INVALID_INPUT": "Check the data: choose at least one order, an issue point and a term with numbers only.",
+    "QUOTA_EXCEEDED": "The document quota for the period is used up.",
+    "ORDER_NOT_INVOICEABLE": "The order can no longer be invoiced (only confirmed ones).",
+    "ORDER_NOTHING_LEFT": "The order is already fully invoiced.",
+    "INSUFFICIENT_STOCK": "There is not enough stock for this order.",
+    "NOT_A_MEMBER": "Whoever started the batch no longer belongs to the company.",
+    "BATCH_ITEM_INVALID": "The item has no sale order.",
+    "UNKNOWN": "Something unexpected went wrong. Try again."
+  },
+  "adminQueue": {
+    "title": "Bulk invoicing queue",
+    "description": "What is being worked through, company by company, against the limits that share out the turns.",
+    "inFlight": "In progress across the platform",
+    "waiting": "Waiting for a turn",
+    "perCompany": "Limit per company",
+    "ofCap": "{count} of {cap}",
+    "emptyTitle": "The queue is empty",
+    "empty": "No company has bulk invoicing in progress.",
+    "twin": "Test",
+    "table": {
+      "company": "Company",
+      "batches": "Batches",
+      "waiting": "Waiting",
+      "inFlight": "In progress",
+      "failed": "Failed",
+      "oldest": "Waiting since"
+    }
   }
 }

@@ -13,3 +13,5 @@ export { FINAL_DOCUMENT_STATUSES, itemView } from './status';
 export type { ItemView } from './status';
 export { allocateSlots, BULK_LIMITS, feedBatches } from './feed';
 export type { BulkLimits, FeedDeps } from './feed';
+export { bulkQueueOverview } from './queue-overview';
+export type { QueueCompany, QueueOverview } from './queue-overview';

@@ -6,6 +6,7 @@ import {
   ArrowLeftRight,
   Blocks,
   Building2,
+  ListOrdered,
   LogOut,
   Package,
   Menu,
@@ -23,7 +24,7 @@ import { Logomark, LogoLockup } from '../logo';
 type AdminItem = {
   href: string;
   icon: LucideIcon;
-  labelKey: 'companies' | 'plans' | 'modules';
+  labelKey: 'companies' | 'queue' | 'plans' | 'modules';
   // The pages under it; /admin itself is the companies list.
   section: string;
 };
@@ -34,6 +35,7 @@ const GROUPS: { group: 'operate' | 'catalog'; items: AdminItem[] }[] = [
     group: 'operate',
     items: [
       { href: '/admin', icon: Building2, labelKey: 'companies', section: '/admin/companies' },
+      { href: '/admin/queue', icon: ListOrdered, labelKey: 'queue', section: '/admin/queue' },
     ],
   },
   {

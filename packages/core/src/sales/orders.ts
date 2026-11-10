@@ -1,8 +1,10 @@
 import {
   and,
+  asc,
   desc,
   eq,
   ilike,
+  inArray,
   or,
   schema,
   sql,
@@ -318,19 +320,17 @@ export type SaleOrderRow = {
 
 const PAGE_SIZE = 50;
 
-// Newest first; a search matches the client or the number.
-export async function listSaleOrders(
-  ctx: ActorContext,
-  db: Database,
-  raw: SaleOrderFilters = {},
-): Promise<{ rows: SaleOrderRow[]; total: number; page: number; pageSize: number }> {
-  canRead(ctx);
-  const filters = saleOrderFilters.parse(raw);
+// What a batch can invoice: orders with something left (FR-BULK-1). A line's own quantities are
+// checked when its turn comes, so an order fully covered by now fails alone.
+const INVOICEABLE: SaleOrderStatus[] = ['CONFIRMED', 'PARTIALLY_INVOICED'];
+
+function orderWhere(filters: z.output<typeof saleOrderFilters>, statuses?: SaleOrderStatus[]) {
   const { saleOrders, clients } = schema;
   const query = filters.query?.replace(/^pv-?/i, '');
   const pattern = query ? `%${query.replaceAll(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
   const number = query && /^\d{1,9}$/.test(query) ? Number(query) : null;
-  const where = and(
+  return and(
+    statuses ? inArray(saleOrders.status, statuses) : undefined,
     filters.status ? eq(saleOrders.status, filters.status) : undefined,
     pattern
       ? or(
@@ -340,6 +340,18 @@ export async function listSaleOrders(
         )
       : undefined,
   );
+}
+
+async function listOrders(
+  ctx: ActorContext,
+  db: Database,
+  raw: SaleOrderFilters,
+  scope: { statuses?: SaleOrderStatus[]; oldestFirst?: boolean } = {},
+): Promise<{ rows: SaleOrderRow[]; total: number; page: number; pageSize: number }> {
+  canRead(ctx);
+  const filters = saleOrderFilters.parse(raw);
+  const { saleOrders, clients } = schema;
+  const where = orderWhere(filters, scope.statuses);
   return db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
     const join = and(
       eq(clients.tenantId, saleOrders.tenantId),
@@ -362,10 +374,46 @@ export async function listSaleOrders(
       .from(saleOrders)
       .leftJoin(clients, join)
       .where(where)
-      .orderBy(desc(saleOrders.number))
+      .orderBy(scope.oldestFirst ? asc(saleOrders.number) : desc(saleOrders.number))
       .limit(PAGE_SIZE)
       .offset((filters.page - 1) * PAGE_SIZE);
     return { rows, total: count!.total, page: filters.page, pageSize: PAGE_SIZE };
+  });
+}
+
+// Newest first; a search matches the client or the number.
+export const listSaleOrders = (ctx: ActorContext, db: Database, raw: SaleOrderFilters = {}) =>
+  listOrders(ctx, db, raw);
+
+// FR-BULK-1: the orders a batch can take, oldest first, searched the same way.
+export const listInvoiceableOrders = (
+  ctx: ActorContext,
+  db: Database,
+  raw: Pick<SaleOrderFilters, 'query' | 'page'> = {},
+) => listOrders(ctx, db, raw, { statuses: INVOICEABLE, oldestFirst: true });
+
+// All of them matching a search, for a batch of "everything shown" (at most `max`).
+export async function invoiceableOrderIds(
+  ctx: ActorContext,
+  db: Database,
+  raw: Pick<SaleOrderFilters, 'query'>,
+  max: number,
+): Promise<string[]> {
+  canRead(ctx);
+  const filters = saleOrderFilters.parse({ query: raw.query });
+  const { saleOrders, clients } = schema;
+  return db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+    const rows = await tx
+      .select({ id: saleOrders.id })
+      .from(saleOrders)
+      .leftJoin(
+        clients,
+        and(eq(clients.tenantId, saleOrders.tenantId), eq(clients.id, saleOrders.clientId)),
+      )
+      .where(orderWhere(filters, INVOICEABLE))
+      .orderBy(asc(saleOrders.number))
+      .limit(max);
+    return rows.map((row) => row.id);
   });
 }
 

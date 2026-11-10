@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
+  bulkQueueOverview,
   checkAuthorization,
   companySettings,
   completeBatches,
@@ -15,8 +16,10 @@ import {
   getBatch,
   getSaleOrder,
   goLive,
+  invoiceableOrderIds,
   invoiceOrderRemainder,
   listBatches,
+  listInvoiceableOrders,
   onboardOrganization,
   processItem,
   resolveActor,
@@ -414,5 +417,41 @@ describe('bulk invoicing', () => {
     expect(stack.items[0]!.view).toBe('FAILED');
     expect(await retryFailedItems(await actor(twin), db, batch.id, { jobs })).toBe(0);
     expect(await completeBatches(bulk)).toBeGreaterThanOrEqual(1);
+  });
+  it('lists the orders a batch can take, oldest first, and finds them all for a search', async () => {
+    const product = await stocked(twin);
+    const [confirmed] = await orders(twin, product, 1);
+    const [draft] = await orders(twin, product, 1, false);
+    const ctx = await actor(twin);
+    const list = await listInvoiceableOrders(ctx, db, {});
+    const ids = list.rows.map((row) => row.id);
+    expect(ids).toContain(confirmed);
+    expect(ids).not.toContain(draft);
+    const numbers = list.rows.map((row) => row.number);
+    expect(numbers).toEqual([...numbers].sort((a, b) => a - b));
+    expect(await invoiceableOrderIds(ctx, db, {}, 10_000)).toContain(confirmed);
+    expect(await invoiceableOrderIds(ctx, db, {}, 1)).toHaveLength(1);
+    expect(await invoiceableOrderIds(ctx, db, { query: 'nadie con este nombre' }, 10)).toEqual([]);
+    // Another company's orders are not in the list.
+    expect(
+      (await listInvoiceableOrders(await actor(real), db, {})).rows.map((r) => r.id),
+    ).not.toContain(confirmed);
+  });
+
+  it('shows the platform what waits, company by company, to the super admin only', async () => {
+    const product = await stocked(twin);
+    const batch = await start(twin, await orders(twin, product, 2));
+    const overview = await bulkQueueOverview(await superAdmin(db), db);
+    const row = overview.companies.find((company) => company.tenantId === twin.tenantId);
+    expect(row).toMatchObject({ isTwin: true });
+    expect(row!.waiting).toBeGreaterThanOrEqual(2);
+    expect(overview.limits.global).toBeGreaterThan(overview.limits.perCompany);
+    expect(
+      await failure(bulkQueueOverview({ userId: ownerId, isSuperAdmin: true, clock }, db)),
+    ).toBe('FORBIDDEN');
+    // The item names its invoice number once it exists.
+    await run(twin, batch.id);
+    const [item] = (await view(twin, batch.id)).items;
+    expect(item!.documentNumber).toMatch(/^001-001-\d{9}$/);
   });
 });
