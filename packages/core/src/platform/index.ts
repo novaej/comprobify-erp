@@ -30,6 +30,7 @@ import {
   type CompanyRow,
 } from '../tenancy';
 
+export * from './billing';
 export * from './catalog';
 
 // The super admin area (ADR-010, FR-ADM-1): platform work outside any tenant. Each

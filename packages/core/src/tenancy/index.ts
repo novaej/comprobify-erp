@@ -73,3 +73,6 @@ export {
   warehousesOf,
 } from './warehouses';
 export type { CompanyHeader, Warehouse } from './warehouses';
+// For the screens: why the operator suspends a company (FR-BILL-9).
+export { SUSPENSION_REASONS } from '@comprobify/db';
+export type { SuspensionReason } from '@comprobify/db';

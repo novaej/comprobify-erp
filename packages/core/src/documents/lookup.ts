@@ -1,4 +1,4 @@
-import { eq, schema, type Database } from '@comprobify/db';
+import { eq, schema, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
 import { requirePermission, type ActorContext } from '../kernel';
 
@@ -25,4 +25,33 @@ export async function findByAccessKey(
       .where(eq(schema.documentReissues.previousAccessKey, accessKey));
     return previous ? { documentId: previous.id, current: false } : null;
   });
+}
+
+export type InvoiceByKey = {
+  id: string;
+  documentType: string;
+  status: string;
+  buyerIdentification: string;
+  total: string;
+};
+
+// FR-BILL-4: the operator's invoice for a payment, found by its access key in the caller's
+// system-context transaction, whichever company issued it.
+export async function documentByAccessKey(tx: Tx['db'], key: string): Promise<InvoiceByKey | null> {
+  const accessKey = z
+    .string()
+    .regex(/^\d{49}$/)
+    .parse(key);
+  const { documents } = schema;
+  const [row] = await tx
+    .select({
+      id: documents.id,
+      documentType: documents.documentType,
+      status: documents.status,
+      buyerIdentification: documents.buyerIdentification,
+      total: documents.total,
+    })
+    .from(documents)
+    .where(eq(documents.accessKey, accessKey));
+  return row ?? null;
 }

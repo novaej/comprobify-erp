@@ -1,4 +1,11 @@
-import { FEATURE_KEYS, FEATURES, getCompany, isDomainError, SHOWN_LIMITS } from '@comprobify/core';
+import {
+  FEATURE_KEYS,
+  FEATURES,
+  getCompany,
+  isDomainError,
+  SHOWN_LIMITS,
+  SUSPENSION_REASONS,
+} from '@comprobify/core';
 import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { PageHeader } from '@/components/page-header';
@@ -6,6 +13,7 @@ import { pageTitle } from '@/server/page-title';
 import { loadPlatform } from '@/server/platform';
 import { getRuntime } from '@/server/runtime';
 import { CompanyManager } from './company-manager';
+import { SuspensionCard } from './suspension-card';
 
 export const generateMetadata = pageTitle('adminCompany');
 
@@ -46,6 +54,15 @@ export default async function AdminCompanyPage({
         description={`${company.ruc} · ${company.legalName}`}
         backHref="/admin"
         backLabel={tNav('companies')}
+      />
+      <SuspensionCard
+        realTenantId={company.realTenantId}
+        suspended={
+          company.status === 'SUSPENDED' && company.suspensionReason && company.suspendedAt
+            ? { reason: company.suspensionReason, since: date.format(company.suspendedAt) }
+            : null
+        }
+        reasons={SUSPENSION_REASONS}
       />
       <CompanyManager
         company={{

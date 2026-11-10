@@ -1,4 +1,14 @@
-import { and, desc, eq, ilike, inArray, or, schema, type Tx } from '@comprobify/db';
+import {
+  and,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  or,
+  schema,
+  type SuspensionReason,
+  type Tx,
+} from '@comprobify/db';
 import { DomainError } from '../kernel';
 
 // Reads for the super admin area, in the caller's system-context transaction.
@@ -10,6 +20,9 @@ export type CompanyRow = {
   name: string;
   legalName: string;
   status: 'ACTIVE' | 'SUSPENDED';
+  // FR-BILL-9: why and since when, while suspended.
+  suspensionReason: SuspensionReason | null;
+  suspendedAt: Date | null;
   liveAt: Date | null;
   createdAt: Date;
 };
@@ -22,6 +35,8 @@ const columns = () => {
     legalName: tenants.legalName,
     tradeName: tenants.tradeName,
     status: tenants.status,
+    suspensionReason: tenants.suspensionReason,
+    suspendedAt: tenants.suspendedAt,
     liveAt: tenants.liveAt,
     createdAt: tenants.createdAt,
   };

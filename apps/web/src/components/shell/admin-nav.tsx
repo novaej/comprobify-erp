@@ -4,11 +4,14 @@ import { cn } from '@comprobify/ui/lib/utils';
 import { ThemeToggle } from '@comprobify/ui/theme';
 import {
   ArrowLeftRight,
+  Banknote,
   Blocks,
+  CreditCard,
   Building2,
   ListOrdered,
   LogOut,
   Package,
+  ReceiptText,
   Menu,
   ShieldCheck,
   Tag,
@@ -25,7 +28,8 @@ import { Logomark, LogoLockup } from '../logo';
 type AdminItem = {
   href: string;
   icon: LucideIcon;
-  labelKey: 'companies' | 'queue' | 'plans' | 'modules' | 'prices';
+  labelKey:
+    'companies' | 'queue' | 'payments' | 'invoicing' | 'cards' | 'plans' | 'modules' | 'prices';
   // The pages under it; /admin itself is the companies list.
   section: string;
 };
@@ -37,6 +41,14 @@ const GROUPS: { group: 'operate' | 'catalog'; items: AdminItem[] }[] = [
     items: [
       { href: '/admin', icon: Building2, labelKey: 'companies', section: '/admin/companies' },
       { href: '/admin/queue', icon: ListOrdered, labelKey: 'queue', section: '/admin/queue' },
+      { href: '/admin/payments', icon: Banknote, labelKey: 'payments', section: '/admin/payments' },
+      {
+        href: '/admin/invoicing',
+        icon: ReceiptText,
+        labelKey: 'invoicing',
+        section: '/admin/invoicing',
+      },
+      { href: '/admin/cards', icon: CreditCard, labelKey: 'cards', section: '/admin/cards' },
     ],
   },
   {

@@ -1921,4 +1921,85 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(payment.getByRole('link', { name: 'transferencia.png' })).toBeVisible();
     await look(page, 'plan-payment-reported');
   });
+
+  // FR-ADM-2, FR-BILL-4, FR-BILL-9: the operator verifies the transfer, owes its invoice, and
+  // suspends and reactivates the company.
+  test('reviews the transfer, queues its invoice and suspends the company (FR-ADM-2, FR-BILL-9)', async ({
+    page,
+  }) => {
+    await signIn(page, email, newPassword);
+    await page.getByLabel('Código', { exact: true }).fill(await totp());
+    await page.getByRole('button', { name: 'Verificar' }).click();
+    await expect(page).toHaveURL(/\/es\/dashboard$/);
+
+    await page.goto('/es/admin/payments');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Pagos');
+    await look(page, 'admin-payments');
+    await page
+      .getByRole('row', { name: /Plan Empresa, mensual/ })
+      .getByRole('link', { name: 'Delta Comercial S.A.' })
+      .click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Delta Comercial S.A.');
+    await expect(page.getByRole('img', { name: 'Comprobante transferencia.png' })).toBeVisible();
+    await look(page, 'admin-payment');
+    await page.getByRole('button', { name: 'Verificar' }).click();
+    await page
+      .getByRole('dialog', { name: 'Verificar el pago' })
+      .getByRole('button', { name: 'Verificar' })
+      .click();
+    await expect(page.getByText('Pago verificado.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Devolver' })).toBeVisible();
+
+    // The invoice is owed until it is recorded, and only the right one closes it.
+    await page.goto('/es/admin/invoicing');
+    const owed = page.getByRole('row', { name: /Delta Comercial S\.A\./ });
+    await expect(owed).toContainText('$91.89');
+    await look(page, 'admin-invoicing');
+    await owed.getByRole('button', { name: 'Registrar factura' }).click();
+    const record = page.getByRole('dialog', { name: 'Registrar la factura' });
+    await record.getByLabel('Clave de acceso').fill('1'.repeat(49));
+    await record.getByRole('button', { name: 'Registrar factura' }).click();
+    await expect(record.getByText('No hay una factura con esa clave de acceso.')).toBeVisible();
+    await record.getByRole('button', { name: 'Cancelar' }).click();
+
+    await page.goto('/es/admin/cards');
+    await expect(page.getByText('Nada por resolver')).toBeVisible();
+    await look(page, 'admin-cards');
+
+    // Suspended, the company only reads, its plan page says so; reactivated, it works again.
+    await page.goto(`/es/admin?q=${companyRuc}`);
+    await page
+      .getByRole('row', { name: new RegExp(companyRuc) })
+      .getByRole('link', { name: 'Delta Comercial S.A.' })
+      .click();
+    await page.getByRole('button', { name: 'Suspender' }).click();
+    const suspend = page.getByRole('dialog', { name: 'Suspender la empresa' });
+    await suspend.getByRole('combobox', { name: 'Motivo' }).click();
+    await page.getByRole('option', { name: 'Saldo impago' }).click();
+    await look(page, 'admin-suspend');
+    await suspend.getByRole('button', { name: 'Suspender' }).click();
+    await expect(page.getByText('Empresa suspendida.')).toBeVisible();
+    await expect(page.getByText(/Suspendida desde el .*: Saldo impago/)).toBeVisible();
+
+    await page.goto('/es/plan');
+    await expect(page.getByRole('alert').filter({ hasText: 'Empresa suspendida' })).toBeVisible();
+    // Verified: the company is on the plan it paid for.
+    await expect(page.getByRole('main').getByText('Empresa', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Cambiar de plan' })).toHaveCount(0);
+    await look(page, 'plan-suspended');
+
+    await page.goto(`/es/admin?q=${companyRuc}`);
+    await page
+      .getByRole('row', { name: new RegExp(companyRuc) })
+      .getByRole('link', { name: 'Delta Comercial S.A.' })
+      .click();
+    await page.getByRole('button', { name: 'Reactivar' }).click();
+    await page
+      .getByRole('dialog', { name: 'Reactivar la empresa' })
+      .getByRole('button', { name: 'Reactivar' })
+      .click();
+    await expect(page.getByText('Empresa reactivada.')).toBeVisible();
+    await page.goto('/es/plan');
+    await expect(page.getByRole('alert').filter({ hasText: 'Empresa suspendida' })).toHaveCount(0);
+  });
 });

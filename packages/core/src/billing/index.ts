@@ -98,3 +98,15 @@ export {
 export type { ConfirmResult, FakeCharge, PayphoneGateway } from './payphone-gateway';
 export { billingOverview } from './overview';
 export type { BillingOverview } from './overview';
+export {
+  cardAttemptsToResolve,
+  invoicingQueue,
+  paymentToInvoice,
+  resolveCardAttempt,
+  resolveCardInput,
+  setPaymentInvoiced,
+} from './operator';
+export type { CardAttention } from './operator';
+// For the screens: the reasons a transfer is rejected (FR-BILL-3).
+export { PAYMENT_REJECTION_REASONS } from '@comprobify/db';
+export type { PaymentRejectionReason } from '@comprobify/db';

@@ -65,6 +65,9 @@ export const AUDIT_ACTIONS = [
   'subscription.moved_to_free',
   // FR-BILL-3 (ADR-033): a card charge captured but not applied, for the operator to refund.
   'payment.card_duplicate',
+  // FR-BILL-4, FR-ADM-2: the operator's invoice for a payment, and a card charge settled by hand.
+  'payment.invoiced',
+  'payment.card_resolved',
 ] as const;
 
 // Append-only: the app role may insert and read, never update or delete.

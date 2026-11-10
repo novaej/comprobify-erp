@@ -38,4 +38,4 @@ FR-BILL-2 to FR-BILL-4 and FR-BILL-8 describe how a company pays: a payment per 
 - A paying company has its plan the moment the operator verifies, whatever SRI is doing.
 - Every charge can be explained afterwards: its rate, its lines and the period it paid for are on it.
 - Reversals are handled by a function rather than by hand; detecting them stays manual, as neither SPI nor a card rail tells us.
-- The operator still has to issue the invoice; the queue that shows what is owed is part of the screens (step 7).
+- The operator still has to issue the invoice. The platform's Por facturar screen lists every verified payment until the invoice for it is recorded. The operator issues it from its own company in Comprobify and records it by access key. It must be an authorized factura for the company's RUC and for the payment's total, and used for one payment only, so a mistyped key can't close the wrong payment (`markPaymentInvoiced`). A refunded payment leaves the queue.

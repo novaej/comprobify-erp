@@ -377,6 +377,10 @@ export const payphoneTransactions = pgTable(
     confirmedAt: timestamp('confirmed_at', { withTimezone: true }),
     // The second phase: the payment applied. APPROVED without it is swept and finished.
     appliedAt: timestamp('applied_at', { withTimezone: true }),
+    // A DUPLICATE or ERROR the operator settled by hand in Payphone's dashboard, and how.
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+    resolvedBy: uuid('resolved_by').references(() => users.id),
+    resolutionNote: text('resolution_note'),
     createdBy: uuid('created_by').references(() => users.id),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -396,6 +400,11 @@ export const payphoneTransactions = pgTable(
       .where(sql`status = 'APPROVED' AND applied_at IS NULL`),
     check('payphone_transactions_status_check', oneOf('status', CARD_ATTEMPT_STATUSES)),
     check('payphone_transactions_amount_check', sql`amount_cents >= 100`),
+    check(
+      'payphone_transactions_resolved_check',
+      sql`(resolved_at IS NULL) = (resolution_note IS NULL)
+          AND (resolved_at IS NULL OR status IN ('DUPLICATE', 'ERROR'))`,
+    ),
   ],
 );
 

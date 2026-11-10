@@ -51,8 +51,9 @@ export async function AppShell({ locale, children }: { locale: string; children:
           <TopBar />
           <main
             id="main-content"
-            tabIndex={-1}
-            className="relative flex-1 overflow-y-auto p-4 outline-none md:p-8"
+            // In the tab order: it scrolls, and a read-only screen may have nothing else to reach.
+            tabIndex={0}
+            className="relative flex-1 overflow-y-auto p-4 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset md:p-8"
           >
             {active.mode === 'TEST' && (
               <Banner tone="warning" icon={FlaskConical} role="note" title={t('sandboxTitle')}>

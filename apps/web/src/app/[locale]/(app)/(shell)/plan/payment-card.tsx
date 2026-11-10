@@ -19,8 +19,8 @@ import {
   submitProofAction,
 } from './actions';
 import { PayphoneCheckout } from './payphone-checkout';
-import { usePaymentLabel } from './payment-label';
-import { STATUS_TONE } from './payment-status';
+import { usePaymentLabel } from '@/components/billing/payment-label';
+import { STATUS_TONE } from '@/components/billing/payment-status';
 
 export type OpenPayment = PaymentView & { proofs: ProofView[] };
 

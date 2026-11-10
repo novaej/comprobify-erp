@@ -70,7 +70,8 @@ export { voidDeadline, voidDocument, voidInput } from './void';
 export type { VoidInput } from './void';
 export { receivableInvoice, receivableInvoices } from './receivables';
 export type { ReceivableInvoice } from './receivables';
-export { findByAccessKey } from './lookup';
+export { documentByAccessKey, findByAccessKey } from './lookup';
+export type { InvoiceByKey } from './lookup';
 export { documentRide, emailDocument, resendDocumentEmail } from './ride';
 export type { DocumentEmailDeps } from './ride';
 export {

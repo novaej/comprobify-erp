@@ -446,7 +446,9 @@
         "verified": "Payment verified",
         "rejected": "Payment rejected",
         "refunded": "Payment refunded",
-        "card_duplicate": "recorded a duplicate card charge, to refund"
+        "card_duplicate": "recorded a duplicate card charge, to refund",
+        "invoiced": "recorded the invoice for a payment",
+        "card_resolved": "settled a card charge"
       }
     },
     "complimentary": "complimentary",
@@ -802,7 +804,32 @@
     },
     "limitValue": "Limit value",
     "resolvedTitle": "Active features",
-    "resolvedDescription": "What the company has today, combined."
+    "resolvedDescription": "What the company has today, combined.",
+    "suspension": {
+      "title": "Company status",
+      "activeDescription": "Active: working as usual.",
+      "suspended": "Suspended",
+      "suspendedSince": "Suspended since {date}: {reason}. It can only view its data.",
+      "suspend": "Suspend",
+      "suspendTitle": "Suspend the company",
+      "suspendDescription": "The company and its test environment can only view their data: no issuing, changing or paying until you reactivate it.",
+      "reason": "Reason",
+      "note": "Note",
+      "noteHint": "Optional. Kept in the company's activity log.",
+      "suspendedDone": "Company suspended.",
+      "reactivate": "Reactivate",
+      "reactivateTitle": "Reactivate the company",
+      "reactivateDescription": "It works as usual again, with its plan and payments as they were.",
+      "reactivated": "Company reactivated.",
+      "reasons": {
+        "PAYMENT_REVERSED": "Payment reversed",
+        "FRAUD_SUSPECTED": "Suspected fraud",
+        "TERMS_VIOLATION": "Terms violation",
+        "VOLUNTARY_CLOSURE": "Closure asked by the company",
+        "UNPAID_BALANCE": "Unpaid balance",
+        "OTHER": "Other"
+      }
+    }
   },
   "adminError": {
     "FORBIDDEN": "Only platform administration can do this.",
@@ -819,7 +846,19 @@
     "INVALID_OVERRIDE": "A feature is turned on or off; a limit takes a value.",
     "OVERRIDE_NOT_FOUND": "There is no exception for that feature.",
     "INVALID_INPUT": "Check the details you entered.",
-    "UNKNOWN": "An unexpected error occurred. Please try again."
+    "UNKNOWN": "An unexpected error occurred. Please try again.",
+    "ALREADY_SUSPENDED": "The company is already suspended.",
+    "NOT_SUSPENDED": "The company isn't suspended.",
+    "PAYMENT_NOT_REVIEWABLE": "That payment is already settled.",
+    "PAYMENT_NOT_REFUNDABLE": "Only a verified payment is refunded, and a later one first.",
+    "PACK_IN_USE": "Part of that pack is already used: it can't be refunded.",
+    "PAYMENT_NOT_INVOICEABLE": "That payment already has an invoice, or isn't verified.",
+    "INVOICE_NOT_FOUND": "No invoice has that access key.",
+    "INVOICE_NOT_AUTHORIZED": "That invoice isn't authorized by SRI.",
+    "INVOICE_BUYER_MISMATCH": "That invoice isn't for this company's RUC.",
+    "INVOICE_TOTAL_MISMATCH": "That invoice's total doesn't match the payment's.",
+    "INVOICE_ALREADY_USED": "That invoice is already recorded for another payment.",
+    "CARD_NOT_TO_RESOLVE": "That charge needs nothing more."
   },
   "pageTitles": {
     "login": "Sign in",
@@ -875,7 +914,11 @@
     "bulkBatch": "Bulk invoicing",
     "adminQueue": "Bulk invoicing queue",
     "adminPrices": "Prices",
-    "cardReturn": "Card payment"
+    "cardReturn": "Card payment",
+    "adminPayments": "Payments",
+    "adminPayment": "Payment",
+    "adminInvoicing": "To invoice",
+    "adminCards": "Card charges"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -890,7 +933,10 @@
     "plans": "Plans",
     "modules": "Modules",
     "queue": "Invoicing queue",
-    "prices": "Prices"
+    "prices": "Prices",
+    "payments": "Payments",
+    "invoicing": "To invoice",
+    "cards": "Card charges"
   },
   "catalog": {
     "plansTitle": "Plans",
@@ -2705,5 +2751,97 @@
     "CARD_NOT_AVAILABLE": "Card payments aren't available. Pay by transfer.",
     "CARD_AMOUNT_TOO_LOW": "The card minimum is $1.00. Pay this one by transfer.",
     "CARD_TOO_MANY_ATTEMPTS": "There are several unresolved card attempts. Wait a few minutes or pay by transfer."
+  },
+  "adminPayments": {
+    "title": "Payments",
+    "description": "Transfers to review first; the other states to look a payment up.",
+    "filter": "Payment status",
+    "emptyReported": "No transfers to review.",
+    "empty": "No payments in this state.",
+    "table": {
+      "company": "Company",
+      "what": "For",
+      "when": "Date",
+      "proofs": "Proofs",
+      "total": "Total",
+      "status": "Status"
+    },
+    "detail": {
+      "title": "Payment",
+      "created": "Created",
+      "reported": "Proof sent",
+      "verified": "Verified",
+      "method": "Method",
+      "rejectedFor": "Rejected: {reason}.",
+      "refundedFor": "Refunded: {reason}",
+      "company": "View the company",
+      "proofs": "Proofs",
+      "proofsHint": "Every one the company sent, the ones it removed too.",
+      "noProofs": "No proofs.",
+      "reference": "Transfer {reference}",
+      "removed": "Removed by the company",
+      "proofAlt": "Proof {file}"
+    },
+    "review": {
+      "verify": "Verify",
+      "reject": "Reject",
+      "refund": "Refund",
+      "verifyTitle": "Verify the payment",
+      "verifyDescription": "You confirm the money arrived. The company gets what it paid for at once.",
+      "verified": "Payment verified.",
+      "rejectTitle": "Reject the proof",
+      "rejectDescription": "The company sees the reason and can send another proof or pay by card.",
+      "reason": "Reason",
+      "rejected": "Proof rejected.",
+      "refundTitle": "Refund the payment",
+      "refundDescription": "The subscription goes back to how it was before this payment. The money is returned outside: at the bank or in Payphone.",
+      "refundReason": "Reason",
+      "refunded": "Payment refunded."
+    }
+  },
+  "adminInvoicing": {
+    "title": "To invoice",
+    "description": "Verified payments still missing your invoice. Issue it from your company in Comprobify and record it here by its access key.",
+    "emptyTitle": "Nothing to invoice",
+    "empty": "Every verified payment shows here until you record its invoice.",
+    "table": {
+      "company": "Company",
+      "what": "For",
+      "verified": "Verified",
+      "method": "Method",
+      "total": "Total",
+      "actions": "Actions"
+    },
+    "record": "Record invoice",
+    "recordTitle": "Record the invoice",
+    "recordDescription": "The invoice issued for {payment}.",
+    "accessKey": "Access key",
+    "accessKeyHint": "All 49 digits. It must be authorized, for the company's RUC and for the payment's total.",
+    "recorded": "Invoice recorded."
+  },
+  "adminCards": {
+    "title": "Card charges",
+    "description": "Card money captured but not applied: a second charge or a different amount. Reverse it in Payphone's dashboard (same day, until 20:00) and mark it here.",
+    "emptyTitle": "Nothing to settle",
+    "empty": "Duplicate or mismatched charges show here.",
+    "table": {
+      "company": "Company",
+      "kind": "Kind",
+      "payphone": "Transaction",
+      "card": "Card",
+      "when": "Date",
+      "amount": "Amount",
+      "actions": "Actions"
+    },
+    "kinds": {
+      "DUPLICATE": "Duplicate",
+      "ERROR": "Different amount"
+    },
+    "resolve": "Mark settled",
+    "resolveTitle": "Mark the charge settled",
+    "resolveDescription": "{charge}. Do it after reversing it in Payphone.",
+    "note": "What was done",
+    "noteHint": "For example, the reversal's reference in Payphone.",
+    "resolved": "Charge settled."
   }
 }

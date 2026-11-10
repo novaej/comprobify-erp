@@ -27,8 +27,8 @@ import { loadShell } from '@/server/shell';
 import { pageTitle } from '@/server/page-title';
 import { AddOnsSection, PacksSection, PlanSection, SeatsSection } from './billing-manager';
 import { PaymentCard } from './payment-card';
-import { STATUS_TONE } from './payment-status';
-import { PaymentLabel } from './payment-label-cell';
+import { STATUS_TONE } from '@/components/billing/payment-status';
+import { PaymentLabel } from '@/components/billing/payment-label-cell';
 
 export const generateMetadata = pageTitle('plan');
 
@@ -71,7 +71,8 @@ export default async function PlanPage({ params }: { params: Promise<{ locale: s
     key === 'DOCUMENT_QUOTA' ? quota.limit : overview.limits[key];
   const day = (iso: string) => iso.split('-').reverse().join('/');
   const billed = overview.subscription.periodEnd !== null;
-  const canManage = actor.permissions.includes('billing.manage');
+  // Suspended, the company only reads (FR-BILL-9): nothing to offer it here.
+  const canManage = actor.permissions.includes('billing.manage') && actor.standing !== 'SUSPENDED';
   const flags = {
     canManage,
     changeOpen: open.some((payment) => payment.purpose !== 'RENEWAL'),

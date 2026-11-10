@@ -393,6 +393,13 @@
       "when": 1794322192243,
       "tag": "0055_payphone_card_attempts",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1794327297884,
+      "tag": "0056_card_resolution",
+      "breakpoints": true
     }
   ]
 }

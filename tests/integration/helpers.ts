@@ -105,8 +105,15 @@ export async function grantSeats(
 export async function insertTestDocument(
   db: Database,
   tenantId: string,
-  options: { issueDate?: string } = {},
+  options: {
+    issueDate?: string;
+    // A buyer and amounts of its own, such as the operator's invoice for a payment.
+    buyerIdentification?: string;
+    amounts?: { base: string; iva: string; total: string };
+  } = {},
 ): Promise<{ id: string; accessKey: string; sequential: number }> {
+  const amounts = options.amounts ?? { base: '10.00', iva: '1.50', total: '11.50' };
+  const buyer = options.buyerIdentification;
   return db.withSystem('test: insert a signed document', async ({ db: tx }) => {
     const [point] = await tx
       .select({ id: schema.issuePoints.id, ruc: schema.tenants.ruc })
@@ -139,13 +146,15 @@ export async function insertTestDocument(
         ambiente: '1',
         accessKey: key,
         issueDate: options.issueDate ?? '2026-11-10',
-        buyerIdType: '07',
-        buyerIdentification: '9999999999999',
-        buyerName: 'CONSUMIDOR FINAL',
-        subtotal: '10.00',
+        buyerIdType: buyer ? '04' : '07',
+        buyerIdentification: buyer ?? '9999999999999',
+        buyerName: buyer ? 'COMPRADOR' : 'CONSUMIDOR FINAL',
+        subtotal: amounts.base,
         discount: '0.00',
-        taxTotals: [{ taxCode: '2', rateCode: '4', percent: '15', base: '10.00', value: '1.50' }],
-        total: '11.50',
+        taxTotals: [
+          { taxCode: '2', rateCode: '4', percent: '15', base: amounts.base, value: amounts.iva },
+        ],
+        total: amounts.total,
       })
       .returning({ id: schema.documents.id });
     await tx.insert(schema.documentLines).values({
@@ -156,12 +165,12 @@ export async function insertTestDocument(
       code: 'P-1',
       name: 'Producto',
       quantity: '1',
-      unitPrice: '10',
+      unitPrice: amounts.base,
       discount: '0',
       ivaRateCode: '4',
       ivaPercent: '15',
-      base: '10.00',
-      iva: '1.50',
+      base: amounts.base,
+      iva: amounts.iva,
     });
     await tx.insert(schema.documentPayments).values({
       tenantId,
@@ -169,7 +178,7 @@ export async function insertTestDocument(
       revision: 1,
       position: 1,
       method: '01',
-      amount: '11.50',
+      amount: amounts.total,
     });
     await tx.insert(schema.documentEvents).values({
       tenantId,

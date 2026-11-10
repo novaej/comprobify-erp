@@ -446,7 +446,9 @@
         "verified": "Pago verificado",
         "rejected": "Pago rechazado",
         "refunded": "Pago reembolsado",
-        "card_duplicate": "registró un cobro con tarjeta duplicado, por devolver"
+        "card_duplicate": "registró un cobro con tarjeta duplicado, por devolver",
+        "invoiced": "registró la factura de un pago",
+        "card_resolved": "resolvió un cobro con tarjeta"
       }
     },
     "complimentary": "cortesía",
@@ -802,7 +804,32 @@
     },
     "limitValue": "Valor del límite",
     "resolvedTitle": "Funciones activas",
-    "resolvedDescription": "Lo que la empresa tiene hoy, ya combinado."
+    "resolvedDescription": "Lo que la empresa tiene hoy, ya combinado.",
+    "suspension": {
+      "title": "Estado de la empresa",
+      "activeDescription": "Activa: trabaja con normalidad.",
+      "suspended": "Suspendida",
+      "suspendedSince": "Suspendida desde el {date}: {reason}. Solo puede consultar sus datos.",
+      "suspend": "Suspender",
+      "suspendTitle": "Suspender la empresa",
+      "suspendDescription": "La empresa y su ambiente de pruebas solo podrán consultar sus datos: ni emitir, ni cambiar nada, ni pagar, hasta que la reactives.",
+      "reason": "Motivo",
+      "note": "Nota",
+      "noteHint": "Opcional. Queda en el registro de actividad de la empresa.",
+      "suspendedDone": "Empresa suspendida.",
+      "reactivate": "Reactivar",
+      "reactivateTitle": "Reactivar la empresa",
+      "reactivateDescription": "Vuelve a trabajar con normalidad, con su plan y sus pagos como estaban.",
+      "reactivated": "Empresa reactivada.",
+      "reasons": {
+        "PAYMENT_REVERSED": "Pago revertido",
+        "FRAUD_SUSPECTED": "Sospecha de fraude",
+        "TERMS_VIOLATION": "Incumplimiento de los términos",
+        "VOLUNTARY_CLOSURE": "Cierre pedido por la empresa",
+        "UNPAID_BALANCE": "Saldo impago",
+        "OTHER": "Otro"
+      }
+    }
   },
   "adminError": {
     "FORBIDDEN": "Solo la administración de la plataforma puede hacer esto.",
@@ -819,7 +846,19 @@
     "INVALID_OVERRIDE": "Una función se activa o desactiva; un límite recibe un valor.",
     "OVERRIDE_NOT_FOUND": "No hay una excepción para esa función.",
     "INVALID_INPUT": "Revisa los datos ingresados.",
-    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "ALREADY_SUSPENDED": "La empresa ya está suspendida.",
+    "NOT_SUSPENDED": "La empresa no está suspendida.",
+    "PAYMENT_NOT_REVIEWABLE": "Ese pago ya se resolvió.",
+    "PAYMENT_NOT_REFUNDABLE": "Solo se devuelve un pago verificado, y uno posterior primero.",
+    "PACK_IN_USE": "Ya se usó parte de ese paquete: no se puede devolver.",
+    "PAYMENT_NOT_INVOICEABLE": "Ese pago ya tiene factura, o no está verificado.",
+    "INVOICE_NOT_FOUND": "No hay una factura con esa clave de acceso.",
+    "INVOICE_NOT_AUTHORIZED": "Esa factura no está autorizada por el SRI.",
+    "INVOICE_BUYER_MISMATCH": "Esa factura no es para el RUC de esta empresa.",
+    "INVOICE_TOTAL_MISMATCH": "El total de esa factura no coincide con el del pago.",
+    "INVOICE_ALREADY_USED": "Esa factura ya está registrada para otro pago.",
+    "CARD_NOT_TO_RESOLVE": "Ese cobro ya no necesita nada."
   },
   "pageTitles": {
     "login": "Iniciar sesión",
@@ -875,7 +914,11 @@
     "bulkBatch": "Facturación masiva",
     "adminQueue": "Cola de facturación masiva",
     "adminPrices": "Precios",
-    "cardReturn": "Pago con tarjeta"
+    "cardReturn": "Pago con tarjeta",
+    "adminPayments": "Pagos",
+    "adminPayment": "Pago",
+    "adminInvoicing": "Por facturar",
+    "adminCards": "Cobros con tarjeta"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -890,7 +933,10 @@
     "plans": "Planes",
     "modules": "Módulos",
     "queue": "Cola de facturación",
-    "prices": "Precios"
+    "prices": "Precios",
+    "payments": "Pagos",
+    "invoicing": "Por facturar",
+    "cards": "Cobros con tarjeta"
   },
   "catalog": {
     "plansTitle": "Planes",
@@ -2705,5 +2751,97 @@
     "CARD_NOT_AVAILABLE": "El pago con tarjeta no está disponible. Paga con transferencia.",
     "CARD_AMOUNT_TOO_LOW": "Con tarjeta el mínimo es $1.00. Paga este con transferencia.",
     "CARD_TOO_MANY_ATTEMPTS": "Hay varios intentos con tarjeta sin resolver. Espera unos minutos o paga con transferencia."
+  },
+  "adminPayments": {
+    "title": "Pagos",
+    "description": "Las transferencias por revisar primero; los demás estados para buscar un pago.",
+    "filter": "Estado de los pagos",
+    "emptyReported": "No hay transferencias por revisar.",
+    "empty": "No hay pagos en este estado.",
+    "table": {
+      "company": "Empresa",
+      "what": "Concepto",
+      "when": "Fecha",
+      "proofs": "Comprobantes",
+      "total": "Total",
+      "status": "Estado"
+    },
+    "detail": {
+      "title": "Pago",
+      "created": "Creado",
+      "reported": "Comprobante enviado",
+      "verified": "Verificado",
+      "method": "Forma de pago",
+      "rejectedFor": "Rechazado: {reason}.",
+      "refundedFor": "Devuelto: {reason}",
+      "company": "Ver la empresa",
+      "proofs": "Comprobantes",
+      "proofsHint": "Todos los que envió la empresa, también los que quitó.",
+      "noProofs": "Sin comprobantes.",
+      "reference": "Transferencia {reference}",
+      "removed": "Quitado por la empresa",
+      "proofAlt": "Comprobante {file}"
+    },
+    "review": {
+      "verify": "Verificar",
+      "reject": "Rechazar",
+      "refund": "Devolver",
+      "verifyTitle": "Verificar el pago",
+      "verifyDescription": "Confirmas que el dinero llegó. La empresa recibe lo que pagó en ese momento.",
+      "verified": "Pago verificado.",
+      "rejectTitle": "Rechazar el comprobante",
+      "rejectDescription": "La empresa ve el motivo y puede enviar otro comprobante o pagar con tarjeta.",
+      "reason": "Motivo",
+      "rejected": "Comprobante rechazado.",
+      "refundTitle": "Devolver el pago",
+      "refundDescription": "La suscripción vuelve a como estaba antes de este pago. El dinero se devuelve por fuera: en el banco o en Payphone.",
+      "refundReason": "Motivo",
+      "refunded": "Pago devuelto."
+    }
+  },
+  "adminInvoicing": {
+    "title": "Por facturar",
+    "description": "Pagos verificados a los que falta tu factura. Emítela desde tu empresa en Comprobify y regístrala aquí con su clave de acceso.",
+    "emptyTitle": "Nada por facturar",
+    "empty": "Cada pago verificado aparece aquí hasta que registres su factura.",
+    "table": {
+      "company": "Empresa",
+      "what": "Concepto",
+      "verified": "Verificado",
+      "method": "Forma de pago",
+      "total": "Total",
+      "actions": "Acciones"
+    },
+    "record": "Registrar factura",
+    "recordTitle": "Registrar la factura",
+    "recordDescription": "La factura emitida por {payment}.",
+    "accessKey": "Clave de acceso",
+    "accessKeyHint": "Los 49 dígitos. Debe estar autorizada, para el RUC de la empresa y por el total del pago.",
+    "recorded": "Factura registrada."
+  },
+  "adminCards": {
+    "title": "Cobros con tarjeta",
+    "description": "Dinero cobrado con tarjeta que no se aplicó: un segundo cobro o un valor distinto. Revérsalo en el panel de Payphone (el mismo día, hasta las 20:00) y márcalo aquí.",
+    "emptyTitle": "Nada por resolver",
+    "empty": "Aquí aparecen los cobros duplicados o con errores.",
+    "table": {
+      "company": "Empresa",
+      "kind": "Tipo",
+      "payphone": "Transacción",
+      "card": "Tarjeta",
+      "when": "Fecha",
+      "amount": "Valor",
+      "actions": "Acciones"
+    },
+    "kinds": {
+      "DUPLICATE": "Duplicado",
+      "ERROR": "Valor distinto"
+    },
+    "resolve": "Marcar resuelto",
+    "resolveTitle": "Marcar el cobro como resuelto",
+    "resolveDescription": "{charge}. Hazlo después de reversarlo en Payphone.",
+    "note": "Qué se hizo",
+    "noteHint": "Por ejemplo, la referencia del reverso en Payphone.",
+    "resolved": "Cobro resuelto."
   }
 }

@@ -5,11 +5,14 @@ import {
   changePlan,
   clearLimit,
   clearOverride,
+  reactivateCompany,
   removeModule,
   setBilling,
   setLimit,
   setNegotiatedPrice,
   setOverride,
+  suspendCompany,
+  type SuspensionReason,
 } from '@comprobify/core';
 import { revalidatePath } from 'next/cache';
 import { toActionState, type ActionState } from '@/server/actions';
@@ -117,4 +120,19 @@ export async function clearOverrideAction(_: ActionState, form: FormData): Promi
   return run(form, ({ actor, db, realTenantId }) =>
     clearOverride(actor, db, { realTenantId, featureKey: text(form, 'featureKey') }),
   );
+}
+
+// FR-BILL-9: the company keeps reading its data and can do nothing else until reactivated.
+export async function suspendAction(_: ActionState, form: FormData): Promise<ActionState> {
+  return run(form, ({ actor, db, realTenantId }) =>
+    suspendCompany(actor, db, {
+      realTenantId,
+      reason: text(form, 'reason') as SuspensionReason,
+      note: text(form, 'note') || null,
+    }),
+  );
+}
+
+export async function reactivateAction(_: ActionState, form: FormData): Promise<ActionState> {
+  return run(form, ({ actor, db, realTenantId }) => reactivateCompany(actor, db, { realTenantId }));
 }

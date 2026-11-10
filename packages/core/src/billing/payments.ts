@@ -88,6 +88,8 @@ export type PaymentView = {
   periodStart: string | null;
   periodEnd: string | null;
   rejectionReason: PaymentRejectionReason | null;
+  refundReason: string | null;
+  invoicedAt: Date | null;
   createdAt: Date;
   reportedAt: Date | null;
   verifiedAt: Date | null;
@@ -137,6 +139,8 @@ export async function viewsOf(tx: Tx['db'], rows: PaymentRow[]): Promise<Payment
       periodStart: row.periodStart,
       periodEnd: row.periodEnd,
       rejectionReason: row.rejectionReason,
+      refundReason: row.refundReason,
+      invoicedAt: row.invoicedAt,
       createdAt: row.createdAt,
       reportedAt: row.reportedAt,
       verifiedAt: row.verifiedAt,
@@ -656,23 +660,28 @@ export async function paymentsToReview(
       .where(eq(schema.payments.status, filter.status ?? 'REPORTED'))
       .orderBy(asc(schema.payments.reportedAt), asc(schema.payments.createdAt))
       .limit(200);
-    const views = await viewsOf(tx, rows);
-    const result: ReviewRow[] = [];
-    for (const [index, row] of rows.entries()) {
-      const company = await companyRow(tx, row.tenantId);
-      const [proofs] = await tx
-        .select({ n: sql<number>`count(*)::int` })
-        .from(schema.paymentProofs)
-        .where(eq(schema.paymentProofs.paymentId, row.id));
-      result.push({
-        ...views[index]!,
-        realTenantId: row.tenantId,
-        company: { name: company.name, ruc: company.ruc },
-        proofs: proofs!.n,
-      });
-    }
-    return result;
+    return reviewRowsOf(tx, rows);
   });
+}
+
+// Each payment with its company and how many proofs it carries, for the operator's lists.
+export async function reviewRowsOf(tx: Tx['db'], rows: PaymentRow[]): Promise<ReviewRow[]> {
+  const views = await viewsOf(tx, rows);
+  const result: ReviewRow[] = [];
+  for (const [index, row] of rows.entries()) {
+    const company = await companyRow(tx, row.tenantId);
+    const [proofs] = await tx
+      .select({ n: sql<number>`count(*)::int` })
+      .from(schema.paymentProofs)
+      .where(eq(schema.paymentProofs.paymentId, row.id));
+    result.push({
+      ...views[index]!,
+      realTenantId: row.tenantId,
+      company: { name: company.name, ruc: company.ruc },
+      proofs: proofs!.n,
+    });
+  }
+  return result;
 }
 
 export async function paymentForReview(

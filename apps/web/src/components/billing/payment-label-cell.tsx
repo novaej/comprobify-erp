@@ -1,7 +1,7 @@
 'use client';
 
 import type { PaymentView } from '@comprobify/core';
-import { usePaymentLabel } from './payment-label';
+import { usePaymentLabel } from '@/components/billing/payment-label';
 
 // The label hook in a server-rendered table.
 export function PaymentLabel({ payment }: { payment: PaymentView }) {
