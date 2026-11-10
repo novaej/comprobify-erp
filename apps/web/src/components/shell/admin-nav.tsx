@@ -11,6 +11,7 @@ import {
   Package,
   Menu,
   ShieldCheck,
+  Tag,
   X,
   type LucideIcon,
 } from 'lucide-react';
@@ -24,7 +25,7 @@ import { Logomark, LogoLockup } from '../logo';
 type AdminItem = {
   href: string;
   icon: LucideIcon;
-  labelKey: 'companies' | 'queue' | 'plans' | 'modules';
+  labelKey: 'companies' | 'queue' | 'plans' | 'modules' | 'prices';
   // The pages under it; /admin itself is the companies list.
   section: string;
 };
@@ -43,6 +44,7 @@ const GROUPS: { group: 'operate' | 'catalog'; items: AdminItem[] }[] = [
     items: [
       { href: '/admin/plans', icon: Package, labelKey: 'plans', section: '/admin/plans' },
       { href: '/admin/modules', icon: Blocks, labelKey: 'modules', section: '/admin/modules' },
+      { href: '/admin/prices', icon: Tag, labelKey: 'prices', section: '/admin/prices' },
     ],
   },
 ];

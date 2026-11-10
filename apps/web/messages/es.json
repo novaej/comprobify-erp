@@ -669,7 +669,8 @@
     "bulkInvoicing": "Facturación masiva",
     "newBulkBatch": "Nueva facturación masiva",
     "bulkBatch": "Facturación masiva",
-    "adminQueue": "Cola de facturación masiva"
+    "adminQueue": "Cola de facturación masiva",
+    "adminPrices": "Precios"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -683,7 +684,8 @@
     "backToApp": "Volver a la aplicación",
     "plans": "Planes",
     "modules": "Módulos",
-    "queue": "Cola de facturación"
+    "queue": "Cola de facturación",
+    "prices": "Precios"
   },
   "catalog": {
     "plansTitle": "Planes",
@@ -2387,5 +2389,59 @@
       "failed": "Con error",
       "oldest": "Espera desde"
     }
+  },
+  "prices": {
+    "title": "Precios",
+    "description": "Lo que cuesta cada plan, módulo adicional, usuario adicional y paquete de documentos, antes de IVA. Un cambio se prepara como borrador y se publica: una subida a lo que ya pagan las empresas se anuncia con 30 días; una baja, un precio nuevo o un paquete aplica desde hoy.",
+    "groups": {
+      "plans": "Planes",
+      "modules": "Módulos adicionales",
+      "seat": "Usuarios adicionales",
+      "packs": "Paquetes de documentos"
+    },
+    "table": {
+      "item": "Qué se vende",
+      "current": "Precio actual",
+      "upcoming": "Anunciado",
+      "draft": "Borrador",
+      "actions": "Acciones"
+    },
+    "monthly": "{amount} al mes · {yearly} al año",
+    "withdrawn": "Ya no se vende",
+    "none": "Sin precio",
+    "since": "desde {date}",
+    "from": "desde {date}",
+    "affected": "{count, plural, one {1 empresa lo paga} other {# empresas lo pagan}}",
+    "change": "Cambiar precio",
+    "changeTitle": "Cambiar el precio de {name}",
+    "changeDescription": "Se guarda como borrador: nadie lo ve hasta que lo publiques.",
+    "amount": "Precio sin IVA",
+    "monthlyHint": "Mensual. El anual es 10 veces este valor.",
+    "onceHint": "Se paga una vez al comprar el paquete.",
+    "withdraw": "Dejar de vender este paquete",
+    "saveDraft": "Guardar borrador",
+    "drafted": "Borrador guardado.",
+    "publish": "Publicar",
+    "publishTitle": "Publicar el precio de {name}",
+    "publishDescription": "El nuevo precio es {amount}. Una vez publicado no se puede cambiar: un cambio posterior es otro precio.",
+    "effectiveOn": "Aplica desde",
+    "effectiveOnHint": "Vacío: la fecha más cercana posible. Una subida a lo que pagan las empresas necesita al menos 30 días.",
+    "published": "Precio publicado.",
+    "discard": "Descartar",
+    "discardTitle": "¿Descartar el borrador?",
+    "discardDescription": "El borrador no se publica y deja de aparecer. El precio actual no cambia.",
+    "discarded": "Borrador descartado.",
+    "newPack": "Nuevo paquete",
+    "newPackDescription": "Un tamaño de paquete que no se vendía. Se guarda como borrador y se publica desde su fila.",
+    "packSize": "Documentos del paquete"
+  },
+  "pricesError": {
+    "FORBIDDEN": "Solo un administrador de la plataforma puede cambiar precios.",
+    "NOT_FOUND": "No se encontró el borrador, el plan o el módulo.",
+    "PLAN_NOT_PRICED": "Ese plan o módulo no tiene precio de lista.",
+    "PRICE_NOTICE_TOO_SHORT": "Esta subida necesita al menos 30 días de aviso. Deja la fecha vacía para la más cercana.",
+    "PRICE_DATE_TAKEN": "Ya hay un precio que empieza ese día. Elige otra fecha.",
+    "INVALID_INPUT": "Revisa el precio (hasta 2 decimales) y el tamaño del paquete.",
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
   }
 }

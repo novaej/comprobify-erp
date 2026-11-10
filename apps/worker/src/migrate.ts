@@ -1,6 +1,12 @@
 import { loadMigrateEnv } from '@comprobify/config/env';
 import { createLogger } from '@comprobify/config/logger';
-import { assignDefaultPlans, installJobs, publishAgreements, syncCatalog } from '@comprobify/core';
+import {
+  assignDefaultPlans,
+  installJobs,
+  publishAgreements,
+  syncCatalog,
+  syncPrices,
+} from '@comprobify/core';
 import { createDatabase } from '@comprobify/db';
 import { runMigrations } from '@comprobify/db/migrator';
 
@@ -22,6 +28,10 @@ try {
   const added = [...catalog.features, ...catalog.modules, ...catalog.plans];
   if (added.length > 0)
     logger.info(`Synced the plan catalog: ${added.join(', ')}`, { event: 'catalog.synced' });
+  // ADR-027: placeholder prices for whatever has none; the super admin sets the real ones.
+  const priced = await syncPrices(owner);
+  if (priced.length > 0)
+    logger.info(`Placeholder prices for ${priced.join(', ')}`, { event: 'prices.seeded' });
   const assigned = await assignDefaultPlans(owner);
   if (assigned > 0)
     logger.info(`Put ${assigned} tenants on the default plan`, { event: 'plans.defaulted' });

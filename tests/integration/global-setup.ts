@@ -1,6 +1,12 @@
 import { loadTestEnv } from '@comprobify/config/env';
 import { createLogger } from '@comprobify/config/logger';
-import { assignDefaultPlans, installJobs, publishAgreements, syncCatalog } from '@comprobify/core';
+import {
+  assignDefaultPlans,
+  installJobs,
+  publishAgreements,
+  syncCatalog,
+  syncPrices,
+} from '@comprobify/core';
 import { createDatabase } from '@comprobify/db';
 import { runMigrations } from '@comprobify/db/migrator';
 
@@ -13,6 +19,7 @@ export default async function setup(): Promise<void> {
     logger: createLogger({ service: 'test', level: 'warn' }),
   });
   await syncCatalog(owner);
+  await syncPrices(owner);
   await assignDefaultPlans(owner);
   await publishAgreements(owner);
   await owner.close();

@@ -1790,6 +1790,28 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(planModules).toContainText('Inventario');
     await look(page, 'admin-plan');
 
+    // FR-BILL-6: a new pack size is drafted, then published from today (a pack needs no notice).
+    await page.goto('/es/admin/prices');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Precios');
+    await expect(page.getByRole('table', { name: 'Planes' })).toContainText('Negocio');
+    await look(page, 'admin-prices');
+    const packSize = String(100 + Math.floor(Math.random() * 800));
+    await page.getByRole('button', { name: 'Nuevo paquete' }).click();
+    const pack = page.getByRole('dialog', { name: 'Nuevo paquete' });
+    await pack.getByLabel('Documentos del paquete').fill(packSize);
+    await pack.getByLabel('Precio sin IVA').fill('12,50');
+    await pack.getByRole('button', { name: 'Guardar borrador' }).click();
+    await expect(page.getByText('Borrador guardado.')).toBeVisible();
+    const packRow = page.getByRole('row', { name: new RegExp(`Paquete de ${packSize}`) });
+    await packRow.getByRole('button', { name: 'Publicar' }).click();
+    await page
+      .getByRole('dialog', { name: `Publicar el precio de Paquete de ${packSize}` })
+      .getByRole('button', { name: 'Publicar' })
+      .click();
+    await expect(page.getByText('Precio publicado.')).toBeVisible();
+    await expect(packRow).toContainText('$12,50');
+    await look(page, 'admin-prices-published');
+
     await page.goto('/es/admin/modules');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Módulos');
     await look(page, 'admin-modules');

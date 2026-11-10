@@ -5,7 +5,7 @@ A change isn't done until its docs are. Update these in the same piece of work.
 | Change | Update |
 |---|---|
 | Any user-visible or operator-visible change | `CHANGELOG.md` under Unreleased |
-| Finishing a step in `NEXT_STEPS.md` | Tick it. Remove the milestone's section when its gate passes. |
+| Finishing a step in `NEXT_STEPS.md` | Remove it, and the milestone's section when its gate passes: only pending work stays. |
 | New or changed env variable | The schema in `packages/config/src/env.ts`, `.env.example`, `docs/deployment.md`, `infra/compose.yaml` if the stack needs it |
 | New command or script | `CLAUDE.md` commands, `GETTING_STARTED.md` if developers run it |
 | New package, app or top-level folder | `CLAUDE.md` architecture, `docs/architecture.md` |

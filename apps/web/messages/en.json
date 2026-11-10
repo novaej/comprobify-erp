@@ -669,7 +669,8 @@
     "bulkInvoicing": "Bulk invoicing",
     "newBulkBatch": "New bulk invoicing",
     "bulkBatch": "Bulk invoicing",
-    "adminQueue": "Bulk invoicing queue"
+    "adminQueue": "Bulk invoicing queue",
+    "adminPrices": "Prices"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -683,7 +684,8 @@
     "backToApp": "Back to the app",
     "plans": "Plans",
     "modules": "Modules",
-    "queue": "Invoicing queue"
+    "queue": "Invoicing queue",
+    "prices": "Prices"
   },
   "catalog": {
     "plansTitle": "Plans",
@@ -2387,5 +2389,59 @@
       "failed": "Failed",
       "oldest": "Waiting since"
     }
+  },
+  "prices": {
+    "title": "Prices",
+    "description": "What each plan, add-on module, extra user and document pack costs, before IVA. A change is drafted, then published: a rise over what companies already pay is announced 30 days ahead; a cut, a new price or a pack applies from today.",
+    "groups": {
+      "plans": "Plans",
+      "modules": "Add-on modules",
+      "seat": "Extra users",
+      "packs": "Document packs"
+    },
+    "table": {
+      "item": "What is sold",
+      "current": "Current price",
+      "upcoming": "Announced",
+      "draft": "Draft",
+      "actions": "Actions"
+    },
+    "monthly": "{amount} a month · {yearly} a year",
+    "withdrawn": "No longer sold",
+    "none": "No price",
+    "since": "since {date}",
+    "from": "from {date}",
+    "affected": "{count, plural, one {1 company pays it} other {# companies pay it}}",
+    "change": "Change price",
+    "changeTitle": "Change the price of {name}",
+    "changeDescription": "It is saved as a draft: nobody sees it until you publish it.",
+    "amount": "Price before IVA",
+    "monthlyHint": "Monthly. Yearly is 10 times this.",
+    "onceHint": "Paid once when the pack is bought.",
+    "withdraw": "Stop selling this pack",
+    "saveDraft": "Save draft",
+    "drafted": "Draft saved.",
+    "publish": "Publish",
+    "publishTitle": "Publish the price of {name}",
+    "publishDescription": "The new price is {amount}. Once published it can't change: a later change is another price.",
+    "effectiveOn": "Applies from",
+    "effectiveOnHint": "Empty: the earliest possible date. A rise over what companies pay needs at least 30 days.",
+    "published": "Price published.",
+    "discard": "Discard",
+    "discardTitle": "Discard the draft?",
+    "discardDescription": "The draft is not published and disappears. The current price doesn't change.",
+    "discarded": "Draft discarded.",
+    "newPack": "New pack",
+    "newPackDescription": "A pack size not sold before. It is saved as a draft and published from its row.",
+    "packSize": "Documents in the pack"
+  },
+  "pricesError": {
+    "FORBIDDEN": "Only a platform administrator can change prices.",
+    "NOT_FOUND": "The draft, plan or module was not found.",
+    "PLAN_NOT_PRICED": "That plan or module has no list price.",
+    "PRICE_NOTICE_TOO_SHORT": "This rise needs at least 30 days' notice. Leave the date empty for the earliest.",
+    "PRICE_DATE_TAKEN": "Another price starts that day. Choose another date.",
+    "INVALID_INPUT": "Check the price (up to 2 decimals) and the pack size.",
+    "UNKNOWN": "Something unexpected went wrong. Try again."
   }
 }

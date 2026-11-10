@@ -87,6 +87,10 @@ export const PLATFORM_AUDIT_ACTIONS = [
   'plan.module_added',
   'plan.module_removed',
   'plan.limit_changed',
+  // FR-BILL-6: prices (ADR-027).
+  'price.drafted',
+  'price.published',
+  'price.discarded',
 ] as const;
 
 export const platformAuditEvents = pgTable(

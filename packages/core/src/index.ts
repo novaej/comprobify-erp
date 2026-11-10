@@ -11,6 +11,7 @@ export * from './platform';
 export * from './sri';
 export * from './parties';
 export * from './catalog';
+export * from './billing';
 export * from './bulk';
 export * from './documents';
 export * from './inventory';

@@ -25,7 +25,7 @@ Comprobify is a cloud ERP for Ecuadorian SMBs built around SRI electronic invoic
 - **This repo must stand alone: the old repositories will be deleted.** Never point code, comments or docs at them for content or reasoning (no "see API ADR-038", no paths into them). Copy what's needed into this repo and state the reason in place. A carried-over ADR holds the full reasoning itself.
 - PRD vs old code: the PRD wins. PRD silent: prefer old behaviour and record the decision in an ADR.
 - Reference requirement ids in commits, tests and ADRs.
-- Track progress in `NEXT_STEPS.md`: tick a step in the same change that finishes it, and remove a milestone's section when its gate passes.
+- Track progress in `NEXT_STEPS.md`, which holds pending work only: remove a step in the same change that finishes it, and a milestone's section when its gate passes.
 - SRI spec: Ficha Técnica v2.34, in `docs/reference/`. That folder is git-ignored and local only: never commit it, and ask the owner for the PDF if it's missing.
 
 ---
@@ -178,7 +178,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/tenancy/` | Organizations and twins, roles and permissions, actor context, ambiente |
 | `packages/core/src/entitlements/` | Feature key registry, the starting modules and plans, `syncCatalog`, subscriptions, the resolver, the catalog editors' rules on notice (ADR-011) |
 | `packages/core/src/platform/` | The super admin's workflows: companies, their plans, add-ons, Personalizado, complimentary, overrides; editing plans and modules |
-| `apps/web/src/app/[locale]/(admin)/` | The platform area, outside any company (`loadPlatform`) |
+| `apps/web/src/app/[locale]/(admin)/` | The platform area, outside any company (`loadPlatform`); `admin/prices/` is the price editor |
 | `packages/core/src/sri/` | SRI catalogues (from `packages/db/src/schema/sri.ts`), totals and rounding (ADR-012), access keys, the factura builder, XSD validation and the XAdES-BES signer (ADR-013), the SOAP client and the mock SRI (ADR-014) |
 | `packages/core/src/documents/` | `createInvoice` (the FR-DOC-2 pipeline), the send and authorize handlers and their calendar (`sending.ts`, `calendar.ts`), the next-day and manual re-issue (`reissue.ts`), correction (in `create-invoice.ts`), void (`void.ts`), the stock side of SRI's answers (`stock.ts`, ADR-020), invoicing a sale order (`order-invoice.ts`, ADR-022), the RIDE and buyer's copy (`ride.ts`; drawing in `sri/ride-*.ts`), status machine checks and sequentials; the table, transitions and trigger generator are in `packages/db/src/schema/documents.ts` (FR-DOC-3) |
 | `apps/web/src/app/[locale]/(app)/(shell)/documents/` | The document list, invoice form and detail, with the RIDE and XML routes |
@@ -190,6 +190,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `apps/web/src/app/[locale]/(app)/(shell)/purchase-orders/` | The order list, form (new and edit), detail, receive screen and PDF route |
 | `packages/core/src/sales/` | Sale orders: numbers, revisions, holding goods on confirm and releasing them on cancel (`orders.ts`), what invoices cover and the order's status (`invoicing.ts`, ADR-022), the status machine (`status.ts`; the tables and transitions are in `packages/db/src/schema/sales.ts`, ADR-021) |
 | `apps/web/src/app/[locale]/(app)/(shell)/sale-orders/` | The order list, form (new and edit), detail and the form that invoices it |
+| `packages/core/src/billing/` | Billing: prices and their history (`prices.ts`: `priceOn`, the editor, the notice rule; placeholders in `starting-prices.ts`, ADR-027); the table is in `packages/db/src/schema/billing.ts` |
 | `packages/core/src/bulk/` | Batches of invoices: starting one from sale orders, the item job (`processItem`), the fair-queuing feeder (`feed.ts`), the completion sweep, retry, and the stack view's reads (`batches.ts`, `process.ts`; the tables and transitions are in `packages/db/src/schema/bulk.ts`, ADR-026) |
 | `apps/web/src/app/[locale]/(app)/(shell)/bulk-invoicing/` | The batch list, the form that starts one from sale orders, and the stack view with its retry; `apps/web/src/app/[locale]/(admin)/admin/queue/` is the platform's read-only queue page |
 | `packages/core/src/receivables/` | Payments received for invoices, the balance and status, and the aging report (`payments.ts`, `aging.ts`; ADR-024); the table is in `packages/db/src/schema/receivables.ts` |
