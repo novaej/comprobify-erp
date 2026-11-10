@@ -18,13 +18,14 @@ export {
   applyOverride,
   applyPlanChange,
   applyRemoveModule,
+  applySubscriptionTerm,
   billingInput,
   CUSTOM_PLAN_KEY,
   limitInput,
   overrideInput,
   priceInput,
 } from './writes';
-export type { Named, PlanChange } from './writes';
+export type { Named, PlanChange, SubscriptionTerm } from './writes';
 export type { CompanyTenants } from './subscriptions';
 export { catalogChoices, companyPlanDetail, subscriptionSummaries } from './admin-reads';
 export type { CatalogChoices, CompanyPlanDetail, SubscriptionSummary } from './admin-reads';

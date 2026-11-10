@@ -12,3 +12,40 @@ export {
 } from './prices';
 export type { DraftPriceInput, PriceLine, PricedThing, PublishPriceInput } from './prices';
 export { STARTING_PRICES, STARTING_PRICES_FROM } from './starting-prices';
+export {
+  ACTIVE_PROOFS_PER_PAYMENT,
+  amountsOf,
+  applyVerifiedPayment,
+  cancelPayment,
+  getPayment,
+  listPayments,
+  openRenewal,
+  paymentCode,
+  paymentForReview,
+  paymentsToReview,
+  PROOF_MAX_BYTES,
+  proofFile,
+  proofFileForReview,
+  PROOFS_PER_SUBMISSION,
+  refundPayment,
+  refundPaymentInput,
+  removeProof,
+  reviewPayment,
+  reviewPaymentInput,
+  sniffProof,
+  startPaidPlan,
+  startPaidPlanInput,
+  submitProof,
+  submitProofInput,
+} from './payments';
+export type {
+  BillingDeps,
+  PaymentView,
+  ProofFile,
+  ProofView,
+  RefundPaymentInput,
+  ReviewPaymentInput,
+  ReviewRow,
+  StartPaidPlanInput,
+  SubmitProofInput,
+} from './payments';

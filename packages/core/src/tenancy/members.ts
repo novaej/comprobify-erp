@@ -113,7 +113,7 @@ export type InvitationRow = { id: string; email: string; role: Role; expiresAt: 
 
 // The real organization of the actor's tenant, which the actor also belongs to
 // through the mirrored membership; members and invitations live there.
-const realTenantOf = (ctx: ActorContext, db: Database): Promise<string> =>
+export const realTenantOf = (ctx: ActorContext, db: Database): Promise<string> =>
   db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
     const [tenant] = await tx
       .select({ id: schema.tenants.id, twinOf: schema.tenants.twinOf })

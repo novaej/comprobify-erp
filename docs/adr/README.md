@@ -49,6 +49,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [026](026-bulk-invoicing.md) | Bulk invoicing | Accepted |
 | [027](027-prices-and-their-history.md) | Prices and their history | Accepted |
 | [028](028-subscription-periods-and-the-quota.md) | Subscription periods and the quota | Accepted |
+| [029](029-payments-and-their-review.md) | Payments and their review | Accepted |
 
 ## Old ADRs to read before each milestone
 

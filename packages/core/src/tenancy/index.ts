@@ -28,6 +28,7 @@ export {
   inviteMember,
   listIssuePoints,
   listMembers,
+  realTenantOf,
   removeMember,
   revokeInvitation,
   setIssuePointAccess,

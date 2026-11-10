@@ -18,6 +18,7 @@ import {
   type Jobs,
   type SriClient,
   type KeyCipher,
+  type BillingDeps,
 } from '@comprobify/core';
 import { createDatabase, type Database } from '@comprobify/db';
 import { nextCookies } from 'better-auth/next-js';
@@ -32,6 +33,7 @@ export type Runtime = {
   keyCipher: KeyCipher;
   // What createInvoice and correctInvoice need from config (FR-DOC-2, FR-DOC-9).
   issueDeps: IssueDeps;
+  billingDeps: BillingDeps;
   // For voiding: Consulta de validez (FR-DOC-8).
   sri: SriClient;
   // Null while the legal texts are under review (AGREEMENTS_ENABLED=false).
@@ -108,6 +110,7 @@ async function start(): Promise<Runtime> {
           },
           timeoutMs: env.SRI_TIMEOUT_MS,
         }),
+    billingDeps: { ivaRate: env.IVA_RATE },
     issueDeps: {
       jobs,
       keyCipher,

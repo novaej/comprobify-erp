@@ -336,3 +336,39 @@ export async function applyClearOverride(
   if ((await clearOverrides(tx, company, input.featureKey)).length === 0)
     throw new DomainError('OVERRIDE_NOT_FOUND', 'No override for that feature');
 }
+
+// FR-BILL-1 (ADR-029): what a verified payment, a renewal or a refund sets on the subscription,
+// for the company and its twin alike. Returns how it was before, which a refund restores.
+export type SubscriptionTerm = {
+  planId: string;
+  interval: 'MONTHLY' | 'YEARLY';
+  status: 'ACTIVE' | 'CANCELLED' | 'PAST_DUE';
+  periodStart: string;
+  periodEnd: string | null;
+};
+
+export async function applySubscriptionTerm(
+  tx: Tx['db'],
+  company: CompanyTenants,
+  term: SubscriptionTerm,
+): Promise<SubscriptionTerm> {
+  const { subscriptions } = schema;
+  const [before] = await tx
+    .select({
+      planId: subscriptions.planId,
+      interval: subscriptions.interval,
+      status: subscriptions.status,
+      periodStart: subscriptions.periodStart,
+      periodEnd: subscriptions.periodEnd,
+    })
+    .from(subscriptions)
+    .where(eq(subscriptions.tenantId, company.realTenantId))
+    .for('update');
+  if (!before) throw new Error('The company has no subscription');
+  for (const tenantId of tenantsOf(company))
+    await tx
+      .update(subscriptions)
+      .set({ ...term, updatedAt: sql`now()` })
+      .where(eq(subscriptions.tenantId, tenantId));
+  return before;
+}

@@ -422,6 +422,14 @@
       },
       "sequence": {
         "starting_set": "fijó los números iniciales"
+      },
+      "payment": {
+        "created": "Pago generado",
+        "reported": "Pago reportado",
+        "cancelled": "Pago cancelado",
+        "verified": "Pago verificado",
+        "rejected": "Pago rechazado",
+        "refunded": "Pago reembolsado"
       }
     },
     "complimentary": "cortesía",

@@ -422,6 +422,14 @@
       },
       "sequence": {
         "starting_set": "set the starting numbers"
+      },
+      "payment": {
+        "created": "Payment created",
+        "reported": "Payment reported",
+        "cancelled": "Payment cancelled",
+        "verified": "Payment verified",
+        "rejected": "Payment rejected",
+        "refunded": "Payment refunded"
       }
     },
     "complimentary": "complimentary",

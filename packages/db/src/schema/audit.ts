@@ -44,6 +44,13 @@ export const AUDIT_ACTIONS = [
   'subscription.limit_cleared',
   'entitlements.override_set',
   'entitlements.override_cleared',
+  // FR-BILL-2, FR-BILL-3 (ADR-029).
+  'payment.created',
+  'payment.reported',
+  'payment.cancelled',
+  'payment.verified',
+  'payment.rejected',
+  'payment.refunded',
 ] as const;
 
 // Append-only: the app role may insert and read, never update or delete.

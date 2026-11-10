@@ -22,6 +22,7 @@ import {
   fixedClock,
   inviteMember,
   orderWarehouses,
+  paymentCode,
   onboardOrganization,
   recordSessionStart,
   resolveActor,
@@ -257,6 +258,35 @@ describe('isolation sweep over every tenant table', () => {
           quantity: '1',
         }),
       );
+      // A payment and its proof (FR-BILL-2, FR-BILL-3).
+      await db.withSystem('test: record a payment', async ({ db: tx, executeSql }) => {
+        const { rows } = await executeSql<{ id: string }>(
+          `SELECT id FROM subscriptions WHERE tenant_id = $1`,
+          [tenantId],
+        );
+        const [payment] = await tx
+          .insert(schema.payments)
+          .values({
+            tenantId,
+            subscriptionId: rows[0]!.id,
+            code: paymentCode(),
+            purpose: 'RENEWAL',
+            baseAmount: '10.00',
+            ivaRate: '15.00',
+            ivaAmount: '1.50',
+            totalAmount: '11.50',
+          })
+          .returning({ id: schema.payments.id });
+        await tx.insert(schema.paymentProofs).values({
+          tenantId,
+          paymentId: payment!.id,
+          filename: 'pago.png',
+          contentType: 'image/png',
+          content: PNG,
+          size: PNG.length,
+          reference: 'SPI-1',
+        });
+      });
       // A batch with an item that made an invoice, and one still waiting (FR-BULK-1).
       await db.withSystem('test: start a batch', async ({ db: tx, executeSql }) => {
         const { rows } = await executeSql<{ id: string }>(
@@ -344,6 +374,8 @@ describe('isolation sweep over every tenant table', () => {
         'invoice_payments',
         'issue_points',
         'memberships',
+        'payment_proofs',
+        'payments',
         'products',
         'providers',
         'purchase_order_lines',

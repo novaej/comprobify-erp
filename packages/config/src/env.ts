@@ -111,6 +111,13 @@ const consumerFinalMaxAmount = z
   .regex(/^\d{1,9}(\.\d{1,2})?$/, 'must be an amount such as 50.00')
   .default('50.00');
 
+// FR-BILL-2: the IVA rate charged on subscriptions, a percent such as 15. Each payment keeps
+// the rate it was created with.
+const ivaRate = z
+  .string()
+  .regex(/^\d{1,2}(\.\d{1,2})?$/, 'must be a percent such as 15')
+  .default('15');
+
 function requireOperatorRuc(
   env: { APP_ENV: string; OPERATOR_RUC?: string | undefined },
   ctx: z.RefinementCtx,
@@ -140,6 +147,7 @@ export const webEnvSchema = z
     OPERATOR_ADDRESS: z.string().optional(),
     SUPPORT_EMAIL: z.email().optional(),
     CONSUMER_FINAL_MAX_AMOUNT: consumerFinalMaxAmount,
+    IVA_RATE: ivaRate,
   })
   .superRefine((env, ctx) => {
     refuseMockInProduction(env, ctx);
@@ -168,6 +176,7 @@ export const workerEnvSchema = z
     CERT_ENCRYPTION_KEY: certificateKey,
     OPERATOR_RUC: operatorRuc,
     CONSUMER_FINAL_MAX_AMOUNT: consumerFinalMaxAmount,
+    IVA_RATE: ivaRate,
   })
   .superRefine((env, ctx) => {
     refuseMockInProduction(env, ctx);
