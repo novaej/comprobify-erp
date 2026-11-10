@@ -55,7 +55,11 @@ export async function loadEntitlements(
   const { subscriptions, subscriptionItems, planModules, planLimits, modules, moduleFeatures } =
     schema;
   const [subscription] = await tx
-    .select({ id: subscriptions.id, planId: subscriptions.planId })
+    .select({
+      id: subscriptions.id,
+      planId: subscriptions.planId,
+      extraSeats: subscriptions.extraSeats,
+    })
     .from(subscriptions)
     .where(eq(subscriptions.tenantId, tenantId));
   // Every company gets one when created, and the migrate step fills any gap.
@@ -126,7 +130,7 @@ export async function loadEntitlements(
       ),
     );
 
-  return resolveEntitlements(
+  const resolved = resolveEntitlements(
     {
       planModules: fromPlan.map((row) => moduleSource(row.moduleId, row.removesAt)),
       itemModules: items.flatMap((item) =>
@@ -149,4 +153,9 @@ export async function loadEntitlements(
     },
     startOfEcuadorDay(window.start),
   );
+  // Extra seats the company pays for sit on top of whatever its user limit resolved to
+  // (FR-PLAN-1a, ADR-030); unlimited stays unlimited.
+  const users = resolved.limits.USERS;
+  if (users === undefined || users === null || subscription.extraSeats === 0) return resolved;
+  return { ...resolved, limits: { ...resolved.limits, USERS: users + subscription.extraSeats } };
 }

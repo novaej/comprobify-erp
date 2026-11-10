@@ -50,6 +50,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [027](027-prices-and-their-history.md) | Prices and their history | Accepted |
 | [028](028-subscription-periods-and-the-quota.md) | Subscription periods and the quota | Accepted |
 | [029](029-payments-and-their-review.md) | Payments and their review | Accepted |
+| [030](030-plan-changes-seats-and-add-ons.md) | Plan changes, seats and add-ons | Accepted |
 
 ## Old ADRs to read before each milestone
 

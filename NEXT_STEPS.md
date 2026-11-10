@@ -26,7 +26,7 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 Gate: the full upgrade, renewal and expiry cycle on a fake clock, and a Payphone test card run by the owner. Prices, pack sizes and limits start as placeholders the super admin replaces with the real ones.
 
-- [ ] 4. Plan changes: upgrades, downgrades, interval changes, seats, document packs (they roll over until used), cancellation; past-due and suspended companies can't write
+- [ ] 4b. Document packs (used after the period's quota, oldest first, rolling over until used; refundable only unused; not for unlimited or complimentary companies), and the write block for past-due and suspended companies in core (`ACCOUNT_PAST_DUE`, `ACCOUNT_SUSPENDED`; past due keeps billing)
 - [ ] 5. The daily job: renewals, reminders, grace, expiry, on a fake clock
 - [ ] 6. Payphone against a fake gateway; the owner runs the real test card
 - [ ] 7. Screens: the company's billing page; payment review, invoicing queue and Payphone reconciliation in the platform area

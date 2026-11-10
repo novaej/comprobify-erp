@@ -345,6 +345,10 @@ export type SubscriptionTerm = {
   status: 'ACTIVE' | 'CANCELLED' | 'PAST_DUE';
   periodStart: string;
   periodEnd: string | null;
+  extraSeats: number;
+  pendingPlanId: string | null;
+  pendingInterval: 'MONTHLY' | 'YEARLY' | null;
+  pendingSeats: number | null;
 };
 
 export async function applySubscriptionTerm(
@@ -360,6 +364,10 @@ export async function applySubscriptionTerm(
       status: subscriptions.status,
       periodStart: subscriptions.periodStart,
       periodEnd: subscriptions.periodEnd,
+      extraSeats: subscriptions.extraSeats,
+      pendingPlanId: subscriptions.pendingPlanId,
+      pendingInterval: subscriptions.pendingInterval,
+      pendingSeats: subscriptions.pendingSeats,
     })
     .from(subscriptions)
     .where(eq(subscriptions.tenantId, company.realTenantId))
@@ -371,4 +379,24 @@ export async function applySubscriptionTerm(
       .set({ ...term, updatedAt: sql`now()` })
       .where(eq(subscriptions.tenantId, tenantId));
   return before;
+}
+
+// A bought add-on whose payment was refunded: gone at once, from the company and its twin.
+export async function applyDropAddOn(
+  tx: Tx['db'],
+  company: CompanyTenants,
+  moduleId: string,
+): Promise<void> {
+  const { subscriptionItems } = schema;
+  await tx
+    .update(subscriptionItems)
+    .set({ active: false, updatedAt: sql`now()` })
+    .where(
+      and(
+        inArray(subscriptionItems.tenantId, tenantsOf(company)),
+        eq(subscriptionItems.moduleId, moduleId),
+        eq(subscriptionItems.kind, 'MODULE'),
+        eq(subscriptionItems.active, true),
+      ),
+    );
 }

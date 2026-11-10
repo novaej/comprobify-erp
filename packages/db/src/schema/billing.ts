@@ -109,6 +109,8 @@ export const PAYMENT_PURPOSES = [
   'TIER_CHANGE',
   'SEAT_CHANGE',
   'DOCUMENT_PACK',
+  // An add-on module the company buys on top of its plan (ADR-030).
+  'ADD_ON',
 ] as const;
 export type PaymentPurpose = (typeof PAYMENT_PURPOSES)[number];
 
@@ -173,6 +175,7 @@ export const payments = pgTable(
     targetPlanId: uuid('target_plan_id').references(() => plans.id),
     targetInterval: text('target_interval', { enum: BILLING_INTERVALS }),
     targetSeats: integer('target_seats'),
+    targetModuleId: uuid('target_module_id').references(() => modules.id),
     packSize: integer('pack_size'),
     // How the amount was reached, for a prorated or composite charge.
     pricing: jsonb('pricing').$type<Record<string, unknown>>().default({}).notNull(),
@@ -225,6 +228,7 @@ export const payments = pgTable(
             WHEN 'TIER_CHANGE' THEN target_plan_id IS NOT NULL AND target_interval IS NOT NULL
             WHEN 'SEAT_CHANGE' THEN target_seats IS NOT NULL AND target_seats >= 0
             WHEN 'DOCUMENT_PACK' THEN pack_size > 0
+            WHEN 'ADD_ON' THEN target_module_id IS NOT NULL
             ELSE true
           END`,
     ),
@@ -233,7 +237,8 @@ export const payments = pgTable(
       sql`(status IN ('VERIFIED', 'REFUNDED')) = (verified_at IS NOT NULL)`,
     ),
     check('payments_refunded_check', sql`(status = 'REFUNDED') = (refunded_at IS NOT NULL)`),
-    check('payments_rejected_check', sql`(status = 'REJECTED') = (rejection_reason IS NOT NULL)`),
+    // A rejection keeps its reason when the payment is later cancelled.
+    check('payments_rejected_check', sql`status <> 'REJECTED' OR rejection_reason IS NOT NULL`),
     check('payments_period_check', sql`period_end IS NULL OR period_end > period_start`),
   ],
 );

@@ -405,7 +405,10 @@
         "module_added": "agregó el módulo",
         "module_removed": "programó el retiro del módulo",
         "limit_set": "cambió un límite del plan",
-        "limit_cleared": "devolvió un límite al valor del plan"
+        "limit_cleared": "devolvió un límite al valor del plan",
+        "change_scheduled": "Cambio de suscripción",
+        "cancelled": "Suscripción cancelada",
+        "resumed": "Suscripción reanudada"
       },
       "entitlements": {
         "override_set": "puso una excepción a",

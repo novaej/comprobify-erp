@@ -13,6 +13,7 @@ export {
   applyBilling,
   applyClearLimit,
   applyClearOverride,
+  applyDropAddOn,
   applyLimit,
   applyNegotiatedPrice,
   applyOverride,

@@ -51,6 +51,10 @@ export const AUDIT_ACTIONS = [
   'payment.verified',
   'payment.rejected',
   'payment.refunded',
+  // FR-BILL-5 (ADR-030): the company's own changes to its subscription.
+  'subscription.change_scheduled',
+  'subscription.cancelled',
+  'subscription.resumed',
 ] as const;
 
 // Append-only: the app role may insert and read, never update or delete.

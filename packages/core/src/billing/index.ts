@@ -29,6 +29,7 @@ export {
   PROOFS_PER_SUBMISSION,
   refundPayment,
   refundPaymentInput,
+  repriceRenewal,
   removeProof,
   reviewPayment,
   reviewPaymentInput,
@@ -49,3 +50,18 @@ export type {
   StartPaidPlanInput,
   SubmitProofInput,
 } from './payments';
+export {
+  addOnInput,
+  buyAddOn,
+  cancelScheduledChange,
+  cancelSubscription,
+  dropAddOn,
+  planChangeInput,
+  previewPlanChange,
+  remainingShare,
+  requestPlanChange,
+  requestSeats,
+  resumeSubscription,
+  seatsInput,
+} from './changes';
+export type { ChangeQuote, ChangeResult, PlanChangeInput } from './changes';

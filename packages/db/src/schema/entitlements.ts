@@ -194,6 +194,13 @@ export const subscriptions = pgTable(
     // (a free plan or complimentary) and its quota renews monthly from `start` (ADR-028).
     periodStart: date('period_start').notNull(),
     periodEnd: date('period_end'),
+    // Users above the plan's limit, paid for with the plan (FR-PLAN-1a, ADR-030).
+    extraSeats: integer('extra_seats').default(0).notNull(),
+    // What changes when the period ends: a lower plan, another interval, fewer seats. The
+    // renewal is priced and applied with them (ADR-030).
+    pendingPlanId: uuid('pending_plan_id'),
+    pendingInterval: text('pending_interval', { enum: BILLING_INTERVALS }),
+    pendingSeats: integer('pending_seats'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
@@ -212,6 +219,19 @@ export const subscriptions = pgTable(
     check('subscriptions_interval_check', oneOf('interval', BILLING_INTERVALS)),
     check('subscriptions_status_check', oneOf('status', SUBSCRIPTION_STATUSES)),
     check('subscriptions_period_check', sql`period_end IS NULL OR period_end > period_start`),
+    check(
+      'subscriptions_seats_check',
+      sql`extra_seats >= 0 AND (pending_seats IS NULL OR pending_seats >= 0)`,
+    ),
+    check(
+      'subscriptions_pending_interval_check',
+      sql`pending_interval IS NULL OR ${oneOf('pending_interval', BILLING_INTERVALS)}`,
+    ),
+    foreignKey({
+      name: 'subscriptions_pending_plan_fk',
+      columns: [table.pendingPlanId],
+      foreignColumns: [plans.id],
+    }),
   ],
 );
 

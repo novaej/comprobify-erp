@@ -121,7 +121,7 @@ describe('payments', () => {
         startPaidPlan(await owner(), db, { planKey: 'CUSTOM', interval: 'MONTHLY' }, billing),
       ),
     ).toBe('PLAN_NOT_SOLD');
-    await addModule(operator, db, { realTenantId: org.realTenantId, moduleKey: 'INVENTORY' });
+    await addModule(operator, db, { realTenantId: org.realTenantId, moduleKey: 'DELIVERY_GUIDES' });
     // From the twin, where the owner works: the payment belongs to the real company.
     const payment = await startPaidPlan(
       await owner(),
@@ -129,14 +129,14 @@ describe('payments', () => {
       { planKey: 'BUSINESS', interval: 'MONTHLY' },
       billing,
     );
-    // Negocio 29.90 + Inventario 15.00 = 44.90; 15 % IVA is 6.735, so 6.74.
+    // Negocio 29.90 + Guías 5.00 = 34.90; 15 % IVA is 5.235, so 5.24.
     expect(payment).toMatchObject({
       purpose: 'INITIAL',
       status: 'PENDING',
-      baseAmount: '44.90',
+      baseAmount: '34.90',
       ivaRate: '15.00',
-      ivaAmount: '6.74',
-      totalAmount: '51.64',
+      ivaAmount: '5.24',
+      totalAmount: '40.14',
       targetPlan: { key: 'BUSINESS' },
       targetInterval: 'MONTHLY',
     });
@@ -151,14 +151,14 @@ describe('payments', () => {
     // Nothing changed yet: access waits for the payment.
     expect(await subscriptionOf(org.realTenantId)).toMatchObject({ plan: 'FREE', end: null });
     await cancelPayment(await owner(), db, payment.id);
-    // Yearly is ten months: (29.90 + 15.00) × 10.
+    // Yearly is ten months: (29.90 + 5.00) × 10.
     const yearly = await startPaidPlan(
       await owner(),
       db,
       { planKey: 'BUSINESS', interval: 'YEARLY' },
       billing,
     );
-    expect(yearly).toMatchObject({ baseAmount: '449.00', totalAmount: '516.35' });
+    expect(yearly).toMatchObject({ baseAmount: '349.00', totalAmount: '401.35' });
     await cancelPayment(await owner(), db, yearly.id);
   });
 
@@ -259,7 +259,7 @@ describe('payments', () => {
     const renewal = await db.withSystem('test: open a renewal', ({ db: tx }) =>
       openRenewal(tx, org.realTenantId, billing),
     );
-    expect(renewal).toMatchObject({ purpose: 'RENEWAL', baseAmount: '44.90' });
+    expect(renewal).toMatchObject({ purpose: 'RENEWAL', baseAmount: '34.90' });
     expect(
       await db.withSystem('test: open it again', ({ db: tx }) =>
         openRenewal(tx, org.realTenantId, billing),
