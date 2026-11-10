@@ -58,6 +58,11 @@ export const AUDIT_ACTIONS = [
   // FR-BILL-9: the operator's suspension, mirrored in the twin.
   'organization.suspended',
   'organization.reactivated',
+  // FR-BILL-5 (ADR-032): the daily job's steps through the renewal cycle, each emailed.
+  'subscription.renewal_due',
+  'subscription.grace_started',
+  'subscription.past_due',
+  'subscription.moved_to_free',
 ] as const;
 
 // Append-only: the app role may insert and read, never update or delete.

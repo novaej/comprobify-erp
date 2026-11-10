@@ -4,7 +4,16 @@ import type { EmailMessage } from './provider';
 export const emailLocale = z.enum(['es', 'en']);
 export type EmailLocale = z.output<typeof emailLocale>;
 
-export const emailTemplate = z.enum(['verifyEmail', 'resetPassword', 'invitation']);
+export const emailTemplate = z.enum([
+  'verifyEmail',
+  'resetPassword',
+  'invitation',
+  // FR-BILL-5 (ADR-032): the renewal cycle, to the company's owner and admins.
+  'renewalDue',
+  'graceStarted',
+  'pastDue',
+  'movedToFree',
+]);
 export type EmailTemplate = z.output<typeof emailTemplate>;
 
 type Copy = { subject: string; heading: string; body: string; button: string; footer: string };
@@ -33,6 +42,34 @@ const COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       button: 'Elegir una nueva contraseña',
       footer: 'Si no lo solicitaste, ignora este mensaje: tu contraseña no cambia.',
     },
+    renewalDue: {
+      subject: 'La suscripción de {organization} se renueva el {date}',
+      heading: 'Se acerca la renovación de {organization}',
+      body: 'La suscripción se renueva el {date} por {amount}, IVA incluido. Paga antes de esa fecha para seguir sin interrupciones.',
+      button: 'Ver el pago',
+      footer: 'Si ya pagaste, ignora este mensaje.',
+    },
+    graceStarted: {
+      subject: 'El pago de {organization} está pendiente',
+      heading: 'La renovación de {organization} no está pagada',
+      body: 'El período terminó y el pago de {amount} sigue pendiente. Sigues trabajando con normalidad hasta el {date}; desde entonces solo podrás consultar tus datos y pagar.',
+      button: 'Pagar ahora',
+      footer: 'Si ya enviaste el comprobante, lo estamos revisando.',
+    },
+    pastDue: {
+      subject: 'La suscripción de {organization} está vencida',
+      heading: 'La suscripción de {organization} está vencida',
+      body: 'No recibimos el pago de {amount}. Desde hoy solo puedes consultar tus datos y pagar. Si no pagas hasta el {date}, la empresa pasará al plan Gratis.',
+      button: 'Pagar ahora',
+      footer: 'Si ya enviaste el comprobante, lo estamos revisando.',
+    },
+    movedToFree: {
+      subject: '{organization} pasó al plan Gratis',
+      heading: '{organization} está en el plan Gratis',
+      body: 'Desde el {date}, la empresa está en el plan Gratis. Sus datos siguen aquí, con los límites de ese plan, y puedes volver a un plan de pago cuando quieras.',
+      button: 'Ver los planes',
+      footer: 'Los paquetes de comprobantes que tenías siguen disponibles.',
+    },
   },
   en: {
     verifyEmail: {
@@ -56,6 +93,34 @@ const COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       button: 'Choose a new password',
       footer: "If you didn't ask for this, ignore this message: your password won't change.",
     },
+    renewalDue: {
+      subject: "{organization}'s subscription renews on {date}",
+      heading: "{organization}'s renewal is coming up",
+      body: 'The subscription renews on {date} for {amount}, VAT included. Pay before then to keep working without interruption.',
+      button: 'View the payment',
+      footer: 'If you already paid, ignore this message.',
+    },
+    graceStarted: {
+      subject: "{organization}'s payment is pending",
+      heading: "{organization}'s renewal isn't paid",
+      body: 'The period ended and the payment of {amount} is still pending. You can keep working as usual until {date}; after that you can only view your data and pay.',
+      button: 'Pay now',
+      footer: "If you already sent the proof, we're reviewing it.",
+    },
+    pastDue: {
+      subject: "{organization}'s subscription is past due",
+      heading: "{organization}'s subscription is past due",
+      body: "We didn't receive the payment of {amount}. From today you can only view your data and pay. If it isn't paid by {date}, the company moves to the Free plan.",
+      button: 'Pay now',
+      footer: "If you already sent the proof, we're reviewing it.",
+    },
+    movedToFree: {
+      subject: '{organization} moved to the Free plan',
+      heading: '{organization} is on the Free plan',
+      body: "Since {date}, the company is on the Free plan. Its data is still here, within that plan's limits, and you can return to a paid plan whenever you like.",
+      button: 'View the plans',
+      footer: 'Any document packs you had are still available.',
+    },
   },
 };
 
@@ -67,7 +132,13 @@ const escapeHtml = (value: string): string =>
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
 
-export type EmailParams = { url: string; organization?: string | undefined };
+export type EmailParams = {
+  url: string;
+  organization?: string | undefined;
+  // Already formatted for the locale: a date and an amount with its currency.
+  date?: string | undefined;
+  amount?: string | undefined;
+};
 
 export function renderEmail(
   template: EmailTemplate,
@@ -76,7 +147,11 @@ export function renderEmail(
   params: EmailParams,
 ): EmailMessage {
   // Filled before escaping, so an organization name can't inject HTML.
-  const fill = (text: string) => text.replaceAll('{organization}', params.organization ?? '');
+  const fill = (text: string) =>
+    text
+      .replaceAll('{organization}', params.organization ?? '')
+      .replaceAll('{date}', params.date ?? '')
+      .replaceAll('{amount}', params.amount ?? '');
   const base = COPY[locale][template];
   const copy = {
     subject: fill(base.subject),

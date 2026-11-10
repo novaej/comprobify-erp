@@ -106,6 +106,12 @@ export const queues = {
     options: { retryLimit: 1, expireInSeconds: 120 },
     concurrency: 1,
   },
+  // FR-BILL-5 (ADR-032): renewals, grace, past due and the move to Gratis, once a day.
+  'billing.daily': {
+    payload: z.object({}),
+    options: { policy: 'short', retryLimit: 2, retryDelay: 600, expireInSeconds: 1800 },
+    concurrency: 1,
+  },
   'identity.prune': {
     payload: z.object({}),
     options: { retryLimit: 2, expireInSeconds: 300 },
@@ -135,4 +141,6 @@ export const schedules: readonly {
   { queue: 'sri.overdue', cron: '*/15 * * * *', tz: JOB_TIME_ZONE, data: {} },
   // After midnight in Quito, once yesterday's deadline checks have run.
   { queue: 'sri.reissue-sweep', cron: '30 0 * * *', tz: JOB_TIME_ZONE, data: {} },
+  // Early morning in Quito, so the day's emails arrive before work starts.
+  { queue: 'billing.daily', cron: '0 6 * * *', tz: JOB_TIME_ZONE, data: {} },
 ];

@@ -86,6 +86,7 @@ await registerHandlers(jobs, {
     providerRuc: env.OPERATOR_RUC ?? null,
     consumerFinalMaxAmount: env.CONSUMER_FINAL_MAX_AMOUNT,
   },
+  billing: { ivaRate: env.IVA_RATE, appUrl: env.APP_URL },
 });
 logger.info('Worker started', { event: 'worker.started' });
 

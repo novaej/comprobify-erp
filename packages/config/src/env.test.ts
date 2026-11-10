@@ -18,9 +18,10 @@ import {
 const worker = {
   APP_ENV: 'local',
   DATABASE_URL: 'postgres://app:secret-pw@localhost/db',
+  APP_URL: 'http://localhost:3000',
   CERT_ENCRYPTION_KEY: 'a'.repeat(64),
 };
-const web = { ...worker, APP_URL: 'http://localhost:3000', AUTH_SECRET: 'x'.repeat(32) };
+const web = { ...worker, AUTH_SECRET: 'x'.repeat(32) };
 
 const failure = (load: () => unknown): string => {
   try {

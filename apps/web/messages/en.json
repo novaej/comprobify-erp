@@ -412,7 +412,11 @@
         "limit_cleared": "returned a limit to the plan value",
         "change_scheduled": "Subscription changed",
         "cancelled": "Subscription cancelled",
-        "resumed": "Subscription resumed"
+        "resumed": "Subscription resumed",
+        "renewal_due": "opened the renewal payment",
+        "grace_started": "warned that the renewal is unpaid",
+        "past_due": "marked the subscription past due",
+        "moved_to_free": "moved the company to the Free plan"
       },
       "entitlements": {
         "override_set": "set an exception for",

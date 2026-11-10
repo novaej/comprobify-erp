@@ -400,3 +400,18 @@ export async function applyDropAddOn(
       ),
     );
 }
+
+// Back on the free plan: the add-ons it paid for go, from the company and its twin (ADR-032).
+export async function applyDropAllAddOns(tx: Tx['db'], company: CompanyTenants): Promise<void> {
+  const { subscriptionItems } = schema;
+  await tx
+    .update(subscriptionItems)
+    .set({ active: false, updatedAt: sql`now()` })
+    .where(
+      and(
+        inArray(subscriptionItems.tenantId, tenantsOf(company)),
+        eq(subscriptionItems.kind, 'MODULE'),
+        eq(subscriptionItems.active, true),
+      ),
+    );
+}

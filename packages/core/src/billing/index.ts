@@ -68,3 +68,5 @@ export {
 } from './changes';
 export type { ChangeQuote, ChangeResult, PlanChangeInput } from './changes';
 export { consumePack, packBalance } from './packs';
+export { BILLING_DAYS, runBillingDay } from './daily';
+export type { BillingDayDeps, BillingDayResult } from './daily';

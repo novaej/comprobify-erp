@@ -4,6 +4,7 @@ import {
   ASSIGNABLE_ROLES,
   count,
   eq,
+  inArray,
   schema,
   sql,
   type Database,
@@ -605,4 +606,28 @@ export async function masterDataToCopy(ctx: ActorContext, db: Database): Promise
       ? countMasterData(tx, pair.twinTenantId)
       : { products: 0, clients: 0, providers: 0, templates: 0 };
   });
+}
+
+export type BillingContact = { email: string; locale: 'es' | 'en' };
+
+// Who hears about the company's billing: its active owners and admins, the roles that pay
+// (billing.manage). In the caller's system-context transaction, so it names the company.
+export async function billingContacts(
+  tx: Tx['db'],
+  realTenantId: string,
+): Promise<BillingContact[]> {
+  const { memberships, users } = schema;
+  const rows = await tx
+    .select({ email: users.email, locale: users.locale })
+    .from(memberships)
+    .innerJoin(users, eq(users.id, memberships.userId))
+    .where(
+      and(
+        eq(memberships.tenantId, realTenantId),
+        eq(memberships.active, true),
+        inArray(memberships.role, ['OWNER', 'ADMIN']),
+      ),
+    )
+    .orderBy(users.email);
+  return rows.map((row) => ({ email: row.email, locale: row.locale === 'en' ? 'en' : 'es' }));
 }

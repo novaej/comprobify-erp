@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   createMailgunProvider,
+  emailTemplate,
   createNoEmailProvider,
   renderDocumentEmail,
   renderEmail,
@@ -13,11 +14,16 @@ import {
 describe('renderEmail', () => {
   it('renders each template in both languages, with the link', () => {
     for (const locale of ['es', 'en'] as const) {
-      for (const template of ['verifyEmail', 'resetPassword', 'invitation'] as const) {
+      for (const template of emailTemplate.options) {
         const message = renderEmail(template, locale, 'a@example.com', {
           url: 'https://app.test/x?token=t',
+          organization: 'Alfa',
+          date: '10/12/2026',
+          amount: '$11.50',
         });
         expect(message.subject).not.toBe('');
+        // Every placeholder a template uses is filled.
+        expect(`${message.subject}${message.text}`).not.toMatch(/\{[a-z]+\}/);
         expect(message.text).toContain('https://app.test/x?token=t');
         expect(message.html).toContain(`lang="${locale}"`);
       }

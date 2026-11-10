@@ -15,7 +15,7 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 - **Milestone 9: CSV batches (FR-BULK-1), after the CSV import of clients and products (FR-MD-1), which it needs and shares its parser, row-numbered errors and upload screen with.** A file starts a batch in one of two ways. The default, on any plan with Bulk invoicing, is invoices: each row (rows with the same reference are the lines of one invoice) is validated up front, with errors by row number and nothing queued if the file is invalid, then made through the single-invoice pipeline (`bulk_batch_items.input` already holds a row). Only when the plan also has Sales (`SALE_ORDERS`) is there a second choice, to import the file as sale orders to invoice from the batch screen. Until then Bulk invoicing starts from sale orders only, so a company with the add-on but not Sales (the module is separate; Business and Enterprise have both) sees a locked page: either the CSV lifts that, or the module gets its dependency on Sales in the catalog.
 - **Milestone 9:** a page in the platform area to read a document's `sri_exchanges` for support, and a retention period for them (they grow with every authorization check).
 - **Milestone 9 (also):** the alerts that are only logged today become notifications: `BATCH_COMPLETED` (FR-BULK-3), no SRI answer 24 hours after RECEIVED, code 45, a re-issue skipped at a month boundary, and "Factura … re-emitida con fecha …" (FR-DOC-5, FR-DOC-6, FR-NOT-2).
-- **Milestone 9 (also):** billing notifications: a payment verified or rejected (to the company) and a proof submitted (to the operator), logged in the activity log today (ADR-029).
+- **Milestone 9 (also):** billing notifications: a payment verified or rejected (to the company) and a proof submitted (to the operator), logged in the activity log today (ADR-029); and the renewal cycle's steps, emailed today, in the notification centre too (ADR-032).
 - **Milestone 9 (also):** the mandatory notification announcing a price rise to the companies that pay it (FR-BILL-6, ADR-027).
 - **Milestone 9 (also):** email the companies on a plan when a module or a lower limit is scheduled to leave it, as with price changes (FR-BILL-6, FR-NOT-2); a page for the platform activity log (`platform_audit_events`).
 - **Not scheduled:** the vehicle plate on invoices of transport operators, excluding taxis (Anexo 25, Ficha v2.33), if such companies sign up.
@@ -26,7 +26,6 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 Gate: the full upgrade, renewal and expiry cycle on a fake clock, and a Payphone test card run by the owner. Prices, pack sizes and limits start as placeholders the super admin replaces with the real ones.
 
-- [ ] 5. The daily job: renewals, reminders, grace, expiry, on a fake clock
 - [ ] 6. Payphone against a fake gateway; the owner runs the real test card
 - [ ] 7. Screens: the company's billing page (packs and what is left of them, a banner for past due and suspended); payment review, invoicing queue, Payphone reconciliation and suspending a company in the platform area
 - [ ] 8. Gate

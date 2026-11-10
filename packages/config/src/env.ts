@@ -173,6 +173,8 @@ export const workerEnvSchema = z
     ...runtimeShape,
     ...mailShape,
     ...sriShape,
+    // Billing emails link back to the app (ADR-032).
+    APP_URL: z.url(),
     CERT_ENCRYPTION_KEY: certificateKey,
     OPERATOR_RUC: operatorRuc,
     CONSUMER_FINAL_MAX_AMOUNT: consumerFinalMaxAmount,

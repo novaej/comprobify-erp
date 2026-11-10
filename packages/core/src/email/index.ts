@@ -36,7 +36,12 @@ export const sendEmailPayload = z.object({
   to: z.email(),
   locale: emailLocale,
   template: emailTemplate,
-  params: z.object({ url: z.url(), organization: z.string().max(300).optional() }),
+  params: z.object({
+    url: z.url(),
+    organization: z.string().max(300).optional(),
+    date: z.string().max(60).optional(),
+    amount: z.string().max(30).optional(),
+  }),
 });
 export type SendEmailPayload = z.output<typeof sendEmailPayload>;
 

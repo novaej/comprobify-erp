@@ -412,7 +412,11 @@
         "limit_cleared": "devolvió un límite al valor del plan",
         "change_scheduled": "Cambio de suscripción",
         "cancelled": "Suscripción cancelada",
-        "resumed": "Suscripción reanudada"
+        "resumed": "Suscripción reanudada",
+        "renewal_due": "abrió el pago de la renovación",
+        "grace_started": "avisó que la renovación está pendiente",
+        "past_due": "marcó la suscripción como vencida",
+        "moved_to_free": "pasó la empresa al plan Gratis"
       },
       "entitlements": {
         "override_set": "puso una excepción a",

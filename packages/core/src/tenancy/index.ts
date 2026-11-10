@@ -19,6 +19,7 @@ export { companyLogo, documentLogo, LOGO_MAX_BYTES, sniffLogo } from './logo';
 export type { Logo } from './logo';
 export {
   acceptInvitation,
+  billingContacts,
   changeRole,
   companyUsage,
   getInvitation,
@@ -35,6 +36,7 @@ export {
   setTwoFactorRequirement,
 } from './members';
 export type {
+  BillingContact,
   CompanyUsage,
   InvitationRow,
   InvitationView,

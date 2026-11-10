@@ -1,5 +1,6 @@
 import type { Logger } from '@comprobify/config/logger';
 import type { Database, IdentityDb } from '@comprobify/db';
+import { runBillingDay, type BillingDeps } from './billing';
 import {
   alertOverdueAuthorizations,
   checkAfterDeadline,
@@ -30,6 +31,8 @@ export type HandlerDeps = {
   clock: Clock;
   // What issuing a document needs, for the invoices a batch makes (ADR-026).
   issue: Omit<IssueDeps, 'jobs' | 'keyCipher'>;
+  // The daily billing job's IVA rate and the URL its emails point to (ADR-032).
+  billing: BillingDeps & { appUrl: string };
 };
 
 // Every job handler the worker runs.
@@ -81,6 +84,9 @@ export async function registerHandlers(jobs: Jobs, deps: HandlerDeps): Promise<v
   });
   await jobs.work('bulk.complete', async () => {
     await completeBatches({ db: deps.db, clock, logger });
+  });
+  await jobs.work('billing.daily', async () => {
+    await runBillingDay({ db: deps.db, jobs, clock, logger, ...deps.billing });
   });
   await jobs.work('sri.overdue', async () => {
     await alertOverdueAuthorizations(sending);

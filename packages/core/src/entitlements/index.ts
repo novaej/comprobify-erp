@@ -14,6 +14,7 @@ export {
   applyClearLimit,
   applyClearOverride,
   applyDropAddOn,
+  applyDropAllAddOns,
   applyLimit,
   applyNegotiatedPrice,
   applyOverride,

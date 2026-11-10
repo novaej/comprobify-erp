@@ -70,7 +70,7 @@ The area also requires two-step verification, so set it up on that account befor
 | `SENTRY_DSN` | all | Optional. Server-side errors only (ADR-008). |
 | `DATABASE_URL` | web, worker | `comprobify_erp_app` |
 | `MIGRATION_DATABASE_URL` | migrate | `comprobify_erp_owner` |
-| `APP_URL` | web | Public URL. Email links point here. |
+| `APP_URL` | web, worker | Public URL. Email links point here, the worker's billing emails too. |
 | `CERT_ENCRYPTION_KEY` | web, worker | 64 hex characters (`openssl rand -hex 32`). Encrypts each company's stored certificate private key; never signs anything itself. The worker decrypts a company's key with it to sign that company's re-issues; losing it makes every stored key unusable, so back it up with the database credentials. |
 | `AGREEMENTS_ENABLED` | web | `false` until the owner approves the legal texts (`docs/legal/review-notes.md`). When `true`, go-live requires acceptance. |
 | `OPERATOR_NAME`, `OPERATOR_RUC`, `OPERATOR_ADDRESS`, `SUPPORT_EMAIL` | web | The operator named in the legal texts. Required when `AGREEMENTS_ENABLED` is `true`. `OPERATOR_RUC` is also printed on every document as "RUC Proveedor" (Anexo 26, ADR-013), so it is required in production whether or not agreements are on. |
