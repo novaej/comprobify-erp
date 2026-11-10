@@ -46,6 +46,7 @@ export { activeCertificate, issuingContext } from './issuing';
 export type { IssuingContext } from './issuing';
 export { onboardOrganization, onboardOrganizationInput } from './onboarding';
 export { isValidRucStructure } from './ruc';
+export { applyReactivation, applySuspension, suspendInput } from './suspension';
 export { PERMISSIONS, permissionsFor, ROLE_PERMISSIONS, ROLES } from './roles';
 export type { Permission, Role } from './roles';
 export {

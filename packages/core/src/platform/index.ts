@@ -1,4 +1,4 @@
-import type { Database, Tx } from '@comprobify/db';
+import type { Database, SuspensionReason, Tx } from '@comprobify/db';
 import { z } from 'zod';
 import { recordAudit, type AuditEvent } from '../audit';
 import {
@@ -22,7 +22,13 @@ import {
 } from '../entitlements';
 import { assertSuperAdmin } from '../identity';
 import { startOfEcuadorDay, type PlatformActor } from '../kernel';
-import { companyRow, listCompanyRows, type CompanyRow } from '../tenancy';
+import {
+  applyReactivation,
+  applySuspension,
+  companyRow,
+  listCompanyRows,
+  type CompanyRow,
+} from '../tenancy';
 
 export * from './catalog';
 
@@ -234,4 +240,33 @@ export const clearOverride = (
   change(actor, db, input.realTenantId, 'super admin: clear a feature override', async (tx, c) => {
     await applyClearOverride(tx, c, input);
     return { action: 'entitlements.override_cleared', details: { feature: input.featureKey } };
+  });
+
+// FR-BILL-9: the company keeps reading its data and can do nothing else until reactivated.
+export const suspendCompany = (
+  actor: PlatformActor,
+  db: Database,
+  input: { realTenantId: string; reason: SuspensionReason; note?: string | null },
+) =>
+  change(actor, db, input.realTenantId, 'super admin: suspend a company', async (tx, c) => {
+    const applied = await applySuspension(
+      tx,
+      c,
+      { reason: input.reason, note: input.note ?? null },
+      actor.clock.now(),
+    );
+    return {
+      action: 'organization.suspended',
+      details: { reason: applied.reason, note: applied.note },
+    };
+  });
+
+export const reactivateCompany = (
+  actor: PlatformActor,
+  db: Database,
+  input: { realTenantId: string },
+) =>
+  change(actor, db, input.realTenantId, 'super admin: reactivate a company', async (tx, c) => {
+    await applyReactivation(tx, c);
+    return { action: 'organization.reactivated', details: {} };
   });

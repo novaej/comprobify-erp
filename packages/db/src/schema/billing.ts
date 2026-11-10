@@ -285,3 +285,45 @@ export const paymentProofs = pgTable(
     check('payment_proofs_removed_check', sql`active = (removed_at IS NULL)`),
   ],
 );
+
+// FR-BILL-7: a pack is bought once and spent after the period's quota, oldest first. It rolls over
+// from period to period until used; only an untouched pack is refunded.
+export const PACK_STATUSES = ['ACTIVE', 'REFUNDED'] as const;
+export type PackStatus = (typeof PACK_STATUSES)[number];
+export const PACK_TRANSITIONS: Record<PackStatus, readonly PackStatus[]> = {
+  ACTIVE: ['REFUNDED'],
+  REFUNDED: [],
+};
+
+// In the real company only: the twin never uses quota (FR-ONB-6a).
+export const documentPacks = pgTable(
+  'document_packs',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`uuidv7()`),
+    tenantId: uuid('tenant_id').notNull(),
+    paymentId: uuid('payment_id').notNull(),
+    size: integer('size').notNull(),
+    used: integer('used').default(0).notNull(),
+    status: text('status', { enum: PACK_STATUSES }).default('ACTIVE').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      name: 'document_packs_payment_fk',
+      columns: [table.tenantId, table.paymentId],
+      foreignColumns: [payments.tenantId, payments.id],
+    }),
+    unique('document_packs_payment_unique').on(table.paymentId),
+    index('document_packs_tenant_open').on(table.tenantId, table.status, table.createdAt),
+    check('document_packs_status_check', oneOf('status', PACK_STATUSES)),
+    check('document_packs_used_check', sql`size > 0 AND used >= 0 AND used <= size`),
+    check('document_packs_refunded_check', sql`status = 'ACTIVE' OR used = 0`),
+  ],
+);
+
+// The trigger that enforces PACK_TRANSITIONS; migration 0053 holds its output.
+export const packStatusTriggerBody = (): string =>
+  transitionTriggerBody('Pack', PACK_STATUSES, PACK_TRANSITIONS);

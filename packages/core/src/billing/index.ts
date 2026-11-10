@@ -53,9 +53,11 @@ export type {
 export {
   addOnInput,
   buyAddOn,
+  buyPack,
   cancelScheduledChange,
   cancelSubscription,
   dropAddOn,
+  packInput,
   planChangeInput,
   previewPlanChange,
   remainingShare,
@@ -65,3 +67,4 @@ export {
   seatsInput,
 } from './changes';
 export type { ChangeQuote, ChangeResult, PlanChangeInput } from './changes';
+export { consumePack, packBalance } from './packs';

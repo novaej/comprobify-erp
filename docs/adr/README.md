@@ -51,6 +51,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [028](028-subscription-periods-and-the-quota.md) | Subscription periods and the quota | Accepted |
 | [029](029-payments-and-their-review.md) | Payments and their review | Accepted |
 | [030](030-plan-changes-seats-and-add-ons.md) | Plan changes, seats and add-ons | Accepted |
+| [031](031-document-packs-and-the-write-block.md) | Document packs and the write block | Accepted |
 
 ## Old ADRs to read before each milestone
 

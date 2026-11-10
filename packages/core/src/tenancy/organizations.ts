@@ -1,7 +1,7 @@
 import { and, eq, schema, TAX_REGIMES, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
 import { recordAudit } from '../audit';
-import { loadEntitlements, startDefaultSubscriptions } from '../entitlements';
+import { loadEntitlements, startDefaultSubscriptions, subscriptionState } from '../entitlements';
 import { setActiveTenant } from '../identity';
 import { DomainError, ecuadorDate, systemClock, type ActorContext, type Clock } from '../kernel';
 import type { Logo } from './logo';
@@ -242,11 +242,13 @@ export async function resolveActor(
   return db.withTenant({ tenantId: input.tenantId }, async ({ db: tx }) => {
     const { tenants, memberships } = schema;
     const [row] = await tx
-      .select({ mode: tenants.mode, role: memberships.role })
+      .select({ mode: tenants.mode, status: tenants.status, role: memberships.role })
       .from(memberships)
       .innerJoin(tenants, eq(tenants.id, memberships.tenantId))
       .where(and(eq(memberships.userId, input.userId), eq(memberships.active, true)));
     if (!row) throw new DomainError('NOT_A_MEMBER', 'Not a member of this organization');
+    // Both are mirrored in the twin, so it is blocked with its company.
+    const { status } = await subscriptionState(tx, input.tenantId, input.clock.now());
     return {
       tenantId: input.tenantId,
       tenantMode: row.mode,
@@ -255,6 +257,8 @@ export async function resolveActor(
       issuePointIds: await restrictedIssuePoints(tx, input.userId),
       // FR-PLAN-4: once per request; the twin reads its own mirrored rows.
       entitlements: await loadEntitlements(tx, input.tenantId, input.clock.now()),
+      standing:
+        row.status === 'SUSPENDED' ? 'SUSPENDED' : status === 'PAST_DUE' ? 'PAST_DUE' : 'GOOD',
       clock: input.clock,
     };
   });

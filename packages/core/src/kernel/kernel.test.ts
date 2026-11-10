@@ -8,6 +8,7 @@ import {
   isDomainError,
   limitOf,
   requireFeature,
+  requirePermission,
   requireWithinLimit,
   startOfEcuadorMonth,
   startOfNextEcuadorMonth,
@@ -89,6 +90,7 @@ describe('entitlement checks (FR-PLAN-4)', () => {
     userId: 'u',
     permissions: [],
     issuePointIds: null,
+    standing: 'GOOD',
     clock: systemClock,
     entitlements: { features: ['DOC_TYPE_01'], limits: { USERS: 2, DOCUMENT_QUOTA: null } },
   } satisfies ActorContext;
@@ -142,5 +144,47 @@ describe('calendar days', () => {
     expect(daysBetween('2026-11-10', '2026-12-10')).toBe(30);
     expect(daysBetween('2026-12-10', '2026-11-10')).toBe(-30);
     expect(daysBetween('2026-11-10', '2026-11-10')).toBe(0);
+  });
+});
+
+describe('the write block (FR-BILL-5, FR-BILL-9)', () => {
+  const as = (standing: ActorContext['standing']) =>
+    ({
+      tenantId: 't',
+      tenantMode: 'PRODUCTION',
+      userId: 'u',
+      permissions: ['documents.read', 'documents.issue', 'reports.export', 'billing.manage'],
+      issuePointIds: null,
+      standing,
+      clock: systemClock,
+      entitlements: { features: [], limits: {} },
+    }) satisfies ActorContext;
+
+  it('lets a company in good standing write', () => {
+    expect(() => requirePermission(as('GOOD'), 'documents.issue')).not.toThrow();
+  });
+
+  it('lets a past-due company read, export and pay, and nothing else', () => {
+    const ctx = as('PAST_DUE');
+    expect(() => requirePermission(ctx, 'documents.read')).not.toThrow();
+    expect(() => requirePermission(ctx, 'reports.export')).not.toThrow();
+    expect(() => requirePermission(ctx, 'billing.manage')).not.toThrow();
+    expect(() => requirePermission(ctx, 'documents.issue')).toThrow(
+      expect.objectContaining({ code: 'ACCOUNT_PAST_DUE' }),
+    );
+  });
+
+  it('lets a suspended company only read', () => {
+    const ctx = as('SUSPENDED');
+    expect(() => requirePermission(ctx, 'documents.read')).not.toThrow();
+    expect(() => requirePermission(ctx, 'billing.manage')).toThrow(
+      expect.objectContaining({ code: 'ACCOUNT_SUSPENDED' }),
+    );
+  });
+
+  it('still says FORBIDDEN first for a permission the role lacks', () => {
+    expect(() => requirePermission(as('SUSPENDED'), 'users.manage')).toThrow(
+      expect.objectContaining({ code: 'FORBIDDEN' }),
+    );
   });
 });

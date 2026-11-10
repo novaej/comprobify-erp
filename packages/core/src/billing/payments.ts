@@ -5,6 +5,7 @@ import {
   desc,
   eq,
   inArray,
+  ne,
   PAYMENT_REJECTION_REASONS,
   schema,
   sql,
@@ -36,6 +37,7 @@ import {
   type PlatformActor,
 } from '../kernel';
 import { companyRow, realTenantOf } from '../tenancy';
+import { grantPack, refundPack } from './packs';
 import { priceOn, YEARLY_MONTHS } from './prices';
 
 // FR-BILL-2, FR-BILL-3, FR-BILL-4, FR-BILL-8 (ADR-029): payments, their proofs and their review.
@@ -80,6 +82,7 @@ export type PaymentView = {
   totalAmount: string;
   targetPlan: { key: string; nameEs: string; nameEn: string } | null;
   targetInterval: PaymentRow['targetInterval'];
+  packSize: number | null;
   periodStart: string | null;
   periodEnd: string | null;
   rejectionReason: PaymentRejectionReason | null;
@@ -117,6 +120,7 @@ export async function viewsOf(tx: Tx['db'], rows: PaymentRow[]): Promise<Payment
       totalAmount: row.totalAmount,
       targetPlan: plan ? { key: plan.key, nameEs: plan.nameEs, nameEn: plan.nameEn } : null,
       targetInterval: row.targetInterval,
+      packSize: row.packSize,
       periodStart: row.periodStart,
       periodEnd: row.periodEnd,
       rejectionReason: row.rejectionReason,
@@ -789,8 +793,8 @@ export async function applyChange(
       break;
     }
     default:
-      // Document packs arrive in Milestone 8, step 4b.
-      throw new DomainError('PAYMENT_PURPOSE_UNSUPPORTED', 'This payment can not be applied yet');
+      // A pack never reaches here: applyVerifiedPayment grants it.
+      throw new DomainError('PAYMENT_PURPOSE_UNSUPPORTED', 'This payment changes no subscription');
   }
   const before = await applySubscriptionTerm(tx, company, term);
   return { before, term };
@@ -803,6 +807,16 @@ export async function applyVerifiedPayment(
   payment: PaymentRow,
   now: Date,
 ): Promise<SubscriptionTerm> {
+  // A pack leaves the subscription as it is: its documents are a balance of their own.
+  if (payment.purpose === 'DOCUMENT_PACK') {
+    await grantPack(tx, payment);
+    const current = termOf(await subscriptionOf(tx, payment.tenantId));
+    await tx
+      .update(schema.payments)
+      .set({ appliedFrom: snapshotOf(current) })
+      .where(eq(schema.payments.id, payment.id));
+    return current;
+  }
   const { before, term } = await applyChange(tx, payment.tenantId, payment, now);
   if (payment.purpose === 'TIER_CHANGE' && term.periodStart !== before.periodStart)
     await dropOpenRenewal(tx, payment.tenantId, now);
@@ -899,6 +913,11 @@ export async function refundPayment(
       throw new DomainError('PAYMENT_NOT_REFUNDABLE', 'Only a verified payment is refunded', {
         status: payment.status,
       });
+    if (payment.purpose === 'DOCUMENT_PACK') {
+      // Not part of the subscription, so nothing to restore and no later payment in its way.
+      await refundPack(tx, payment.id);
+      return settleRefund(tx, actor, payment, input.reason);
+    }
     // A later payment built on this one: undo that one first, or the restore would erase it.
     const [later] = await tx
       .select({ code: schema.payments.code })
@@ -907,6 +926,7 @@ export async function refundPayment(
         and(
           eq(schema.payments.tenantId, payment.tenantId),
           eq(schema.payments.status, 'VERIFIED'),
+          ne(schema.payments.purpose, 'DOCUMENT_PACK'),
           // uuidv7 ids follow creation, so they settle a tie in time.
           sql`(${schema.payments.verifiedAt}, ${schema.payments.id}) > (${payment.verifiedAt}, ${payment.id})`,
         ),
@@ -921,20 +941,29 @@ export async function refundPayment(
     await applySubscriptionTerm(tx, company, payment.appliedFrom as SubscriptionTerm);
     // An add-on is an item, not part of the snapshot: it goes with the money.
     if (payment.purpose === 'ADD_ON') await applyDropAddOn(tx, company, payment.targetModuleId!);
-    await tx
-      .update(schema.payments)
-      .set({
-        status: 'REFUNDED',
-        refundedAt: actor.clock.now(),
-        refundedBy: actor.userId,
-        refundReason: input.reason,
-      })
-      .where(eq(schema.payments.id, payment.id));
-    await recordAudit(tx, {
-      tenantId: payment.tenantId,
-      actorUserId: actor.userId,
-      action: 'payment.refunded',
-      details: { code: payment.code, purpose: payment.purpose, reason: input.reason },
-    });
+    await settleRefund(tx, actor, payment, input.reason);
+  });
+}
+
+async function settleRefund(
+  tx: Tx['db'],
+  actor: PlatformActor,
+  payment: PaymentRow,
+  reason: string,
+): Promise<void> {
+  await tx
+    .update(schema.payments)
+    .set({
+      status: 'REFUNDED',
+      refundedAt: actor.clock.now(),
+      refundedBy: actor.userId,
+      refundReason: reason,
+    })
+    .where(eq(schema.payments.id, payment.id));
+  await recordAudit(tx, {
+    tenantId: payment.tenantId,
+    actorUserId: actor.userId,
+    action: 'payment.refunded',
+    details: { code: payment.code, purpose: payment.purpose, reason },
   });
 }

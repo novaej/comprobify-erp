@@ -22,6 +22,16 @@ import { SRI_DOCUMENT_TYPES } from './sri';
 // The single source for these values: CHECKs below and core both use them.
 export const TENANT_MODES = ['TEST', 'PRODUCTION'] as const;
 export const TENANT_STATUSES = ['ACTIVE', 'SUSPENDED'] as const;
+// FR-BILL-9: why the operator suspended a company.
+export const SUSPENSION_REASONS = [
+  'PAYMENT_REVERSED',
+  'FRAUD_SUSPECTED',
+  'TERMS_VIOLATION',
+  'VOLUNTARY_CLOSURE',
+  'UNPAID_BALANCE',
+  'OTHER',
+] as const;
+export type SuspensionReason = (typeof SUSPENSION_REASONS)[number];
 // The legend each regime prints on its documents (Ficha, Anexo 22).
 export const TAX_REGIMES = ['GENERAL', 'RIMPE_EMPRENDEDOR', 'RIMPE_NEGOCIO_POPULAR'] as const;
 // FR-INV-4: what an outflow beyond the available stock does. BLOCK is the default.
@@ -55,6 +65,9 @@ export const tenants = pgTable(
     mode: text('mode', { enum: TENANT_MODES }).notNull(),
     twinOf: uuid('twin_of').references((): AnyPgColumn => tenants.id),
     status: text('status', { enum: TENANT_STATUSES }).default('ACTIVE').notNull(),
+    // Set with SUSPENDED and mirrored in the twin; only system context changes either.
+    suspensionReason: text('suspension_reason', { enum: SUSPENSION_REASONS }),
+    suspendedAt: timestamp('suspended_at', { withTimezone: true }),
     idleTimeoutMinutes: integer('idle_timeout_minutes').default(30).notNull(),
     // obligadoContabilidad in the SRI XML.
     requiredAccounting: boolean('required_accounting').default(false).notNull(),
@@ -78,6 +91,11 @@ export const tenants = pgTable(
     check('tenants_ruc_check', sql`${table.ruc} ~ '^[0-9]{13}$'`),
     check('tenants_mode_check', oneOf('mode', TENANT_MODES)),
     check('tenants_status_check', oneOf('status', TENANT_STATUSES)),
+    check(
+      'tenants_suspension_check',
+      sql`(status = 'SUSPENDED') = (suspension_reason IS NOT NULL AND suspended_at IS NOT NULL)
+          AND (suspension_reason IS NULL OR ${oneOf('suspension_reason', SUSPENSION_REASONS)})`,
+    ),
     // Only a twin points at another tenant, and every twin does.
     check('tenants_twin_check', sql`(${table.mode} = 'TEST') = (${table.twinOf} IS NOT NULL)`),
     check('tenants_idle_timeout_check', sql`${table.idleTimeoutMinutes} BETWEEN 5 AND 480`),

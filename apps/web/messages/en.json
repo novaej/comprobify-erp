@@ -302,7 +302,9 @@
     "UNKNOWN_ISSUE_POINT": "One of the issue points doesn't exist.",
     "RATE_LIMITED": "Too many invitations. Wait a few minutes.",
     "INVALID_INPUT": "Check the details you entered.",
-    "UNKNOWN": "An unexpected error occurred. Please try again."
+    "UNKNOWN": "An unexpected error occurred. Please try again.",
+    "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
   },
   "invite": {
     "title": "You're invited to {organization}",
@@ -379,7 +381,9 @@
         "created": "created the company",
         "went_live": "took the company live",
         "two_factor_requirement_changed": "changed the two-step verification requirement",
-        "settings_changed": "changed the tax details"
+        "settings_changed": "changed the tax details",
+        "suspended": "suspended the company",
+        "reactivated": "reactivated the company"
       },
       "certificate": {
         "uploaded": "uploaded the electronic signature"
@@ -469,7 +473,9 @@
     "UNKNOWN": "An unexpected error occurred. Please try again.",
     "AGREEMENTS_PENDING": "Accept the legal documents first, in Legal documents.",
     "SEQUENCE_BACKWARD": "A starting number can't be lower than the current one.",
-    "INVALID_INPUT": "Starting numbers are whole numbers from 1 to 999,999,999."
+    "INVALID_INPUT": "Starting numbers are whole numbers from 1 to 999,999,999.",
+    "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
   },
   "legal": {
     "title": "Legal documents",
@@ -502,7 +508,9 @@
     "AGREEMENTS_DISABLED": "The legal documents are under review.",
     "FORBIDDEN": "Only the owner can accept them.",
     "NO_AGREEMENTS": "No documents are published yet.",
-    "UNKNOWN": "An unexpected error occurred. Please try again."
+    "UNKNOWN": "An unexpected error occurred. Please try again.",
+    "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
   },
   "featureLocked": {
     "title": "This feature isn't in your plan",
@@ -807,7 +815,9 @@
     "MODULE_NOT_FOUND": "No such module.",
     "PLAN_NOT_FOUND": "No such plan.",
     "INVALID_INPUT": "Check the details you entered.",
-    "UNKNOWN": "An unexpected error occurred. Please try again."
+    "UNKNOWN": "An unexpected error occurred. Please try again.",
+    "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
   },
   "sri": {
     "documentTypes": {
@@ -909,7 +919,9 @@
     "FEATURE_NOT_ENABLED": "Your plan doesn't include clients.",
     "NOT_FOUND": "Client not found.",
     "INVALID_INPUT": "Check the details: the ID must be valid for its type, and each email an address.",
-    "UNKNOWN": "An unexpected error occurred. Please try again."
+    "UNKNOWN": "An unexpected error occurred. Please try again.",
+    "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
   },
   "products": {
     "title": "Products and services",
@@ -980,7 +992,9 @@
     "INVALID_INPUT": "Check the details: the price takes up to 6 decimals, and text can not have line breaks.",
     "UNKNOWN": "An unexpected error occurred. Please try again.",
     "STOCK_HELD": "A warehouse still holds stock of this product: adjust it to zero before you stop tracking stock.",
-    "SERVICE_HAS_NO_STOCK": "A service does not track stock."
+    "SERVICE_HAS_NO_STOCK": "A service does not track stock.",
+    "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
   },
   "settings": {
     "title": "Company",
@@ -1057,7 +1071,9 @@
     "FEATURE_NOT_ENABLED": "Your plan doesn't include that document type.",
     "NOT_FOUND": "Not found.",
     "INVALID_INPUT": "Check the details: codes are three digits and resolutions follow SRI's format.",
-    "UNKNOWN": "An unexpected error occurred. Please try again."
+    "UNKNOWN": "An unexpected error occurred. Please try again.",
+    "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
   },
   "documents": {
     "title": "Documents",
@@ -1412,7 +1428,9 @@
     "CREDIT_EXCEEDS_BALANCE": "A line is more than what is left to credit on the invoice.",
     "TRANSPORT_START_BEFORE_ISSUE": "The transport cannot start before the issue day. Use today or a later date.",
     "TRANSPORT_END_BEFORE_START": "The transport cannot end before it starts.",
-    "INSUFFICIENT_STOCK": "A product doesn’t have enough stock available in this branch’s warehouse. Check the inventory or change the quantity."
+    "INSUFFICIENT_STOCK": "A product doesn’t have enough stock available in this branch’s warehouse. Check the inventory or change the quantity.",
+    "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
   },
   "creditNoteForm": {
     "title": "Credit note for {number}",
@@ -1705,7 +1723,9 @@
     "FEATURE_NOT_ENABLED": "Your plan doesn't include inventory.",
     "NOT_FOUND": "The product or warehouse wasn't found.",
     "INVALID_INPUT": "Check the data: the quantity must be above zero and numbers take up to 6 decimals.",
-    "UNKNOWN": "Something went wrong. Try again."
+    "UNKNOWN": "Something went wrong. Try again.",
+    "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
   },
   "providers": {
     "title": "Providers",
@@ -1765,7 +1785,9 @@
     "FEATURE_NOT_ENABLED": "Your plan doesn't include providers.",
     "NOT_FOUND": "Provider not found.",
     "INVALID_INPUT": "Check the details: the ID must be valid for its type, and each email an address.",
-    "UNKNOWN": "An unexpected error occurred. Please try again."
+    "UNKNOWN": "An unexpected error occurred. Please try again.",
+    "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
   },
   "purchaseOrders": {
     "title": "Purchase orders",
@@ -1981,7 +2003,9 @@
     "NOT_FOUND": "The order, provider or product wasn't found.",
     "INVALID_INPUT": "Check the data: each address must be valid, each quantity more than zero, and numbers take up to 6 decimals.",
     "UNKNOWN": "Something unexpected went wrong. Try again.",
-    "ORDER_NOT_EMAILABLE": "This order is no longer sent to the provider."
+    "ORDER_NOT_EMAILABLE": "This order is no longer sent to the provider.",
+    "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
   },
   "saleOrders": {
     "title": "Sale orders",
@@ -2200,7 +2224,9 @@
     "ORDER_LINE_UNKNOWN": "A line isn't on the order or is repeated.",
     "PAYMENT_AMOUNT_REQUIRED": "With several payment methods, each needs its amount.",
     "INVOICE_FROM_ORDER": "This invoice is corrected from its order.",
-    "NOT_ORDER_INVOICE": "This invoice wasn't made from an order."
+    "NOT_ORDER_INVOICE": "This invoice wasn't made from an order.",
+    "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
   },
   "receivables": {
     "title": "Receivables",
@@ -2273,7 +2299,9 @@
     "FEATURE_NOT_ENABLED": "Your plan doesn't include receivables.",
     "NOT_FOUND": "The invoice or the payment was not found.",
     "INVALID_INPUT": "Check the data: the amount must be more than zero, with up to 2 decimals.",
-    "UNKNOWN": "An unexpected error occurred. Try again."
+    "UNKNOWN": "An unexpected error occurred. Try again.",
+    "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
   },
   "liveRefresh": {
     "updating": "Updating automatically…"
@@ -2387,7 +2415,9 @@
     "INSUFFICIENT_STOCK": "There is not enough stock for this order.",
     "NOT_A_MEMBER": "Whoever started the batch no longer belongs to the company.",
     "BATCH_ITEM_INVALID": "The item has no sale order.",
-    "UNKNOWN": "Something unexpected went wrong. Try again."
+    "UNKNOWN": "Something unexpected went wrong. Try again.",
+    "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
   },
   "adminQueue": {
     "title": "Bulk invoicing queue",

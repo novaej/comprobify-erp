@@ -1,5 +1,6 @@
 import { and, eq, gte, schema, sql, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
+import { consumePack, packBalance } from '../billing';
 import type { KeyCipher } from '../certificates';
 import { subscriptionState } from '../entitlements';
 import type { Jobs } from '../jobs';
@@ -76,7 +77,7 @@ export const issued = (
 
 // FR-BILL-7 (ADR-028): the quota counts the documents made in the subscription's quota window,
 // which a yearly period fills with twelve months of it. The twin and a company still in test
-// never use quota (FR-ONB-6a). Document packs top it up from step 4 of Milestone 8.
+// never use quota (FR-ONB-6a). Past it, each document spends one from a pack (billing).
 async function quotaIn(ctx: ActorContext, tx: Tx) {
   const monthly = limitOf(ctx.entitlements, QUOTA_FEATURE);
   const { window } = await subscriptionState(tx.db, ctx.tenantId, ctx.clock.now());
@@ -97,15 +98,23 @@ export async function consumeQuota(ctx: ActorContext, tx: Tx) {
   if (limitOf(ctx.entitlements, QUOTA_FEATURE) === null) return;
   await lock(tx, `quota:${ctx.tenantId}`);
   const { used, limit } = await quotaIn(ctx, tx);
-  if (limit !== null && used >= limit)
+  if (limit === null || used < limit) return;
+  if (!(await consumePack(tx.db, ctx.tenantId)))
     throw new DomainError('QUOTA_EXCEEDED', 'The document quota for this period is used up', {
       limit,
     });
 }
 
 // What the plan page shows: documents made in the window and what it allows (null: unlimited).
-// A company in test counts nothing against it, so it reads as unused (FR-ONB-6a).
-export type QuotaUsage = { used: number; limit: number | null; start: string; end: string };
+// A company in test counts nothing against it, so it reads as unused (FR-ONB-6a). `packs` is
+// what is left in document packs, which outlive the window.
+export type QuotaUsage = {
+  used: number;
+  limit: number | null;
+  start: string;
+  end: string;
+  packs: number;
+};
 
 export async function quotaUsage(ctx: ActorContext, db: Database): Promise<QuotaUsage> {
   requirePermission(ctx, 'billing.read');
@@ -116,6 +125,7 @@ export async function quotaUsage(ctx: ActorContext, db: Database): Promise<Quota
       limit,
       start: window.start,
       end: window.end,
+      packs: ctx.tenantMode === 'PRODUCTION' ? await packBalance(tx.db, ctx.tenantId) : 0,
     };
   });
 }

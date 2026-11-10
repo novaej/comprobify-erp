@@ -302,7 +302,9 @@
     "UNKNOWN_ISSUE_POINT": "Uno de los puntos de emisión no existe.",
     "RATE_LIMITED": "Demasiadas invitaciones. Espera unos minutos.",
     "INVALID_INPUT": "Revisa los datos ingresados.",
-    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
   },
   "invite": {
     "title": "Te invitaron a {organization}",
@@ -379,7 +381,9 @@
         "created": "creó la empresa",
         "went_live": "pasó la empresa a producción",
         "two_factor_requirement_changed": "cambió la exigencia de verificación en dos pasos",
-        "settings_changed": "cambió los datos tributarios"
+        "settings_changed": "cambió los datos tributarios",
+        "suspended": "suspendió la empresa",
+        "reactivated": "reactivó la empresa"
       },
       "certificate": {
         "uploaded": "subió la firma electrónica"
@@ -469,7 +473,9 @@
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
     "AGREEMENTS_PENDING": "Primero acepta los documentos legales, en Documentos legales.",
     "SEQUENCE_BACKWARD": "Un número inicial no puede ser menor que el actual.",
-    "INVALID_INPUT": "Los números iniciales son enteros entre 1 y 999.999.999."
+    "INVALID_INPUT": "Los números iniciales son enteros entre 1 y 999.999.999.",
+    "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
   },
   "legal": {
     "title": "Documentos legales",
@@ -502,7 +508,9 @@
     "AGREEMENTS_DISABLED": "Los documentos legales están en revisión.",
     "FORBIDDEN": "Solo el propietario puede aceptarlos.",
     "NO_AGREEMENTS": "Todavía no hay documentos publicados.",
-    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
   },
   "featureLocked": {
     "title": "Esta función no está en tu plan",
@@ -807,7 +815,9 @@
     "MODULE_NOT_FOUND": "No existe ese módulo.",
     "PLAN_NOT_FOUND": "No existe ese plan.",
     "INVALID_INPUT": "Revisa los datos ingresados.",
-    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
   },
   "sri": {
     "documentTypes": {
@@ -909,7 +919,9 @@
     "FEATURE_NOT_ENABLED": "Tu plan no incluye clientes.",
     "NOT_FOUND": "No se encontró el cliente.",
     "INVALID_INPUT": "Revisa los datos: la identificación debe ser válida para su tipo y cada correo, una dirección.",
-    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
   },
   "products": {
     "title": "Productos y servicios",
@@ -980,7 +992,9 @@
     "INVALID_INPUT": "Revisa los datos: el precio admite hasta 6 decimales y los textos no pueden tener saltos de línea.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
     "STOCK_HELD": "Todavía hay existencias de este producto en una bodega: ajústalas a cero antes de dejar de controlar inventario.",
-    "SERVICE_HAS_NO_STOCK": "Un servicio no controla inventario."
+    "SERVICE_HAS_NO_STOCK": "Un servicio no controla inventario.",
+    "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
   },
   "settings": {
     "title": "Empresa",
@@ -1057,7 +1071,9 @@
     "FEATURE_NOT_ENABLED": "Tu plan no incluye ese tipo de comprobante.",
     "NOT_FOUND": "No se encontró.",
     "INVALID_INPUT": "Revisa los datos: los códigos son de tres dígitos y las resoluciones siguen el formato del SRI.",
-    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
   },
   "documents": {
     "title": "Comprobantes",
@@ -1412,7 +1428,9 @@
     "CREDIT_EXCEEDS_BALANCE": "Una línea supera lo que queda por acreditar de la factura.",
     "TRANSPORT_START_BEFORE_ISSUE": "El transporte no puede empezar antes del día de emisión. Usa la fecha de hoy o una posterior.",
     "TRANSPORT_END_BEFORE_START": "El transporte no puede terminar antes de empezar.",
-    "INSUFFICIENT_STOCK": "Un producto no tiene suficientes existencias disponibles en la bodega de esta sucursal. Revisa el inventario o cambia la cantidad."
+    "INSUFFICIENT_STOCK": "Un producto no tiene suficientes existencias disponibles en la bodega de esta sucursal. Revisa el inventario o cambia la cantidad.",
+    "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
   },
   "creditNoteForm": {
     "title": "Nota de crédito de {number}",
@@ -1705,7 +1723,9 @@
     "FEATURE_NOT_ENABLED": "Tu plan no incluye el inventario.",
     "NOT_FOUND": "No se encontró el producto o la bodega.",
     "INVALID_INPUT": "Revisa los datos: la cantidad debe ser mayor que cero y los números admiten hasta 6 decimales.",
-    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
   },
   "providers": {
     "title": "Proveedores",
@@ -1765,7 +1785,9 @@
     "FEATURE_NOT_ENABLED": "Tu plan no incluye proveedores.",
     "NOT_FOUND": "No se encontró el proveedor.",
     "INVALID_INPUT": "Revisa los datos: la identificación debe ser válida para su tipo y cada correo, una dirección.",
-    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
   },
   "purchaseOrders": {
     "title": "Órdenes de compra",
@@ -1981,7 +2003,9 @@
     "NOT_FOUND": "No se encontró la orden, el proveedor o el producto.",
     "INVALID_INPUT": "Revisa los datos: cada correo debe ser una dirección válida, cada cantidad mayor que cero, y los números admiten hasta 6 decimales.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
-    "ORDER_NOT_EMAILABLE": "Esta orden ya no se envía al proveedor."
+    "ORDER_NOT_EMAILABLE": "Esta orden ya no se envía al proveedor.",
+    "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
   },
   "saleOrders": {
     "title": "Pedidos de venta",
@@ -2200,7 +2224,9 @@
     "ORDER_LINE_UNKNOWN": "Una línea no es del pedido o está repetida.",
     "PAYMENT_AMOUNT_REQUIRED": "Con varias formas de pago, cada una necesita su valor.",
     "INVOICE_FROM_ORDER": "Esta factura se corrige desde su pedido.",
-    "NOT_ORDER_INVOICE": "Esta factura no se hizo desde un pedido."
+    "NOT_ORDER_INVOICE": "Esta factura no se hizo desde un pedido.",
+    "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
   },
   "receivables": {
     "title": "Cuentas por cobrar",
@@ -2273,7 +2299,9 @@
     "FEATURE_NOT_ENABLED": "Tu plan no incluye cuentas por cobrar.",
     "NOT_FOUND": "No se encontró la factura o el cobro.",
     "INVALID_INPUT": "Revisa los datos: el valor debe ser mayor que cero, con hasta 2 decimales.",
-    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
   },
   "liveRefresh": {
     "updating": "Actualizando automáticamente…"
@@ -2387,7 +2415,9 @@
     "INSUFFICIENT_STOCK": "No hay suficientes existencias para este pedido.",
     "NOT_A_MEMBER": "Quien inició la facturación ya no pertenece a la empresa.",
     "BATCH_ITEM_INVALID": "El elemento no tiene un pedido de venta.",
-    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
   },
   "adminQueue": {
     "title": "Cola de facturación masiva",

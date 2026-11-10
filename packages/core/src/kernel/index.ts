@@ -1,5 +1,5 @@
 export { fixedClock, systemClock, type Clock } from './clock';
-export type { ActorContext, PlatformActor, TenantMode } from './context';
+export type { AccountStanding, ActorContext, PlatformActor, TenantMode } from './context';
 export { DomainError, isDomainError, type DomainErrorDetails } from './errors';
 export {
   addDays,
@@ -29,5 +29,5 @@ export {
   toSriPrecise,
   type DecValue,
 } from './money';
-export { requirePermission } from './permissions';
+export { isWrite, requirePermission } from './permissions';
 export { csvDecimal, parseCsv, type Csv } from './csv';

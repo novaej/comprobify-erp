@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
+  buyPack,
   companySettings,
   createClient,
   createInvoice,
@@ -8,10 +9,13 @@ import {
   fixedClock,
   goLive,
   onboardOrganization,
+  quotaUsage,
   resolveActor,
+  reviewPayment,
   setClientActive,
   setIssuePointPaused,
   setOverride,
+  submitProof,
   validateXml,
   type ActorContext,
   type CreatedOrganization,
@@ -303,6 +307,27 @@ describe('creating an invoice', () => {
     await expect(createInvoice(live, db, invoice(point), deps)).rejects.toMatchObject({
       code: 'QUOTA_EXCEEDED',
     });
+
+    // FR-BILL-7: a pack takes over once the quota is used up, and its rest rolls over.
+    const pack = await buyPack(live, db, { packSize: 100 }, { ivaRate: '15' });
+    expect(pack).toMatchObject({
+      purpose: 'DOCUMENT_PACK',
+      baseAmount: '5.00',
+      totalAmount: '5.75',
+    });
+    await submitProof(live, db, {
+      paymentId: pack.id,
+      reference: 'SPI-PACK',
+      files: [
+        { filename: 'p.png', content: Buffer.from([0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10]) },
+      ],
+    });
+    await reviewPayment({ ...(await superAdmin(db)), clock }, db, {
+      paymentId: pack.id,
+      decision: 'VERIFIED',
+    });
+    await createInvoice(live, db, invoice(point), deps);
+    await expect(quotaUsage(live, db)).resolves.toMatchObject({ used: 2, limit: 1, packs: 99 });
 
     // The twin carries the same limit and never uses it.
     const twin = await actor(org.twinTenantId);

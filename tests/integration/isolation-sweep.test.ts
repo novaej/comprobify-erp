@@ -286,6 +286,10 @@ describe('isolation sweep over every tenant table', () => {
           size: PNG.length,
           reference: 'SPI-1',
         });
+        // A pack it bought (FR-BILL-7).
+        await tx
+          .insert(schema.documentPacks)
+          .values({ tenantId, paymentId: payment!.id, size: 100 });
       });
       // A batch with an item that made an invoice, and one still waiting (FR-BULK-1).
       await db.withSystem('test: start a batch', async ({ db: tx, executeSql }) => {
@@ -367,6 +371,7 @@ describe('isolation sweep over every tenant table', () => {
         'document_sequences',
         'document_templates',
         'document_versions',
+        'document_packs',
         'documents',
         'invitations',
         'issue_point_document_types',

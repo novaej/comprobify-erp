@@ -16,6 +16,8 @@ import {
   Dec,
   DomainError,
   ecuadorDate,
+  limitOf,
+  requireFeature,
   requirePermission,
   startOfEcuadorDay,
   type ActorContext,
@@ -556,5 +558,56 @@ export async function resumeSubscription(ctx: ActorContext, db: Database): Promi
       action: 'subscription.resumed',
       details: { periodEnd: subscription.periodEnd },
     });
+  });
+}
+
+export const packInput = z.object({ packSize: z.int().min(1).max(1_000_000) });
+
+// FR-BILL-7: documents beyond the quota, bought once at the pack's price of the day. Not for a
+// company with no quota to run out of, nor one that is never charged.
+export async function buyPack(
+  ctx: ActorContext,
+  db: Database,
+  raw: z.input<typeof packInput>,
+  deps: BillingDeps,
+): Promise<PaymentView> {
+  requirePermission(ctx, 'billing.manage');
+  requireFeature(ctx, 'DOCUMENT_PACKS');
+  const input = packInput.parse(raw);
+  if (limitOf(ctx.entitlements, 'DOCUMENT_QUOTA') === null)
+    throw new DomainError('QUOTA_UNLIMITED', 'This plan has no document quota to top up');
+  const today = ecuadorDate(ctx.clock.now());
+  return forCompany(ctx, db, 'company: buy a document pack', async (tx, tenantId) => {
+    const subscription = await subscriptionOf(tx.db, tenantId);
+    if (subscription.billing === 'COMPLIMENTARY')
+      throw new DomainError(
+        'SUBSCRIPTION_COMPLIMENTARY',
+        'A complimentary company is never charged',
+      );
+    if (subscription.status === 'PAST_DUE')
+      throw new DomainError('ACCOUNT_PAST_DUE', 'Pay the renewal first');
+    await requireNoOpenChange(tx.db, tenantId);
+    const price = await priceOn(tx.db, { kind: 'PACK', packSize: input.packSize }, today);
+    if (price === null) throw new DomainError('PACK_NOT_SOLD', 'That pack is not sold');
+    const [row] = await tx.db
+      .insert(schema.payments)
+      .values({
+        tenantId,
+        subscriptionId: subscription.id,
+        code: paymentCode(),
+        purpose: 'DOCUMENT_PACK',
+        packSize: input.packSize,
+        ...amountsOf(price, deps.ivaRate),
+        pricing: { model: 'PACK', size: input.packSize, price: price.toFixed(2) },
+        createdBy: ctx.userId ?? null,
+      })
+      .returning();
+    await recordAudit(tx.db, {
+      tenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'payment.created',
+      details: { code: row!.code, purpose: 'DOCUMENT_PACK' },
+    });
+    return (await viewsOf(tx.db, [row!]))[0]!;
   });
 }
