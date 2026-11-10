@@ -26,6 +26,14 @@ import {
 import { createDatabase, type Database } from '@comprobify/db';
 import { nextCookies } from 'better-auth/next-js';
 
+export type BankTransfer = {
+  bankName: string;
+  accountType: string;
+  accountNumber: string;
+  accountHolder: string;
+  identification: string;
+};
+
 export type Runtime = {
   env: WebEnv;
   logger: Logger;
@@ -39,6 +47,8 @@ export type Runtime = {
   billingDeps: BillingDeps;
   // Null when Payphone isn't set up: card payments are refused (ADR-033).
   payphoneDeps: PayphoneDeps;
+  // The operator's account for transfers; null when not configured.
+  bankTransfer: BankTransfer | null;
   // For voiding: Consulta de validez (FR-DOC-8).
   sri: SriClient;
   // Null while the legal texts are under review (AGREEMENTS_ENABLED=false).
@@ -116,6 +126,15 @@ async function start(): Promise<Runtime> {
           timeoutMs: env.SRI_TIMEOUT_MS,
         }),
     billingDeps: { ivaRate: env.IVA_RATE },
+    bankTransfer: env.BANK_TRANSFER_BANK_NAME
+      ? {
+          bankName: env.BANK_TRANSFER_BANK_NAME,
+          accountType: env.BANK_TRANSFER_ACCOUNT_TYPE!,
+          accountNumber: env.BANK_TRANSFER_ACCOUNT_NUMBER!,
+          accountHolder: env.BANK_TRANSFER_ACCOUNT_HOLDER!,
+          identification: env.BANK_TRANSFER_IDENTIFICATION!,
+        }
+      : null,
     payphoneDeps: env.PAYPHONE_TOKEN
       ? {
           gateway: createPayphoneGateway({

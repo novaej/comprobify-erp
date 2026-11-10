@@ -82,6 +82,8 @@ export type PaymentView = {
   totalAmount: string;
   targetPlan: { key: string; nameEs: string; nameEn: string } | null;
   targetInterval: PaymentRow['targetInterval'];
+  targetSeats: number | null;
+  targetModule: { key: string; nameEs: string; nameEn: string } | null;
   packSize: number | null;
   periodStart: string | null;
   periodEnd: string | null;
@@ -106,8 +108,15 @@ export async function viewsOf(tx: Tx['db'], rows: PaymentRow[]): Promise<Payment
   const plans = planIds.length
     ? await tx.select().from(schema.plans).where(inArray(schema.plans.id, planIds))
     : [];
+  const moduleIds = [
+    ...new Set(rows.flatMap((row) => (row.targetModuleId ? [row.targetModuleId] : []))),
+  ];
+  const modules = moduleIds.length
+    ? await tx.select().from(schema.modules).where(inArray(schema.modules.id, moduleIds))
+    : [];
   return rows.map((row) => {
     const plan = plans.find((candidate) => candidate.id === row.targetPlanId);
+    const module = modules.find((candidate) => candidate.id === row.targetModuleId);
     return {
       id: row.id,
       code: row.code,
@@ -120,6 +129,10 @@ export async function viewsOf(tx: Tx['db'], rows: PaymentRow[]): Promise<Payment
       totalAmount: row.totalAmount,
       targetPlan: plan ? { key: plan.key, nameEs: plan.nameEs, nameEn: plan.nameEn } : null,
       targetInterval: row.targetInterval,
+      targetSeats: row.targetSeats,
+      targetModule: module
+        ? { key: module.key, nameEs: module.nameEs, nameEn: module.nameEn }
+        : null,
       packSize: row.packSize,
       periodStart: row.periodStart,
       periodEnd: row.periodEnd,
@@ -422,11 +435,18 @@ export async function repriceRenewal(
 
 export async function listPayments(ctx: ActorContext, db: Database): Promise<PaymentView[]> {
   requirePermission(ctx, 'billing.read');
-  return inCompany(ctx, db, async (tx) =>
-    viewsOf(
-      tx.db,
-      await tx.db.select().from(schema.payments).orderBy(desc(schema.payments.createdAt)),
-    ),
+  return inCompany(ctx, db, async (tx, tenantId) => listPaymentsIn(tx.db, tenantId));
+}
+
+// Newest first, in the caller's transaction.
+export async function listPaymentsIn(tx: Tx['db'], tenantId: string): Promise<PaymentView[]> {
+  return viewsOf(
+    tx,
+    await tx
+      .select()
+      .from(schema.payments)
+      .where(eq(schema.payments.tenantId, tenantId))
+      .orderBy(desc(schema.payments.createdAt)),
   );
 }
 

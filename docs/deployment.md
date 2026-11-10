@@ -77,6 +77,7 @@ The area also requires two-step verification, so set it up on that account befor
 | `CONSUMER_FINAL_MAX_AMOUNT` | web | The most a consumidor final invoice may total, `50.00` by default (FR-DOC-9). |
 | `IVA_RATE` | web, worker | IVA charged on subscriptions, in percent, `15` by default. Each payment keeps the rate it was created with (FR-BILL-2). |
 | `PAYPHONE_TOKEN`, `PAYPHONE_STORE_ID` | web, worker | Card payments through Payphone (ADR-033): both or neither. Unset, card payments are refused and transfers carry on. Leave them unset in a restored copy of real data. The token reaches the payer's browser (Payphone's widget needs it), so it is rotatable, not secret from a company. |
+| `BANK_TRANSFER_BANK_NAME`, `BANK_TRANSFER_ACCOUNT_TYPE`, `BANK_TRANSFER_ACCOUNT_NUMBER`, `BANK_TRANSFER_ACCOUNT_HOLDER`, `BANK_TRANSFER_IDENTIFICATION` | web | The operator's account companies transfer to, shown with each payment: all five or none. Unset, the page asks the company to contact support for them. |
 | `PAYPHONE_API_URL` | web, worker | Payphone's API, `https://paymentbox.payphonetodoesposible.com` by default |
 | `PAYPHONE_CONFIRM_TIMEOUT_MS` | web, worker | The confirm call's limit, `10000` by default; it holds the attempt's lock |
 | `AUTH_SECRET` | web | At least 32 characters. Signs session cookies and tokens; rotating it signs everyone out. |

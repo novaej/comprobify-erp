@@ -359,10 +359,12 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
       .last()
       .getByRole('link', { name: 'Plan' })
       .click();
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Plan');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Plan y pagos');
     await look(page, 'plan');
     await expect(page.getByText('Gratis', { exact: true })).toBeVisible();
-    await expect(page.getByRole('list', { name: 'Módulos' })).toContainText('Facturación');
+    await expect(page.getByRole('list', { name: 'Módulos', exact: true })).toContainText(
+      'Facturación',
+    );
     const usersRow = page.getByRole('main').getByText('Usuarios', { exact: true }).locator('..');
     await expect(usersRow).toContainText('1 de 1');
   });
@@ -1873,5 +1875,50 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
       page.getByText('1 de 5 usuarios, contando las invitaciones pendientes'),
     ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Invitar', exact: true })).toBeEnabled();
+  });
+
+  // FR-BILL-1, FR-BILL-3: the operator's plan isn't billed, so the company picks a paid one and
+  // reports the transfer; nothing changes until the operator verifies it (step 7b).
+  test('chooses a paid plan and reports its transfer with a proof (FR-BILL-1, FR-BILL-3)', async ({
+    page,
+  }) => {
+    await signIn(page, email, newPassword);
+    await page.getByLabel('Código', { exact: true }).fill(await totp());
+    await page.getByRole('button', { name: 'Verificar' }).click();
+    await expect(page).toHaveURL(/\/es\/dashboard$/);
+    await page.goto('/es/plan');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Plan y pagos');
+    await expect(page.getByRole('heading', { name: 'Paquetes de comprobantes' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Elegir un plan' }).click();
+    const choose = page.getByRole('dialog', { name: 'Elegir un plan' });
+    await choose.getByRole('combobox', { name: 'Plan' }).click();
+    await page.getByRole('option', { name: /^Empresa/ }).click();
+    await expect(choose).toContainText('Total $79.90 más IVA.');
+    await look(page, 'plan-choose');
+    await choose.getByRole('button', { name: 'Continuar al pago' }).click();
+    await expect(page.getByText('Listo. Paga abajo para activar el plan.')).toBeVisible();
+
+    const payment = page.getByRole('region', { name: 'Plan Empresa, mensual' });
+    await expect(payment).toContainText('Por pagar');
+    await expect(payment).toContainText('$91.89');
+    // No card without Payphone set up, and one open payment at a time.
+    await expect(payment.getByRole('button', { name: 'Tarjeta' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Elegir un plan' })).toBeDisabled();
+    await look(page, 'plan-payment');
+
+    await payment.getByLabel('Número de la transferencia').fill('SPI-E2E-1');
+    await payment.getByLabel('Comprobante').setInputFiles({
+      name: 'transferencia.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]),
+    });
+    await payment.getByRole('button', { name: 'Enviar comprobante' }).click();
+    await expect(
+      page.getByText('Comprobante enviado. Te avisaremos cuando lo revisemos.'),
+    ).toBeVisible();
+    await expect(payment).toContainText('En revisión');
+    await expect(payment.getByRole('link', { name: 'transferencia.png' })).toBeVisible();
+    await look(page, 'plan-payment-reported');
   });
 });

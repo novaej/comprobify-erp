@@ -1,30 +1,59 @@
-import { companyUsage, planOverview, quotaUsage, SHOWN_LIMITS } from '@comprobify/core';
-import { CheckCircle2, Clock } from 'lucide-react';
+import {
+  billingOverview,
+  companyUsage,
+  getPayment,
+  planOverview,
+  quotaUsage,
+  SHOWN_LIMITS,
+} from '@comprobify/core';
+import { CheckCircle2, Clock, Receipt } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { EmptyState } from '@/components/empty-state';
 import { NoAccess } from '@/components/no-access';
 import { PageHeader } from '@/components/page-header';
 import { SectionCard } from '@/components/section-card';
+import {
+  StackBody,
+  StackCell,
+  StackHead,
+  StackHeader,
+  StackRow,
+  StackTable,
+  TableCard,
+} from '@/components/stack-table';
 import { ToneBadge } from '@/components/tone-badge';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
 import { pageTitle } from '@/server/page-title';
+import { AddOnsSection, PacksSection, PlanSection, SeatsSection } from './billing-manager';
+import { PaymentCard } from './payment-card';
+import { STATUS_TONE } from './payment-status';
+import { PaymentLabel } from './payment-label-cell';
 
 export const generateMetadata = pageTitle('plan');
 
-// FR-PLAN-4: what the company's plan includes and how much of each limit it uses, in its
-// current period (FR-BILL-7). Changing plan arrives later in Milestone 8.
+const OPEN = ['PENDING', 'REPORTED', 'REJECTED'];
+
+// FR-PLAN-4, FR-BILL-1, FR-BILL-3, FR-BILL-5, FR-BILL-7: the company's plan and what it uses,
+// what it pays and how, and what it may change. Core decides every change.
 export default async function PlanPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const { actor } = await loadShell(locale);
   if (!actor.permissions.includes('billing.read')) return <NoAccess />;
 
-  const { db } = await getRuntime();
-  const [overview, usage, quota] = await Promise.all([
+  const { db, payphoneDeps, bankTransfer } = await getRuntime();
+  const [overview, usage, quota, billing] = await Promise.all([
     planOverview(actor, db),
     companyUsage(actor, db),
     quotaUsage(actor, db),
+    billingOverview(actor, db),
   ]);
+  const open = await Promise.all(
+    billing.payments
+      .filter((payment) => OPEN.includes(payment.status))
+      .map((payment) => getPayment(actor, db, payment.id)),
+  );
   const t = await getTranslations('plan');
   const english = locale === 'en';
   const name = (row: { nameEs: string; nameEn: string }) => (english ? row.nameEn : row.nameEs);
@@ -42,16 +71,36 @@ export default async function PlanPage({ params }: { params: Promise<{ locale: s
     key === 'DOCUMENT_QUOTA' ? quota.limit : overview.limits[key];
   const day = (iso: string) => iso.split('-').reverse().join('/');
   const billed = overview.subscription.periodEnd !== null;
+  const canManage = actor.permissions.includes('billing.manage');
+  const flags = {
+    canManage,
+    changeOpen: open.some((payment) => payment.purpose !== 'RENEWAL'),
+    unlimited: quota.limit === null,
+  };
+  const users = overview.limits.USERS;
+  const history = billing.payments.filter((payment) => !OPEN.includes(payment.status));
 
   return (
     <div className="max-w-3xl space-y-4">
       <PageHeader title={t('title')} description={t('description')} className="mb-2" />
+
+      {open.map((payment) => (
+        <PaymentCard
+          key={payment.id}
+          payment={payment}
+          bankTransfer={bankTransfer}
+          cardAvailable={payphoneDeps !== null}
+          canManage={canManage}
+        />
+      ))}
 
       <SectionCard
         title={t('current')}
         action={
           overview.billing === 'COMPLIMENTARY' ? (
             <ToneBadge tone="primary">{t('complimentary')}</ToneBadge>
+          ) : overview.subscription.status === 'PAST_DUE' ? (
+            <ToneBadge tone="danger">{t('pastDue')}</ToneBadge>
           ) : undefined
         }
       >
@@ -65,7 +114,7 @@ export default async function PlanPage({ params }: { params: Promise<{ locale: s
               })
             : t('notBilled')}
         </p>
-        <p className="mt-1 text-sm text-muted-foreground">{t('changeSoon')}</p>
+        <PlanSection overview={billing} flags={flags} />
       </SectionCard>
 
       <SectionCard
@@ -93,6 +142,14 @@ export default async function PlanPage({ params }: { params: Promise<{ locale: s
           })}
         </dl>
       </SectionCard>
+
+      <PacksSection overview={billing} flags={flags} />
+      <SeatsSection
+        overview={billing}
+        flags={flags}
+        planUsers={users === null ? null : users - billing.subscription.extraSeats}
+      />
+      <AddOnsSection overview={billing} flags={flags} />
 
       <SectionCard title={t('modulesTitle')}>
         <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2" aria-label={t('modulesTitle')}>
@@ -123,6 +180,53 @@ export default async function PlanPage({ params }: { params: Promise<{ locale: s
           })}
         </ul>
       </SectionCard>
+
+      <section aria-labelledby="payments-title" className="space-y-3 pt-2">
+        <h2 id="payments-title" className="text-sm font-semibold">
+          {t('history.title')}
+        </h2>
+        <TableCard>
+          {history.length === 0 ? (
+            <EmptyState icon={Receipt} title={t('history.empty')} />
+          ) : (
+            <StackTable aria-label={t('history.title')}>
+              <StackHeader>
+                <StackRow className="bg-muted/40">
+                  <StackHead className="pl-4">{t('history.what')}</StackHead>
+                  <StackHead>{t('history.date')}</StackHead>
+                  <StackHead>{t('history.method')}</StackHead>
+                  <StackHead className="text-right">{t('history.total')}</StackHead>
+                  <StackHead>{t('history.status')}</StackHead>
+                </StackRow>
+              </StackHeader>
+              <StackBody>
+                {history.map((payment) => (
+                  <StackRow key={payment.id}>
+                    <StackCell heading className="pl-4">
+                      <PaymentLabel payment={payment} />
+                      <span className="block text-xs text-muted-foreground">{payment.code}</span>
+                    </StackCell>
+                    <StackCell label={t('history.date')}>
+                      {date.format(payment.verifiedAt ?? payment.createdAt)}
+                    </StackCell>
+                    <StackCell label={t('history.method')}>
+                      {payment.method ? t(`history.methods.${payment.method}`) : '—'}
+                    </StackCell>
+                    <StackCell label={t('history.total')} className="text-right tabular-nums">
+                      ${payment.totalAmount}
+                    </StackCell>
+                    <StackCell label={t('history.status')}>
+                      <ToneBadge tone={STATUS_TONE[payment.status]}>
+                        {t(`payment.status.${payment.status}`)}
+                      </ToneBadge>
+                    </StackCell>
+                  </StackRow>
+                ))}
+              </StackBody>
+            </StackTable>
+          )}
+        </TableCard>
+      </section>
     </div>
   );
 }

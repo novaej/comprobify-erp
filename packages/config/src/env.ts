@@ -128,6 +128,32 @@ const payphoneShape = {
   PAYPHONE_CONFIRM_TIMEOUT_MS: z.coerce.number().int().min(1000).max(30_000).default(10_000),
 };
 
+// FR-BILL-3: the operator's account a company transfers to, shown beside each payment. All five
+// or none; without them the page asks the company to contact support for the details.
+const BANK_KEYS = [
+  'BANK_TRANSFER_BANK_NAME',
+  'BANK_TRANSFER_ACCOUNT_TYPE',
+  'BANK_TRANSFER_ACCOUNT_NUMBER',
+  'BANK_TRANSFER_ACCOUNT_HOLDER',
+  'BANK_TRANSFER_IDENTIFICATION',
+] as const;
+const bankShape = Object.fromEntries(
+  BANK_KEYS.map((key) => [key, z.string().trim().min(1).max(120).optional()]),
+) as Record<(typeof BANK_KEYS)[number], z.ZodOptional<z.ZodString>>;
+
+function requireBankDetails(
+  env: Partial<Record<(typeof BANK_KEYS)[number], string | undefined>>,
+  ctx: z.RefinementCtx,
+): void {
+  const set = BANK_KEYS.filter((key) => env[key]);
+  if (set.length > 0 && set.length < BANK_KEYS.length)
+    ctx.addIssue({
+      code: 'custom',
+      path: [BANK_KEYS.find((key) => !env[key])!],
+      message: 'the BANK_TRANSFER_* variables are set together, or none',
+    });
+}
+
 function requirePayphonePair(
   env: { PAYPHONE_TOKEN?: string | undefined; PAYPHONE_STORE_ID?: string | undefined },
   ctx: z.RefinementCtx,
@@ -171,11 +197,13 @@ export const webEnvSchema = z
     CONSUMER_FINAL_MAX_AMOUNT: consumerFinalMaxAmount,
     IVA_RATE: ivaRate,
     ...payphoneShape,
+    ...bankShape,
   })
   .superRefine((env, ctx) => {
     refuseMockInProduction(env, ctx);
     requireOperatorRuc(env, ctx);
     requirePayphonePair(env, ctx);
+    requireBankDetails(env, ctx);
     if (!env.AGREEMENTS_ENABLED) return;
     for (const name of [
       'OPERATOR_NAME',

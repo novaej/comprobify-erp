@@ -24,8 +24,8 @@ const nextConfig: NextConfig = {
     '@logtail/pino',
     'thread-stream',
   ],
-  // Onboarding uploads a P12 and a logo of up to 500 KB.
-  experimental: { serverActions: { bodySizeLimit: '2mb' } },
+  // Onboarding uploads a P12 and a logo; a transfer's proof is up to five files of 2 MB.
+  experimental: { serverActions: { bodySizeLimit: '11mb' } },
 };
 
 export default withNextIntl(nextConfig);

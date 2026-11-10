@@ -96,3 +96,5 @@ export {
   PAYPHONE_APPROVED,
 } from './payphone-gateway';
 export type { ConfirmResult, FakeCharge, PayphoneGateway } from './payphone-gateway';
+export { billingOverview } from './overview';
+export type { BillingOverview } from './overview';

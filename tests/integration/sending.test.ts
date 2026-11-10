@@ -74,11 +74,12 @@ describe('sending to SRI', () => {
         .orderBy(asc(schema.documentEvents.occurredAt), asc(schema.documentEvents.id)),
     );
   // The jobs scheduled for later for a document, oldest first; not the one creation enqueues.
+  // By inequality, not "after": the fake clock falls behind the real one once its date passes.
   const scheduled = async (document: IssuedDocument, queue: string) =>
     (
       await db.withSystem('test: read scheduled jobs', ({ executeSql }) =>
         executeSql<{ start_after: Date }>(
-          `SELECT start_after FROM pgboss.job WHERE name = $1 AND data->>'documentId' = $2 AND start_after > created_on ORDER BY created_on, start_after`,
+          `SELECT start_after FROM pgboss.job WHERE name = $1 AND data->>'documentId' = $2 AND start_after <> created_on ORDER BY created_on, start_after`,
           [queue, document.id],
         ),
       )

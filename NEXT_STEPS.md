@@ -25,7 +25,7 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 Gate: the full upgrade, renewal and expiry cycle on a fake clock, and a Payphone test card run by the owner. Prices, pack sizes and limits start as placeholders the super admin replaces with the real ones.
 
-- [ ] 7. Screens: the company's billing page (packs and what is left of them, a banner for past due and suspended, paying by card: Payphone's widget and the return page that confirms on load, ADR-033); payment review, invoicing queue, Payphone reconciliation and suspending a company in the platform area
+- [ ] 7b. Screens in the platform area: payment review with a proof viewer (verify, reject, refund), the invoicing queue of verified payments, Payphone reconciliation (`DUPLICATE` and `ERROR` attempts to refund by hand), and suspending and reactivating a company with a reason (FR-ADM-1, FR-ADM-2, FR-BILL-9)
 - [ ] 8. Gate, with the owner's real Payphone test card through the billing page (`PAYPHONE_TOKEN` and `PAYPHONE_STORE_ID` from Payphone's developer console, the app's domain registered there)
 
 ## Upcoming milestones

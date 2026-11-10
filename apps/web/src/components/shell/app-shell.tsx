@@ -1,6 +1,6 @@
 import { agreementStatus } from '@comprobify/core';
 import { buttonVariants } from '@comprobify/ui/components/button';
-import { AlertCircle, AlertTriangle, FileText, FlaskConical } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Ban, FileText, FlaskConical } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { getRuntime } from '@/server/runtime';
 import { getTranslations } from 'next-intl/server';
@@ -57,6 +57,31 @@ export async function AppShell({ locale, children }: { locale: string; children:
             {active.mode === 'TEST' && (
               <Banner tone="warning" icon={FlaskConical} role="note" title={t('sandboxTitle')}>
                 {t('sandboxBody')}
+              </Banner>
+            )}
+            {/* FR-BILL-5, FR-BILL-9: core refuses the writes; this says why first. */}
+            {actor.standing === 'PAST_DUE' && (
+              <Banner
+                tone="danger"
+                icon={AlertCircle}
+                title={t('pastDueTitle')}
+                action={
+                  actor.permissions.includes('billing.read') ? (
+                    <Link
+                      href="/plan"
+                      className={buttonVariants({ variant: 'outline', size: 'sm' })}
+                    >
+                      {t('pastDueAction')}
+                    </Link>
+                  ) : undefined
+                }
+              >
+                {t('pastDueBody')}
+              </Banner>
+            )}
+            {actor.standing === 'SUSPENDED' && (
+              <Banner tone="danger" icon={Ban} title={t('suspendedTitle')}>
+                {t('suspendedBody')}
               </Banner>
             )}
             {agreementsPending && (
