@@ -30,7 +30,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appDatabase, superAdmin } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
-const billing = { ivaRate: '15' };
 
 // FR-BILL-7 (document packs), FR-BILL-5 (past due blocks writes but lets the company pay) and
 // FR-BILL-9 (suspension keeps reading only). Placeholder packs: 100 for 5.00, 500 for 20.00.
@@ -66,7 +65,7 @@ describe('document packs and the write block', () => {
     });
   };
   const buy = async (packSize: number) => {
-    const payment = await buyPack(await owner(), db, { packSize }, billing);
+    const payment = await buyPack(await owner(), db, { packSize });
     await pay(payment);
     return payment;
   };
@@ -141,15 +140,13 @@ describe('document packs and the write block', () => {
   });
 
   it('sells a pack at its price of the day, never to an unlimited or complimentary company', async () => {
-    expect(await failure(buyPack(await owner(), db, { packSize: 300 }, billing))).toBe(
-      'PACK_NOT_SOLD',
-    );
+    expect(await failure(buyPack(await owner(), db, { packSize: 300 }))).toBe('PACK_NOT_SOLD');
     await setBilling({ ...operator, clock }, db, {
       realTenantId: org.realTenantId,
       complimentary: true,
       reason: 'Socio',
     });
-    expect(await failure(buyPack(await owner(), db, { packSize: 100 }, billing))).toBe(
+    expect(await failure(buyPack(await owner(), db, { packSize: 100 }))).toBe(
       'SUBSCRIPTION_COMPLIMENTARY',
     );
     await setBilling({ ...operator, clock }, db, {
@@ -163,16 +160,14 @@ describe('document packs and the write block', () => {
       limitValue: null,
       reason: 'test',
     });
-    expect(await failure(buyPack(await owner(), db, { packSize: 100 }, billing))).toBe(
-      'QUOTA_UNLIMITED',
-    );
+    expect(await failure(buyPack(await owner(), db, { packSize: 100 }))).toBe('QUOTA_UNLIMITED');
     await clearOverride({ ...operator, clock }, db, {
       realTenantId: org.realTenantId,
       featureKey: 'DOCUMENT_QUOTA',
     });
 
     // Gratis can top up too: it has a quota to run out of.
-    const payment = await buyPack(await owner(), db, { packSize: 100 }, billing);
+    const payment = await buyPack(await owner(), db, { packSize: 100 });
     expect(payment).toMatchObject({
       purpose: 'DOCUMENT_PACK',
       packSize: 100,
@@ -231,16 +226,14 @@ describe('document packs and the write block', () => {
   });
 
   it('blocks a past-due company’s writes, twin included, and lets it pay the renewal', async () => {
-    const initial = await startPaidPlan(
-      await owner(),
-      db,
-      { planKey: 'STARTER', interval: 'MONTHLY' },
-      billing,
-    );
+    const initial = await startPaidPlan(await owner(), db, {
+      planKey: 'STARTER',
+      interval: 'MONTHLY',
+    });
     await pay(initial);
     clock.set('2026-12-05T15:00:00Z');
     const renewal = await db.withSystem('test: open the renewal', ({ db: tx }) =>
-      openRenewal(tx, org.realTenantId, billing),
+      openRenewal(tx, org.realTenantId, clock.now()),
     );
     expect(renewal).not.toBeNull();
     // What the daily job does after the grace (step 5).
@@ -254,9 +247,7 @@ describe('document packs and the write block', () => {
       expect(await failure(newClient(ctx))).toBe('ACCOUNT_PAST_DUE');
       await expect(listClients(ctx, db)).resolves.toBeDefined();
     }
-    expect(await failure(buyPack(await owner(), db, { packSize: 100 }, billing))).toBe(
-      'ACCOUNT_PAST_DUE',
-    );
+    expect(await failure(buyPack(await owner(), db, { packSize: 100 }))).toBe('ACCOUNT_PAST_DUE');
 
     await pay(renewal!);
     const ctx = await owner();
@@ -285,9 +276,7 @@ describe('document packs and the write block', () => {
       await expect(listClients(ctx, db)).resolves.toBeDefined();
     }
     // Paying doesn't lift a suspension: the operator decides.
-    expect(await failure(buyPack(await owner(), db, { packSize: 100 }, billing))).toBe(
-      'ACCOUNT_SUSPENDED',
-    );
+    expect(await failure(buyPack(await owner(), db, { packSize: 100 }))).toBe('ACCOUNT_SUSPENDED');
 
     await reactivateCompany({ ...operator, clock }, db, { realTenantId: org.realTenantId });
     expect(

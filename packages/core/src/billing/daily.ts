@@ -19,9 +19,10 @@ import {
 } from '../entitlements';
 import type { EmailTemplate } from '../email';
 import type { Jobs } from '../jobs';
-import { addDays, ecuadorDate, type Clock } from '../kernel';
+import { addDays, Dec, ecuadorDate, type Clock } from '../kernel';
 import { billingContacts, companyRow } from '../tenancy';
-import { OPEN, openRenewal, subscriptionOf, termOf, type BillingDeps } from './payments';
+import { ivaRateOn } from './iva';
+import { amountsOf, lockPayment, OPEN, openRenewal, subscriptionOf, termOf } from './payments';
 
 // FR-BILL-5 (ADR-032): the renewal cycle, once a day. Each step reads the subscription as it is
 // now and does only what is still due, so a second run, or a run after missed days, is harmless
@@ -35,7 +36,7 @@ export const BILLING_DAYS = {
   pastDue: 14,
 } as const;
 
-export type BillingDayDeps = BillingDeps & {
+export type BillingDayDeps = {
   db: Database;
   jobs: Pick<Jobs, 'enqueue'>;
   clock: Clock;
@@ -45,13 +46,15 @@ export type BillingDayDeps = BillingDeps & {
 };
 
 export type BillingDayResult = {
+  // Unpaid payments charged again at a new IVA rate (ADR-034).
+  repriced: number;
   renewalsOpened: number;
   graceStarted: number;
   pastDue: number;
   movedToFree: number;
 };
 
-type Step = keyof BillingDayResult;
+type Step = Exclude<keyof BillingDayResult, 'repriced'>;
 
 const formatDate = (date: string, locale: 'es' | 'en') =>
   new Intl.DateTimeFormat(locale === 'es' ? 'es-EC' : 'en-US', {
@@ -63,7 +66,7 @@ async function notify(
   tx: Tx,
   deps: BillingDayDeps,
   realTenantId: string,
-  email: { template: EmailTemplate; date: string; amount: string | null },
+  email: { template: EmailTemplate; date: string; amount: string | null; rate?: string },
 ): Promise<void> {
   const company = await companyRow(tx.db, realTenantId);
   for (const contact of await billingContacts(tx.db, realTenantId))
@@ -76,6 +79,7 @@ async function notify(
         organization: company.name,
         date: formatDate(email.date, contact.locale),
         ...(email.amount ? { amount: `$${email.amount}` } : {}),
+        ...(email.rate ? { rate: `${new Dec(email.rate).toString()} %` } : {}),
       },
     });
 }
@@ -176,7 +180,7 @@ async function runCompany(deps: BillingDayDeps, realTenantId: string): Promise<S
 
     if (today < addDays(end, -BILLING_DAYS.renewalNotice)) return null;
     if (!open) {
-      const opened = await openRenewal(tx.db, realTenantId, deps);
+      const opened = await openRenewal(tx.db, realTenantId, now);
       if (!opened) return null;
       await record('subscription.renewal_due', { periodEnd: end, code: opened.code });
       await notify(tx, deps, realTenantId, {
@@ -209,6 +213,92 @@ async function runCompany(deps: BillingDayDeps, realTenantId: string): Promise<S
   });
 }
 
+// ADR-034: a new IVA rate has started, so a payment nobody has paid yet charges it, and the payer
+// is told the new total. A transfer under review keeps its rate: that money is on its way. One
+// with a card attempt still unresolved waits a day, so Payphone confirms what it held.
+async function repriceForIva(
+  deps: BillingDayDeps,
+  today: string,
+): Promise<{ repriced: number; failed: number }> {
+  const { payments, payphoneTransactions } = schema;
+  const rate = await deps.db.withSystem('billing: the IVA rate in force', ({ db: tx }) =>
+    ivaRateOn(tx, today),
+  );
+  // Payments are the real company's (FR-ONB-6a); the join keeps it so whatever a row says.
+  const stale = await deps.db.withSystem('billing: payments at an old IVA rate', ({ db: tx }) =>
+    tx
+      .select({ id: payments.id })
+      .from(payments)
+      .innerJoin(schema.tenants, eq(schema.tenants.id, payments.tenantId))
+      .where(
+        and(
+          isNull(schema.tenants.twinOf),
+          inArray(payments.status, ['PENDING', 'REJECTED']),
+          ne(payments.ivaRate, rate),
+        ),
+      ),
+  );
+  let repriced = 0;
+  let failed = 0;
+  for (const { id } of stale) {
+    const done = await deps.db
+      .withSystem('billing: charge a payment at the new IVA', async (tx) => {
+        const payment = await lockPayment(tx.db, id);
+        if (!['PENDING', 'REJECTED'].includes(payment.status) || new Dec(payment.ivaRate).eq(rate))
+          return false;
+        const [card] = await tx.db
+          .select({ id: payphoneTransactions.id })
+          .from(payphoneTransactions)
+          .where(
+            and(
+              eq(payphoneTransactions.paymentId, payment.id),
+              eq(payphoneTransactions.status, 'PENDING'),
+            ),
+          )
+          .limit(1);
+        if (card) return false;
+        const amounts = amountsOf(new Dec(payment.baseAmount), rate);
+        await tx.db
+          .update(payments)
+          .set({
+            ivaRate: amounts.ivaRate,
+            ivaAmount: amounts.ivaAmount,
+            totalAmount: amounts.totalAmount,
+          })
+          .where(eq(payments.id, payment.id));
+        await recordAudit(tx.db, {
+          tenantId: payment.tenantId,
+          actorUserId: null,
+          action: 'payment.repriced',
+          details: {
+            code: payment.code,
+            fromRate: payment.ivaRate,
+            toRate: amounts.ivaRate,
+            fromTotal: payment.totalAmount,
+            toTotal: amounts.totalAmount,
+          },
+        });
+        await notify(tx, deps, payment.tenantId, {
+          template: 'paymentRepriced',
+          date: today,
+          amount: amounts.totalAmount,
+          rate: amounts.ivaRate,
+        });
+        return true;
+      })
+      // One payment never holds back the others; the job fails at the end and runs again.
+      .catch((error: unknown) => {
+        failed += 1;
+        deps.logger.error(`IVA re-pricing failed for a payment: ${String(error)}`, {
+          event: 'billing.reprice_failed',
+        });
+        return false;
+      });
+    if (done) repriced += 1;
+  }
+  return { repriced, failed };
+}
+
 // The companies with a billed period, then one transaction each: one company's failure never
 // holds back the others, and the job fails at the end so pg-boss runs it again.
 export async function runBillingDay(deps: BillingDayDeps): Promise<BillingDayResult> {
@@ -227,13 +317,16 @@ export async function runBillingDay(deps: BillingDayDeps): Promise<BillingDayRes
           ),
         ),
   );
+  // First, so a renewal opened today is already at the new rate.
+  const iva = await repriceForIva(deps, ecuadorDate(deps.clock.now()));
   const result: BillingDayResult = {
+    repriced: iva.repriced,
     renewalsOpened: 0,
     graceStarted: 0,
     pastDue: 0,
     movedToFree: 0,
   };
-  let failed = 0;
+  let failed = iva.failed;
   for (const { tenantId } of tenants) {
     try {
       const step = await runCompany(deps, tenantId);
@@ -247,9 +340,9 @@ export async function runBillingDay(deps: BillingDayDeps): Promise<BillingDayRes
     }
   }
   deps.logger.info(
-    `Billing day: ${result.renewalsOpened} renewals opened, ${result.graceStarted} in grace, ${result.pastDue} past due, ${result.movedToFree} moved to Gratis`,
+    `Billing day: ${result.repriced} repriced for IVA, ${result.renewalsOpened} renewals opened, ${result.graceStarted} in grace, ${result.pastDue} past due, ${result.movedToFree} moved to Gratis`,
     { event: 'billing.daily' },
   );
-  if (failed > 0) throw new Error(`Billing day failed for ${failed} companies`);
+  if (failed > 0) throw new Error(`Billing day failed for ${failed} companies or payments`);
   return result;
 }

@@ -68,6 +68,8 @@ export const AUDIT_ACTIONS = [
   // FR-BILL-4, FR-ADM-2: the operator's invoice for a payment, and a card charge settled by hand.
   'payment.invoiced',
   'payment.card_resolved',
+  // ADR-034: an unpaid payment charged again at a new IVA rate.
+  'payment.repriced',
 ] as const;
 
 // Append-only: the app role may insert and read, never update or delete.
@@ -115,6 +117,9 @@ export const PLATFORM_AUDIT_ACTIONS = [
   'price.drafted',
   'price.published',
   'price.discarded',
+  // FR-BILL-2: the IVA on subscriptions (ADR-034).
+  'iva.scheduled',
+  'iva.withdrawn',
 ] as const;
 
 export const platformAuditEvents = pgTable(

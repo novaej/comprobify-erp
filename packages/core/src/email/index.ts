@@ -41,6 +41,7 @@ export const sendEmailPayload = z.object({
     organization: z.string().max(300).optional(),
     date: z.string().max(60).optional(),
     amount: z.string().max(30).optional(),
+    rate: z.string().max(10).optional(),
   }),
 });
 export type SendEmailPayload = z.output<typeof sendEmailPayload>;

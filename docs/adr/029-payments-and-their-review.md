@@ -17,7 +17,7 @@ FR-BILL-2 to FR-BILL-4 and FR-BILL-8 describe how a company pays: a payment per 
 
 ## Decision
 
-**A payment is a row of the real company** (`payments`, migration 0051), never of the twin, which doesn't pay (FR-ONB-6a). A member working in the twin reaches it through the real company. Its amounts are the base before IVA, the IVA at the rate in force when it was created (`IVA_RATE`, 15 by default, kept on the payment), each rounded to the cent, and their sum. The code is `CB-` and eight characters without 0, O, 1, I or L, so it survives being typed into a bank transfer. What it buys is in columns (the target plan and interval, seats, a pack's size), and how the amount was reached is kept with it (`pricing`).
+**A payment is a row of the real company** (`payments`, migration 0051), never of the twin, which doesn't pay (FR-ONB-6a). A member working in the twin reaches it through the real company. Its amounts are the base before IVA, the IVA at the rate in force when it was created (kept on the payment; first a setting, `IVA_RATE`, now a dated table, ADR-034), each rounded to the cent, and their sum. The code is `CB-` and eight characters without 0, O, 1, I or L, so it survives being typed into a bank transfer. What it buys is in columns (the target plan and interval, seats, a pack's size), and how the amount was reached is kept with it (`pricing`).
 
 **Prices come from the price in force on the date the period starts** (ADR-027): a new plan from today, a renewal from the day its next period starts. A plan's charge is the plan plus each add-on module the company carries; yearly is ten months of it.
 

@@ -400,6 +400,13 @@
       "when": 1794327297884,
       "tag": "0056_card_resolution",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1794331712669,
+      "tag": "0057_iva_rates",
+      "breakpoints": true
     }
   ]
 }

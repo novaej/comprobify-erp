@@ -1,6 +1,13 @@
 'use server';
 
-import { discardPrice, draftPrice, publishPrice, type DraftPriceInput } from '@comprobify/core';
+import {
+  discardPrice,
+  draftPrice,
+  publishPrice,
+  scheduleIvaRate,
+  withdrawIvaRate,
+  type DraftPriceInput,
+} from '@comprobify/core';
 import { revalidatePath } from 'next/cache';
 import { toActionState, type ActionState } from '@/server/actions';
 import { loadPlatform } from '@/server/platform';
@@ -56,4 +63,22 @@ export async function discardPriceAction(_: ActionState, form: FormData): Promis
   return run(form, async () => {
     await discardPrice(actor, db, text(form, 'id'));
   });
+}
+
+// FR-BILL-2 (ADR-034): the IVA on subscriptions from a date on, and withdrawing one to come.
+export async function scheduleIvaAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const { actor } = await loadPlatform(localeOf(form));
+  const { db } = await getRuntime();
+  return run(form, () =>
+    scheduleIvaRate(actor, db, {
+      rate: text(form, 'rate').replace(',', '.'),
+      effectiveOn: text(form, 'effectiveOn'),
+    }),
+  );
+}
+
+export async function withdrawIvaAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const { actor } = await loadPlatform(localeOf(form));
+  const { db } = await getRuntime();
+  return run(form, () => withdrawIvaRate(actor, db, text(form, 'id')));
 }

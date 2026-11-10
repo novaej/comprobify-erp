@@ -23,7 +23,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { appDatabase, superAdmin, testLogger } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
-const billing = { ivaRate: '15' };
 
 type Sent = { to: string; template: string; params: Record<string, string | undefined> };
 
@@ -108,12 +107,10 @@ describe('the daily billing job', () => {
       { keyCipher: createKeyCipher('d6'.repeat(32)), clock },
     );
     const company = { org, ownerId: user!.id, email };
-    const initial = await startPaidPlan(
-      await owner(company),
-      db,
-      { planKey: 'STARTER', interval: 'MONTHLY' },
-      billing,
-    );
+    const initial = await startPaidPlan(await owner(company), db, {
+      planKey: 'STARTER',
+      interval: 'MONTHLY',
+    });
     await pay(company, initial.id);
     companies.push(company);
     return company;
@@ -131,7 +128,6 @@ describe('the daily billing job', () => {
       db,
       clock,
       logger: testLogger(),
-      ivaRate: '15',
       appUrl: 'https://app.test',
       jobs: {
         enqueue: (_tx, queue, data) => {
@@ -146,16 +142,12 @@ describe('the daily billing job', () => {
     leaving = await newCompany('Leaving S.A.');
     inReview = await newCompany('In Review S.A.');
     // Paid extras that must not outlive the plan.
+    await pay(late, paymentOf(await requestSeats(await owner(late), db, { extraSeats: 2 }))!.id);
     await pay(
       late,
-      paymentOf(await requestSeats(await owner(late), db, { extraSeats: 2 }, billing))!.id,
+      paymentOf(await buyAddOn(await owner(late), db, { moduleKey: 'DELIVERY_GUIDES' }))!.id,
     );
-    await pay(
-      late,
-      paymentOf(await buyAddOn(await owner(late), db, { moduleKey: 'DELIVERY_GUIDES' }, billing))!
-        .id,
-    );
-    await cancelSubscription(await owner(leaving), db, billing);
+    await cancelSubscription(await owner(leaving), db);
   });
 
   beforeEach(() => {

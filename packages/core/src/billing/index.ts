@@ -40,7 +40,6 @@ export {
   submitProofInput,
 } from './payments';
 export type {
-  BillingDeps,
   PaymentView,
   ProofFile,
   ProofView,
@@ -105,3 +104,5 @@ export type { CardAttention } from './operator';
 // For the screens: the reasons a transfer is rejected (FR-BILL-3).
 export { PAYMENT_REJECTION_REASONS } from '@comprobify/db';
 export type { PaymentRejectionReason } from '@comprobify/db';
+export { ivaRateOn, ivaRates, scheduleIvaInput, scheduleIvaRate, withdrawIvaRate } from './iva';
+export type { IvaRateLine } from './iva';

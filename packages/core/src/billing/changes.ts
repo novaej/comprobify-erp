@@ -35,10 +35,10 @@ import {
   subscriptionOf,
   termOf,
   viewsOf,
-  type BillingDeps,
   type Change,
   type PaymentView,
 } from './payments';
+import { ivaRateOn } from './iva';
 import { priceOn, YEARLY_MONTHS } from './prices';
 
 // FR-BILL-5, FR-PLAN-1a (ADR-030): what a paying company changes on its own subscription.
@@ -177,9 +177,8 @@ async function chargeOrApply(
   subscription: SubscriptionRow,
   change: Change,
   quote: { amount: Dec; pricing: Record<string, unknown> },
-  deps: BillingDeps,
 ): Promise<ChangeResult> {
-  const amounts = amountsOf(quote.amount, deps.ivaRate);
+  const amounts = amountsOf(quote.amount, await ivaRateOn(tx, ecuadorDate(ctx.clock.now())));
   if (!new Dec(amounts.baseAmount).gt(0)) {
     await applyChange(tx, subscription.tenantId, change, ctx.clock.now());
     await recordAudit(tx, {
@@ -216,7 +215,6 @@ export async function previewPlanChange(
   ctx: ActorContext,
   db: Database,
   raw: PlanChangeInput,
-  deps: BillingDeps,
 ): Promise<
   | { when: 'NOW'; amounts: ReturnType<typeof amountsOf> }
   | { when: 'PERIOD_END'; effectiveOn: string }
@@ -228,7 +226,7 @@ export async function previewPlanChange(
     const subscription = requireBilledActive(await subscriptionOf(tx.db, tenantId));
     const { quote } = await quotePlan(tx.db, subscription, input, today);
     return quote.when === 'NOW'
-      ? { when: 'NOW', amounts: amountsOf(quote.amount, deps.ivaRate) }
+      ? { when: 'NOW', amounts: amountsOf(quote.amount, await ivaRateOn(tx.db, today)) }
       : { when: 'PERIOD_END', effectiveOn: quote.effectiveOn };
   });
 }
@@ -237,7 +235,6 @@ export async function requestPlanChange(
   ctx: ActorContext,
   db: Database,
   raw: PlanChangeInput,
-  deps: BillingDeps,
 ): Promise<ChangeResult> {
   requirePermission(ctx, 'billing.manage');
   const input = planChangeInput.parse(raw);
@@ -278,9 +275,8 @@ export async function requestPlanChange(
           targetModuleId: null,
         },
         quote,
-        deps,
       );
-    await schedule(ctx, tx.db, subscription, deps, {
+    await schedule(ctx, tx.db, subscription, {
       pendingPlanId: planId === subscription.planId ? null : planId,
       pendingInterval: input.interval === subscription.interval ? null : input.interval,
     });
@@ -293,7 +289,6 @@ async function schedule(
   ctx: ActorContext,
   tx: Tx['db'],
   subscription: SubscriptionRow,
-  deps: BillingDeps,
   pending: Partial<Pick<SubscriptionRow, 'pendingPlanId' | 'pendingInterval' | 'pendingSeats'>>,
 ) {
   const row = await companyRow(tx, subscription.tenantId);
@@ -302,7 +297,7 @@ async function schedule(
     { realTenantId: row.realTenantId, twinTenantId: row.twinTenantId },
     { ...termOf(subscription), ...pending },
   );
-  await repriceRenewal(tx, subscription.tenantId, deps, ctx.clock.now());
+  await repriceRenewal(tx, subscription.tenantId, ctx.clock.now());
   await recordAudit(tx, {
     tenantId: subscription.tenantId,
     actorUserId: ctx.userId ?? null,
@@ -318,11 +313,7 @@ async function schedule(
 }
 
 // Drops whatever was due at the period end: the company keeps what it has.
-export async function cancelScheduledChange(
-  ctx: ActorContext,
-  db: Database,
-  deps: BillingDeps,
-): Promise<void> {
+export async function cancelScheduledChange(ctx: ActorContext, db: Database): Promise<void> {
   requirePermission(ctx, 'billing.manage');
   await forCompany(
     ctx,
@@ -330,7 +321,7 @@ export async function cancelScheduledChange(
     'company: drop a change due at the period end',
     async (tx, tenantId) => {
       const subscription = requireBilledActive(await subscriptionOf(tx.db, tenantId));
-      await schedule(ctx, tx.db, subscription, deps, {
+      await schedule(ctx, tx.db, subscription, {
         pendingPlanId: null,
         pendingInterval: null,
         pendingSeats: null,
@@ -347,7 +338,6 @@ export async function requestSeats(
   ctx: ActorContext,
   db: Database,
   raw: z.input<typeof seatsInput>,
-  deps: BillingDeps,
 ): Promise<ChangeResult> {
   requirePermission(ctx, 'billing.manage');
   const input = seatsInput.parse(raw);
@@ -359,11 +349,11 @@ export async function requestSeats(
     if (input.extraSeats === current) {
       if (subscription.pendingSeats === null)
         throw new DomainError('SAME_SEATS', 'The company already has those seats');
-      await schedule(ctx, tx.db, subscription, deps, { pendingSeats: null });
+      await schedule(ctx, tx.db, subscription, { pendingSeats: null });
       return { applied: 'NOW', payment: null };
     }
     if (input.extraSeats < current) {
-      await schedule(ctx, tx.db, subscription, deps, { pendingSeats: input.extraSeats });
+      await schedule(ctx, tx.db, subscription, { pendingSeats: input.extraSeats });
       return { applied: 'PERIOD_END', effectiveOn: subscription.periodEnd };
     }
     const seat = await priceOn(tx.db, { kind: 'SEAT' }, today);
@@ -392,7 +382,6 @@ export async function requestSeats(
           share: share.toFixed(6),
         },
       },
-      deps,
     );
   });
 }
@@ -404,7 +393,6 @@ export async function buyAddOn(
   ctx: ActorContext,
   db: Database,
   raw: z.input<typeof addOnInput>,
-  deps: BillingDeps,
 ): Promise<ChangeResult> {
   requirePermission(ctx, 'billing.manage');
   const input = addOnInput.parse(raw);
@@ -451,30 +439,23 @@ export async function buyAddOn(
     // Still paid for this period, only due to leave: keeping it costs nothing now.
     if (item) {
       await applyChange(tx.db, tenantId, change, ctx.clock.now());
-      await repriceRenewal(tx.db, tenantId, deps, ctx.clock.now());
+      await repriceRenewal(tx.db, tenantId, ctx.clock.now());
       return { applied: 'NOW', payment: null };
     }
     const price = await priceOn(tx.db, { kind: 'MODULE', moduleId: module.id }, today);
     if (price === null) throw new DomainError('PLAN_NOT_SOLD', 'That module has no price');
     const months = monthsOf(subscription.interval);
     const share = remainingShare(subscription.periodStart, subscription.periodEnd, today);
-    return chargeOrApply(
-      ctx,
-      tx.db,
-      subscription,
-      change,
-      {
-        amount: price.mul(months).mul(share),
-        pricing: {
-          model: 'PRORATED_ADD_ON',
-          module: module.key,
-          monthly: price.toFixed(2),
-          months,
-          share: share.toFixed(6),
-        },
+    return chargeOrApply(ctx, tx.db, subscription, change, {
+      amount: price.mul(months).mul(share),
+      pricing: {
+        model: 'PRORATED_ADD_ON',
+        module: module.key,
+        monthly: price.toFixed(2),
+        months,
+        share: share.toFixed(6),
       },
-      deps,
-    );
+    });
   });
 }
 
@@ -483,7 +464,6 @@ export async function dropAddOn(
   ctx: ActorContext,
   db: Database,
   raw: z.input<typeof addOnInput>,
-  deps: BillingDeps,
 ): Promise<{ effectiveOn: string }> {
   requirePermission(ctx, 'billing.manage');
   const input = addOnInput.parse(raw);
@@ -496,7 +476,7 @@ export async function dropAddOn(
       input,
       startOfEcuadorDay(subscription.periodEnd),
     );
-    await repriceRenewal(tx.db, tenantId, deps, ctx.clock.now());
+    await repriceRenewal(tx.db, tenantId, ctx.clock.now());
     await recordAudit(tx.db, {
       tenantId,
       actorUserId: ctx.userId ?? null,
@@ -516,7 +496,6 @@ export async function dropAddOn(
 export async function cancelSubscription(
   ctx: ActorContext,
   db: Database,
-  deps: BillingDeps,
 ): Promise<{ effectiveOn: string }> {
   requirePermission(ctx, 'billing.manage');
   return forCompany(ctx, db, 'company: cancel its subscription', async (tx, tenantId) => {
@@ -529,7 +508,7 @@ export async function cancelSubscription(
       { ...termOf(subscription), status: 'CANCELLED' },
     );
     // Nothing is renewed now: an unpaid renewal goes away.
-    await repriceRenewal(tx.db, tenantId, deps, ctx.clock.now());
+    await repriceRenewal(tx.db, tenantId, ctx.clock.now());
     await recordAudit(tx.db, {
       tenantId,
       actorUserId: ctx.userId ?? null,
@@ -569,7 +548,6 @@ export async function buyPack(
   ctx: ActorContext,
   db: Database,
   raw: z.input<typeof packInput>,
-  deps: BillingDeps,
 ): Promise<PaymentView> {
   requirePermission(ctx, 'billing.manage');
   requireFeature(ctx, 'DOCUMENT_PACKS');
@@ -597,7 +575,7 @@ export async function buyPack(
         code: paymentCode(),
         purpose: 'DOCUMENT_PACK',
         packSize: input.packSize,
-        ...amountsOf(price, deps.ivaRate),
+        ...amountsOf(price, await ivaRateOn(tx.db, today)),
         pricing: { model: 'PACK', size: input.packSize, price: price.toFixed(2) },
         createdBy: ctx.userId ?? null,
       })

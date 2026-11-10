@@ -448,7 +448,8 @@
         "refunded": "Payment refunded",
         "card_duplicate": "recorded a duplicate card charge, to refund",
         "invoiced": "recorded the invoice for a payment",
-        "card_resolved": "settled a card charge"
+        "card_resolved": "settled a card charge",
+        "repriced": "recalculated an open payment at the new VAT"
       }
     },
     "complimentary": "complimentary",
@@ -2706,7 +2707,29 @@
     "discarded": "Draft discarded.",
     "newPack": "New pack",
     "newPackDescription": "A pack size not sold before. It is saved as a draft and published from its row.",
-    "packSize": "Documents in the pack"
+    "packSize": "Documents in the pack",
+    "iva": {
+      "title": "VAT",
+      "description": "The VAT charged on subscriptions. Each payment keeps the rate it was created with; an open payment is recalculated the day a new rate starts, and the company is told.",
+      "schedule": "Schedule a rate",
+      "scheduleTitle": "Schedule a VAT rate",
+      "scheduleDescription": "From the date the law sets, today at the earliest. What was charged before doesn't change.",
+      "rate": "Rate (%)",
+      "rateHint": "For example, 15 or 13.5.",
+      "effectiveOn": "From",
+      "state": "Status",
+      "states": {
+        "CURRENT": "In force",
+        "PAST": "Previous",
+        "SCHEDULED": "Scheduled",
+        "WITHDRAWN": "Withdrawn"
+      },
+      "scheduled": "Rate scheduled.",
+      "withdraw": "Withdraw",
+      "withdrawTitle": "Withdraw the scheduled rate",
+      "withdrawDescription": "It will never apply. Use it if it was recorded by mistake.",
+      "withdrawn": "Rate withdrawn."
+    }
   },
   "pricesError": {
     "FORBIDDEN": "Only a platform administrator can change prices.",
@@ -2715,7 +2738,10 @@
     "PRICE_NOTICE_TOO_SHORT": "This rise needs at least 30 days' notice. Leave the date empty for the earliest.",
     "PRICE_DATE_TAKEN": "Another price starts that day. Choose another date.",
     "INVALID_INPUT": "Check the price (up to 2 decimals) and the pack size.",
-    "UNKNOWN": "Something unexpected went wrong. Try again."
+    "UNKNOWN": "Something unexpected went wrong. Try again.",
+    "IVA_DATE_PAST": "A rate starts today at the earliest.",
+    "IVA_DATE_TAKEN": "Another rate starts that day. Withdraw it first.",
+    "IVA_NOT_WITHDRAWABLE": "Only a rate that hasn't started yet is withdrawn."
   },
   "planError": {
     "FORBIDDEN": "Your role doesn't allow this.",

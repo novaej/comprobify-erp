@@ -13,6 +13,8 @@ export const emailTemplate = z.enum([
   'graceStarted',
   'pastDue',
   'movedToFree',
+  // ADR-034: a new IVA rate changed an unpaid payment's total.
+  'paymentRepriced',
 ]);
 export type EmailTemplate = z.output<typeof emailTemplate>;
 
@@ -70,6 +72,14 @@ const COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       button: 'Ver los planes',
       footer: 'Los paquetes de comprobantes que tenías siguen disponibles.',
     },
+    paymentRepriced: {
+      subject: 'Cambió el IVA de tu pago pendiente en {organization}',
+      heading: 'Tu pago pendiente tiene un nuevo total',
+      body: 'Desde el {date}, el IVA es del {rate}. Tu pago pendiente ahora es de {amount}, IVA incluido. Si pagas por transferencia, transfiere este nuevo valor.',
+      button: 'Ver el pago',
+      footer:
+        'Si ya enviaste el comprobante de una transferencia, no cambia: lo estamos revisando.',
+    },
   },
   en: {
     verifyEmail: {
@@ -121,6 +131,13 @@ const COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       button: 'View the plans',
       footer: 'Any document packs you had are still available.',
     },
+    paymentRepriced: {
+      subject: "The VAT on {organization}'s open payment changed",
+      heading: 'Your open payment has a new total',
+      body: 'Since {date}, VAT is {rate}. Your open payment is now {amount}, VAT included. If you pay by transfer, transfer this new amount.',
+      button: 'View the payment',
+      footer: "If you already sent a transfer's proof, it doesn't change: we're reviewing it.",
+    },
   },
 };
 
@@ -138,6 +155,7 @@ export type EmailParams = {
   // Already formatted for the locale: a date and an amount with its currency.
   date?: string | undefined;
   amount?: string | undefined;
+  rate?: string | undefined;
 };
 
 export function renderEmail(
@@ -151,7 +169,8 @@ export function renderEmail(
     text
       .replaceAll('{organization}', params.organization ?? '')
       .replaceAll('{date}', params.date ?? '')
-      .replaceAll('{amount}', params.amount ?? '');
+      .replaceAll('{amount}', params.amount ?? '')
+      .replaceAll('{rate}', params.rate ?? '');
   const base = COPY[locale][template];
   const copy = {
     subject: fill(base.subject),

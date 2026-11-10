@@ -48,14 +48,9 @@ async function context(form: FormData) {
 }
 
 export async function startPlanAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const { actor, db, billingDeps } = await context(form);
+  const { actor, db } = await context(form);
   return run(form, () =>
-    startPaidPlan(
-      actor,
-      db,
-      { planKey: text(form, 'planKey'), interval: intervalOf(form) },
-      billingDeps,
-    ),
+    startPaidPlan(actor, db, { planKey: text(form, 'planKey'), interval: intervalOf(form) }),
   );
 }
 
@@ -71,14 +66,12 @@ export async function previewPlanAction(
   interval: string,
 ): Promise<PreviewState> {
   const { actor } = await loadShell(locale);
-  const { db, billingDeps } = await getRuntime();
+  const { db } = await getRuntime();
   try {
-    const quote = await previewPlanChange(
-      actor,
-      db,
-      { planKey, interval: interval === 'YEARLY' ? 'YEARLY' : 'MONTHLY' },
-      billingDeps,
-    );
+    const quote = await previewPlanChange(actor, db, {
+      planKey,
+      interval: interval === 'YEARLY' ? 'YEARLY' : 'MONTHLY',
+    });
     return quote.when === 'NOW'
       ? {
           when: 'NOW',
@@ -94,45 +87,38 @@ export async function previewPlanAction(
 }
 
 export async function changePlanAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const { actor, db, billingDeps } = await context(form);
+  const { actor, db } = await context(form);
   return run(form, () =>
-    requestPlanChange(
-      actor,
-      db,
-      { planKey: text(form, 'planKey'), interval: intervalOf(form) },
-      billingDeps,
-    ),
+    requestPlanChange(actor, db, { planKey: text(form, 'planKey'), interval: intervalOf(form) }),
   );
 }
 
 export async function cancelScheduledAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const { actor, db, billingDeps } = await context(form);
-  return run(form, () => cancelScheduledChange(actor, db, billingDeps));
+  const { actor, db } = await context(form);
+  return run(form, () => cancelScheduledChange(actor, db));
 }
 
 export async function seatsAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const { actor, db, billingDeps } = await context(form);
-  return run(form, () =>
-    requestSeats(actor, db, { extraSeats: Number(text(form, 'extraSeats')) }, billingDeps),
-  );
+  const { actor, db } = await context(form);
+  return run(form, () => requestSeats(actor, db, { extraSeats: Number(text(form, 'extraSeats')) }));
 }
 
 export async function buyAddOnAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const { actor, db, billingDeps } = await context(form);
-  return run(form, () => buyAddOn(actor, db, { moduleKey: text(form, 'moduleKey') }, billingDeps));
+  const { actor, db } = await context(form);
+  return run(form, () => buyAddOn(actor, db, { moduleKey: text(form, 'moduleKey') }));
 }
 
 export async function dropAddOnAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const { actor, db, billingDeps } = await context(form);
-  return run(form, () => dropAddOn(actor, db, { moduleKey: text(form, 'moduleKey') }, billingDeps));
+  const { actor, db } = await context(form);
+  return run(form, () => dropAddOn(actor, db, { moduleKey: text(form, 'moduleKey') }));
 }
 
 export async function cancelSubscriptionAction(
   _: ActionState,
   form: FormData,
 ): Promise<ActionState> {
-  const { actor, db, billingDeps } = await context(form);
-  return run(form, () => cancelSubscription(actor, db, billingDeps));
+  const { actor, db } = await context(form);
+  return run(form, () => cancelSubscription(actor, db));
 }
 
 export async function resumeSubscriptionAction(
@@ -144,10 +130,8 @@ export async function resumeSubscriptionAction(
 }
 
 export async function buyPackAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const { actor, db, billingDeps } = await context(form);
-  return run(form, () =>
-    buyPack(actor, db, { packSize: Number(text(form, 'packSize')) }, billingDeps),
-  );
+  const { actor, db } = await context(form);
+  return run(form, () => buyPack(actor, db, { packSize: Number(text(form, 'packSize')) }));
 }
 
 export async function cancelPaymentAction(_: ActionState, form: FormData): Promise<ActionState> {

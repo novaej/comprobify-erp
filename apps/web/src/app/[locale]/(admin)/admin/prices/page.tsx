@@ -1,5 +1,6 @@
 import {
   ecuadorDate,
+  ivaRates,
   priceBook,
   systemClock,
   YEARLY_MONTHS,
@@ -20,6 +21,7 @@ import { ToneBadge } from '@/components/tone-badge';
 import { pageTitle } from '@/server/page-title';
 import { loadPlatform } from '@/server/platform';
 import { getRuntime } from '@/server/runtime';
+import { ScheduleIvaButton, WithdrawIvaButton } from './iva-actions';
 import {
   DiscardPriceButton,
   DraftPriceButton,
@@ -42,7 +44,7 @@ export default async function AdminPricesPage({ params }: { params: Promise<{ lo
   setRequestLocale(locale);
   const { actor } = await loadPlatform(locale);
   const { db } = await getRuntime();
-  const book = await priceBook(actor, db);
+  const [book, rates] = await Promise.all([priceBook(actor, db), ivaRates(actor, db)]);
   const t = await getTranslations('prices');
   const english = locale === 'en';
   const money = new Intl.NumberFormat(english ? 'en' : 'es-EC', {
@@ -65,6 +67,62 @@ export default async function AdminPricesPage({ params }: { params: Promise<{ lo
   return (
     <div className="max-w-6xl space-y-6">
       <PageHeader title={t('title')} description={t('description')} className="mb-0" />
+      <section aria-labelledby="prices-iva" className="space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 id="prices-iva" className="text-sm font-semibold">
+              {t('iva.title')}
+            </h2>
+            <p className="text-sm text-muted-foreground">{t('iva.description')}</p>
+          </div>
+          <ScheduleIvaButton today={today} />
+        </div>
+        <TableCard>
+          <StackTable aria-label={t('iva.title')}>
+            <StackHeader>
+              <StackRow className="bg-muted/40">
+                <StackHead className="pl-4">{t('iva.rate')}</StackHead>
+                <StackHead>{t('iva.effectiveOn')}</StackHead>
+                <StackHead>{t('iva.state')}</StackHead>
+                <StackHead className="pr-4">
+                  <span className="sr-only">{t('table.actions')}</span>
+                </StackHead>
+              </StackRow>
+            </StackHeader>
+            <StackBody>
+              {rates.map((rate) => (
+                <StackRow key={rate.id}>
+                  <StackCell heading className="pl-4 tabular-nums">
+                    {Number(rate.rate)} %
+                  </StackCell>
+                  <StackCell label={t('iva.effectiveOn')}>{date(rate.effectiveOn)}</StackCell>
+                  <StackCell label={t('iva.state')}>
+                    <ToneBadge
+                      tone={
+                        rate.state === 'CURRENT'
+                          ? 'success'
+                          : rate.state === 'SCHEDULED'
+                            ? 'info'
+                            : 'neutral'
+                      }
+                    >
+                      {t(`iva.states.${rate.state}`)}
+                    </ToneBadge>
+                  </StackCell>
+                  <StackCell className="pr-4 text-right">
+                    {rate.state === 'SCHEDULED' && (
+                      <WithdrawIvaButton
+                        id={rate.id}
+                        label={`${Number(rate.rate)} % · ${date(rate.effectiveOn)}`}
+                      />
+                    )}
+                  </StackCell>
+                </StackRow>
+              ))}
+            </StackBody>
+          </StackTable>
+        </TableCard>
+      </section>
       {GROUPS.map((group) => {
         const lines = book.filter((line) => line.kind === group.kind);
         return (

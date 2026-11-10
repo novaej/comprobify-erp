@@ -24,7 +24,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appDatabase, insertTestDocument, superAdmin, testLogger } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
-const billing = { ivaRate: '15' };
 
 // FR-BILL-4, FR-ADM-2 (ADR-033): the operator's invoices for verified payments, and the card
 // charges it settles by hand.
@@ -107,12 +106,10 @@ describe("the operator's billing work", () => {
     ownerId = users[0]!.id;
     company = await onboard('Chi S.A.', ownerId);
     issuer = await onboard('Operadora S.A.', users[1]!.id);
-    const initial = await startPaidPlan(
-      await owner(),
-      db,
-      { planKey: 'STARTER', interval: 'MONTHLY' },
-      billing,
-    );
+    const initial = await startPaidPlan(await owner(), db, {
+      planKey: 'STARTER',
+      interval: 'MONTHLY',
+    });
     paymentId = initial.id;
     await submitProof(await owner(), db, {
       paymentId,
@@ -167,12 +164,10 @@ describe("the operator's billing work", () => {
       instance: 'ci',
     };
     // The refund put the company back where it was, unbilled, so it starts a plan again.
-    const plan = await startPaidPlan(
-      await owner(),
-      db,
-      { planKey: 'STARTER', interval: 'MONTHLY' },
-      billing,
-    );
+    const plan = await startPaidPlan(await owner(), db, {
+      planKey: 'STARTER',
+      interval: 'MONTHLY',
+    });
     const first = await startCardPayment(await owner(), db, { paymentId: plan.id }, deps);
     const second = await startCardPayment(await owner(), db, { paymentId: plan.id }, deps);
     for (const session of [first, second])

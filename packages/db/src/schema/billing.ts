@@ -411,3 +411,30 @@ export const payphoneTransactions = pgTable(
 // The trigger that enforces CARD_ATTEMPT_TRANSITIONS; migration 0055 holds its output.
 export const cardAttemptStatusTriggerBody = (): string =>
   transitionTriggerBody('Card attempt', CARD_ATTEMPT_STATUSES, CARD_ATTEMPT_TRANSITIONS);
+
+// FR-BILL-2 (ADR-034): the IVA charged on subscriptions, with its history. The law sets a new
+// rate and its date; the operator records it ahead. A row never changes, except a rate still
+// to come being withdrawn. Platform data, written in system context only.
+export const ivaRates = pgTable(
+  'iva_rates',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`uuidv7()`),
+    // A percent, such as 15.00.
+    rate: numeric('rate', { precision: 5, scale: 2 }).notNull(),
+    // The Ecuador date it applies from.
+    effectiveOn: date('effective_on').notNull(),
+    createdBy: uuid('created_by').references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    withdrawnAt: timestamp('withdrawn_at', { withTimezone: true }),
+    withdrawnBy: uuid('withdrawn_by').references(() => users.id),
+  },
+  (table) => [
+    uniqueIndex('iva_rates_effective_on_unique')
+      .on(table.effectiveOn)
+      .where(sql`withdrawn_at IS NULL`),
+    check('iva_rates_rate_check', sql`rate >= 0 AND rate < 100`),
+    check('iva_rates_withdrawn_check', sql`(withdrawn_at IS NULL) = (withdrawn_by IS NULL)`),
+  ],
+);

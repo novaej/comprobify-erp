@@ -87,7 +87,7 @@ await registerHandlers(jobs, {
     providerRuc: env.OPERATOR_RUC ?? null,
     consumerFinalMaxAmount: env.CONSUMER_FINAL_MAX_AMOUNT,
   },
-  billing: { ivaRate: env.IVA_RATE, appUrl: env.APP_URL },
+  billing: { appUrl: env.APP_URL },
   payphone: env.PAYPHONE_TOKEN
     ? createPayphoneGateway({
         token: env.PAYPHONE_TOKEN,

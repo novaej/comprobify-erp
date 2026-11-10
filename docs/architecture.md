@@ -83,6 +83,8 @@ The `billing` module prices what is sold (ADR-027), charges it through `payments
 
 **The renewal cycle** (`billing.daily`, 06:00 Quito time, ADR-032) opens renewals 7 days before the period ends. An unpaid company keeps full access for a 7-day grace, is past due for 14 days, then moves to Gratis; a cancelled one moves to Gratis at its period end. Each step is emailed to the owners and admins and recorded in the activity log, which is also what keeps a step from being emailed twice.
 
+**IVA** (ADR-034). Each payment charges the IVA in force on the day it is created, read from `iva_rates`, a dated platform table the operator edits ahead of a change. On the day a new rate starts, the daily job re-prices unpaid open payments and emails the payer.
+
 **Cards** (ADR-033). The web starts an attempt for Payphone's widget and confirms it from the return page: Payphone's answer commits first, then the payment is applied. `payphone.reconcile` (every 5 minutes) asks again about attempts whose answer was lost and applies approved charges that weren't. A second charge for one payment is flagged `DUPLICATE` for a refund by hand.
 
 ## Company settings

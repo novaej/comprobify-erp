@@ -18,7 +18,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appDatabase, superAdmin } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
-const billing = { ivaRate: '15' };
 
 // FR-BILL-1, FR-BILL-7: what the billing page offers, at today's placeholder prices.
 describe('the billing overview', () => {
@@ -103,14 +102,12 @@ describe('the billing overview', () => {
       });
       await reviewPayment(operator, db, { paymentId: id, decision: 'VERIFIED' });
     };
-    const initial = await startPaidPlan(
-      await owner(),
-      db,
-      { planKey: 'STARTER', interval: 'MONTHLY' },
-      billing,
-    );
+    const initial = await startPaidPlan(await owner(), db, {
+      planKey: 'STARTER',
+      interval: 'MONTHLY',
+    });
     await pay(initial.id);
-    const addOn = await buyAddOn(await owner(), db, { moduleKey: 'DELIVERY_GUIDES' }, billing);
+    const addOn = await buyAddOn(await owner(), db, { moduleKey: 'DELIVERY_GUIDES' });
     await pay(addOn.applied === 'NOW' ? addOn.payment!.id : '');
 
     const view = await billingOverview(await owner(), db);

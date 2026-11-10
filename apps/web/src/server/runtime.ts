@@ -19,7 +19,6 @@ import {
   type Jobs,
   type SriClient,
   type KeyCipher,
-  type BillingDeps,
   createPayphoneGateway,
   type PayphoneDeps,
 } from '@comprobify/core';
@@ -44,7 +43,6 @@ export type Runtime = {
   keyCipher: KeyCipher;
   // What createInvoice and correctInvoice need from config (FR-DOC-2, FR-DOC-9).
   issueDeps: IssueDeps;
-  billingDeps: BillingDeps;
   // Null when Payphone isn't set up: card payments are refused (ADR-033).
   payphoneDeps: PayphoneDeps;
   // The operator's account for transfers; null when not configured.
@@ -125,7 +123,6 @@ async function start(): Promise<Runtime> {
           },
           timeoutMs: env.SRI_TIMEOUT_MS,
         }),
-    billingDeps: { ivaRate: env.IVA_RATE },
     bankTransfer: env.BANK_TRANSFER_BANK_NAME
       ? {
           bankName: env.BANK_TRANSFER_BANK_NAME,

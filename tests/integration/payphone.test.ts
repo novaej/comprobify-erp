@@ -21,7 +21,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appDatabase, testLogger } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
-const billing = { ivaRate: '15' };
 
 // FR-BILL-3 (ADR-033): card payments against a fake Payphone. Placeholder prices: Emprende 9.90
 // (11.39 with IVA), a 100-document pack 5.00 (5.75).
@@ -67,7 +66,7 @@ describe('card payments through Payphone', () => {
     };
   const confirm = async (id: number, clientTransactionId: string) =>
     confirmCardPayment(await owner(), db, { id, clientTransactionId }, deps, logger);
-  const pack = async () => buyPack(await owner(), db, { packSize: 100 }, billing);
+  const pack = async () => buyPack(await owner(), db, { packSize: 100 });
   const reconcile = () =>
     reconcileCardPayments({ db, gateway: fake.gateway, clock: later(), logger });
 
@@ -124,12 +123,10 @@ describe('card payments through Payphone', () => {
   });
 
   it('pays a plan by card at once, and a second load of the return page asks Payphone nothing', async () => {
-    const initial = await startPaidPlan(
-      await owner(),
-      db,
-      { planKey: 'STARTER', interval: 'MONTHLY' },
-      billing,
-    );
+    const initial = await startPaidPlan(await owner(), db, {
+      planKey: 'STARTER',
+      interval: 'MONTHLY',
+    });
     expect(
       await failure(startCardPayment(await owner(), db, { paymentId: initial.id }, null)),
     ).toBe('CARD_NOT_AVAILABLE');

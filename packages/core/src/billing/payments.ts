@@ -37,13 +37,11 @@ import {
   type PlatformActor,
 } from '../kernel';
 import { companyRow, realTenantOf } from '../tenancy';
+import { ivaRateOn } from './iva';
 import { grantPack, refundPack } from './packs';
 import { priceOn, YEARLY_MONTHS } from './prices';
 
 // FR-BILL-2, FR-BILL-3, FR-BILL-4, FR-BILL-8 (ADR-029): payments, their proofs and their review.
-
-// What billing needs from the deployment: the IVA rate, a percent such as "15" (IVA_RATE).
-export type BillingDeps = { ivaRate: string };
 
 export const PROOF_MAX_BYTES = 2 * 1024 * 1024;
 export const PROOFS_PER_SUBMISSION = 5;
@@ -271,7 +269,6 @@ export async function startPaidPlan(
   ctx: ActorContext,
   db: Database,
   raw: StartPaidPlanInput,
-  deps: BillingDeps,
 ): Promise<PaymentView> {
   requirePermission(ctx, 'billing.manage');
   const input = startPaidPlanInput.parse(raw);
@@ -312,7 +309,7 @@ export async function startPaidPlan(
         subscriptionId: subscription.id,
         code: paymentCode(),
         purpose: 'INITIAL',
-        ...amountsOf(monthly.total.mul(months), deps.ivaRate),
+        ...amountsOf(monthly.total.mul(months), await ivaRateOn(tx.db, today)),
         targetPlanId: plan.id,
         targetInterval: input.interval,
         pricing: { lines: monthly.lines, months, on: today },
@@ -336,7 +333,7 @@ export async function startPaidPlan(
 export async function openRenewal(
   tx: Tx['db'],
   tenantId: string,
-  deps: BillingDeps,
+  now: Date,
 ): Promise<PaymentRow | null> {
   const subscription = await subscriptionOf(tx, tenantId);
   if (
@@ -371,7 +368,8 @@ export async function openRenewal(
       subscriptionId: subscription.id,
       code: paymentCode(),
       purpose: 'RENEWAL',
-      ...amountsOf(monthly.total.mul(months), deps.ivaRate),
+      // At the rate of the day it opens; a new rate before it is paid prices it again (ADR-034).
+      ...amountsOf(monthly.total.mul(months), await ivaRateOn(tx, ecuadorDate(now))),
       pricing: { lines: monthly.lines, months, on: subscription.periodEnd, interval },
     })
     .returning();
@@ -410,12 +408,7 @@ async function dropOpenRenewal(tx: Tx['db'], tenantId: string, now: Date): Promi
 // A change due at the period end alters what the renewal charges: an open renewal nobody has
 // paid yet is replaced by one priced again. One the company already reported waits for the
 // operator, so the change waits too.
-export async function repriceRenewal(
-  tx: Tx['db'],
-  tenantId: string,
-  deps: BillingDeps,
-  now: Date,
-): Promise<void> {
+export async function repriceRenewal(tx: Tx['db'], tenantId: string, now: Date): Promise<void> {
   const [open] = await tx
     .select()
     .from(schema.payments)
@@ -434,7 +427,7 @@ export async function repriceRenewal(
     .update(schema.payments)
     .set({ status: 'CANCELLED', cancelledAt: now })
     .where(eq(schema.payments.id, open.id));
-  await openRenewal(tx, tenantId, deps);
+  await openRenewal(tx, tenantId, now);
 }
 
 export async function listPayments(ctx: ActorContext, db: Database): Promise<PaymentView[]> {

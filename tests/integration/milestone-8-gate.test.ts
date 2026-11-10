@@ -29,7 +29,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appDatabase, insertTestDocument, superAdmin, testLogger } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
-const billing = { ivaRate: '15' };
 
 // Milestone 8 gate (PRD section 15): the full upgrade, renewal and expiry cycle on a fake clock,
 // one company, every step through the functions the screens and the worker call. Placeholder
@@ -149,7 +148,6 @@ describe('Milestone 8 gate: upgrade, renewal and expiry on a fake clock', () => 
       db,
       clock,
       logger: testLogger(),
-      ivaRate: '15',
       appUrl: 'https://app.test',
       jobs: {
         enqueue: (_tx, queue, data) => {
@@ -165,12 +163,10 @@ describe('Milestone 8 gate: upgrade, renewal and expiry on a fake clock', () => 
   });
 
   it('starts Emprende by transfer, verified, and its invoice is recorded', async () => {
-    const initial = await startPaidPlan(
-      await owner(),
-      db,
-      { planKey: 'STARTER', interval: 'MONTHLY' },
-      billing,
-    );
+    const initial = await startPaidPlan(await owner(), db, {
+      planKey: 'STARTER',
+      interval: 'MONTHLY',
+    });
     expect(initial).toMatchObject({ baseAmount: '9.90', ivaAmount: '1.49', totalAmount: '11.39' });
     await byTransfer(initial.id);
     expect(await subscription()).toMatchObject({
@@ -207,12 +203,7 @@ describe('Milestone 8 gate: upgrade, renewal and expiry on a fake clock', () => 
     at('2027-01-19');
     // (29.90 - 9.90) × 16 of 31 days = 10.32, plus 1.55 of IVA.
     const upgrade = paymentOf(
-      await requestPlanChange(
-        await owner(),
-        db,
-        { planKey: 'BUSINESS', interval: 'MONTHLY' },
-        billing,
-      ),
+      await requestPlanChange(await owner(), db, { planKey: 'BUSINESS', interval: 'MONTHLY' }),
     );
     expect(upgrade).toMatchObject({
       purpose: 'TIER_CHANGE',
@@ -251,7 +242,7 @@ describe('Milestone 8 gate: upgrade, renewal and expiry on a fake clock', () => 
   it('adds an extra user by card, prorated, and it renews with the plan', async () => {
     at('2027-02-10');
     // 4.00 × 22 of 28 days = 3.14, plus 0.47 of IVA.
-    const seats = paymentOf(await requestSeats(await owner(), db, { extraSeats: 1 }, billing));
+    const seats = paymentOf(await requestSeats(await owner(), db, { extraSeats: 1 }));
     expect(seats).toMatchObject({ baseAmount: '3.14', ivaAmount: '0.47', totalAmount: '3.61' });
     await byCard(seats!.id);
     expect(await subscription()).toMatchObject({ seats: 1 });

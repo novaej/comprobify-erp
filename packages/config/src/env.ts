@@ -111,13 +111,6 @@ const consumerFinalMaxAmount = z
   .regex(/^\d{1,9}(\.\d{1,2})?$/, 'must be an amount such as 50.00')
   .default('50.00');
 
-// FR-BILL-2: the IVA rate charged on subscriptions, a percent such as 15. Each payment keeps
-// the rate it was created with.
-const ivaRate = z
-  .string()
-  .regex(/^\d{1,2}(\.\d{1,2})?$/, 'must be a percent such as 15')
-  .default('15');
-
 // FR-BILL-3 (ADR-033): card payments through Payphone, optional. Without the token and store id
 // they are refused and transfers carry on. The web starts and confirms charges; the worker's
 // sweep asks again about the ones whose answer was lost.
@@ -195,7 +188,6 @@ export const webEnvSchema = z
     OPERATOR_ADDRESS: z.string().optional(),
     SUPPORT_EMAIL: z.email().optional(),
     CONSUMER_FINAL_MAX_AMOUNT: consumerFinalMaxAmount,
-    IVA_RATE: ivaRate,
     ...payphoneShape,
     ...bankShape,
   })
@@ -230,7 +222,6 @@ export const workerEnvSchema = z
     CERT_ENCRYPTION_KEY: certificateKey,
     OPERATOR_RUC: operatorRuc,
     CONSUMER_FINAL_MAX_AMOUNT: consumerFinalMaxAmount,
-    IVA_RATE: ivaRate,
     ...payphoneShape,
   })
   .superRefine((env, ctx) => {

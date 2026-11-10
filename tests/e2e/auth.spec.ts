@@ -1814,6 +1814,25 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(packRow).toContainText('$12,50');
     await look(page, 'admin-prices-published');
 
+    // ADR-034: the IVA with its history; a rate to come is scheduled, then withdrawn.
+    const iva = page.getByRole('table', { name: 'IVA' });
+    await expect(iva.getByRole('row', { name: /15 %.*Vigente/ })).toBeVisible();
+    await page.getByRole('button', { name: 'Programar una tasa' }).click();
+    const schedule = page.getByRole('dialog', { name: 'Programar una tasa de IVA' });
+    await schedule.getByLabel('Tasa (%)').fill('13,5');
+    await schedule.getByLabel('Desde').fill('2099-01-01');
+    await look(page, 'admin-iva-schedule');
+    await schedule.getByRole('button', { name: 'Programar una tasa' }).click();
+    await expect(page.getByText('Tasa programada.')).toBeVisible();
+    const scheduled = iva.getByRole('row', { name: /13\.5 %.*Programada/ });
+    await scheduled.getByRole('button', { name: 'Retirar' }).click();
+    await page
+      .getByRole('dialog', { name: 'Retirar la tasa programada' })
+      .getByRole('button', { name: 'Retirar' })
+      .click();
+    await expect(page.getByText('Tasa retirada.')).toBeVisible();
+    await expect(iva.getByRole('row', { name: /13\.5 %.*Retirada/ })).toBeVisible();
+
     await page.goto('/es/admin/modules');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Módulos');
     await look(page, 'admin-modules');

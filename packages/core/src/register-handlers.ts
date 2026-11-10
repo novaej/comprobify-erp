@@ -1,11 +1,6 @@
 import type { Logger } from '@comprobify/config/logger';
 import type { Database, IdentityDb } from '@comprobify/db';
-import {
-  reconcileCardPayments,
-  runBillingDay,
-  type BillingDeps,
-  type PayphoneGateway,
-} from './billing';
+import { reconcileCardPayments, runBillingDay, type PayphoneGateway } from './billing';
 import {
   alertOverdueAuthorizations,
   checkAfterDeadline,
@@ -36,8 +31,8 @@ export type HandlerDeps = {
   clock: Clock;
   // What issuing a document needs, for the invoices a batch makes (ADR-026).
   issue: Omit<IssueDeps, 'jobs' | 'keyCipher'>;
-  // The daily billing job's IVA rate and the URL its emails point to (ADR-032).
-  billing: BillingDeps & { appUrl: string };
+  // Where the daily billing job's emails point (ADR-032).
+  billing: { appUrl: string };
   // Null when Payphone isn't set up: the sweep has nothing to ask (ADR-033).
   payphone: PayphoneGateway | null;
 };

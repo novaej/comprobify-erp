@@ -31,7 +31,6 @@ import { appDatabase, superAdmin } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
 const PDF = Buffer.from('%PDF-1.4 proof');
-const billing = { ivaRate: '15' };
 
 // FR-BILL-2, FR-BILL-3, FR-BILL-4, FR-BILL-8 (ADR-029): paying for a plan by transfer.
 describe('payments', () => {
@@ -112,23 +111,17 @@ describe('payments', () => {
 
   it('prices a paid plan with its add-ons and IVA, in the real company, one at a time', async () => {
     expect(
-      await failure(
-        startPaidPlan(await owner(), db, { planKey: 'FREE', interval: 'MONTHLY' }, billing),
-      ),
+      await failure(startPaidPlan(await owner(), db, { planKey: 'FREE', interval: 'MONTHLY' })),
     ).toBe('PLAN_NOT_SOLD');
     expect(
-      await failure(
-        startPaidPlan(await owner(), db, { planKey: 'CUSTOM', interval: 'MONTHLY' }, billing),
-      ),
+      await failure(startPaidPlan(await owner(), db, { planKey: 'CUSTOM', interval: 'MONTHLY' })),
     ).toBe('PLAN_NOT_SOLD');
     await addModule(operator, db, { realTenantId: org.realTenantId, moduleKey: 'DELIVERY_GUIDES' });
     // From the twin, where the owner works: the payment belongs to the real company.
-    const payment = await startPaidPlan(
-      await owner(),
-      db,
-      { planKey: 'BUSINESS', interval: 'MONTHLY' },
-      billing,
-    );
+    const payment = await startPaidPlan(await owner(), db, {
+      planKey: 'BUSINESS',
+      interval: 'MONTHLY',
+    });
     // Negocio 29.90 + Guías 5.00 = 34.90; 15 % IVA is 5.235, so 5.24.
     expect(payment).toMatchObject({
       purpose: 'INITIAL',
@@ -144,31 +137,25 @@ describe('payments', () => {
     const { rows } = await sql(`SELECT tenant_id FROM payments WHERE id = $1`, [payment.id]);
     expect(rows[0]).toEqual({ tenant_id: org.realTenantId });
     expect(
-      await failure(
-        startPaidPlan(await owner(), db, { planKey: 'STARTER', interval: 'YEARLY' }, billing),
-      ),
+      await failure(startPaidPlan(await owner(), db, { planKey: 'STARTER', interval: 'YEARLY' })),
     ).toBe('PAYMENT_IN_PROGRESS');
     // Nothing changed yet: access waits for the payment.
     expect(await subscriptionOf(org.realTenantId)).toMatchObject({ plan: 'FREE', end: null });
     await cancelPayment(await owner(), db, payment.id);
     // Yearly is ten months: (29.90 + 5.00) × 10.
-    const yearly = await startPaidPlan(
-      await owner(),
-      db,
-      { planKey: 'BUSINESS', interval: 'YEARLY' },
-      billing,
-    );
+    const yearly = await startPaidPlan(await owner(), db, {
+      planKey: 'BUSINESS',
+      interval: 'YEARLY',
+    });
     expect(yearly).toMatchObject({ baseAmount: '349.00', totalAmount: '401.35' });
     await cancelPayment(await owner(), db, yearly.id);
   });
 
   it('takes proof of a transfer, which the company can withdraw and the operator still sees', async () => {
-    const payment = await startPaidPlan(
-      await owner(),
-      db,
-      { planKey: 'BUSINESS', interval: 'MONTHLY' },
-      billing,
-    );
+    const payment = await startPaidPlan(await owner(), db, {
+      planKey: 'BUSINESS',
+      interval: 'MONTHLY',
+    });
     expect(
       await failure(report(payment.id, [{ filename: 'x.txt', content: Buffer.from('hello') }])),
     ).toBe('PROOF_INVALID');
@@ -257,12 +244,12 @@ describe('payments', () => {
 
   it('renews from the old end even when paid early, then refunds latest first back to the snapshot', async () => {
     const renewal = await db.withSystem('test: open a renewal', ({ db: tx }) =>
-      openRenewal(tx, org.realTenantId, billing),
+      openRenewal(tx, org.realTenantId, clock.now()),
     );
     expect(renewal).toMatchObject({ purpose: 'RENEWAL', baseAmount: '34.90' });
     expect(
       await db.withSystem('test: open it again', ({ db: tx }) =>
-        openRenewal(tx, org.realTenantId, billing),
+        openRenewal(tx, org.realTenantId, clock.now()),
       ),
     ).toBeNull();
     expect(await failure(cancelPayment(await owner(), db, renewal!.id))).toBe(
@@ -302,9 +289,7 @@ describe('payments', () => {
   it('needs the role, and never charges a complimentary company', async () => {
     const viewer = { ...(await owner()), permissions: ['billing.read'] };
     expect(
-      await failure(
-        startPaidPlan(viewer, db, { planKey: 'BUSINESS', interval: 'MONTHLY' }, billing),
-      ),
+      await failure(startPaidPlan(viewer, db, { planKey: 'BUSINESS', interval: 'MONTHLY' })),
     ).toBe('FORBIDDEN');
     expect(await failure(paymentsToReview({ ...operator, userId: ownerId }, db))).toBe('FORBIDDEN');
     await setBilling(operator, db, {
@@ -313,9 +298,7 @@ describe('payments', () => {
       reason: 'Owner company',
     });
     expect(
-      await failure(
-        startPaidPlan(await owner(), db, { planKey: 'BUSINESS', interval: 'MONTHLY' }, billing),
-      ),
+      await failure(startPaidPlan(await owner(), db, { planKey: 'BUSINESS', interval: 'MONTHLY' })),
     ).toBe('SUBSCRIPTION_COMPLIMENTARY');
   });
 });

@@ -309,7 +309,7 @@ describe('creating an invoice', () => {
     });
 
     // FR-BILL-7: a pack takes over once the quota is used up, and its rest rolls over.
-    const pack = await buyPack(live, db, { packSize: 100 }, { ivaRate: '15' });
+    const pack = await buyPack(live, db, { packSize: 100 });
     expect(pack).toMatchObject({
       purpose: 'DOCUMENT_PACK',
       baseAmount: '5.00',

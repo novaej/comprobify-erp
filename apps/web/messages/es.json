@@ -448,7 +448,8 @@
         "refunded": "Pago reembolsado",
         "card_duplicate": "registró un cobro con tarjeta duplicado, por devolver",
         "invoiced": "registró la factura de un pago",
-        "card_resolved": "resolvió un cobro con tarjeta"
+        "card_resolved": "resolvió un cobro con tarjeta",
+        "repriced": "recalculó un pago pendiente con el nuevo IVA"
       }
     },
     "complimentary": "cortesía",
@@ -2706,7 +2707,29 @@
     "discarded": "Borrador descartado.",
     "newPack": "Nuevo paquete",
     "newPackDescription": "Un tamaño de paquete que no se vendía. Se guarda como borrador y se publica desde su fila.",
-    "packSize": "Documentos del paquete"
+    "packSize": "Documentos del paquete",
+    "iva": {
+      "title": "IVA",
+      "description": "El IVA que se cobra sobre las suscripciones. Cada pago guarda la tasa con la que se creó; un pago pendiente se recalcula el día que empieza una tasa nueva y se avisa a la empresa.",
+      "schedule": "Programar una tasa",
+      "scheduleTitle": "Programar una tasa de IVA",
+      "scheduleDescription": "Desde la fecha que fije la ley, hoy como pronto. Lo cobrado antes no cambia.",
+      "rate": "Tasa (%)",
+      "rateHint": "Por ejemplo, 15 o 13,5.",
+      "effectiveOn": "Desde",
+      "state": "Estado",
+      "states": {
+        "CURRENT": "Vigente",
+        "PAST": "Anterior",
+        "SCHEDULED": "Programada",
+        "WITHDRAWN": "Retirada"
+      },
+      "scheduled": "Tasa programada.",
+      "withdraw": "Retirar",
+      "withdrawTitle": "Retirar la tasa programada",
+      "withdrawDescription": "No llegará a aplicarse. Úsalo si se registró por error.",
+      "withdrawn": "Tasa retirada."
+    }
   },
   "pricesError": {
     "FORBIDDEN": "Solo un administrador de la plataforma puede cambiar precios.",
@@ -2715,7 +2738,10 @@
     "PRICE_NOTICE_TOO_SHORT": "Esta subida necesita al menos 30 días de aviso. Deja la fecha vacía para la más cercana.",
     "PRICE_DATE_TAKEN": "Ya hay un precio que empieza ese día. Elige otra fecha.",
     "INVALID_INPUT": "Revisa el precio (hasta 2 decimales) y el tamaño del paquete.",
-    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "IVA_DATE_PAST": "La tasa empieza hoy como pronto.",
+    "IVA_DATE_TAKEN": "Ya hay otra tasa desde ese día. Retírala primero.",
+    "IVA_NOT_WITHDRAWABLE": "Solo se retira una tasa que todavía no empieza."
   },
   "planError": {
     "FORBIDDEN": "Tu rol no permite esta acción.",
