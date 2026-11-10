@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import {
   cardAttemptsToResolve,
   confirmCardPayment,
-  createFakePayphone,
   createKeyCipher,
   fixedClock,
   invoicingQueue,
@@ -19,7 +18,7 @@ import {
   type CreatedOrganization,
   type PlatformActor,
 } from '@comprobify/core';
-import { createTestP12, testRuc } from '@comprobify/core/testing';
+import { createFakePayphone, createTestP12, testRuc } from '@comprobify/core/testing';
 import { schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appDatabase, insertTestDocument, superAdmin, testLogger } from './helpers';

@@ -89,13 +89,8 @@ export type {
   PayphoneDeps,
   ReconcileDeps,
 } from './payphone';
-export {
-  createFakePayphone,
-  createPayphoneGateway,
-  keepFields,
-  PAYPHONE_APPROVED,
-} from './payphone-gateway';
-export type { ConfirmResult, FakeCharge, PayphoneGateway } from './payphone-gateway';
+export { createPayphoneGateway, keepFields, PAYPHONE_APPROVED } from './payphone-gateway';
+export type { ConfirmResult, PayphoneGateway } from './payphone-gateway';
 export { billingOverview } from './overview';
 export type { BillingOverview } from './overview';
 export {

@@ -5,3 +5,5 @@ export { sampleFactura } from './factura';
 export { sampleGuiaRemision } from './guia-remision';
 export { sampleNotaCredito } from './nota-credito';
 export { serveMockSri } from './mock-sri-server';
+export { createFakePayphone } from './payphone';
+export type { FakeCharge } from './payphone';

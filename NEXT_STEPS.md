@@ -25,7 +25,7 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 Gate: the full upgrade, renewal and expiry cycle on a fake clock, and a Payphone test card run by the owner. Prices, pack sizes and limits start as placeholders the super admin replaces with the real ones.
 
-- [ ] 8. Gate, with the owner's real Payphone test card through the billing page (`PAYPHONE_TOKEN` and `PAYPHONE_STORE_ID` from Payphone's developer console, the app's domain registered there)
+- [ ] 8. Gate: the automated half passes (`tests/integration/milestone-8-gate.test.ts`: upgrade, renewal and expiry on a fake clock). Left: the owner's real Payphone test card run, from [docs/guides/payphone-test-card.md](docs/guides/payphone-test-card.md).
 
 ## Upcoming milestones
 

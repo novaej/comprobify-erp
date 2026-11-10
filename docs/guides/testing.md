@@ -19,7 +19,7 @@ Next to the code, as `*.test.ts`. No database, no network. Take time from a `fix
 
 The RLS catalog test (NFR-SEC-5) fails when any table with `tenant_id` lacks forced RLS or the standard policy. There is no allow-list.
 
-Each milestone's gate has a test that says so: `tests/integration/milestone-2-gate.test.ts` for core, and the E2E test that names the gate for the screens.
+Each milestone's gate has a test that says so: `tests/integration/milestone-2-gate.test.ts` for core, and the E2E test that names the gate for the screens. Milestone 8's runs a company's whole billing cycle on a fake clock with the fake Payphone (`createFakePayphone` in `@comprobify/core/testing`); its real card run is the owner's, from `docs/guides/payphone-test-card.md`.
 
 The isolation sweep fills every tenant table with rows for two companies and a twin, then checks that no company sees another's rows. It finds the tables from the catalog, so a new table is checked automatically, and it fails if any table has no data, so give it data for each new table.
 

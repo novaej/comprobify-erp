@@ -3,7 +3,6 @@ import {
   buyPack,
   cancelPayment,
   confirmCardPayment,
-  createFakePayphone,
   createKeyCipher,
   fixedClock,
   onboardOrganization,
@@ -16,7 +15,7 @@ import {
   type CreatedOrganization,
   type PayphoneDeps,
 } from '@comprobify/core';
-import { createTestP12, testRuc } from '@comprobify/core/testing';
+import { createFakePayphone, createTestP12, testRuc } from '@comprobify/core/testing';
 import { schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appDatabase, testLogger } from './helpers';
