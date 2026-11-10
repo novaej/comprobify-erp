@@ -9,7 +9,7 @@ import {
   reissueDocument,
   sendDocument,
 } from './documents';
-import { completeBatches, processItem } from './bulk';
+import { completeBatches, feedBatches, processItem } from './bulk';
 import { sendEmailHandler, type EmailProvider } from './email';
 import { createRateLimiter, pruneIdentityTables } from './identity';
 import { verifyStockLevels } from './inventory';
@@ -76,6 +76,9 @@ export async function registerHandlers(jobs: Jobs, deps: HandlerDeps): Promise<v
       job.data,
     ),
   );
+  await jobs.work('bulk.feed', async () => {
+    await feedBatches({ db: deps.db, jobs, clock, logger });
+  });
   await jobs.work('bulk.complete', async () => {
     await completeBatches({ db: deps.db, clock, logger });
   });

@@ -1,7 +1,13 @@
 import type { Logger } from '@comprobify/config/logger';
 import type { Tx } from '@comprobify/db';
 import { PgBoss, type ConstructorOptions } from 'pg-boss';
-import { queues, schedules, type QueueName, type QueuePayload } from './registry';
+import {
+  queues,
+  schedules,
+  type QueueDefinition,
+  type QueueName,
+  type QueuePayload,
+} from './registry';
 
 const SCHEMA = 'pgboss';
 
@@ -118,9 +124,12 @@ export async function installJobs(connectionString: string): Promise<void> {
   });
   await boss.start();
   try {
-    for (const [name, { options }] of Object.entries(queues)) {
+    for (const [name, { options }] of Object.entries<QueueDefinition>(queues)) {
       await boss.createQueue(name, options);
-      await boss.updateQueue(name, options);
+      // The policy can't change once the queue exists.
+      const changeable = { ...options };
+      delete changeable.policy;
+      await boss.updateQueue(name, changeable);
     }
   } finally {
     await boss.stop();

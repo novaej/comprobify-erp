@@ -93,6 +93,8 @@ export const bulkBatchItems = pgTable(
     saleOrderId: uuid('sale_order_id'),
     input: jsonb('input'),
     documentId: uuid('document_id'),
+    // When the feeder put the item's job on the queue (ADR-026). Null: waiting for a turn.
+    dispatchedAt: timestamp('dispatched_at', { withTimezone: true }),
     attempts: integer('attempts').default(0).notNull(),
     errorCode: text('error_code'),
     errorMessage: text('error_message'),
@@ -121,6 +123,9 @@ export const bulkBatchItems = pgTable(
     index('bulk_batch_items_pending')
       .on(table.tenantId, table.status)
       .where(sql`status IN ('QUEUED', 'CREATING')`),
+    index('bulk_batch_items_waiting')
+      .on(table.tenantId, table.batchId, table.position)
+      .where(sql`status = 'QUEUED' AND dispatched_at IS NULL`),
     check('bulk_batch_items_status_check', oneOf('status', BATCH_ITEM_STATUSES)),
     check('bulk_batch_items_position_check', sql`position > 0 AND attempts >= 0`),
     // An item names an order or carries a row, never both.

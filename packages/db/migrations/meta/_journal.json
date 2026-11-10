@@ -337,6 +337,13 @@
       "when": 1794254566544,
       "tag": "0047_bulk_batches",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1794268098927,
+      "tag": "0048_bulk_feeding",
+      "breakpoints": true
     }
   ]
 }

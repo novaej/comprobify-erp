@@ -1,12 +1,13 @@
-import type { QueueOptions } from 'pg-boss';
+import type { Queue } from 'pg-boss';
 import { z } from 'zod';
 import { sendEmailPayload } from '../email';
 
 const documentRef = z.object({ tenantId: z.uuid(), documentId: z.uuid() });
 
-type QueueDefinition = {
+export type QueueDefinition = {
   payload: z.ZodType;
-  options: QueueOptions;
+  // `policy` is fixed when the queue is created (ADR-005).
+  options: Omit<Queue, 'name'>;
   // Jobs one worker process runs at once (NFR-JOB-3).
   concurrency: number;
 };
@@ -91,6 +92,14 @@ export const queues = {
     options: { retryLimit: 3, retryDelay: 30, retryBackoff: true, expireInSeconds: 300 },
     concurrency: 3,
   },
+  // FR-BULK-4: hands waiting items to `bulk.item` a few at a time, company by company. `short`
+  // keeps one queued at most, so the schedule, a new batch and the feeder's own re-queue
+  // never pile up into several feeders.
+  'bulk.feed': {
+    payload: z.object({}),
+    options: { policy: 'short', retryLimit: 1, expireInSeconds: 120 },
+    concurrency: 1,
+  },
   // FR-BULK-3: marks the batches whose invoices have all been answered.
   'bulk.complete': {
     payload: z.object({}),
@@ -121,6 +130,8 @@ export const schedules: readonly {
   // Quiet hours in Quito, after the day's receipts and adjustments.
   { queue: 'inventory.verify', cron: '45 2 * * *', tz: JOB_TIME_ZONE, data: {} },
   { queue: 'bulk.complete', cron: '* * * * *', tz: JOB_TIME_ZONE, data: {} },
+  // A net under the feeder's own re-queue: work left behind by a crash starts again.
+  { queue: 'bulk.feed', cron: '* * * * *', tz: JOB_TIME_ZONE, data: {} },
   { queue: 'sri.overdue', cron: '*/15 * * * *', tz: JOB_TIME_ZONE, data: {} },
   // After midnight in Quito, once yesterday's deadline checks have run.
   { queue: 'sri.reissue-sweep', cron: '30 0 * * *', tz: JOB_TIME_ZONE, data: {} },

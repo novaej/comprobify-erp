@@ -122,11 +122,12 @@ describe('bulk invoicing', () => {
     return ids;
   };
   const start = async (company_: Company, orderIds: string[]) =>
-    startOrderBatch(await actor(company_), db, {
-      issuePointId: company_.pointId,
-      orderIds,
-      payment: PAYMENT,
-    });
+    startOrderBatch(
+      await actor(company_),
+      db,
+      { issuePointId: company_.pointId, orderIds, payment: PAYMENT },
+      { jobs },
+    );
   const view = async (company_: Company, batchId: string) =>
     getBatch(await actor(company_), db, batchId);
   const itemIds = async (company_: Company, batchId: string) =>
@@ -244,11 +245,12 @@ describe('bulk invoicing', () => {
     expect(await failure(start(twin, [randomUUID()]))).toBe('NOT_FOUND');
     expect(
       await failure(
-        startOrderBatch(await actor(twin), db, {
-          issuePointId: randomUUID(),
-          orderIds: ids,
-          payment: PAYMENT,
-        }),
+        startOrderBatch(
+          await actor(twin),
+          db,
+          { issuePointId: randomUUID(), orderIds: ids, payment: PAYMENT },
+          { jobs },
+        ),
       ),
     ).toBe('NOT_FOUND');
     // Another company's orders are not found, and its batches are not seen.
@@ -263,10 +265,14 @@ describe('bulk invoicing', () => {
     const ctx = await actor(twin);
     const input = { issuePointId: twin.pointId, orderIds: [randomUUID()], payment: PAYMENT };
     expect(
-      await failure(startOrderBatch({ ...ctx, permissions: ['documents.issue'] }, db, input)),
+      await failure(
+        startOrderBatch({ ...ctx, permissions: ['documents.issue'] }, db, input, { jobs }),
+      ),
     ).toBe('FORBIDDEN');
     expect(
-      await failure(startOrderBatch({ ...ctx, permissions: ['sales.manage'] }, db, input)),
+      await failure(
+        startOrderBatch({ ...ctx, permissions: ['sales.manage'] }, db, input, { jobs }),
+      ),
     ).toBe('FORBIDDEN');
     expect(await failure(listBatches({ ...ctx, permissions: ['sales.read'] }, db))).toBe(
       'FORBIDDEN',
@@ -380,8 +386,8 @@ describe('bulk invoicing', () => {
       limitValue: null,
       reason: 'test',
     });
-    expect(await retryFailedItems(await actor(real), db, batch.id)).toBe(4 - made);
-    expect(await retryFailedItems(await actor(real), db, batch.id)).toBe(0);
+    expect(await retryFailedItems(await actor(real), db, batch.id, { jobs })).toBe(4 - made);
+    expect(await retryFailedItems(await actor(real), db, batch.id, { jobs })).toBe(0);
     stack = await view(real, batch.id);
     expect(stack).toMatchObject({ status: 'PROCESSING' });
     expect(stack.counts).toMatchObject({ QUEUED: 4 - made, FAILED: 0 });
@@ -406,7 +412,7 @@ describe('bulk invoicing', () => {
     await checkAuthorization(sending, ref);
     const stack = await view(twin, batch.id);
     expect(stack.items[0]!.view).toBe('FAILED');
-    expect(await retryFailedItems(await actor(twin), db, batch.id)).toBe(0);
+    expect(await retryFailedItems(await actor(twin), db, batch.id, { jobs })).toBe(0);
     expect(await completeBatches(bulk)).toBeGreaterThanOrEqual(1);
   });
 });

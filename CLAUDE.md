@@ -189,7 +189,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `apps/web/src/app/[locale]/(app)/(shell)/purchase-orders/` | The order list, form (new and edit), detail, receive screen and PDF route |
 | `packages/core/src/sales/` | Sale orders: numbers, revisions, holding goods on confirm and releasing them on cancel (`orders.ts`), what invoices cover and the order's status (`invoicing.ts`, ADR-022), the status machine (`status.ts`; the tables and transitions are in `packages/db/src/schema/sales.ts`, ADR-021) |
 | `apps/web/src/app/[locale]/(app)/(shell)/sale-orders/` | The order list, form (new and edit), detail and the form that invoices it |
-| `packages/core/src/bulk/` | Batches of invoices: starting one from sale orders, the item job (`processItem`), the completion sweep, retry, and the stack view's reads (`batches.ts`, `process.ts`; the tables and transitions are in `packages/db/src/schema/bulk.ts`, ADR-026) |
+| `packages/core/src/bulk/` | Batches of invoices: starting one from sale orders, the item job (`processItem`), the fair-queuing feeder (`feed.ts`), the completion sweep, retry, and the stack view's reads (`batches.ts`, `process.ts`; the tables and transitions are in `packages/db/src/schema/bulk.ts`, ADR-026) |
 | `packages/core/src/receivables/` | Payments received for invoices, the balance and status, and the aging report (`payments.ts`, `aging.ts`; ADR-024); the table is in `packages/db/src/schema/receivables.ts` |
 | `apps/web/src/app/[locale]/(app)/(shell)/receivables/` | The aging report and the actions that record and void a payment (shown on the invoice's page) |
 | `packages/core/src/masterdata/` | What go-live copies from the twin to the real company: products, clients, providers, templates (ADR-025) |

@@ -11,3 +11,5 @@ export { completeBatches, processItem } from './process';
 export type { BulkDeps } from './process';
 export { FINAL_DOCUMENT_STATUSES, itemView } from './status';
 export type { ItemView } from './status';
+export { allocateSlots, BULK_LIMITS, feedBatches } from './feed';
+export type { BulkLimits, FeedDeps } from './feed';

@@ -12,6 +12,7 @@ import {
 } from '@comprobify/db';
 import { z } from 'zod';
 import { DomainError, requireFeature, requirePermission, type ActorContext } from '../kernel';
+import type { Jobs } from '../jobs';
 import { countSaleOrders } from '../sales';
 import { SRI_PAYMENT_METHODS, SRI_TERM_UNITS } from '../sri';
 import { issuePointWarehouse } from '../tenancy';
@@ -54,6 +55,7 @@ export async function startOrderBatch(
   ctx: ActorContext,
   db: Database,
   raw: StartOrderBatchInput,
+  deps: { jobs: Pick<Jobs, 'enqueue'> },
 ): Promise<{ id: string; totalItems: number }> {
   canStart(ctx);
   const input = startOrderBatchInput.parse(raw);
@@ -88,6 +90,8 @@ export async function startOrderBatch(
           saleOrderId,
         })),
       );
+    // With the batch, so a batch that commits is a batch the feeder is told about.
+    await deps.jobs.enqueue(tx, 'bulk.feed', {});
     return { id: batch!.id, totalItems: orderIds.length };
   });
 }
@@ -251,6 +255,7 @@ export async function retryFailedItems(
   ctx: ActorContext,
   db: Database,
   batchId: string,
+  deps: { jobs: Pick<Jobs, 'enqueue'> },
   itemIds: string[] | null = null,
 ): Promise<number> {
   requireFeature(ctx, 'BULK_INVOICING');
@@ -261,7 +266,7 @@ export async function retryFailedItems(
     if (!batch) throw new DomainError('NOT_FOUND', 'Batch not found');
     const requeued = await tx.db
       .update(items)
-      .set({ status: 'QUEUED', errorCode: null, errorMessage: null })
+      .set({ status: 'QUEUED', errorCode: null, errorMessage: null, dispatchedAt: null })
       .where(
         and(
           eq(items.batchId, batchId),
@@ -270,11 +275,13 @@ export async function retryFailedItems(
         ),
       )
       .returning({ id: items.id });
-    if (requeued.length > 0 && batch.status === 'COMPLETED')
+    if (requeued.length === 0) return 0;
+    if (batch.status === 'COMPLETED')
       await tx.db
         .update(batches)
         .set({ status: 'PROCESSING', completedAt: null })
         .where(eq(batches.id, batchId));
+    await deps.jobs.enqueue(tx, 'bulk.feed', {});
     return requeued.length;
   });
 }

@@ -25,7 +25,7 @@ Gate: a 1,000-item batch locally on the mock SRI with the quota cutting it off, 
 
 - [x] 1. Tables, migration 0047, ADR-026
 - [x] 2. Core: start a batch from orders, the item job, quota cut-off, retry, completion sweep
-- [ ] 3. Pacing: the feeder with per-company and global caps, and a test that a big batch doesn't starve a small one
+- [x] 3. Pacing: the feeder with per-company and global caps, and a test that a big batch doesn't starve a small one
 - [ ] 4. Web: batch list and stack view with live progress, starting a batch from orders, the platform queue page
 - [ ] 5. CSV upload (format in the ADR)
 - [ ] 6. Gate: 1,000 items on the mock with quota cut, latency of another company's invoice
