@@ -18,7 +18,7 @@ Questions settled with the owner before building:
 
 ## Decision
 
-**What a company pays a month** is its plan, each add-on it carries that the plan doesn't already include, and its extra seats, at the prices in force on the day the period starts (`monthlyCharge`). An add-on that a plan change brings into the plan stops being charged. Yearly is ten months.
+**What a company pays a month** is its plan, each add-on it keeps for the whole period that the plan doesn't already include, and its extra seats, at the prices in force on the day the period starts (`monthlyCharge`). An add-on due to leave before the period ends isn't charged. That happens when the operator removes one on Gratis, where it stays until the next quota month, and the company then starts a paid plan. Once that first payment is verified, any add-on the operator had already removed goes at once rather than on its old date. A pending removal means the operator decided the company shouldn't have it, so a paid period never carries it for free. Add-ons still on the company are charged in full, and the plan's own modules stay as part of the plan. An add-on that a plan change brings into the plan stops being charged. Yearly is ten months.
 
 **Now, prorated, once paid** (`requestPlanChange`, `requestSeats`, `buyAddOn`):
 

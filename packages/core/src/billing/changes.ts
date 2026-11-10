@@ -107,12 +107,14 @@ async function quotePlan(
     planId: subscription.planId,
     seats,
     on: today,
+    until: subscription.periodEnd,
   });
   const next = await monthlyCharge(tx, {
     subscriptionId: subscription.id,
     planId: plan.id,
     seats,
     on: today,
+    until: subscription.periodEnd,
   });
   // Going to a free plan is leaving: that is a cancellation.
   const planPrice = await priceOn(tx, { kind: 'PLAN', planId: plan.id }, today);

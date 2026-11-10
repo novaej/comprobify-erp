@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, schema, sql, type Tx } from '@comprobify/db';
+import { and, eq, inArray, isNotNull, isNull, schema, sql, type Tx } from '@comprobify/db';
 import { z } from 'zod';
 import { DomainError } from '../kernel';
 import { FEATURE_KEYS, FEATURES, type FeatureKey } from './features';
@@ -412,6 +412,23 @@ export async function applyDropAllAddOns(tx: Tx['db'], company: CompanyTenants):
         inArray(subscriptionItems.tenantId, tenantsOf(company)),
         eq(subscriptionItems.kind, 'MODULE'),
         eq(subscriptionItems.active, true),
+      ),
+    );
+}
+
+// A paid plan starts: an add-on already removed goes now rather than at the old date, so no
+// paid period carries a module the operator took away (ADR-030).
+export async function applyDropLeavingAddOns(tx: Tx['db'], company: CompanyTenants): Promise<void> {
+  const { subscriptionItems } = schema;
+  await tx
+    .update(subscriptionItems)
+    .set({ active: false, updatedAt: sql`now()` })
+    .where(
+      and(
+        inArray(subscriptionItems.tenantId, tenantsOf(company)),
+        eq(subscriptionItems.kind, 'MODULE'),
+        eq(subscriptionItems.active, true),
+        isNotNull(subscriptionItems.removesAt),
       ),
     );
 }

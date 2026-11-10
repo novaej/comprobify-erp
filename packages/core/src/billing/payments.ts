@@ -20,6 +20,7 @@ import { recordAudit } from '../audit';
 import {
   applyAddModule,
   applyDropAddOn,
+  applyDropLeavingAddOns,
   applySubscriptionTerm,
   periodEndFrom,
   type CompanyTenants,
@@ -199,12 +200,13 @@ export async function lockPayment(tx: Tx['db'], id: string): Promise<PaymentRow>
   return row;
 }
 
-// What the company pays a month on a plan: the plan, each add-on it still carries then that the
-// plan doesn't already include, and its extra seats, at their prices on the day the period
-// starts (FR-BILL-6, ADR-030).
+// What the company pays a month on a plan: the plan, each add-on it keeps for the whole period
+// that the plan doesn't already include, and its extra seats, at their prices on the day the
+// period starts (FR-BILL-6, ADR-030). An add-on due to leave before `until` isn't charged: the
+// period would pay for what it no longer has.
 export async function monthlyCharge(
   tx: Tx['db'],
-  input: { subscriptionId: string; planId: string; seats: number; on: string },
+  input: { subscriptionId: string; planId: string; seats: number; on: string; until: string },
 ): Promise<{ total: Dec; lines: { kind: string; key: string; monthly: string }[] }> {
   const { planId, on } = input;
   const [plan] = await tx.select().from(schema.plans).where(eq(schema.plans.id, planId));
@@ -234,11 +236,11 @@ export async function monthlyCharge(
         eq(schema.subscriptionItems.active, true),
       ),
     );
-  const from = startOfEcuadorDay(on);
+  const end = startOfEcuadorDay(input.until);
   let total = planPrice;
   for (const addOn of addOns) {
-    // Gone by then, or part of the plan: not charged.
-    if ((addOn.removesAt && addOn.removesAt <= from) || inPlan.has(addOn.moduleId!)) continue;
+    // Leaving during the period, or part of the plan: not charged.
+    if ((addOn.removesAt && addOn.removesAt < end) || inPlan.has(addOn.moduleId!)) continue;
     const price = await priceOn(tx, { kind: 'MODULE', moduleId: addOn.moduleId! }, on);
     if (price === null) continue;
     total = total.add(price);
@@ -299,6 +301,7 @@ export async function startPaidPlan(
       planId: plan.id,
       seats: subscription.extraSeats,
       on: today,
+      until: periodEndFrom(today, input.interval),
     });
     if (!monthly.total.gt(0)) throw new DomainError('PLAN_NOT_SOLD', 'That plan costs nothing');
     const months = input.interval === 'YEARLY' ? YEARLY_MONTHS : 1;
@@ -359,6 +362,7 @@ export async function openRenewal(
     planId: subscription.pendingPlanId ?? subscription.planId,
     seats: subscription.pendingSeats ?? subscription.extraSeats,
     on: subscription.periodEnd,
+    until: periodEndFrom(subscription.periodEnd, interval),
   });
   const months = interval === 'YEARLY' ? YEARLY_MONTHS : 1;
   const [row] = await tx
@@ -767,6 +771,7 @@ export async function applyChange(
         periodStart: today,
         periodEnd: periodEndFrom(today, change.targetInterval!),
       };
+      await applyDropLeavingAddOns(tx, company);
       break;
     case 'RENEWAL': {
       if (current.periodEnd === null)
