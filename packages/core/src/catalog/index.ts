@@ -63,7 +63,7 @@ const isUniqueViolation = (error: unknown) => {
 };
 
 // The products trigger refuses to stop tracking stock a warehouse still holds (FR-INV-6).
-const isStockHeld = (error: unknown) => {
+export const isStockHeld = (error: unknown) => {
   const pgError = error instanceof Error && error.cause ? error.cause : error;
   return pgError instanceof Error && pgError.message.startsWith('STOCK_HELD');
 };
@@ -336,3 +336,5 @@ export async function productsForOrder(tx: Tx, ids: string[]): Promise<OrderProd
     .from(products)
     .where(inArray(products.id, ids));
 }
+export { exportProducts, importProducts, PRODUCT_IMPORT_MAX_ROWS } from './import';
+export type { ProductImportResult } from './import';

@@ -1223,7 +1223,37 @@
     "reactivateName": "Reactivate {name}",
     "reactivateTitle": "Reactivate the client?",
     "reactivateDescription": "It shows again when invoicing.",
-    "reactivated": "Client reactivated."
+    "reactivated": "Client reactivated.",
+    "export": "Export CSV",
+    "import": {
+      "open": "Import CSV",
+      "title": "Import clients",
+      "description": "A CSV file with one client per line. An identification that already exists is updated and a new one is created. It is imported whole or not at all: if one line has a problem, none is saved.",
+      "template": "Download template",
+      "templateFile": "clients.csv",
+      "file": "CSV file",
+      "fileHint": "Required: id type (04 RUC, 05 cédula, 06 passport, 08 foreign), identification and name. Optional: emails (separated by |), phone, address, payment term and unit (dias or meses) and active. Save it from Excel as “CSV UTF-8”.",
+      "submit": "Import",
+      "cancel": "Cancel",
+      "done": "{created, plural, =0 {} one {# client created. } other {# clients created. }}{updated, plural, =0 {} one {# updated.} other {# updated.}}",
+      "problems": "{count, plural, one {One line has a problem; nothing was imported.} other {# lines have problems; nothing was imported.}}",
+      "line": "Line {line}:",
+      "field": {
+        "id_type": "id type",
+        "identification": "identification",
+        "name": "name",
+        "emails": "emails",
+        "phone": "phone",
+        "address": "address",
+        "payment_term": "payment term",
+        "payment_term_unit": "term unit",
+        "active": "active"
+      },
+      "problem": {
+        "INVALID_FIELD": "check the “{field}” column.",
+        "DUPLICATE_ROW": "the identification already appears earlier in the file."
+      }
+    }
   },
   "clientsError": {
     "IDENTIFICATION_TAKEN": "A client with that ID already exists.",
@@ -1233,7 +1263,10 @@
     "INVALID_INPUT": "Check the details: the ID must be valid for its type, and each email an address.",
     "UNKNOWN": "An unexpected error occurred. Please try again.",
     "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
-    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data.",
+    "IMPORT_EMPTY": "The file has no lines.",
+    "IMPORT_COLUMNS": "The file lacks required columns: id type, identification and name. Download the template.",
+    "IMPORT_TOO_LARGE": "The file is too large: up to 5000 lines per file."
   },
   "products": {
     "title": "Products and services",
@@ -1294,7 +1327,41 @@
     "reactivateName": "Reactivate {name}",
     "reactivateTitle": "Reactivate the product?",
     "reactivateDescription": "It shows again when invoicing.",
-    "reactivated": "Product reactivated."
+    "reactivated": "Product reactivated.",
+    "export": "Export CSV",
+    "import": {
+      "open": "Import CSV",
+      "title": "Import products",
+      "description": "A CSV file with one product per line. A code that already exists is updated and a new one is created. It is imported whole or not at all: if one line has a problem, none is saved.",
+      "template": "Download template",
+      "templateFile": "products.csv",
+      "file": "CSV file",
+      "fileHint": "Required: code, name, type (good or service), price and IVA (SRI code: 4 is 15 %, 0 is 0 %, 5 is 5 %, 6 not subject, 7 exempt). Optional: cost, unit, tracks_stock, active and up to three details. Save it from Excel as “CSV UTF-8”.",
+      "submit": "Import",
+      "cancel": "Cancel",
+      "done": "{created, plural, =0 {} one {# product created. } other {# products created. }}{updated, plural, =0 {} one {# updated.} other {# updated.}}",
+      "problems": "{count, plural, one {One line has a problem; nothing was imported.} other {# lines have problems; nothing was imported.}}",
+      "line": "Line {line}:",
+      "field": {
+        "code": "code",
+        "auxiliary_code": "auxiliary code",
+        "name": "name",
+        "description": "description",
+        "type": "type",
+        "unit": "unit",
+        "price": "price",
+        "cost": "cost",
+        "iva_code": "IVA",
+        "tracks_stock": "tracks stock",
+        "active": "active",
+        "details": "details"
+      },
+      "problem": {
+        "INVALID_FIELD": "check the “{field}” column.",
+        "DUPLICATE_ROW": "the code already appears earlier in the file.",
+        "STOCK_HELD": "the product still has stock in a warehouse: adjust it to zero before it stops being tracked."
+      }
+    }
   },
   "productsError": {
     "CODE_TAKEN": "A product with that code already exists.",
@@ -1306,7 +1373,10 @@
     "STOCK_HELD": "A warehouse still holds stock of this product: adjust it to zero before you stop tracking stock.",
     "SERVICE_HAS_NO_STOCK": "A service does not track stock.",
     "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
-    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data.",
+    "IMPORT_EMPTY": "The file has no lines.",
+    "IMPORT_COLUMNS": "The file lacks required columns: code, name, type, price and IVA. Download the template.",
+    "IMPORT_TOO_LARGE": "The file is too large: up to 5000 lines per file."
   },
   "settings": {
     "title": "Company",

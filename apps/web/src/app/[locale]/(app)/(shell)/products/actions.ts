@@ -1,6 +1,13 @@
 'use server';
 
-import { createProduct, setProductActive, updateProduct } from '@comprobify/core';
+import {
+  createProduct,
+  importProducts,
+  isDomainError,
+  setProductActive,
+  updateProduct,
+} from '@comprobify/core';
+import type { CsvImportState } from '@/components/csv-import-dialog';
 import { revalidatePath } from 'next/cache';
 import { toActionState, type ActionState } from '@/server/actions';
 import { getRuntime } from '@/server/runtime';
@@ -54,4 +61,21 @@ export async function setProductActiveAction(_: ActionState, form: FormData): Pr
   );
   if (state.done) revalidatePath(`/${localeOf(form)}/products`);
   return state;
+}
+
+// FR-MD-1: the file is read in the browser and sent as text; core checks every line first.
+export async function importProductsAction(
+  locale: string,
+  content: string,
+): Promise<CsvImportState> {
+  const { actor } = await loadShell(locale === 'en' ? 'en' : 'es');
+  const { db } = await getRuntime();
+  try {
+    const result = await importProducts(actor, db, content);
+    if (result.created + result.updated > 0) revalidatePath(`/${locale}/products`, 'layout');
+    return result;
+  } catch (error) {
+    if (isDomainError(error)) return { error: error.code };
+    throw error;
+  }
 }

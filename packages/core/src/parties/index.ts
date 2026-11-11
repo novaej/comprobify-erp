@@ -17,6 +17,8 @@ import { clientInput, line } from './input';
 export { isValidCedula, isValidIdentification } from './identification';
 export { CLIENT_ID_TYPES };
 export { clientInput } from './input';
+export { CLIENT_IMPORT_MAX_ROWS, exportClients, importClients } from './clients-import';
+export type { ClientImportResult } from './clients-import';
 export {
   createProvider,
   getProvider,

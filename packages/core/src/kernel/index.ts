@@ -31,4 +31,14 @@ export {
 } from './money';
 export { isWrite, requirePermission } from './permissions';
 export { csvDecimal, parseCsv, toCsv, type Csv } from './csv';
+export {
+  CSV_MAX_BYTES,
+  csvBoolean,
+  normalHeader,
+  readCsvTable,
+  type CsvColumns,
+  type CsvProblem,
+  type CsvRow,
+  type CsvTable,
+} from './csv-table';
 export { createZip, ZIP_MAX_ENTRIES, type ZipEntry } from './zip';

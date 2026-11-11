@@ -1,6 +1,13 @@
 'use server';
 
-import { createClient, setClientActive, updateClient } from '@comprobify/core';
+import {
+  createClient,
+  importClients,
+  isDomainError,
+  setClientActive,
+  updateClient,
+} from '@comprobify/core';
+import type { CsvImportState } from '@/components/csv-import-dialog';
 import { revalidatePath } from 'next/cache';
 import { toActionState, type ActionState } from '@/server/actions';
 import { getRuntime } from '@/server/runtime';
@@ -51,4 +58,21 @@ export async function setClientActiveAction(_: ActionState, form: FormData): Pro
   );
   if (state.done) revalidatePath(`/${localeOf(form)}/clients`);
   return state;
+}
+
+// FR-MD-2: the file is read in the browser and sent as text; core checks every line first.
+export async function importClientsAction(
+  locale: string,
+  content: string,
+): Promise<CsvImportState> {
+  const { actor } = await loadShell(locale === 'en' ? 'en' : 'es');
+  const { db } = await getRuntime();
+  try {
+    const result = await importClients(actor, db, content);
+    if (result.created + result.updated > 0) revalidatePath(`/${locale}/clients`, 'layout');
+    return result;
+  } catch (error) {
+    if (isDomainError(error)) return { error: error.code };
+    throw error;
+  }
 }

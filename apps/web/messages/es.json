@@ -1223,7 +1223,37 @@
     "reactivateName": "Reactivar a {name}",
     "reactivateTitle": "¿Reactivar el cliente?",
     "reactivateDescription": "Vuelve a aparecer al facturar.",
-    "reactivated": "Cliente reactivado."
+    "reactivated": "Cliente reactivado.",
+    "export": "Exportar CSV",
+    "import": {
+      "open": "Importar CSV",
+      "title": "Importar clientes",
+      "description": "Un archivo CSV con un cliente por línea. Una identificación que ya existe se actualiza y una nueva se crea. Se importa completo o nada: si una línea tiene un problema, no se registra ninguna.",
+      "template": "Descargar plantilla",
+      "templateFile": "clientes.csv",
+      "file": "Archivo CSV",
+      "fileHint": "Obligatorias: tipo de identificación (04 RUC, 05 cédula, 06 pasaporte, 08 exterior), identificación y nombre. Opcionales: correos (separados por |), teléfono, dirección, plazo y unidad (dias o meses) y activo. Guárdalo desde Excel como «CSV (delimitado por punto y coma)» o «CSV UTF-8».",
+      "submit": "Importar",
+      "cancel": "Cancelar",
+      "done": "{created, plural, =0 {} one {Se creó # cliente. } other {Se crearon # clientes. }}{updated, plural, =0 {} one {Se actualizó #.} other {Se actualizaron #.}}",
+      "problems": "{count, plural, one {Una línea tiene un problema; no se importó nada.} other {# líneas tienen problemas; no se importó nada.}}",
+      "line": "Línea {line}:",
+      "field": {
+        "id_type": "tipo de identificación",
+        "identification": "identificación",
+        "name": "nombre",
+        "emails": "correos",
+        "phone": "teléfono",
+        "address": "dirección",
+        "payment_term": "plazo",
+        "payment_term_unit": "unidad del plazo",
+        "active": "activo"
+      },
+      "problem": {
+        "INVALID_FIELD": "revisa la columna «{field}».",
+        "DUPLICATE_ROW": "la identificación ya aparece antes en el archivo."
+      }
+    }
   },
   "clientsError": {
     "IDENTIFICATION_TAKEN": "Ya existe un cliente con esa identificación.",
@@ -1233,7 +1263,10 @@
     "INVALID_INPUT": "Revisa los datos: la identificación debe ser válida para su tipo y cada correo, una dirección.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
     "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
-    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos.",
+    "IMPORT_EMPTY": "El archivo no tiene líneas.",
+    "IMPORT_COLUMNS": "Al archivo le faltan columnas obligatorias: tipo de identificación, identificación y nombre. Descarga la plantilla.",
+    "IMPORT_TOO_LARGE": "El archivo es demasiado grande: hasta 5000 líneas por archivo."
   },
   "products": {
     "title": "Productos y servicios",
@@ -1294,7 +1327,41 @@
     "reactivateName": "Reactivar {name}",
     "reactivateTitle": "¿Reactivar el producto?",
     "reactivateDescription": "Vuelve a aparecer al facturar.",
-    "reactivated": "Producto reactivado."
+    "reactivated": "Producto reactivado.",
+    "export": "Exportar CSV",
+    "import": {
+      "open": "Importar CSV",
+      "title": "Importar productos",
+      "description": "Un archivo CSV con un producto por línea. Un código que ya existe se actualiza y uno nuevo se crea. Se importa completo o nada: si una línea tiene un problema, no se registra ninguna.",
+      "template": "Descargar plantilla",
+      "templateFile": "productos.csv",
+      "file": "Archivo CSV",
+      "fileHint": "Obligatorias: código, nombre, tipo (bien o servicio), precio e IVA (código del SRI: 4 es 15 %, 0 es 0 %, 5 es 5 %, 6 no objeto, 7 exento). Opcionales: costo, unidad, controla_stock, activo y hasta tres detalles. Guárdalo desde Excel como «CSV (delimitado por punto y coma)» o «CSV UTF-8».",
+      "submit": "Importar",
+      "cancel": "Cancelar",
+      "done": "{created, plural, =0 {} one {Se creó # producto. } other {Se crearon # productos. }}{updated, plural, =0 {} one {Se actualizó #.} other {Se actualizaron #.}}",
+      "problems": "{count, plural, one {Una línea tiene un problema; no se importó nada.} other {# líneas tienen problemas; no se importó nada.}}",
+      "line": "Línea {line}:",
+      "field": {
+        "code": "código",
+        "auxiliary_code": "código auxiliar",
+        "name": "nombre",
+        "description": "descripción",
+        "type": "tipo",
+        "unit": "unidad",
+        "price": "precio",
+        "cost": "costo",
+        "iva_code": "IVA",
+        "tracks_stock": "controla stock",
+        "active": "activo",
+        "details": "detalles"
+      },
+      "problem": {
+        "INVALID_FIELD": "revisa la columna «{field}».",
+        "DUPLICATE_ROW": "el código ya aparece antes en el archivo.",
+        "STOCK_HELD": "el producto aún tiene existencias en una bodega: ajústalas a cero antes de dejar de controlarlo."
+      }
+    }
   },
   "productsError": {
     "CODE_TAKEN": "Ya existe un producto con ese código.",
@@ -1306,7 +1373,10 @@
     "STOCK_HELD": "Todavía hay existencias de este producto en una bodega: ajústalas a cero antes de dejar de controlar inventario.",
     "SERVICE_HAS_NO_STOCK": "Un servicio no controla inventario.",
     "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
-    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos.",
+    "IMPORT_EMPTY": "El archivo no tiene líneas.",
+    "IMPORT_COLUMNS": "Al archivo le faltan columnas obligatorias: código, nombre, tipo, precio e IVA. Descarga la plantilla.",
+    "IMPORT_TOO_LARGE": "El archivo es demasiado grande: hasta 5000 líneas por archivo."
   },
   "settings": {
     "title": "Empresa",

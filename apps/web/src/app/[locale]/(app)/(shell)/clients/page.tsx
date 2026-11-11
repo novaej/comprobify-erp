@@ -1,7 +1,7 @@
 import { CLIENT_ID_TYPES, hasFeature, listClients, SRI_TERM_UNITS } from '@comprobify/core';
-import { Button } from '@comprobify/ui/components/button';
+import { Button, buttonVariants } from '@comprobify/ui/components/button';
 import { Input } from '@comprobify/ui/components/input';
-import { Search } from 'lucide-react';
+import { Download, Search } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { FeatureLocked } from '@/components/feature-locked';
 import { NoAccess } from '@/components/no-access';
@@ -10,6 +10,7 @@ import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
 import { ClientManager } from './client-manager';
+import { ImportClients } from './import-clients';
 
 export const generateMetadata = pageTitle('clients');
 
@@ -34,7 +35,23 @@ export default async function ClientsPage({
 
   return (
     <div className="max-w-6xl">
-      <PageHeader title={t('title')} description={t('description')} />
+      <PageHeader
+        title={t('title')}
+        description={t('description')}
+        action={
+          <>
+            {/* A file download, not a page: a plain link to the route. */}
+            <a
+              href={`/${locale}/clients/csv`}
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
+            >
+              <Download className="mr-1.5 h-4 w-4" aria-hidden />
+              {t('export')}
+            </a>
+            {actor.permissions.includes('clients.manage') && <ImportClients />}
+          </>
+        }
+      />
       <form className="mb-4 flex max-w-md gap-2" role="search">
         <Input
           name="q"

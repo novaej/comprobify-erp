@@ -1576,6 +1576,82 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page).toHaveURL(/\/es\/documents\?status=AUTHORIZED/);
   });
 
+  test('imports products and clients from a CSV, names the wrong lines, and exports them (FR-MD-1, FR-MD-2)', async ({
+    page,
+  }) => {
+    await signIn(page, email, newPassword);
+    await expect(page).toHaveURL(/\/es\/dashboard$/);
+    const csv = (name: string, content: string) => ({
+      name,
+      mimeType: 'text/csv',
+      buffer: Buffer.from(content, 'utf8'),
+    });
+
+    await page.goto('/es/products');
+    await page.getByRole('button', { name: 'Importar CSV' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Importar productos' });
+    await look(page, 'import-products');
+    // A wrong line: nothing is saved, and the line is named.
+    await dialog
+      .getByLabel('Archivo CSV')
+      .setInputFiles(
+        csv(
+          'malo.csv',
+          'codigo;nombre;tipo;precio;iva\nIMP-0;Bueno;bien;1;4\nIMP-X;Tarifa mala;bien;1;99\n',
+        ),
+      );
+    await dialog.getByRole('button', { name: 'Importar', exact: true }).click();
+    await expect(dialog.getByRole('alert')).toContainText('Línea 3:');
+    await expect(dialog.getByRole('alert')).toContainText('revisa la columna «IVA»');
+    // A right one: created, and listed.
+    await dialog
+      .getByLabel('Archivo CSV')
+      .setInputFiles(
+        csv(
+          'productos.csv',
+          'codigo;nombre;tipo;precio;costo;iva;controla_stock\nIMP-1;Té verde importado;bien;3,50;1,20;4;no\nIMP-2;Asesoría importada;servicio;40;;0;no\n',
+        ),
+      );
+    await dialog.getByRole('button', { name: 'Importar', exact: true }).click();
+    await expect(page.getByText('Se crearon 2 productos.')).toBeVisible();
+    await expect(page.getByRole('table')).toContainText('Té verde importado');
+    await expect(page.getByRole('table')).toContainText('Asesoría importada');
+
+    // The file it exports is the one an import reads: here, an update of both.
+    const download = page.waitForEvent('download');
+    await page.getByRole('link', { name: 'Exportar CSV' }).click();
+    const exported = await readFile(await (await download).path(), 'utf8');
+    expect(exported.startsWith('\uFEFFcodigo;codigo_auxiliar;nombre;')).toBe(true);
+    expect(exported).toContain('IMP-1;;Té verde importado;;bien;;3,50;1,20;4;no;si;');
+    await page.getByRole('button', { name: 'Importar CSV' }).click();
+    await page
+      .getByRole('dialog', { name: 'Importar productos' })
+      .getByLabel('Archivo CSV')
+      .setInputFiles(csv('productos.csv', exported));
+    await page
+      .getByRole('dialog', { name: 'Importar productos' })
+      .getByRole('button', { name: 'Importar', exact: true })
+      .click();
+    await expect(page.getByText(/Se actualizaron \d+\./)).toBeVisible();
+
+    // Clients the same way.
+    await page.goto('/es/clients');
+    await page.getByRole('button', { name: 'Importar CSV' }).click();
+    const clients = page.getByRole('dialog', { name: 'Importar clientes' });
+    await look(page, 'import-clients');
+    await clients
+      .getByLabel('Archivo CSV')
+      .setInputFiles(
+        csv(
+          'clientes.csv',
+          `tipo_identificacion;identificacion;nombre;correos\n05;1700000001;María Importada;maria.importada@example.com\n04;${testRuc()};Comercial Importada S.A.;\n`,
+        ),
+      );
+    await clients.getByRole('button', { name: 'Importar', exact: true }).click();
+    await expect(page.getByText('Se crearon 2 clientes.')).toBeVisible();
+    await expect(page.getByRole('table')).toContainText('María Importada');
+  });
+
   test('reads the sales and tax reports and downloads one as a CSV (FR-REP-2)', async ({
     page,
   }) => {
