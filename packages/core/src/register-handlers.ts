@@ -7,6 +7,7 @@ import {
   checkAuthorization,
   emailDocument,
   enqueueReissues,
+  pruneSriRaw,
   reissueDocument,
   sendDocument,
   watchQuota,
@@ -68,6 +69,9 @@ export async function registerHandlers(jobs: Jobs, deps: HandlerDeps): Promise<v
   });
   await jobs.work('quota.watch', async () => {
     await watchQuota(watch);
+  });
+  await jobs.work('retention.prune', async () => {
+    await pruneSriRaw({ db: deps.db, clock, logger });
   });
   await jobs.work('identity.prune', async (job) => {
     const now = () => clock.now();

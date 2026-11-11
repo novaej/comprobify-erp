@@ -37,6 +37,7 @@ export * from './activity';
 export * from './billing';
 export * from './catalog';
 export * from './email-templates';
+export * from './exchanges';
 export * from './jobs';
 
 // The super admin area (ADR-010, FR-ADM-1): platform work outside any tenant. Each

@@ -1008,7 +1008,8 @@
     "reports": "Reportes",
     "importBulkBatch": "Importar facturas de un CSV",
     "adminJobs": "Trabajos",
-    "adminActivity": "Registro de la plataforma"
+    "adminActivity": "Registro de la plataforma",
+    "adminExchanges": "Respuestas del SRI"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -1030,7 +1031,8 @@
     "emails": "Correos",
     "notifications": "Avisos",
     "jobs": "Trabajos",
-    "activity": "Registro"
+    "activity": "Registro",
+    "exchanges": "Respuestas del SRI"
   },
   "catalog": {
     "plansTitle": "Planes",
@@ -3559,7 +3561,8 @@
       "price": "Precios",
       "iva": "IVA",
       "email_template": "Correos",
-      "job": "Trabajos"
+      "job": "Trabajos",
+      "document": "Soporte"
     },
     "table": {
       "when": "Cuándo",
@@ -3594,7 +3597,51 @@
       "email_template_drafted": "Guardó el borrador de un correo",
       "email_template_published": "Publicó un correo",
       "email_template_discarded": "Descartó el borrador de un correo",
-      "email_template_test_sent": "Envió una prueba de un correo"
+      "email_template_test_sent": "Envió una prueba de un correo",
+      "document_exchanges_viewed": "Consultó las respuestas del SRI de un comprobante"
     }
+  },
+  "adminExchanges": {
+    "title": "Respuestas del SRI",
+    "description": "Lo que el SRI contestó a cada llamada por un comprobante, para dar soporte. Se busca por la clave de acceso, en cualquier empresa. Cada consulta queda en el registro de la plataforma.",
+    "search": "Clave de acceso (49 dígitos)",
+    "searchButton": "Buscar",
+    "invalid": "La clave de acceso tiene 49 dígitos.",
+    "startTitle": "Busca un comprobante",
+    "start": "Pega la clave de acceso para ver todo lo que se le pidió al SRI y lo que contestó.",
+    "notFoundTitle": "No se encontró",
+    "notFound": "Ningún comprobante tiene esa clave de acceso, ni la tuvo antes de una corrección o reemisión.",
+    "document": "Comprobante",
+    "status": "Estado",
+    "issued": "Emisión",
+    "environment": "Ambiente",
+    "test": "Pruebas",
+    "noExchangesTitle": "Sin llamadas",
+    "noExchanges": "Todavía no se le pidió nada al SRI por este comprobante.",
+    "table": {
+      "label": "Llamadas al SRI",
+      "when": "Cuándo",
+      "call": "Llamada",
+      "answer": "Respuesta"
+    },
+    "operations": {
+      "reception": "Recepción",
+      "authorization": "Autorización",
+      "validity": "Consulta de validez"
+    },
+    "outcomes": {
+      "RECEIVED": "Recibido",
+      "RETURNED": "Devuelto",
+      "AUTHORIZED": "Autorizado",
+      "NOT_AUTHORIZED": "No autorizado",
+      "PENDING": "Pendiente",
+      "PENDING_VOID": "Anulación pendiente",
+      "VOIDED": "Anulado",
+      "NOT_FOUND": "No encontrado",
+      "TRANSPORT_ERROR": "Error de conexión"
+    },
+    "raw": "Ver la respuesta completa",
+    "rawCut": "Se muestran los primeros {count} caracteres.",
+    "rawCleared": "La respuesta completa se eliminó pasados {days} días; queda este resumen."
   }
 }

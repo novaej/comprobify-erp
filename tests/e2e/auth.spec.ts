@@ -105,6 +105,26 @@ async function setSuperAdmin(userEmail: string): Promise<void> {
   }
 }
 
+// The access key of a document SRI authorized in the database under test, for a support lookup.
+async function anAuthorizedAccessKey(): Promise<string> {
+  const silent = { debug() {}, info() {}, warn() {}, error() {}, child: () => silent };
+  const db = createDatabase({ connectionString: process.env.DATABASE_URL!, logger: silent });
+  try {
+    const { rows } = await db.withSystem('e2e: find an authorized document', ({ executeSql }) =>
+      executeSql<{ access_key: string }>(
+        `SELECT d.access_key FROM documents d
+         WHERE d.status = 'AUTHORIZED'
+           AND EXISTS (SELECT 1 FROM sri_exchanges e WHERE e.document_id = d.id)
+         LIMIT 1`,
+      ),
+    );
+    if (!rows[0]) throw new Error('No authorized document with exchanges');
+    return rows[0].access_key;
+  } finally {
+    await db.close();
+  }
+}
+
 // What the worker does, run here against the mock SRI: the app Playwright starts has no
 // worker. On the stack the worker may get there first; the handlers don't mind.
 async function runSri(
@@ -2004,6 +2024,17 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page.getByRole('table', { name: 'Colas' })).toContainText('sri.send');
     await expect(page.getByRole('heading', { name: 'Trabajos fallidos' })).toBeVisible();
     await look(page, 'admin-jobs');
+
+    // FR-DOC-13: what SRI answered for one document, found by its access key.
+    await page.goto('/es/admin/exchanges');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Respuestas del SRI');
+    await look(page, 'admin-exchanges-start');
+    await page.goto(`/es/admin/exchanges?q=${await anAuthorizedAccessKey()}`);
+    await expect(page.getByRole('table', { name: 'Llamadas al SRI' })).toContainText('Recepción');
+    await expect(page.getByRole('table', { name: 'Llamadas al SRI' })).toContainText(
+      'Autorización',
+    );
+    await look(page, 'admin-exchanges');
     await page.goto('/es/admin');
     await page.getByRole('searchbox', { name: 'Buscar por RUC o nombre' }).fill(companyRuc);
     await page.getByRole('button', { name: 'Buscar' }).click();

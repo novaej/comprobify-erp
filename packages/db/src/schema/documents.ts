@@ -392,6 +392,10 @@ export const sriExchanges = pgTable(
       foreignColumns: [documents.tenantId, documents.id],
     }),
     index('sri_exchanges_document_idx').on(table.documentId, table.occurredAt),
+    // What the retention job scans: the raw copies still held, oldest first.
+    index('sri_exchanges_raw_idx')
+      .on(table.occurredAt)
+      .where(sql`raw IS NOT NULL`),
     check('sri_exchanges_operation_check', oneOf('operation', SRI_OPERATIONS)),
     check('sri_exchanges_outcome_check', oneOf('outcome', SRI_EXCHANGE_OUTCOMES)),
     check('sri_exchanges_source_check', oneOf('source', SRI_SOURCES)),

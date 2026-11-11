@@ -9,7 +9,15 @@ import type { PlatformActor } from '../kernel';
 export const ACTIVITY_PAGE_SIZE = 25;
 
 // The first part of an action's name, which groups them for a filter.
-export const ACTIVITY_GROUPS = ['module', 'plan', 'price', 'iva', 'email_template', 'job'] as const;
+export const ACTIVITY_GROUPS = [
+  'module',
+  'plan',
+  'price',
+  'iva',
+  'email_template',
+  'job',
+  'document',
+] as const;
 export type ActivityGroup = (typeof ACTIVITY_GROUPS)[number];
 
 export type PlatformActivity = {

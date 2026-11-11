@@ -142,6 +142,12 @@ export const queues = {
     options: { policy: 'short', retryLimit: 1, expireInSeconds: 240 },
     concurrency: 1,
   },
+  // FR-DOC-13: the raw SRI answers past their retention, cleared once a night.
+  'retention.prune': {
+    payload: z.object({}),
+    options: { policy: 'short', retryLimit: 1, expireInSeconds: 900 },
+    concurrency: 1,
+  },
   'identity.prune': {
     payload: z.object({}),
     options: { retryLimit: 2, expireInSeconds: 300 },
@@ -163,6 +169,7 @@ export const schedules: readonly {
 }[] = [
   { queue: 'system.heartbeat', cron: '*/5 * * * *', tz: JOB_TIME_ZONE, data: {} },
   { queue: 'identity.prune', cron: '15 3 * * *', tz: JOB_TIME_ZONE, data: {} },
+  { queue: 'retention.prune', cron: '30 3 * * *', tz: JOB_TIME_ZONE, data: {} },
   // Quiet hours in Quito, after the day's receipts and adjustments.
   { queue: 'inventory.verify', cron: '45 2 * * *', tz: JOB_TIME_ZONE, data: {} },
   { queue: 'bulk.complete', cron: '* * * * *', tz: JOB_TIME_ZONE, data: {} },

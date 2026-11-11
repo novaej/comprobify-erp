@@ -9,6 +9,7 @@ import {
   Blocks,
   Cog,
   CreditCard,
+  FileSearch,
   Building2,
   ListOrdered,
   Mail,
@@ -36,6 +37,7 @@ type AdminItem = {
     | 'companies'
     | 'queue'
     | 'jobs'
+    | 'exchanges'
     | 'payments'
     | 'invoicing'
     | 'cards'
@@ -57,6 +59,12 @@ const GROUPS: { group: 'operate' | 'catalog'; items: AdminItem[] }[] = [
       { href: '/admin', icon: Building2, labelKey: 'companies', section: '/admin/companies' },
       { href: '/admin/queue', icon: ListOrdered, labelKey: 'queue', section: '/admin/queue' },
       { href: '/admin/jobs', icon: Cog, labelKey: 'jobs', section: '/admin/jobs' },
+      {
+        href: '/admin/exchanges',
+        icon: FileSearch,
+        labelKey: 'exchanges',
+        section: '/admin/exchanges',
+      },
       { href: '/admin/payments', icon: Banknote, labelKey: 'payments', section: '/admin/payments' },
       {
         href: '/admin/invoicing',

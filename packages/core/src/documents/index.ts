@@ -128,3 +128,5 @@ export type {
 } from './figures';
 export type { QuotaUsage } from './compose';
 export { QUOTA_WARNING_PERCENT, watchQuota } from './quota-watch';
+export { documentForSupport, PRUNE_BATCH, pruneSriRaw } from './exchanges-support';
+export type { SupportDocument, SupportExchange } from './exchanges-support';

@@ -470,6 +470,13 @@
       "when": 1794432206394,
       "tag": "0066_invoice_waived",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1794434886676,
+      "tag": "0067_sri_raw_retention",
+      "breakpoints": true
     }
   ]
 }

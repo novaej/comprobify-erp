@@ -1008,7 +1008,8 @@
     "reports": "Reports",
     "importBulkBatch": "Import invoices from a CSV",
     "adminJobs": "Jobs",
-    "adminActivity": "Platform log"
+    "adminActivity": "Platform log",
+    "adminExchanges": "SRI answers"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -1030,7 +1031,8 @@
     "emails": "Emails",
     "notifications": "Notices",
     "jobs": "Jobs",
-    "activity": "Log"
+    "activity": "Log",
+    "exchanges": "SRI answers"
   },
   "catalog": {
     "plansTitle": "Plans",
@@ -3559,7 +3561,8 @@
       "price": "Prices",
       "iva": "IVA",
       "email_template": "Emails",
-      "job": "Jobs"
+      "job": "Jobs",
+      "document": "Support"
     },
     "table": {
       "when": "When",
@@ -3594,7 +3597,51 @@
       "email_template_drafted": "Saved an email draft",
       "email_template_published": "Published an email",
       "email_template_discarded": "Discarded an email draft",
-      "email_template_test_sent": "Sent an email test"
+      "email_template_test_sent": "Sent an email test",
+      "document_exchanges_viewed": "Looked up the SRI answers of a document"
     }
+  },
+  "adminExchanges": {
+    "title": "SRI answers",
+    "description": "What SRI answered to each call for a document, for support. Search by access key, in any company. Every lookup is recorded in the platform log.",
+    "search": "Access key (49 digits)",
+    "searchButton": "Search",
+    "invalid": "An access key has 49 digits.",
+    "startTitle": "Look up a document",
+    "start": "Paste the access key to see everything SRI was asked and what it answered.",
+    "notFoundTitle": "Not found",
+    "notFound": "No document has that access key, nor had it before a correction or re-issue.",
+    "document": "Document",
+    "status": "Status",
+    "issued": "Issued",
+    "environment": "Environment",
+    "test": "Test",
+    "noExchangesTitle": "No calls",
+    "noExchanges": "SRI has not been asked anything for this document yet.",
+    "table": {
+      "label": "Calls to SRI",
+      "when": "When",
+      "call": "Call",
+      "answer": "Answer"
+    },
+    "operations": {
+      "reception": "Reception",
+      "authorization": "Authorization",
+      "validity": "Validity check"
+    },
+    "outcomes": {
+      "RECEIVED": "Received",
+      "RETURNED": "Returned",
+      "AUTHORIZED": "Authorized",
+      "NOT_AUTHORIZED": "Not authorized",
+      "PENDING": "Pending",
+      "PENDING_VOID": "Void pending",
+      "VOIDED": "Voided",
+      "NOT_FOUND": "Not found",
+      "TRANSPORT_ERROR": "Connection error"
+    },
+    "raw": "View the full answer",
+    "rawCut": "The first {count} characters are shown.",
+    "rawCleared": "The full answer was removed after {days} days; this summary remains."
   }
 }
