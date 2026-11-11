@@ -37,6 +37,11 @@ export const NOTIFICATION_TYPES = [
   'DOCUMENT_REISSUED',
   'DOCUMENTS_AUTHORIZED',
   'BATCH_COMPLETED',
+  // The signing certificate running out, and the document quota filling up (FR-NOT-2).
+  'CERTIFICATE_EXPIRING',
+  'CERTIFICATE_EXPIRED',
+  'QUOTA_NEARING',
+  'QUOTA_REACHED',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 

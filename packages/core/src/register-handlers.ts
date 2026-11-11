@@ -9,13 +9,14 @@ import {
   enqueueReissues,
   reissueDocument,
   sendDocument,
+  watchQuota,
 } from './documents';
 import { completeBatches, feedBatches, processItem } from './bulk';
 import { loadCopy, sendEmailHandler, type EmailProvider } from './email';
 import { createRateLimiter, pruneIdentityTables } from './identity';
 import { verifyStockLevels } from './inventory';
 import { heartbeatHandler, type Jobs } from './jobs';
-import { deliverNotificationEvent } from './notifications';
+import { deliverNotificationEvent, watchCertificates } from './notifications';
 import { sendPurchaseOrderEmail } from './purchasing';
 import type { KeyCipher } from './certificates';
 import type { IssueDeps } from './documents';
@@ -53,6 +54,18 @@ export async function registerHandlers(jobs: Jobs, deps: HandlerDeps): Promise<v
       job.data,
     ),
   );
+  const watch = {
+    db: deps.db,
+    notice: { jobs, appUrl: deps.billing.appUrl },
+    clock,
+    logger,
+  };
+  await jobs.work('certificates.watch', async () => {
+    await watchCertificates(watch);
+  });
+  await jobs.work('quota.watch', async () => {
+    await watchQuota(watch);
+  });
   await jobs.work('identity.prune', async (job) => {
     const now = () => clock.now();
     const pruned = await pruneIdentityTables(identityDb, createRateLimiter(identityDb, now), now());

@@ -106,3 +106,4 @@ export {
 export type { DocumentTemplate, TemplateContent } from './templates';
 export { quotaUsage } from './compose';
 export type { QuotaUsage } from './compose';
+export { QUOTA_WARNING_PERCENT, watchQuota } from './quota-watch';

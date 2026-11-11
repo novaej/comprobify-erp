@@ -3036,6 +3036,26 @@
         "label": "Lote terminado",
         "title": "Terminó un lote de facturas",
         "body": "Las {count} facturas del lote ya tienen respuesta del SRI."
+      },
+      "CERTIFICATE_EXPIRING": {
+        "label": "Firma por vencer",
+        "title": "Tu firma electrónica vence pronto",
+        "body": "El certificado vence el {date}, {count, plural, one {en # día} other {en # días}}. Sube el renovado antes de esa fecha."
+      },
+      "CERTIFICATE_EXPIRED": {
+        "label": "Firma vencida",
+        "title": "Tu firma electrónica venció",
+        "body": "El certificado venció el {date}. No se pueden emitir documentos hasta subir el renovado."
+      },
+      "QUOTA_NEARING": {
+        "label": "Documentos al 80 %",
+        "title": "Se acerca el límite de documentos",
+        "body": "Usaste el 80 % de los {count} documentos de este período."
+      },
+      "QUOTA_REACHED": {
+        "label": "Límite de documentos",
+        "title": "Llegaste al límite de documentos",
+        "body": "Usaste los {count} documentos de este período. Se gastan los de tus paquetes y, sin ellos, no podrás emitir."
       }
     }
   },
@@ -3125,6 +3145,22 @@
       "batchCompleted": {
         "name": "Lote terminado",
         "use": "Cuando todas las facturas de un lote tienen respuesta."
+      },
+      "certificateExpiring": {
+        "name": "Firma por vencer",
+        "use": "Cuando el certificado vence en 30, 15 y 7 días."
+      },
+      "certificateExpired": {
+        "name": "Firma vencida",
+        "use": "Cuando el certificado venció."
+      },
+      "quotaNearing": {
+        "name": "Documentos al 80 %",
+        "use": "Cuando se usa el 80 % de los documentos del período."
+      },
+      "quotaReached": {
+        "name": "Límite de documentos",
+        "use": "Cuando se usa todo el cupo de documentos del período."
       }
     },
     "editor": {

@@ -125,6 +125,17 @@ export const queues = {
     options: { retryLimit: 5, retryDelay: 30, retryBackoff: true, expireInSeconds: 120 },
     concurrency: 5,
   },
+  // FR-NOT-2: the certificate reminders, once a day, and the document quota warnings.
+  'certificates.watch': {
+    payload: z.object({}),
+    options: { policy: 'short', retryLimit: 2, retryDelay: 300, expireInSeconds: 300 },
+    concurrency: 1,
+  },
+  'quota.watch': {
+    payload: z.object({}),
+    options: { policy: 'short', retryLimit: 1, expireInSeconds: 240 },
+    concurrency: 1,
+  },
   'identity.prune': {
     payload: z.object({}),
     options: { retryLimit: 2, expireInSeconds: 300 },
@@ -157,4 +168,7 @@ export const schedules: readonly {
   // Early morning in Quito, so the day's emails arrive before work starts.
   { queue: 'billing.daily', cron: '0 6 * * *', tz: JOB_TIME_ZONE, data: {} },
   { queue: 'payphone.reconcile', cron: '*/5 * * * *', tz: JOB_TIME_ZONE, data: {} },
+  // Morning in Quito, with the day's other emails.
+  { queue: 'certificates.watch', cron: '0 7 * * *', tz: JOB_TIME_ZONE, data: {} },
+  { queue: 'quota.watch', cron: '*/15 * * * *', tz: JOB_TIME_ZONE, data: {} },
 ];

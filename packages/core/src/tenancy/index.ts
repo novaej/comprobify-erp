@@ -3,7 +3,12 @@ export type { CompanyRow } from './admin-reads';
 export { chooseActiveOrganization } from './active';
 export type { ActiveOrganization } from './active';
 export { ambienteFor } from './ambiente';
-export { certificateStatus, CERTIFICATE_WARNING_DAYS } from './certificate-status';
+export {
+  activeCertificateExpiries,
+  activeCompanyIds,
+  certificateStatus,
+  CERTIFICATE_WARNING_DAYS,
+} from './certificate-status';
 export type { CertificateStatus } from './certificate-status';
 export type { Ambiente, AppEnv } from './ambiente';
 export {

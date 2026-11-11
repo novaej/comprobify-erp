@@ -33,6 +33,10 @@ export const EMAIL_TEMPLATES = [
   'documentSendFailed',
   'documentOverdue',
   'batchCompleted',
+  'certificateExpiring',
+  'certificateExpired',
+  'quotaNearing',
+  'quotaReached',
 ] as const;
 export type EmailTemplateKey = (typeof EMAIL_TEMPLATES)[number];
 

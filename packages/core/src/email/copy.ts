@@ -119,6 +119,34 @@ export const DEFAULT_COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       button: 'Ver el lote',
       footer: '',
     },
+    certificateExpiring: {
+      subject: 'La firma electrónica de {organization} vence en {count} días',
+      heading: 'Tu firma electrónica vence pronto',
+      body: 'El certificado de {organization} vence el {date}, en {count} días. Después de esa fecha no podrás emitir documentos: sube el certificado renovado antes.',
+      button: 'Subir el certificado',
+      footer: '',
+    },
+    certificateExpired: {
+      subject: 'La firma electrónica de {organization} venció',
+      heading: 'Tu firma electrónica venció',
+      body: 'El certificado de {organization} venció el {date} y ya no se pueden emitir documentos. Sube el certificado renovado para volver a facturar.',
+      button: 'Subir el certificado',
+      footer: '',
+    },
+    quotaNearing: {
+      subject: '{organization} va por el 80 % de sus documentos',
+      heading: 'Se acerca el límite de documentos',
+      body: 'Ya usaste el 80 % de los {count} documentos de este período. Al llegar al límite se gastan los documentos de tus paquetes y, si no quedan, no podrás emitir.',
+      button: 'Ver el plan',
+      footer: '',
+    },
+    quotaReached: {
+      subject: '{organization} llegó al límite de documentos',
+      heading: 'Llegaste al límite de documentos',
+      body: 'Ya usaste los {count} documentos de este período. Desde ahora se gastan los de tus paquetes y, si no quedan, no podrás emitir hasta el siguiente período. Compra un paquete o cambia de plan.',
+      button: 'Ver el plan',
+      footer: '',
+    },
   },
   en: {
     verifyEmail: {
@@ -226,6 +254,34 @@ export const DEFAULT_COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       button: 'View the batch',
       footer: '',
     },
+    certificateExpiring: {
+      subject: 'The electronic signature of {organization} expires in {count} days',
+      heading: 'Your electronic signature expires soon',
+      body: 'The certificate of {organization} expires on {date}, in {count} days. After that you will not be able to issue documents: upload the renewed certificate before then.',
+      button: 'Upload the certificate',
+      footer: '',
+    },
+    certificateExpired: {
+      subject: 'The electronic signature of {organization} has expired',
+      heading: 'Your electronic signature has expired',
+      body: 'The certificate of {organization} expired on {date} and documents can no longer be issued. Upload the renewed certificate to invoice again.',
+      button: 'Upload the certificate',
+      footer: '',
+    },
+    quotaNearing: {
+      subject: '{organization} has used 80 % of its documents',
+      heading: 'You are nearing the document limit',
+      body: 'You have used 80 % of the {count} documents of this period. At the limit, documents from your packs are spent and, if none are left, you will not be able to issue.',
+      button: 'View the plan',
+      footer: '',
+    },
+    quotaReached: {
+      subject: '{organization} has reached its document limit',
+      heading: 'You have reached the document limit',
+      body: 'You have used all {count} documents of this period. From now on those in your packs are spent and, if none are left, you will not be able to issue until the next period. Buy a pack or change plan.',
+      button: 'View the plan',
+      footer: '',
+    },
   },
 };
 
@@ -257,6 +313,13 @@ export const TEMPLATE_PLACEHOLDERS: Record<
   documentSendFailed: { allowed: ['organization', 'number'], required: ['number'] },
   documentOverdue: { allowed: ['organization', 'number'], required: ['number'] },
   batchCompleted: { allowed: ['organization', 'count'], required: ['count'] },
+  certificateExpiring: {
+    allowed: ['organization', 'date', 'count'],
+    required: ['date', 'count'],
+  },
+  certificateExpired: { allowed: ['organization', 'date'], required: ['date'] },
+  quotaNearing: { allowed: ['organization', 'count'], required: ['count'] },
+  quotaReached: { allowed: ['organization', 'count'], required: ['count'] },
 };
 
 export const copyInput = z.object({

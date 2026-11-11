@@ -65,3 +65,10 @@ SRI's answers, the overdue sweep and a batch closing happen in the worker, in a 
 - **Authorizations are grouped.** `DOCUMENTS_AUTHORIZED` has no key: an event inside 60 seconds of a notice's creation adds one to its `count` (one `UPDATE`, under an advisory lock per company and type), and a later one opens a new notice. It is in the app only and off by default, so no row exists until a member turns it on.
 - **What fires.** `DOCUMENT_REJECTED` when SRI returns or does not authorize a document (code 45 included); `DOCUMENT_SEND_FAILED` only after the deadline check leaves a document unsent, not on each retry; `DOCUMENT_OVERDUE` once per document after 24 hours; `DOCUMENT_REISSUED` when it is re-issued; `BATCH_COMPLETED` when the batch closes.
 
+## Addendum: warnings found by a sweep (2026-11-10)
+
+Two warnings come from what a company's data has become, not from an event, so a schedule finds them and calls `notify` itself, in system context, for the real company.
+
+- **Certificate** (`certificates.watch`, daily 07:00 Quito). `CERTIFICATE_EXPIRING` at 30, 15 and 7 days before the active certificate ends, and `CERTIFICATE_EXPIRED` once it has. The audience holds `organization.manage`. Only the closest step is told, so a run after a gap sends one notice, not three.
+- **Quota** (`quota.watch`, every 15 minutes). `QUOTA_NEARING` at 80 % of the period's documents and `QUOTA_REACHED` at 100 %, counted over the subscription's quota window (ADR-028). The audience holds `billing.manage`. Counting on a schedule instead of in `consumeQuota` keeps the issuing path free of notice code, at the price of a delay of up to 15 minutes.
+- **Told once.** The `dedupeKey` is the certificate id plus the step (`certificate:<id>:30`), or the window start plus the percentage (`quota:<start>:80`), so a repeated run writes nothing and a new certificate or period starts again. Only real, active companies are looked at: a test copy tells no one.

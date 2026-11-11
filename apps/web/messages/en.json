@@ -3036,6 +3036,26 @@
         "label": "Batch finished",
         "title": "A batch of invoices finished",
         "body": "All {count} invoices in the batch have SRI's answer."
+      },
+      "CERTIFICATE_EXPIRING": {
+        "label": "Certificate expiring",
+        "title": "Your electronic signature expires soon",
+        "body": "The certificate expires on {date}, {count, plural, one {in # day} other {in # days}}. Upload the renewed one before then."
+      },
+      "CERTIFICATE_EXPIRED": {
+        "label": "Certificate expired",
+        "title": "Your electronic signature has expired",
+        "body": "The certificate expired on {date}. Documents cannot be issued until the renewed one is uploaded."
+      },
+      "QUOTA_NEARING": {
+        "label": "Documents at 80 %",
+        "title": "You are nearing the document limit",
+        "body": "You have used 80 % of the {count} documents of this period."
+      },
+      "QUOTA_REACHED": {
+        "label": "Document limit reached",
+        "title": "You have reached the document limit",
+        "body": "You have used all {count} documents of this period. Those in your packs are spent and, without them, you will not be able to issue."
       }
     }
   },
@@ -3125,6 +3145,22 @@
       "batchCompleted": {
         "name": "Batch finished",
         "use": "When every invoice of a batch has its answer."
+      },
+      "certificateExpiring": {
+        "name": "Certificate expiring",
+        "use": "When the certificate expires in 30, 15 and 7 days."
+      },
+      "certificateExpired": {
+        "name": "Certificate expired",
+        "use": "When the certificate has expired."
+      },
+      "quotaNearing": {
+        "name": "Documents at 80 %",
+        "use": "When 80 % of the period’s documents are used."
+      },
+      "quotaReached": {
+        "name": "Document limit reached",
+        "use": "When all the period’s documents are used."
       }
     },
     "editor": {

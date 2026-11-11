@@ -78,20 +78,22 @@ export const issued = (
 // FR-BILL-7 (ADR-028): the quota counts the documents made in the subscription's quota window,
 // which a yearly period fills with twelve months of it. The twin and a company still in test
 // never use quota (FR-ONB-6a). Past it, each document spends one from a pack (billing).
-async function quotaIn(ctx: ActorContext, tx: Tx) {
-  const monthly = limitOf(ctx.entitlements, QUOTA_FEATURE);
-  const { window } = await subscriptionState(tx.db, ctx.tenantId, ctx.clock.now());
+export async function quotaFor(tx: Tx, tenantId: string, monthly: number | null, now: Date) {
+  const { window } = await subscriptionState(tx.db, tenantId, now);
   const [row] = await tx.db
     .select({ used: sql<number>`count(*)::int` })
     .from(schema.documents)
     .where(
       and(
-        eq(schema.documents.tenantId, ctx.tenantId),
+        eq(schema.documents.tenantId, tenantId),
         gte(schema.documents.createdAt, startOfEcuadorDay(window.start)),
       ),
     );
   return { used: row!.used, limit: monthly === null ? null : monthly * window.months, window };
 }
+
+const quotaIn = (ctx: ActorContext, tx: Tx) =>
+  quotaFor(tx, ctx.tenantId, limitOf(ctx.entitlements, QUOTA_FEATURE), ctx.clock.now());
 
 export async function consumeQuota(ctx: ActorContext, tx: Tx) {
   if (ctx.tenantMode !== 'PRODUCTION') return;

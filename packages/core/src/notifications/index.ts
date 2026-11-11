@@ -19,3 +19,5 @@ export type { NotificationView, PreferenceRow } from './queries';
 // For the screens: the names, from the schema (a client file never imports core).
 export { NOTIFICATION_CHANNELS, NOTIFICATION_TYPES } from '@comprobify/db';
 export type { NotificationChannel, NotificationType } from '@comprobify/db';
+export { CERTIFICATE_REMINDER_DAYS, watchCertificates } from './watch';
+export type { WatchDeps } from './watch';

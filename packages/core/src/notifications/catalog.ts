@@ -41,6 +41,21 @@ const documents = (emailTemplate: EmailTemplate, link = '/documents'): Notificat
 });
 
 // In the app only: a log of what went well, not worth an email.
+// A company-level warning about something that stops it issuing: both channels, to whoever
+// manages the company.
+const warning = (
+  emailTemplate: EmailTemplate,
+  audience: NotificationSpec['audience'],
+  link: string,
+): NotificationSpec => ({
+  channels: BOTH,
+  defaults: BOTH,
+  mandatory: false,
+  audience,
+  emailTemplate,
+  link,
+});
+
 const inAppOnly = (
   defaults: NotificationSpec['defaults'],
   audience: NotificationSpec['audience'],
@@ -71,6 +86,10 @@ export const NOTIFICATIONS: Record<NotificationType, NotificationSpec> = {
   // hundreds a day would drown in them).
   DOCUMENTS_AUTHORIZED: inAppOnly([], 'documents.read'),
   BATCH_COMPLETED: documents('batchCompleted', '/bulk-invoicing'),
+  CERTIFICATE_EXPIRING: warning('certificateExpiring', 'organization.manage', '/settings'),
+  CERTIFICATE_EXPIRED: warning('certificateExpired', 'organization.manage', '/settings'),
+  QUOTA_NEARING: warning('quotaNearing', 'billing.manage', '/plan'),
+  QUOTA_REACHED: warning('quotaReached', 'billing.manage', '/plan'),
 };
 
 export type Catalogue = Record<NotificationType, NotificationSpec>;
