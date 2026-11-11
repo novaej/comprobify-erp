@@ -134,7 +134,9 @@ export default async function BatchPage({
                   {item.position}
                 </StackCell>
                 <StackCell label={t('detail.order')} className="tabular-nums">
-                  {item.saleOrderId && item.saleOrderNumber ? (
+                  {item.reference ? (
+                    <span className="break-all">{item.reference}</span>
+                  ) : item.saleOrderId && item.saleOrderNumber ? (
                     <Link href={`/sale-orders/${item.saleOrderId}`} className="hover:underline">
                       {`PV-${String(item.saleOrderNumber).padStart(6, '0')}`}
                     </Link>

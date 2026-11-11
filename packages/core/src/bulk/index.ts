@@ -7,6 +7,8 @@ export {
   startOrderBatchInput,
 } from './batches';
 export type { BatchCounts, BatchItemRow, BatchRow, StartOrderBatchInput } from './batches';
+export { CSV_BATCH_MAX_ROWS, startCsvBatch, startCsvBatchInput } from './csv';
+export type { CsvBatchResult, StartCsvBatchInput } from './csv';
 export { completeBatches, processItem } from './process';
 export type { BulkDeps } from './process';
 export { FINAL_DOCUMENT_STATUSES, itemView } from './status';

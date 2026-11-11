@@ -8,6 +8,8 @@ export {
 export type { DocumentStatus } from './status';
 export { takeSequential } from './sequence';
 export { correctInvoice, correctionInput, createInvoice, invoiceInput } from './create-invoice';
+export { csvInvoicePayment, csvInvoiceRow, invoiceFromCsvRow } from './csv-invoice';
+export type { CsvInvoiceRow } from './csv-invoice';
 export {
   correctOrderInvoice,
   invoiceOrderRemainder,

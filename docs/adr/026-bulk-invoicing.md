@@ -43,3 +43,13 @@ The throughput is the room divided by how long an invoice stays in flight: with 
 - Quota is checked per item, so a batch that crosses the limit stops making invoices at the exact item and fails the rest with `QUOTA_EXCEEDED`, which a retry can resume after a pack or a new period.
 - Because the item's SRI status is read from the document, the stack view joins items to documents; the lists are paged.
 - The caps and the feeder's period are tuning knobs: too low and a batch is slow, too high and fairness is lost.
+
+## Addendum: batches from a CSV (2026-11-11)
+
+A CSV file starts a batch of invoices (`startCsvBatch`, `bulk/csv.ts`); the columns and row-numbered problems come from the shared reader (`kernel/csv-table.ts`).
+
+- **One row, one line; one reference, one invoice.** Rows with the same `reference` are the lines of one invoice, in the file's order, so an invoice may carry many products (up to 500). The client is a known identification, the same on every row of a reference; blank is consumidor final. The product is a catalogue code, billed at its catalogue price unless the row has one, with an optional discount in dollars.
+- **Checked whole, then started.** Every row is validated in one read: product and client exist and are active, numbers parse, a discount fits its line, a reference keeps one client, and a consumidor final invoice stays under the limit. One problem and nothing is queued: the result is the list of lines and columns to fix (`CsvProblem`). What only the invoice shows when it is made stays a per-item failure: quota, and SRI's answers.
+- **The item holds the validated row.** `bulk_batch_items.input` keeps the invoice as validated (the product's name, price and rate at that moment), so the batch bills what was checked. `processItem` makes it with `invoiceFromCsvRow` through the same pipeline as a single invoice, the item's id as the idempotency key, in one payment for the total with the batch's method (as for orders).
+- **No Sales module needed.** Starting from a CSV needs `BULK_INVOICING`, the catalogue and `documents.issue`; an order batch still needs `SALE_ORDERS` and `sales.manage`. A plan with the add-on and not Sales therefore uses Bulk invoicing through the CSV, instead of a locked page.
+

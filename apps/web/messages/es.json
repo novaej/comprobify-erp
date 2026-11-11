@@ -1003,7 +1003,8 @@
     "adminEmails": "Correos",
     "adminEmail": "Correo",
     "adminNotifications": "Avisos de la plataforma",
-    "reports": "Reportes"
+    "reports": "Reportes",
+    "importBulkBatch": "Importar facturas de un CSV"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -2734,7 +2735,7 @@
       "completedAt": "terminó el {date}",
       "items": "Facturas de la facturación masiva",
       "position": "N.º",
-      "order": "Pedido",
+      "order": "Pedido o referencia",
       "invoice": "Factura",
       "status": "Estado",
       "reason": "Detalle"
@@ -2785,6 +2786,42 @@
       "description": "Se crea una factura por cada pedido, en segundo plano, y se envía al SRI. Una factura autorizada solo se puede anular después.",
       "detail": "{count, plural, one {1 pedido} other {# pedidos}}",
       "submit": "Facturar {count, plural, one {1 pedido} other {# pedidos}}"
+    },
+    "importCsv": "Importar CSV",
+    "csv": {
+      "title": "Importar facturas de un CSV",
+      "description": "Un archivo con una línea por producto. Las líneas con la misma referencia forman una sola factura, así que una factura puede llevar muchos productos. Se revisa completo antes de empezar: si una línea tiene un problema, no se factura nada y te decimos cuál es.",
+      "formDescription": "Todas las facturas salen del mismo punto de emisión y se pagan de la misma forma, por su total.",
+      "fileTitle": "Qué se factura",
+      "fileDescription": "Columnas obligatorias: referencia, producto (código del catálogo) y cantidad. Opcionales: cliente (su identificación; en blanco es consumidor final), precio (si no, el del catálogo) y descuento en dólares.",
+      "template": "Descargar plantilla",
+      "templateFile": "facturas.csv",
+      "file": "Archivo CSV",
+      "fileHint": "Guárdalo desde Excel como «CSV (delimitado por punto y coma)» o «CSV UTF-8».",
+      "noFile": "Aún no eligió un archivo",
+      "submit": "Revisar y facturar",
+      "problems": "{count, plural, one {Una línea tiene un problema; no se facturó nada.} other {# líneas tienen problemas; no se facturó nada.}}",
+      "line": "Línea {line}:",
+      "field": {
+        "reference": "referencia",
+        "client": "cliente",
+        "product": "producto",
+        "quantity": "cantidad",
+        "unit_price": "precio",
+        "discount": "descuento"
+      },
+      "problem": {
+        "REFERENCE_REQUIRED": "falta la referencia de la factura.",
+        "PRODUCT_NOT_FOUND": "no existe un producto con ese código.",
+        "PRODUCT_INACTIVE": "el producto está inactivo.",
+        "CLIENT_NOT_FOUND": "no existe un cliente con esa identificación.",
+        "CLIENT_INACTIVE": "el cliente está inactivo.",
+        "CLIENT_MISMATCH": "esta referencia ya tiene otro cliente en una línea anterior.",
+        "TOO_MANY_LINES": "una factura admite hasta 500 líneas.",
+        "INVALID_FIELD": "revisa la columna «{field}»: la cantidad debe ser mayor que cero y los números admiten hasta 6 decimales.",
+        "DISCOUNT_TOO_LARGE": "el descuento es mayor que el valor de la línea.",
+        "CONSUMER_FINAL_LIMIT": "la factura a consumidor final supera el máximo permitido: indica un cliente."
+      }
     }
   },
   "bulkInvoicingError": {
@@ -2800,7 +2837,10 @@
     "BATCH_ITEM_INVALID": "El elemento no tiene un pedido de venta.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
     "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
-    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos.",
+    "IMPORT_EMPTY": "El archivo no tiene líneas.",
+    "IMPORT_COLUMNS": "Al archivo le faltan columnas obligatorias: referencia, producto y cantidad. Descarga la plantilla.",
+    "IMPORT_TOO_LARGE": "El archivo es demasiado grande: hasta 10.000 facturas y 2 MB por archivo."
   },
   "adminQueue": {
     "title": "Cola de facturación masiva",

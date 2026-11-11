@@ -2,8 +2,10 @@
 
 import {
   invoiceableOrderIds,
+  isDomainError,
   MAX_BATCH_ITEMS,
   retryFailedItems,
+  startCsvBatch,
   startOrderBatch,
   type StartOrderBatchInput,
 } from '@comprobify/core';
@@ -75,4 +77,46 @@ export async function retryBatchAction(_: ActionState, form: FormData): Promise<
   });
   if (state.done) revalidatePath(`/${locale}`, 'layout');
   return state;
+}
+
+export type CsvBatchState = {
+  error?: string;
+  problems?: { line: number; code: string; field?: string }[];
+};
+
+// FR-BULK-1: a CSV starts a batch of invoices. The file is read in the browser and sent as text;
+// core checks every row first, so a file with a wrong row starts nothing and comes back with the
+// rows to fix.
+export async function startCsvBatchAction(
+  locale: string,
+  input: { content: string; issuePointId: string; method: string; term: string; termUnit: string },
+): Promise<CsvBatchState> {
+  const lang = locale === 'en' ? 'en' : 'es';
+  const { actor } = await loadShell(lang);
+  const { db, issueDeps } = await getRuntime();
+  let id: string | undefined;
+  try {
+    const result = await startCsvBatch(
+      actor,
+      db,
+      {
+        text: input.content,
+        issuePointId: input.issuePointId,
+        payment: {
+          method: input.method as StartOrderBatchInput['payment']['method'],
+          term: input.term.trim() === '' ? null : Number(input.term),
+          termUnit: input.term.trim() === '' ? null : (input.termUnit as 'dias' | 'meses'),
+        },
+      },
+      { jobs: issueDeps.jobs, consumerFinalMaxAmount: issueDeps.consumerFinalMaxAmount },
+    );
+    if (!result.batch) return { problems: result.problems };
+    id = result.batch.id;
+  } catch (error) {
+    if (isDomainError(error)) return { error: error.code };
+    if (error instanceof Error && error.name === 'ZodError') return { error: 'INVALID_INPUT' };
+    throw error;
+  }
+  revalidatePath(`/${lang}`, 'layout');
+  return redirect({ href: `/bulk-invoicing/${id}`, locale: lang });
 }

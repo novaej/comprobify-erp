@@ -189,6 +189,8 @@ export type BatchItemRow = {
   view: ItemView;
   saleOrderId: string | null;
   saleOrderNumber: number | null;
+  // What a CSV file called the invoice; null for a sale-order item.
+  reference: string | null;
   documentId: string | null;
   documentNumber: string | null;
   documentStatus: string | null;
@@ -243,6 +245,10 @@ export async function getBatch(
         view: itemView(item.status, document),
         saleOrderId: item.saleOrderId,
         saleOrderNumber: orderNumber,
+        reference:
+          item.input && typeof item.input === 'object' && 'reference' in item.input
+            ? String(item.input.reference)
+            : null,
         documentId: item.documentId,
         documentNumber: series && sequential ? documentNumber(series, sequential) : null,
         documentStatus: document,

@@ -1003,7 +1003,8 @@
     "adminEmails": "Emails",
     "adminEmail": "Email",
     "adminNotifications": "Platform notices",
-    "reports": "Reports"
+    "reports": "Reports",
+    "importBulkBatch": "Import invoices from a CSV"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -2734,7 +2735,7 @@
       "completedAt": "finished {date}",
       "items": "Invoices of the bulk invoicing",
       "position": "No.",
-      "order": "Order",
+      "order": "Order or reference",
       "invoice": "Invoice",
       "status": "Status",
       "reason": "Detail"
@@ -2785,6 +2786,42 @@
       "description": "One invoice is made for each order, in the background, and sent to SRI. An authorized invoice can only be voided afterwards.",
       "detail": "{count, plural, one {1 order} other {# orders}}",
       "submit": "Invoice {count, plural, one {1 order} other {# orders}}"
+    },
+    "importCsv": "Import CSV",
+    "csv": {
+      "title": "Import invoices from a CSV",
+      "description": "A file with one line per product. Lines with the same reference make one invoice, so an invoice can carry many products. It is checked whole before it starts: if one line has a problem, nothing is invoiced and we tell you which.",
+      "formDescription": "Every invoice is issued from the same issue point and paid the same way, for its total.",
+      "fileTitle": "What to invoice",
+      "fileDescription": "Required columns: reference, product (the catalogue code) and quantity. Optional: client (their identification; blank is consumidor final), price (otherwise the catalogue’s) and a discount in dollars.",
+      "template": "Download template",
+      "templateFile": "invoices.csv",
+      "file": "CSV file",
+      "fileHint": "Save it from Excel as “CSV UTF-8”.",
+      "noFile": "No file chosen yet",
+      "submit": "Check and invoice",
+      "problems": "{count, plural, one {One line has a problem; nothing was invoiced.} other {# lines have problems; nothing was invoiced.}}",
+      "line": "Line {line}:",
+      "field": {
+        "reference": "reference",
+        "client": "client",
+        "product": "product",
+        "quantity": "quantity",
+        "unit_price": "price",
+        "discount": "discount"
+      },
+      "problem": {
+        "REFERENCE_REQUIRED": "the invoice reference is missing.",
+        "PRODUCT_NOT_FOUND": "there is no product with that code.",
+        "PRODUCT_INACTIVE": "the product is inactive.",
+        "CLIENT_NOT_FOUND": "there is no client with that identification.",
+        "CLIENT_INACTIVE": "the client is inactive.",
+        "CLIENT_MISMATCH": "this reference already has another client on an earlier line.",
+        "TOO_MANY_LINES": "an invoice takes up to 500 lines.",
+        "INVALID_FIELD": "check the “{field}” column: the quantity must be more than zero and numbers take up to 6 decimals.",
+        "DISCOUNT_TOO_LARGE": "the discount is more than the line is worth.",
+        "CONSUMER_FINAL_LIMIT": "the consumidor final invoice is over the allowed maximum: name a client."
+      }
     }
   },
   "bulkInvoicingError": {
@@ -2800,7 +2837,10 @@
     "BATCH_ITEM_INVALID": "The item has no sale order.",
     "UNKNOWN": "Something unexpected went wrong. Try again.",
     "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
-    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data.",
+    "IMPORT_EMPTY": "The file has no lines.",
+    "IMPORT_COLUMNS": "The file lacks required columns: reference, product and quantity. Download the template.",
+    "IMPORT_TOO_LARGE": "The file is too large: up to 10,000 invoices and 2 MB per file."
   },
   "adminQueue": {
     "title": "Bulk invoicing queue",

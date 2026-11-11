@@ -1,6 +1,6 @@
 import type { Logger } from '@comprobify/config/logger';
 import { and, eq, schema, type Database } from '@comprobify/db';
-import { invoiceOrderRemainder, type IssueDeps } from '../documents';
+import { invoiceFromCsvRow, invoiceOrderRemainder, type IssueDeps } from '../documents';
 import { isDomainError, type Clock } from '../kernel';
 import type { Jobs } from '../jobs';
 import { announce } from '../notifications';
@@ -66,24 +66,38 @@ export async function processItem(
         .where(eq(items.id, item.id))
         .for('update');
       if (current?.status !== 'CREATING') return;
-      if (!item.saleOrderId)
-        throw new BatchItemError('BATCH_ITEM_INVALID', 'The item names no sale order');
-      const issued = await invoiceOrderRemainder(
-        ctx,
-        tx,
-        {
-          orderId: item.saleOrderId,
-          issuePointId: batch.issuePointId,
-          payment: {
-            method: batch.paymentMethod!,
-            amount: null,
-            term: batch.paymentTerm,
-            termUnit: batch.paymentTermUnit,
-          },
-          idempotencyKey: item.id,
-        },
-        { ...deps.issue, jobs: deps.jobs },
-      );
+      if (!item.saleOrderId && !item.input)
+        throw new BatchItemError('BATCH_ITEM_INVALID', 'The item names no order or row');
+      const payment = {
+        method: batch.paymentMethod!,
+        term: batch.paymentTerm,
+        termUnit: batch.paymentTermUnit,
+      };
+      const issueDeps = { ...deps.issue, jobs: deps.jobs };
+      // A sale-order item names its order; a CSV item carries the row it was validated as.
+      const issued = item.saleOrderId
+        ? await invoiceOrderRemainder(
+            ctx,
+            tx,
+            {
+              orderId: item.saleOrderId,
+              issuePointId: batch.issuePointId,
+              payment: { ...payment, amount: null },
+              idempotencyKey: item.id,
+            },
+            issueDeps,
+          )
+        : await invoiceFromCsvRow(
+            ctx,
+            tx,
+            {
+              row: item.input,
+              issuePointId: batch.issuePointId,
+              payment,
+              idempotencyKey: item.id,
+            },
+            issueDeps,
+          );
       await tx.db
         .update(items)
         .set({ status: 'CREATED', documentId: issued.id })

@@ -1,6 +1,6 @@
 import { hasFeature, listBatches } from '@comprobify/core';
 import { buttonVariants } from '@comprobify/ui/components/button';
-import { ChevronRight, Layers, Plus } from 'lucide-react';
+import { ChevronRight, Layers, Plus, Upload } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { EmptyState } from '@/components/empty-state';
 import { FeatureLocked } from '@/components/feature-locked';
@@ -51,14 +51,30 @@ export default async function BulkInvoicingPage({
     timeZone: 'America/Guayaquil',
   });
   const pages = Math.max(1, Math.ceil(list.total / pageSize));
-  const canStart =
-    actor.permissions.includes('documents.issue') && actor.permissions.includes('sales.manage');
+  // An order batch needs the Sales module; a CSV batch only needs invoicing and the catalogue.
+  const canIssue = actor.permissions.includes('documents.issue');
+  const fromOrders =
+    canIssue && actor.permissions.includes('sales.manage') && hasFeature(actor, 'SALE_ORDERS');
+  const fromCsv = canIssue && hasFeature(actor, 'CATALOG');
   const running = list.rows.some((row) => row.status === 'PROCESSING');
-  const start = canStart && (
-    <Link href="/bulk-invoicing/new" className={buttonVariants({ size: 'sm' })}>
-      <Plus className="mr-1.5 h-4 w-4" aria-hidden />
-      {t('new')}
-    </Link>
+  const start = (fromOrders || fromCsv) && (
+    <>
+      {fromCsv && (
+        <Link
+          href="/bulk-invoicing/import"
+          className={buttonVariants({ size: 'sm', variant: fromOrders ? 'outline' : 'default' })}
+        >
+          <Upload className="mr-1.5 h-4 w-4" aria-hidden />
+          {t('importCsv')}
+        </Link>
+      )}
+      {fromOrders && (
+        <Link href="/bulk-invoicing/new" className={buttonVariants({ size: 'sm' })}>
+          <Plus className="mr-1.5 h-4 w-4" aria-hidden />
+          {t('new')}
+        </Link>
+      )}
+    </>
   );
 
   return (

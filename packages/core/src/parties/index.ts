@@ -4,6 +4,7 @@ import {
   CLIENT_ID_TYPES,
   eq,
   ilike,
+  inArray,
   or,
   schema,
   sql,
@@ -195,4 +196,20 @@ export async function setClientActive(
       .returning({ id: schema.clients.id }),
   );
   if (updated.length === 0) throw new DomainError('NOT_FOUND', 'Client not found');
+}
+
+// The clients a CSV invoice batch names by identification, read in the caller's transaction.
+export async function clientsByIdentification(
+  tx: Tx,
+  identifications: string[],
+): Promise<{ id: string; identification: string; active: boolean }[]> {
+  if (identifications.length === 0) return [];
+  return tx.db
+    .select({
+      id: schema.clients.id,
+      identification: schema.clients.identification,
+      active: schema.clients.active,
+    })
+    .from(schema.clients)
+    .where(inArray(schema.clients.identification, identifications));
 }

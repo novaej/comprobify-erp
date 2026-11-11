@@ -338,3 +338,33 @@ export async function productsForOrder(tx: Tx, ids: string[]): Promise<OrderProd
 }
 export { exportProducts, importProducts, PRODUCT_IMPORT_MAX_ROWS } from './import';
 export type { ProductImportResult } from './import';
+
+// What a CSV invoice batch needs of each product it names: the price and rate to bill and whether
+// it can be sold at all. Read in the caller's transaction.
+export type SellableProduct = {
+  id: string;
+  code: string;
+  auxiliaryCode: string | null;
+  name: string;
+  unit: string | null;
+  price: string;
+  ivaRateCode: string;
+  active: boolean;
+};
+
+export async function productsToSell(tx: Tx, codes: string[]): Promise<SellableProduct[]> {
+  if (codes.length === 0) return [];
+  return tx.db
+    .select({
+      id: schema.products.id,
+      code: schema.products.code,
+      auxiliaryCode: schema.products.auxiliaryCode,
+      name: schema.products.name,
+      unit: schema.products.unit,
+      price: schema.products.price,
+      ivaRateCode: schema.products.ivaRateCode,
+      active: schema.products.active,
+    })
+    .from(schema.products)
+    .where(inArray(schema.products.code, codes));
+}

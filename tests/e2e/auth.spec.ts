@@ -1652,6 +1652,59 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page.getByRole('table')).toContainText('María Importada');
   });
 
+  test('starts a batch of invoices from a CSV, names a wrong row, and follows the batch (FR-BULK-1)', async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    await signIn(page, email, newPassword);
+    await expect(page).toHaveURL(/\/es\/dashboard$/);
+    await page.goto('/es/bulk-invoicing');
+    await page.getByRole('link', { name: 'Importar CSV' }).click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Importar facturas de un CSV');
+    await look(page, 'bulk-import');
+    const csv = (content: string) => ({
+      name: 'facturas.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(content, 'utf8'),
+    });
+
+    // A wrong row: nothing is invoiced, and the row is named.
+    await page
+      .getByLabel('Archivo CSV')
+      .setInputFiles(csv('referencia;cliente;producto;cantidad\nX-1;;IMP-1;1\nX-2;;NO-EXISTE;1\n'));
+    await page.getByRole('button', { name: 'Revisar y facturar' }).click();
+    await expect(page.getByRole('alert').filter({ hasText: 'Línea 3:' })).toContainText(
+      'no existe un producto con ese código',
+    );
+    await look(page, 'bulk-import-problems');
+
+    // A right one: two invoices, one with two products, and the batch page follows them.
+    await page
+      .getByLabel('Archivo CSV')
+      .setInputFiles(
+        csv(
+          'referencia;cliente;producto;cantidad;precio;descuento\nX-1;1700000001;IMP-1;2;;\nX-1;1700000001;IMP-2;1;;\nX-2;;IMP-1;1;3,00;\n',
+        ),
+      );
+    await page.getByRole('button', { name: 'Revisar y facturar' }).click();
+    await expect(page).toHaveURL(/\/es\/bulk-invoicing\/[0-9a-f-]{36}$/);
+    const batchId = page.url().split('/').at(-1)!;
+    await expect(
+      page.getByRole('table', { name: 'Facturas de la facturación masiva' }),
+    ).toContainText('X-2');
+    await look(page, 'bulk-csv-batch');
+
+    // The worker's turn, run here: both invoices are made, with their lines and total.
+    const made = await runBulk(batchId, 'make');
+    expect(made).toHaveLength(2);
+    await page.reload();
+    await expect(
+      page.getByRole('table', { name: 'Facturas de la facturación masiva' }).getByRole('link', {
+        name: /001-001-/,
+      }),
+    ).toHaveCount(2);
+  });
+
   test('reads the sales and tax reports and downloads one as a CSV (FR-REP-2)', async ({
     page,
   }) => {
