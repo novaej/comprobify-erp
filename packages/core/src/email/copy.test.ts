@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_COPY, copyInput, placeholderProblems, TEMPLATE_PLACEHOLDERS } from './copy';
+import { sendEmailPayload } from './index';
 import { pickCopy } from './store';
 import { emailTemplate, renderEmail } from './templates';
 
@@ -104,5 +105,24 @@ describe('rendering a given text', () => {
     );
     expect(message.text.endsWith('https://app.test/x')).toBe(true);
     expect(message.html).not.toContain('font-size:12px');
+  });
+});
+
+// The queue parses a job's payload, and a schema drops what it doesn't list: every word a template
+// may use must survive it, or the email goes out with a blank.
+describe('the email job payload', () => {
+  it('keeps every parameter a template allows', () => {
+    for (const template of emailTemplate.options) {
+      const params = Object.fromEntries(
+        TEMPLATE_PLACEHOLDERS[template].allowed.map((name) => [name, '1']),
+      );
+      const parsed = sendEmailPayload.parse({
+        to: 'a@example.com',
+        locale: 'es',
+        template,
+        params: { url: 'https://app.test/es', ...params },
+      });
+      expect(parsed.params, template).toEqual({ url: 'https://app.test/es', ...params });
+    }
   });
 });

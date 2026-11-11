@@ -28,6 +28,8 @@ export type EmailParams = {
   reason?: string | undefined;
   number?: string | undefined;
   count?: string | undefined;
+  // What a change is about: a plan, a module or a limit, in the reader's language.
+  name?: string | undefined;
 };
 
 const REJECTION_REASONS: Record<EmailLocale, Record<string, string>> = {
@@ -66,6 +68,7 @@ export function renderEmail(
       .replaceAll('{rate}', params.rate ?? '')
       .replaceAll('{number}', params.number ?? '')
       .replaceAll('{count}', params.count ?? '')
+      .replaceAll('{name}', params.name ?? '')
       .replaceAll(
         '{reason}',
         params.reason ? (REJECTION_REASONS[locale][params.reason] ?? params.reason) : '',

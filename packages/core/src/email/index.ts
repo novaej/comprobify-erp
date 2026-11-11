@@ -47,6 +47,9 @@ export const sendEmailPayload = z.object({
     amount: z.string().max(30).optional(),
     rate: z.string().max(10).optional(),
     reason: z.string().max(60).optional(),
+    number: z.string().max(30).optional(),
+    count: z.string().max(10).optional(),
+    name: z.string().max(300).optional(),
   }),
   // Only a test send from the template editor carries its own text: the draft, not yet published.
   copy: copyInput.optional(),

@@ -1,4 +1,4 @@
-import type { Database, Tx } from '@comprobify/db';
+import type { Database, NotificationType, Tx } from '@comprobify/db';
 import { recordPlatformAudit, type PlatformAuditAction } from '../audit';
 import {
   applyAddModuleFeature,
@@ -11,10 +11,15 @@ import {
   applyUpdateModule,
   applyUpdatePlan,
   catalogView,
+  companiesOnPlan,
+  companiesWithModule,
+  LIMIT_NAMES,
   type CatalogView,
+  type FeatureKey,
 } from '../entitlements';
 import { assertSuperAdmin } from '../identity';
-import type { PlatformActor } from '../kernel';
+import { ecuadorDate, type PlatformActor } from '../kernel';
+import { notify, type NotificationParams, type NotifyDeps } from '../notifications';
 
 // FR-ADM-3: the plan and module editors. Each change is one system-context transaction,
 // recorded in the platform's own log; the rules on notice live in entitlements.
@@ -31,13 +36,28 @@ async function edit(
   db: Database,
   reason: string,
   action: PlatformAuditAction,
-  fn: (tx: Tx['db'], now: Date) => Promise<Details>,
+  fn: (tx: Tx['db'], now: Date, full: Tx) => Promise<Details>,
 ): Promise<void> {
   await assertSuperAdmin(db.identity, actor);
-  await db.withSystem(reason, async ({ db: tx }) => {
-    const details = await fn(tx, actor.clock.now());
+  await db.withSystem(reason, async (full) => {
+    const tx = full.db;
+    const details = await fn(tx, actor.clock.now(), full);
     await recordPlatformAudit(tx, { actorUserId: actor.userId, action, details });
   });
+}
+
+// FR-NOT-2, ADR-011: a change dated ahead is told to the companies it reaches, in the same
+// transaction. Nothing is told for one that applies now (a draft plan, a coming-soon module).
+async function tellCompanies(
+  full: Tx,
+  notice: NotifyDeps,
+  now: Date,
+  change: { companies: string[]; type: NotificationType; on: Date; params: NotificationParams },
+) {
+  if (change.on.getTime() <= now.getTime()) return;
+  const params = { ...change.params, date: ecuadorDate(change.on) };
+  for (const tenantId of change.companies)
+    await notify(full, notice, { tenantId, type: change.type, params });
 }
 
 const iso = (date: Date | null) => (date ? date.toISOString() : null);
@@ -76,14 +96,21 @@ export const removeModuleFeature = (
   actor: PlatformActor,
   db: Database,
   input: { moduleKey: string; featureKey: string },
+  notice: NotifyDeps,
 ) =>
   edit(
     actor,
     db,
     'super admin: remove a feature from a module',
     'module.feature_removed',
-    async (tx, now) => {
-      const { removesAt } = await applyRemoveModuleFeature(tx, input, now);
+    async (tx, now, full) => {
+      const { removesAt, module } = await applyRemoveModuleFeature(tx, input, now);
+      await tellCompanies(full, notice, now, {
+        companies: await companiesWithModule(tx, module.id),
+        type: 'PLAN_CONTENT_LEAVING',
+        on: removesAt,
+        params: { name: module.nameEs, nameEn: module.nameEn },
+      });
       return { module: input.moduleKey, feature: input.featureKey, removesAt: iso(removesAt) };
     },
   );
@@ -122,14 +149,21 @@ export const removePlanModule = (
   actor: PlatformActor,
   db: Database,
   input: { planKey: string; moduleKey: string },
+  notice: NotifyDeps,
 ) =>
   edit(
     actor,
     db,
     'super admin: remove a module from a plan',
     'plan.module_removed',
-    async (tx, now) => {
-      const { removesAt } = await applyRemovePlanModule(tx, input, now);
+    async (tx, now, full) => {
+      const { removesAt, plan, module } = await applyRemovePlanModule(tx, input, now);
+      await tellCompanies(full, notice, now, {
+        companies: await companiesOnPlan(tx, plan.id),
+        type: 'PLAN_CONTENT_LEAVING',
+        on: removesAt,
+        params: { name: module.nameEs, nameEn: module.nameEn },
+      });
       return { plan: input.planKey, module: input.moduleKey, removesAt: iso(removesAt) };
     },
   );
@@ -138,8 +172,28 @@ export const setPlanLimit = (
   actor: PlatformActor,
   db: Database,
   input: { planKey: string; featureKey: string; value: number | null },
+  notice: NotifyDeps,
 ) =>
-  edit(actor, db, 'super admin: change a plan limit', 'plan.limit_changed', async (tx, now) => {
-    const { value, from } = await applyPlanLimit(tx, input, now);
-    return { plan: input.planKey, feature: input.featureKey, value, from: iso(from) };
-  });
+  edit(
+    actor,
+    db,
+    'super admin: change a plan limit',
+    'plan.limit_changed',
+    async (tx, now, full) => {
+      const { value, from, planId } = await applyPlanLimit(tx, input, now);
+      const label = LIMIT_NAMES[input.featureKey as FeatureKey];
+      // A lowered limit is dated; a raised one is immediate and needs no notice.
+      if (from && value !== null)
+        await tellCompanies(full, notice, now, {
+          companies: await companiesOnPlan(tx, planId),
+          type: 'PLAN_LIMIT_LOWERING',
+          on: from,
+          params: {
+            name: label?.es ?? input.featureKey,
+            nameEn: label?.en ?? input.featureKey,
+            count: String(value),
+          },
+        });
+      return { plan: input.planKey, feature: input.featureKey, value, from: iso(from) };
+    },
+  );

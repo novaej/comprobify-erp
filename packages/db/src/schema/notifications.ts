@@ -42,6 +42,10 @@ export const NOTIFICATION_TYPES = [
   'CERTIFICATE_EXPIRED',
   'QUOTA_NEARING',
   'QUOTA_REACHED',
+  // What the platform changes under a company, with notice (FR-BILL-6, ADR-011).
+  'PRICE_RISE',
+  'PLAN_CONTENT_LEAVING',
+  'PLAN_LIMIT_LOWERING',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 

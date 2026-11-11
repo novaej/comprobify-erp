@@ -328,6 +328,7 @@ const SAMPLES: Record<EmailLocaleKey, Record<string, string>> = {
     reason: 'AMOUNT_MISMATCH',
     number: '001-001-000000123',
     count: '48',
+    name: 'Compras',
   },
   en: {
     organization: 'Example Company S.A.',
@@ -337,6 +338,7 @@ const SAMPLES: Record<EmailLocaleKey, Record<string, string>> = {
     reason: 'AMOUNT_MISMATCH',
     number: '001-001-000000123',
     count: '48',
+    name: 'Purchasing',
   },
 };
 
@@ -349,6 +351,7 @@ const sampleParams = (locale: EmailLocaleKey, url: string) => ({
   reason: SAMPLES[locale].reason!,
   number: SAMPLES[locale].number!,
   count: SAMPLES[locale].count!,
+  name: SAMPLES[locale].name!,
 });
 
 // What the text editor holds, saved or not: the draft, else the version in use, else the start.

@@ -147,6 +147,27 @@ export const DEFAULT_COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       button: 'Ver el plan',
       footer: '',
     },
+    priceRise: {
+      subject: 'Cambia el precio de {name} para {organization}',
+      heading: 'Cambia un precio de tu suscripción',
+      body: 'El precio de {name} cambia desde el {date}. Hasta esa fecha sigues pagando el precio actual. Revisa el nuevo precio en tu plan.',
+      button: 'Ver el plan',
+      footer: '',
+    },
+    planContentLeaving: {
+      subject: '{name} cambia en el plan de {organization}',
+      heading: 'Cambia lo que incluye tu plan',
+      body: 'Desde el {date}, {name} deja de incluir algunas funciones en tu plan. Hasta entonces todo sigue igual. Si lo necesitas, revisa tus opciones en el plan.',
+      button: 'Ver el plan',
+      footer: '',
+    },
+    planLimitLowering: {
+      subject: 'Baja un límite del plan de {organization}',
+      heading: 'Baja un límite de tu plan',
+      body: 'Desde el {date}, tu plan permite {count} {name}. Hasta entonces el límite sigue igual.',
+      button: 'Ver el plan',
+      footer: '',
+    },
   },
   en: {
     verifyEmail: {
@@ -282,6 +303,27 @@ export const DEFAULT_COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       button: 'View the plan',
       footer: '',
     },
+    priceRise: {
+      subject: 'The price of {name} changes for {organization}',
+      heading: 'A price in your subscription changes',
+      body: 'The price of {name} changes from {date}. Until then you keep paying the current price. See the new price on your plan.',
+      button: 'View the plan',
+      footer: '',
+    },
+    planContentLeaving: {
+      subject: '{name} changes in the plan of {organization}',
+      heading: 'What your plan includes is changing',
+      body: 'From {date}, {name} no longer includes some functions in your plan. Until then everything stays the same. If you need them, look at your options on the plan page.',
+      button: 'View the plan',
+      footer: '',
+    },
+    planLimitLowering: {
+      subject: 'A limit of the plan of {organization} is going down',
+      heading: 'A limit of your plan is going down',
+      body: 'From {date}, your plan allows {count} {name}. Until then the limit stays the same.',
+      button: 'View the plan',
+      footer: '',
+    },
   },
 };
 
@@ -320,6 +362,12 @@ export const TEMPLATE_PLACEHOLDERS: Record<
   certificateExpired: { allowed: ['organization', 'date'], required: ['date'] },
   quotaNearing: { allowed: ['organization', 'count'], required: ['count'] },
   quotaReached: { allowed: ['organization', 'count'], required: ['count'] },
+  priceRise: { allowed: ['organization', 'name', 'date'], required: ['name', 'date'] },
+  planContentLeaving: { allowed: ['organization', 'name', 'date'], required: ['name', 'date'] },
+  planLimitLowering: {
+    allowed: ['organization', 'name', 'date', 'count'],
+    required: ['name', 'date', 'count'],
+  },
 };
 
 export const copyInput = z.object({

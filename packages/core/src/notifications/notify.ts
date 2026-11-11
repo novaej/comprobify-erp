@@ -18,7 +18,10 @@ export type NotifyDeps = { jobs: Pick<Jobs, 'enqueue'>; appUrl: string };
 
 // Plain strings that fill a message. `date` is an ISO date; `amount` is before any currency sign.
 export type NotificationParams = Partial<
-  Record<'date' | 'amount' | 'rate' | 'reason' | 'code' | 'number' | 'count', string>
+  Record<
+    'date' | 'amount' | 'rate' | 'reason' | 'code' | 'number' | 'count' | 'name' | 'nameEn',
+    string
+  >
 >;
 
 const formatDate = (date: string, locale: 'es' | 'en') =>
@@ -148,6 +151,13 @@ export async function notify(
           ...(input.params?.reason ? { reason: input.params.reason } : {}),
           ...(input.params?.number ? { number: input.params.number } : {}),
           ...(input.params?.count ? { count: input.params.count } : {}),
+          // What the change is about, in the member's language (`nameEn` falls back to `name`).
+          ...(input.params?.name
+            ? {
+                name:
+                  locale === 'en' ? (input.params.nameEn ?? input.params.name) : input.params.name,
+              }
+            : {}),
         },
       });
     }

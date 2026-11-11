@@ -41,8 +41,8 @@ async function run(
 }
 async function context(form: FormData) {
   const { actor } = await loadPlatform(localeOf(form));
-  const { db } = await getRuntime();
-  return { actor, db };
+  const { db, notice } = await getRuntime();
+  return { actor, db, notice };
 }
 const names = (form: FormData) => ({ nameEs: text(form, 'nameEs'), nameEn: text(form, 'nameEn') });
 
@@ -77,21 +77,28 @@ export async function addPlanModuleAction(_: ActionState, form: FormData): Promi
 }
 
 export async function removePlanModuleAction(_: ActionState, form: FormData): Promise<ActionState> {
-  return run(form, ({ actor, db }) =>
-    removePlanModule(actor, db, {
-      planKey: text(form, 'planKey'),
-      moduleKey: text(form, 'moduleKey'),
-    }),
+  return run(form, ({ actor, db, notice }) =>
+    removePlanModule(
+      actor,
+      db,
+      { planKey: text(form, 'planKey'), moduleKey: text(form, 'moduleKey') },
+      notice,
+    ),
   );
 }
 
 export async function setPlanLimitAction(_: ActionState, form: FormData): Promise<ActionState> {
-  return run(form, ({ actor, db }) =>
-    setPlanLimit(actor, db, {
-      planKey: text(form, 'planKey'),
-      featureKey: text(form, 'featureKey'),
-      value: limitValue(form),
-    }),
+  return run(form, ({ actor, db, notice }) =>
+    setPlanLimit(
+      actor,
+      db,
+      {
+        planKey: text(form, 'planKey'),
+        featureKey: text(form, 'featureKey'),
+        value: limitValue(form),
+      },
+      notice,
+    ),
   );
 }
 
@@ -124,10 +131,12 @@ export async function removeModuleFeatureAction(
   _: ActionState,
   form: FormData,
 ): Promise<ActionState> {
-  return run(form, ({ actor, db }) =>
-    removeModuleFeature(actor, db, {
-      moduleKey: text(form, 'moduleKey'),
-      featureKey: text(form, 'featureKey'),
-    }),
+  return run(form, ({ actor, db, notice }) =>
+    removeModuleFeature(
+      actor,
+      db,
+      { moduleKey: text(form, 'moduleKey'), featureKey: text(form, 'featureKey') },
+      notice,
+    ),
   );
 }

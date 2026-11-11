@@ -72,3 +72,12 @@ Two warnings come from what a company's data has become, not from an event, so a
 - **Certificate** (`certificates.watch`, daily 07:00 Quito). `CERTIFICATE_EXPIRING` at 30, 15 and 7 days before the active certificate ends, and `CERTIFICATE_EXPIRED` once it has. The audience holds `organization.manage`. Only the closest step is told, so a run after a gap sends one notice, not three.
 - **Quota** (`quota.watch`, every 15 minutes). `QUOTA_NEARING` at 80 % of the period's documents and `QUOTA_REACHED` at 100 %, counted over the subscription's quota window (ADR-028). The audience holds `billing.manage`. Counting on a schedule instead of in `consumeQuota` keeps the issuing path free of notice code, at the price of a delay of up to 15 minutes.
 - **Told once.** The `dedupeKey` is the certificate id plus the step (`certificate:<id>:30`), or the window start plus the percentage (`quota:<start>:80`), so a repeated run writes nothing and a new certificate or period starts again. Only real, active companies are looked at: a test copy tells no one.
+
+## Addendum: notices of a change by the platform (2026-11-11)
+
+A price that rises, a module that loses functions or leaves a plan, and a plan limit that goes down are dated at least `NOTICE_DAYS` ahead (FR-BILL-6, ADR-011). The super admin's action tells the companies it reaches, with `notify` in the same system-context transaction, so a change and its notice stand or fall together.
+
+- `PRICE_RISE` is mandatory (FR-BILL-6 owes the notice, so it can't be switched off). It goes to the real, active, paying companies on the plan or holding the module as an add-on, or to all of them for the seat. A cut, a first price, a pack, or a rise nobody pays yet tells no one.
+- `PLAN_CONTENT_LEAVING` goes to the companies that hold the module through their plan or as an add-on, and `PLAN_LIMIT_LOWERING` to those on the plan, with the new value. Nothing is told for a change that applies at once (a draft plan, a coming-soon module, a limit going up).
+- Notices carry `name` and `nameEn`, so the bell and each member's email name the plan, module or limit in their own language.
+- The `email.send` payload schema drops keys it doesn't list. A unit test now holds it to every word a template may use.

@@ -199,7 +199,7 @@ export async function applyRemoveModuleFeature(
   tx: Tx['db'],
   raw: unknown,
   now: Date,
-): Promise<{ removesAt: Date }> {
+): Promise<{ removesAt: Date; module: typeof schema.modules.$inferSelect }> {
   const input = moduleFeatureInput.parse(raw);
   const module = await moduleByKey(tx, input.moduleKey);
   const removesAt = module.status === 'COMING_SOON' ? now : noticeFrom(now);
@@ -217,7 +217,7 @@ export async function applyRemoveModuleFeature(
     .returning({ key: moduleFeatures.featureKey });
   if (updated.length === 0)
     throw new DomainError('NOT_IN_MODULE', 'The module does not have that feature');
-  return { removesAt };
+  return { removesAt, module };
 }
 
 // A draft, with the base module and the default plan's limits to start from.
@@ -298,7 +298,11 @@ export async function applyRemovePlanModule(
   tx: Tx['db'],
   raw: unknown,
   now: Date,
-): Promise<{ removesAt: Date }> {
+): Promise<{
+  removesAt: Date;
+  plan: typeof schema.plans.$inferSelect;
+  module: typeof schema.modules.$inferSelect;
+}> {
   const input = planModuleInput.parse(raw);
   const plan = await planByKey(tx, input.planKey);
   const module = await moduleByKey(tx, input.moduleKey);
@@ -319,13 +323,13 @@ export async function applyRemovePlanModule(
     .returning({ moduleId: planModules.moduleId });
   if (updated.length === 0)
     throw new DomainError('MODULE_NOT_IN_PLAN', 'The plan does not include that module');
-  return { removesAt };
+  return { removesAt, plan, module };
 }
 
 // null is unlimited, so it is above every number.
 const atLeast = (a: number | null, b: number | null) => a === null || (b !== null && a >= b);
 
-export type LimitChange = { value: number | null; from: Date | null };
+export type LimitChange = { value: number | null; from: Date | null; planId: string };
 
 // Raising a limit is immediate; lowering one on a plan in use is dated, so no company
 // finds itself over its limit overnight. `from` is null when it applies now.
@@ -349,5 +353,41 @@ export async function applyPlanLimit(tx: Tx['db'], raw: unknown, now: Date): Pro
     await tx
       .insert(planLimits)
       .values({ planId: plan.id, featureKey: input.featureKey, ...change });
-  return { value: input.value, from: immediate ? null : change.pendingFrom };
+  return { value: input.value, from: immediate ? null : change.pendingFrom, planId: plan.id };
+}
+
+// Who a change to the catalog reaches (system context): the real, active companies on a plan,
+// and those that hold a module through their plan or as an add-on. A test copy tells no one.
+const realCompany = and(eq(schema.tenants.mode, 'PRODUCTION'), eq(schema.tenants.status, 'ACTIVE'));
+
+export async function companiesOnPlan(tx: Tx['db'], planId: string): Promise<string[]> {
+  const rows = await tx
+    .select({ id: schema.tenants.id })
+    .from(schema.subscriptions)
+    .innerJoin(schema.tenants, eq(schema.tenants.id, schema.subscriptions.tenantId))
+    .where(and(eq(schema.subscriptions.planId, planId), realCompany));
+  return rows.map((row) => row.id);
+}
+
+export async function companiesWithModule(tx: Tx['db'], moduleId: string): Promise<string[]> {
+  const { subscriptions, subscriptionItems, planModules, tenants } = schema;
+  const throughPlan = await tx
+    .select({ id: tenants.id })
+    .from(planModules)
+    .innerJoin(subscriptions, eq(subscriptions.planId, planModules.planId))
+    .innerJoin(tenants, eq(tenants.id, subscriptions.tenantId))
+    .where(and(eq(planModules.moduleId, moduleId), isNull(planModules.removesAt), realCompany));
+  const addOns = await tx
+    .select({ id: tenants.id })
+    .from(subscriptionItems)
+    .innerJoin(tenants, eq(tenants.id, subscriptionItems.tenantId))
+    .where(
+      and(
+        eq(subscriptionItems.kind, 'MODULE'),
+        eq(subscriptionItems.active, true),
+        eq(subscriptionItems.moduleId, moduleId),
+        realCompany,
+      ),
+    );
+  return [...new Set([...throughPlan, ...addOns].map((row) => row.id))];
 }

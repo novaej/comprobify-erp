@@ -3056,6 +3056,21 @@
         "label": "Document limit reached",
         "title": "You have reached the document limit",
         "body": "You have used all {count} documents of this period. Those in your packs are spent and, without them, you will not be able to issue."
+      },
+      "PRICE_RISE": {
+        "label": "Price change",
+        "title": "A price in your subscription changes",
+        "body": "The price of {name} changes from {date}."
+      },
+      "PLAN_CONTENT_LEAVING": {
+        "label": "Plan change",
+        "title": "What your plan includes is changing",
+        "body": "From {date}, {name} no longer includes some functions."
+      },
+      "PLAN_LIMIT_LOWERING": {
+        "label": "Limit going down",
+        "title": "A limit of your plan is going down",
+        "body": "From {date}, your plan allows {count} {name}."
       }
     }
   },
@@ -3161,6 +3176,18 @@
       "quotaReached": {
         "name": "Document limit reached",
         "use": "When all the period’s documents are used."
+      },
+      "priceRise": {
+        "name": "Price change",
+        "use": "When the price of what the company pays rises, with 30 days’ notice."
+      },
+      "planContentLeaving": {
+        "name": "Plan change",
+        "use": "When a module loses functions or leaves a plan, with a date."
+      },
+      "planLimitLowering": {
+        "name": "Limit going down",
+        "use": "When a plan limit goes down, with a date."
       }
     },
     "editor": {

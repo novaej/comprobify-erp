@@ -2,7 +2,7 @@ import { schema, type Database } from '@comprobify/db';
 import { STARTING_MODULES, STARTING_PLANS } from './catalog';
 import { FEATURES, FEATURE_KEYS } from './features';
 
-export { FEATURES, FEATURE_KEYS } from './features';
+export { FEATURES, FEATURE_KEYS, LIMIT_NAMES } from './features';
 export type { BooleanFeature, FeatureKey, FeatureKind, LimitFeature } from './features';
 export { STARTING_MODULES, STARTING_PLANS } from './catalog';
 export type { ModuleKey, ModuleStatus, PlanLimits, PlanStatus } from './catalog';
@@ -45,6 +45,8 @@ export {
   applyUpdateModule,
   applyUpdatePlan,
   catalogView,
+  companiesOnPlan,
+  companiesWithModule,
   MODULE_STATUS_MOVES,
   NOTICE_DAYS,
   PLAN_STATUS_MOVES,

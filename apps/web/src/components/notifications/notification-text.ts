@@ -39,6 +39,7 @@ export function useNotificationText() {
         code: params.code ?? '',
         number: params.number ?? '',
         count: Number(params.count ?? 0),
+        name: (locale === 'en' ? params.nameEn : undefined) ?? params.name ?? '',
         reason: params.reason && tReasons.has(params.reason) ? tReasons(params.reason) : '',
       };
       const key = item.type;

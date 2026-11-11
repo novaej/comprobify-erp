@@ -48,12 +48,14 @@ export async function draftPriceAction(_: ActionState, form: FormData): Promise<
 
 export async function publishPriceAction(_: ActionState, form: FormData): Promise<ActionState> {
   const { actor } = await loadPlatform(localeOf(form));
-  const { db } = await getRuntime();
+  const { db, notice } = await getRuntime();
   return run(form, async () => {
-    await publishPrice(actor, db, {
-      id: text(form, 'id'),
-      effectiveOn: text(form, 'effectiveOn') || null,
-    });
+    await publishPrice(
+      actor,
+      db,
+      { id: text(form, 'id'), effectiveOn: text(form, 'effectiveOn') || null },
+      notice,
+    );
   });
 }
 

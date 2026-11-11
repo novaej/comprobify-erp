@@ -17,7 +17,7 @@ import {
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, superAdmin } from './helpers';
+import { appDatabase, superAdmin, testNotice } from './helpers';
 
 // FR-BILL-6 (ADR-027): prices, their history, and the notice a rise owes paying companies.
 describe('prices', () => {
@@ -161,12 +161,19 @@ describe('prices', () => {
     // A draft reaches nobody.
     expect(await planPrice(today)).toBeNull();
     expect((await line('PLAN', planKey)).draft).toMatchObject({ id, amount: '10.00' });
-    expect(await publishPrice(admin, db, { id })).toEqual({ effectiveOn: today, notice: false });
+    expect(await publishPrice(admin, db, { id }, testNotice)).toEqual({
+      effectiveOn: today,
+      notice: false,
+    });
     expect((await planPrice(today))?.toFixed(2)).toBe('10.00');
     // Nobody is on the plan yet, so even a rise is immediate.
     const rise = await draftPrice(admin, db, { kind: 'PLAN', planKey, amount: '12.00' });
-    expect(await failure(publishPrice(admin, db, { id: rise.id }))).toBe('PRICE_DATE_TAKEN');
-    expect(await publishPrice(admin, db, { id: rise.id, effectiveOn: '2026-11-11' })).toEqual({
+    expect(await failure(publishPrice(admin, db, { id: rise.id }, testNotice))).toBe(
+      'PRICE_DATE_TAKEN',
+    );
+    expect(
+      await publishPrice(admin, db, { id: rise.id, effectiveOn: '2026-11-11' }, testNotice),
+    ).toEqual({
       effectiveOn: '2026-11-11',
       notice: false,
     });
@@ -178,10 +185,12 @@ describe('prices', () => {
     await changePlan(admin, db, { realTenantId, planKey });
     expect((await line('PLAN', planKey)).affected).toBeGreaterThanOrEqual(1);
     const rise = await draftPrice(admin, db, { kind: 'PLAN', planKey, amount: '15.00' });
-    expect(await failure(publishPrice(admin, db, { id: rise.id, effectiveOn: '2026-11-20' }))).toBe(
-      'PRICE_NOTICE_TOO_SHORT',
-    );
-    expect(await publishPrice(admin, db, { id: rise.id })).toEqual({
+    expect(
+      await failure(
+        publishPrice(admin, db, { id: rise.id, effectiveOn: '2026-11-20' }, testNotice),
+      ),
+    ).toBe('PRICE_NOTICE_TOO_SHORT');
+    expect(await publishPrice(admin, db, { id: rise.id }, testNotice)).toEqual({
       effectiveOn: '2026-12-10',
       notice: true,
     });
@@ -195,12 +204,16 @@ describe('prices', () => {
     // Under the announced 15.00 but over today's 10.00: still a rise, so it waits too.
     const between = await draftPrice(admin, db, { kind: 'PLAN', planKey, amount: '11.00' });
     expect(
-      await failure(publishPrice(admin, db, { id: between.id, effectiveOn: '2026-11-12' })),
+      await failure(
+        publishPrice(admin, db, { id: between.id, effectiveOn: '2026-11-12' }, testNotice),
+      ),
     ).toBe('PRICE_NOTICE_TOO_SHORT');
     await discardPrice(admin, db, between.id);
     // A cut below the latest published price needs no notice.
     const cut = await draftPrice(admin, db, { kind: 'PLAN', planKey, amount: '8.00' });
-    expect(await publishPrice(admin, db, { id: cut.id, effectiveOn: '2026-11-15' })).toEqual({
+    expect(
+      await publishPrice(admin, db, { id: cut.id, effectiveOn: '2026-11-15' }, testNotice),
+    ).toEqual({
       effectiveOn: '2026-11-15',
       notice: false,
     });
@@ -209,12 +222,12 @@ describe('prices', () => {
   it('adds and withdraws a pack size, and discards a draft', async () => {
     const size = 777;
     const added = await draftPrice(admin, db, { kind: 'PACK', packSize: size, amount: '30.00' });
-    await publishPrice(admin, db, { id: added.id });
+    await publishPrice(admin, db, { id: added.id }, testNotice);
     expect((await on(today, { kind: 'PACK', packSize: size }))?.toFixed(2)).toBe('30.00');
     expect((await line('PACK', null, size)).current).toMatchObject({ amount: '30.00' });
     // Withdrawn from tomorrow: a pack is bought once, so nobody needs notice.
     const withdrawn = await draftPrice(admin, db, { kind: 'PACK', packSize: size, amount: null });
-    await publishPrice(admin, db, { id: withdrawn.id, effectiveOn: '2026-11-11' });
+    await publishPrice(admin, db, { id: withdrawn.id, effectiveOn: '2026-11-11' }, testNotice);
     expect(await on('2026-11-11', { kind: 'PACK', packSize: size })).toBeNull();
     // Only a pack can be withdrawn; a draft can be dropped.
     expect(
@@ -223,7 +236,7 @@ describe('prices', () => {
     const draft = await draftPrice(admin, db, { kind: 'SEAT', amount: '9.00' });
     await discardPrice(admin, db, draft.id);
     expect((await line('SEAT', null)).draft).toBeNull();
-    expect(await failure(publishPrice(admin, db, { id: draft.id }))).toBe('NOT_FOUND');
+    expect(await failure(publishPrice(admin, db, { id: draft.id }, testNotice))).toBe('NOT_FOUND');
   });
 
   it('refuses to price what the operator negotiates and the base module', async () => {

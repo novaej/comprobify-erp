@@ -20,7 +20,7 @@ import {
 import { testRuc } from '@comprobify/core/testing';
 import { schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase } from './helpers';
+import { appDatabase, testNotice } from './helpers';
 
 // ADR-011, FR-ADM-3: editing modules and plans, with 30 days' notice for what a
 // company loses. Each test makes its own keys, so the shared catalog stays as seeded.
@@ -95,7 +95,7 @@ describe('super admin: plan and module editors', () => {
       createPlan(operator, db, { key, nameEs: 'x', nameEn: 'x', selfService: true }),
     ).rejects.toMatchObject({ code: 'KEY_TAKEN' });
     await expect(
-      removePlanModule(operator, db, { planKey: key, moduleKey: 'INVOICING' }),
+      removePlanModule(operator, db, { planKey: key, moduleKey: 'INVOICING' }, testNotice),
     ).rejects.toMatchObject({ code: 'BASE_MODULE_REQUIRED' });
   });
 
@@ -138,7 +138,7 @@ describe('super admin: plan and module editors', () => {
     await addPlanModule(operator, db, { planKey, moduleKey: 'INVENTORY' });
     expect((await has('2026-11-10T16:00:00Z')).features).toContain('INVENTORY');
 
-    await removePlanModule(operator, db, { planKey, moduleKey: 'INVENTORY' });
+    await removePlanModule(operator, db, { planKey, moduleKey: 'INVENTORY' }, testNotice);
     // Removed on 10 November, dated 10 December at 10:00: the company's period that began that
     // morning still has it, and the one from 10 January doesn't (ADR-028).
     expect((await plan(planKey)).modules).toContainEqual({
@@ -156,7 +156,7 @@ describe('super admin: plan and module editors', () => {
     await expect(
       addModuleFeature(operator, db, { moduleKey, featureKey: 'USERS' }),
     ).rejects.toMatchObject({ code: 'NOT_A_FEATURE' });
-    await removeModuleFeature(operator, db, { moduleKey, featureKey: 'RECEIVABLES' });
+    await removeModuleFeature(operator, db, { moduleKey, featureKey: 'RECEIVABLES' }, testNotice);
     expect((await module(moduleKey)).features).toEqual([
       { key: 'RECEIVABLES', removesAt: clock.now() },
     ]);
@@ -168,7 +168,7 @@ describe('super admin: plan and module editors', () => {
       nameEn: 'D',
       status: 'AVAILABLE',
     });
-    await removeModuleFeature(operator, db, { moduleKey, featureKey: 'RECEIVABLES' });
+    await removeModuleFeature(operator, db, { moduleKey, featureKey: 'RECEIVABLES' }, testNotice);
     expect((await module(moduleKey)).features[0]!.removesAt).toEqual(
       new Date('2026-12-10T15:00:00Z'),
     );
@@ -178,8 +178,8 @@ describe('super admin: plan and module editors', () => {
     const planKey = `P_${unique()}`;
     await createPlan(operator, db, { key: planKey, nameEs: 'E', nameEn: 'E', selfService: true });
     // A draft has no companies, so lowering is immediate.
-    await setPlanLimit(operator, db, { planKey, featureKey: 'USERS', value: 0 });
-    await setPlanLimit(operator, db, { planKey, featureKey: 'USERS', value: 10 });
+    await setPlanLimit(operator, db, { planKey, featureKey: 'USERS', value: 0 }, testNotice);
+    await setPlanLimit(operator, db, { planKey, featureKey: 'USERS', value: 10 }, testNotice);
     await updatePlan(operator, db, {
       key: planKey,
       nameEs: 'E',
@@ -189,7 +189,7 @@ describe('super admin: plan and module editors', () => {
     });
     const has = await companyOn(planKey);
 
-    await setPlanLimit(operator, db, { planKey, featureKey: 'USERS', value: 3 });
+    await setPlanLimit(operator, db, { planKey, featureKey: 'USERS', value: 3 }, testNotice);
     expect((await plan(planKey)).limits).toContainEqual({
       key: 'USERS',
       value: 10,
@@ -200,7 +200,7 @@ describe('super admin: plan and module editors', () => {
     expect((await has('2027-01-11T12:00:00Z')).limits.USERS).toBe(3);
 
     // Raising again cancels the lowering.
-    await setPlanLimit(operator, db, { planKey, featureKey: 'USERS', value: null });
+    await setPlanLimit(operator, db, { planKey, featureKey: 'USERS', value: null }, testNotice);
     expect((await has('2027-01-11T12:00:00Z')).limits.USERS).toBeNull();
   });
 

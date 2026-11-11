@@ -3056,6 +3056,21 @@
         "label": "Límite de documentos",
         "title": "Llegaste al límite de documentos",
         "body": "Usaste los {count} documentos de este período. Se gastan los de tus paquetes y, sin ellos, no podrás emitir."
+      },
+      "PRICE_RISE": {
+        "label": "Cambio de precio",
+        "title": "Cambia un precio de tu suscripción",
+        "body": "El precio de {name} cambia desde el {date}."
+      },
+      "PLAN_CONTENT_LEAVING": {
+        "label": "Cambio en el plan",
+        "title": "Cambia lo que incluye tu plan",
+        "body": "Desde el {date}, {name} deja de incluir algunas funciones."
+      },
+      "PLAN_LIMIT_LOWERING": {
+        "label": "Baja un límite",
+        "title": "Baja un límite de tu plan",
+        "body": "Desde el {date}, tu plan permite {count} {name}."
       }
     }
   },
@@ -3161,6 +3176,18 @@
       "quotaReached": {
         "name": "Límite de documentos",
         "use": "Cuando se usa todo el cupo de documentos del período."
+      },
+      "priceRise": {
+        "name": "Cambio de precio",
+        "use": "Cuando sube el precio de lo que paga la empresa, con 30 días de aviso."
+      },
+      "planContentLeaving": {
+        "name": "Cambio en el plan",
+        "use": "Cuando un módulo pierde funciones o sale de un plan, con fecha."
+      },
+      "planLimitLowering": {
+        "name": "Baja un límite",
+        "use": "Cuando baja un límite del plan, con fecha."
       }
     },
     "editor": {

@@ -17,6 +17,7 @@ import { recordPlatformAudit } from '../audit';
 import { NOTICE_DAYS } from '../entitlements';
 import { assertSuperAdmin } from '../identity';
 import { addDays, amountInput, Dec, DomainError, ecuadorDate, type PlatformActor } from '../kernel';
+import { notify, type NotifyDeps } from '../notifications';
 import { STARTING_PRICES, STARTING_PRICES_FROM } from './starting-prices';
 
 // FR-BILL-6 (ADR-027): what plans, add-ons, seats and document packs cost, with their history.
@@ -111,6 +112,59 @@ async function affectedBy(tx: Tx['db'], thing: PricedThing): Promise<number> {
             .from(subscriptions)
             .where(paying);
   return row!.n;
+}
+
+// The real, active companies a rise reaches, and what to call the thing in each language.
+async function risenFor(tx: Tx['db'], thing: PricedThing) {
+  const { subscriptions, subscriptionItems, tenants, plans, modules } = schema;
+  const real = and(eq(tenants.mode, 'PRODUCTION'), eq(tenants.status, 'ACTIVE'));
+  const paying = eq(subscriptions.billing, 'PAID');
+  if (thing.kind === 'PACK') return null;
+  const [plan] =
+    thing.kind === 'PLAN'
+      ? await tx.select().from(plans).where(eq(plans.id, thing.planId))
+      : [undefined];
+  const [module] =
+    thing.kind === 'MODULE'
+      ? await tx.select().from(modules).where(eq(modules.id, thing.moduleId))
+      : [undefined];
+  const rows =
+    thing.kind === 'MODULE'
+      ? await tx
+          .select({ id: tenants.id })
+          .from(subscriptionItems)
+          .innerJoin(
+            subscriptions,
+            and(
+              eq(subscriptions.tenantId, subscriptionItems.tenantId),
+              eq(subscriptions.id, subscriptionItems.subscriptionId),
+            ),
+          )
+          .innerJoin(tenants, eq(tenants.id, subscriptions.tenantId))
+          .where(
+            and(
+              paying,
+              real,
+              eq(subscriptionItems.kind, 'MODULE'),
+              eq(subscriptionItems.active, true),
+              eq(subscriptionItems.moduleId, thing.moduleId),
+            ),
+          )
+      : await tx
+          .select({ id: tenants.id })
+          .from(subscriptions)
+          .innerJoin(tenants, eq(tenants.id, subscriptions.tenantId))
+          .where(
+            thing.kind === 'PLAN'
+              ? and(paying, real, eq(subscriptions.planId, thing.planId))
+              : and(paying, real),
+          );
+  const named = plan ?? module;
+  return {
+    companies: [...new Set(rows.map((row) => row.id))],
+    name: named?.nameEs ?? 'Usuarios adicionales',
+    nameEn: named?.nameEn ?? 'Extra users',
+  };
 }
 
 const thingOf = (row: PriceRow): PricedThing =>
@@ -339,11 +393,13 @@ export async function publishPrice(
   actor: PlatformActor,
   db: Database,
   raw: PublishPriceInput,
+  notice: NotifyDeps,
 ): Promise<{ effectiveOn: string; notice: boolean }> {
   await assertSuperAdmin(db.identity, actor);
   const input = publishPriceInput.parse(raw);
   const today = ecuadorDate(actor.clock.now());
-  return db.withSystem('super admin: publish a price', async ({ db: tx }) => {
+  return db.withSystem('super admin: publish a price', async (full) => {
+    const tx = full.db;
     const row = await lockDraft(tx, input.id);
     // Two drafts published at once can't both decide their notice from the same latest price.
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('prices'))`);
@@ -387,6 +443,17 @@ export async function publishPrice(
         notice: earliest.notice,
       },
     });
+    // FR-BILL-6: a rise that reaches paying companies is told to them, and they can't turn it off.
+    if (earliest.notice) {
+      const reached = await risenFor(tx, thingOf(row));
+      if (reached)
+        for (const tenantId of reached.companies)
+          await notify(full, notice, {
+            tenantId,
+            type: 'PRICE_RISE',
+            params: { name: reached.name, nameEn: reached.nameEn, date: effectiveOn },
+          });
+    }
     return { effectiveOn, notice: earliest.notice };
   });
 }

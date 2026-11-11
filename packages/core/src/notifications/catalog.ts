@@ -90,6 +90,10 @@ export const NOTIFICATIONS: Record<NotificationType, NotificationSpec> = {
   CERTIFICATE_EXPIRED: warning('certificateExpired', 'organization.manage', '/settings'),
   QUOTA_NEARING: warning('quotaNearing', 'billing.manage', '/plan'),
   QUOTA_REACHED: warning('quotaReached', 'billing.manage', '/plan'),
+  // The notice a price rise owes (FR-BILL-6): the one a member can't turn off.
+  PRICE_RISE: { ...warning('priceRise', 'billing.manage', '/plan'), mandatory: true },
+  PLAN_CONTENT_LEAVING: warning('planContentLeaving', 'billing.manage', '/plan'),
+  PLAN_LIMIT_LOWERING: warning('planLimitLowering', 'billing.manage', '/plan'),
 };
 
 export type Catalogue = Record<NotificationType, NotificationSpec>;

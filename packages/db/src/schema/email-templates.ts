@@ -37,6 +37,9 @@ export const EMAIL_TEMPLATES = [
   'certificateExpired',
   'quotaNearing',
   'quotaReached',
+  'priceRise',
+  'planContentLeaving',
+  'planLimitLowering',
 ] as const;
 export type EmailTemplateKey = (typeof EMAIL_TEMPLATES)[number];
 

@@ -27,7 +27,7 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 Gate: reports match seeded data; templates editable (PRD section 15). Pruning old notifications waits for the retention work (below), which needs a narrow exception to the no-delete rule.
 
-- [ ] 3. The other notification types. Done: documents rejected, not sent, overdue, re-issued, authorized (grouped per minute), batch completed, certificate expiring and expired, and quota at 80 % and 100 % (ADR-036). Left: the mandatory price-rise notice and modules or limits leaving a plan; the operator's own (a transfer reported, a card payment applied), which need platform-side tables and go to every super admin
+- [ ] 3. The other notification types. Done: documents rejected, not sent, overdue, re-issued, authorized (grouped per minute), batch completed, certificate expiring and expired, and quota at 80 % and 100 % (ADR-036). Left: the operator's own (a transfer reported, a card payment applied), which need platform-side tables and go to every super admin
 - [ ] 4. The dashboard (FR-REP-1)
 - [ ] 5. Reports with CSV export, and the accountant's ZIP of a month's authorized XMLs (FR-REP-2, FR-REP-3)
 - [ ] 6. CSV import and export of clients and products (FR-MD-1), then CSV batches for bulk invoicing

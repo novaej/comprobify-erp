@@ -48,6 +48,17 @@ export const FEATURES = {
 } as const satisfies Record<string, FeatureKind>;
 
 export type FeatureKey = keyof typeof FEATURES;
+
+// What a limit counts, in each language, for the notice that it is going down (FR-NOT-2).
+export const LIMIT_NAMES: Partial<Record<FeatureKey, { es: string; en: string }>> = {
+  DOCUMENT_QUOTA: { es: 'documentos al mes', en: 'documents a month' },
+  USERS: { es: 'usuarios', en: 'users' },
+  MAX_BRANCHES: { es: 'sucursales', en: 'branches' },
+  MAX_ISSUE_POINTS_PER_BRANCH: {
+    es: 'puntos de emisión por sucursal',
+    en: 'issue points per branch',
+  },
+};
 export type BooleanFeature = {
   [K in FeatureKey]: (typeof FEATURES)[K] extends 'BOOLEAN' ? K : never;
 }[FeatureKey];
