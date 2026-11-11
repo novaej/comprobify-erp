@@ -19,6 +19,7 @@ export * from './inventory';
 export * from './purchasing';
 export * from './sales';
 export * from './receivables';
+export * from './reports';
 export * from './masterdata';
 export { registerHandlers } from './register-handlers';
 export type { HandlerDeps } from './register-handlers';

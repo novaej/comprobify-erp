@@ -6,6 +6,7 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 - **Full review, before deploying (Milestone 10):** one manual QA pass of the whole system, run locally when everything is ready. It needs a written test script (a QA checklist, no code) covering every screen and flow by role (owner, admin, accounting, sales, purchasing, viewer, super admin), the happy paths and the edge cases (quota, SRI rejections, stock shortages, test and production mode, the twin, plans without a module). It takes in what earlier milestones left to walk through: the nightly stock check's log and the Compras and Solo lectura roles on purchasing and inventory; sale orders, invoicing in parts, the guía from an invoice, receivables and the go-live copy; bulk invoicing, its stack view and the platform queue page. Until then the owner hand-tests only when a milestone makes it mandatory.
 - **Milestone 6:** the order's invoice form takes one payment for the whole total; core takes several (ADR-022). Move the payment block of the invoice form into a shared component and offer it on both.
+- **Milestone 9 (also):** a minimum stock per product, so the dashboard's "low stock" (FR-REP-1) and the post-MVP stock-below-minimum notice (FR-NOT-2) mean below a threshold; today the dashboard lists stocked products with nothing available.
 - **Not scheduled:** a guía that leaves before its invoice (dispatch first): lines and quantities of the order, a shipped-so-far balance, and a way to tie the later invoice to it (ADR-023).
 - **Milestone 4:** only the first guía recipient is searchable by client; the others take their invoice through the invoice search (ADR-017). The guía is not offered by plate catalogue or carrier directory.
 - **Milestone 3:** certificate renewal (FR-ONB-3); twin reset.
@@ -24,7 +25,6 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 Gate: reports match seeded data; templates editable (PRD section 15). Pruning old notifications waits for the retention work (below), which needs a narrow exception to the no-delete rule.
 
-- [ ] 4. The dashboard (FR-REP-1)
 - [ ] 5. Reports with CSV export, and the accountant's ZIP of a month's authorized XMLs (FR-REP-2, FR-REP-3)
 - [ ] 6. CSV import and export of clients and products (FR-MD-1), then CSV batches for bulk invoicing
 - [ ] 7. The rest of the platform area: a jobs view with a retry of failed ones and the documents overdue at SRI across companies, the platform activity log, a document's SRI exchanges with their retention, closing a payment that needs no invoice (FR-ADM-5)

@@ -1559,6 +1559,22 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await look(page, 'bulk-list');
   });
 
+  test('shows the day’s figures, the documents by status and the certificate (FR-REP-1)', async ({
+    page,
+  }) => {
+    await signIn(page, email, newPassword);
+    await expect(page).toHaveURL(/\/es\/dashboard$/);
+    await expect(page.getByText('Ventas de hoy', { exact: true })).toBeVisible();
+    await expect(page.getByText('Ventas del mes', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Documentos por estado' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Lo más vendido' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Firma electrónica' })).toBeVisible();
+    await look(page, 'dashboard-figures');
+    // A status leads to the list filtered by it.
+    await page.getByRole('link', { name: 'Autorizado', exact: true }).first().click();
+    await expect(page).toHaveURL(/\/es\/documents\?status=AUTHORIZED/);
+  });
+
   test('finds no drift between the stock levels and their ledger after the day (FR-INV-2, Milestone 5 gate)', async () => {
     // What the nightly inventory.verify job runs, over everything the tests above stocked.
     const silent = { debug() {}, info() {}, warn() {}, error() {}, child: () => silent };

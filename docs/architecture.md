@@ -203,6 +203,10 @@ While SRI hasn't answered, the detail page refreshes itself. It refreshes quickl
 
 Every transition writes an event with SRI's messages, and every call to SRI writes a row to `sri_exchanges`, including the ones that changed nothing, with who answered: SRI or the mock (ADR-014). Every signed version of a document is kept in `document_versions`, so a correction never loses what was sent before. CI and the local stack always run the mock.
 
+## Reports
+
+The `reports` module holds what reads across modules for a person to look at; it never reads their tables, it calls what they export. The dashboard (FR-REP-1) is `dashboard(ctx, db)`: sales figures, the status counts and the top products from `documents`, products with nothing available from `inventory`, the quota from `documents`' `quotaUsage` and the certificate from `tenancy`. It needs `reports.read` and the `REPORTS_BASIC` feature, and leaves a part out (null) when the role or plan doesn't reach it: documents need `documents.read`, stock `inventory.read` and the Inventario module, quota `billing.read`. Sales are the net of authorized invoices and credit notes by issue date in Ecuador time, and "low stock" means no minimum yet: stocked products whose available quantity is zero or below.
+
 ## Audit log
 
 `audit_events` is tenant data with RLS, and append-only: the app role can insert and read, not update or delete. Core writes an event with `recordAudit` in the same transaction as the change, so a rolled-back change leaves none. Event names are one TypeScript list that generates the CHECK, and the web test requires a label for each. Changes to an organization and its twin are recorded in the real organization's log.

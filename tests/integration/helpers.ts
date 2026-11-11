@@ -111,6 +111,10 @@ export async function insertTestDocument(
     // A buyer and amounts of its own, such as the operator's invoice for a payment.
     buyerIdentification?: string;
     amounts?: { base: string; iva: string; total: string };
+    // A credit note instead of an invoice.
+    documentType?: '01' | '04';
+    // The invoice a credit note credits.
+    relatedDocumentId?: string;
   } = {},
 ): Promise<{ id: string; accessKey: string; sequential: number }> {
   const amounts = options.amounts ?? { base: '10.00', iva: '1.50', total: '11.50' };
@@ -129,7 +133,7 @@ export async function insertTestDocument(
     });
     const key = accessKey({
       issueDate: options.issueDate ?? '2026-11-10',
-      documentType: '01',
+      documentType: options.documentType ?? '01',
       ruc: point!.ruc,
       ambiente: '1',
       series: '001001',
@@ -141,7 +145,8 @@ export async function insertTestDocument(
       .values({
         tenantId,
         issuePointId: point!.id,
-        documentType: '01',
+        documentType: options.documentType ?? '01',
+        relatedDocumentId: options.relatedDocumentId ?? null,
         series: '001001',
         sequential,
         ambiente: '1',

@@ -46,3 +46,5 @@ export type {
 } from './queries';
 export { verifyStockLevels } from './verify';
 export type { StockDrift } from './verify';
+export { lowStock } from './low-stock';
+export type { LowStock } from './low-stock';
