@@ -17,6 +17,19 @@ const FORBIDDEN_IN_CORE = {
   message: 'Core stays framework-free (NFR-ARCH-1).',
 };
 
+// ADR-015, ADR-037: every email leaves through the one provider the worker builds, wrapped by
+// the redirect and the staging banner. Nothing else may build a sender, so an override such as
+// EMAIL_REDIRECT_TO can't be bypassed.
+const PROVIDER_BUILDERS = [
+  'createMailgunProvider',
+  'createLogProvider',
+  'createNoEmailProvider',
+  'withRedirect',
+  'withTestBanner',
+];
+const PROVIDER_MESSAGE =
+  'Only the worker builds the email provider; everything else enqueues email.send (ADR-037).';
+
 export default tseslint.config(
   {
     ignores: [
@@ -77,6 +90,21 @@ export default tseslint.config(
               regex: '^\\.\\./[^/]+/.+',
               message: 'Import a sibling module through its index.ts (NFR-ARCH-4).',
             },
+            { regex: '^\\.\\./email$', importNames: PROVIDER_BUILDERS, message: PROVIDER_MESSAGE },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // The web only enqueues emails; the worker is the one place a provider is built.
+    files: ['apps/web/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: '@comprobify/core', importNames: PROVIDER_BUILDERS, message: PROVIDER_MESSAGE },
           ],
         },
       ],

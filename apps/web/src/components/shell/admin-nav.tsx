@@ -9,6 +9,7 @@ import {
   CreditCard,
   Building2,
   ListOrdered,
+  Mail,
   LogOut,
   Package,
   ReceiptText,
@@ -29,7 +30,15 @@ type AdminItem = {
   href: string;
   icon: LucideIcon;
   labelKey:
-    'companies' | 'queue' | 'payments' | 'invoicing' | 'cards' | 'plans' | 'modules' | 'prices';
+    | 'companies'
+    | 'queue'
+    | 'payments'
+    | 'invoicing'
+    | 'cards'
+    | 'plans'
+    | 'modules'
+    | 'prices'
+    | 'emails';
   // The pages under it; /admin itself is the companies list.
   section: string;
 };
@@ -57,6 +66,7 @@ const GROUPS: { group: 'operate' | 'catalog'; items: AdminItem[] }[] = [
       { href: '/admin/plans', icon: Package, labelKey: 'plans', section: '/admin/plans' },
       { href: '/admin/modules', icon: Blocks, labelKey: 'modules', section: '/admin/modules' },
       { href: '/admin/prices', icon: Tag, labelKey: 'prices', section: '/admin/prices' },
+      { href: '/admin/emails', icon: Mail, labelKey: 'emails', section: '/admin/emails' },
     ],
   },
 ];

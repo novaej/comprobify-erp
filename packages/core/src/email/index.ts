@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { copyInput, type Copy } from './copy';
 import type { EmailProvider } from './provider';
 import { emailLocale, emailTemplate, renderEmail } from './templates';
 
@@ -23,6 +24,9 @@ export {
   renderEmail,
   renderPurchaseOrderEmail,
 } from './templates';
+export { loadCopy, pickCopy, syncEmailTemplates } from './store';
+export { copyInput, DEFAULT_COPY, placeholderProblems, TEMPLATE_PLACEHOLDERS } from './copy';
+export type { Copy } from './copy';
 export type {
   DocumentEmailParams,
   EmailLocale,
@@ -44,13 +48,23 @@ export const sendEmailPayload = z.object({
     rate: z.string().max(10).optional(),
     reason: z.string().max(60).optional(),
   }),
+  // Only a test send from the template editor carries its own text: the draft, not yet published.
+  copy: copyInput.optional(),
 });
 export type SendEmailPayload = z.output<typeof sendEmailPayload>;
 
-// A retry may send twice; a duplicate link email is harmless (NFR-JOB-1).
-export function sendEmailHandler(provider: EmailProvider) {
+// Which text an email is written from: the version in use in the database (ADR-037).
+export type CopyResolver = (
+  template: SendEmailPayload['template'],
+  locale: SendEmailPayload['locale'],
+) => Promise<Copy>;
+
+// A retry may send twice; a duplicate link email is harmless (NFR-JOB-1). The one path every
+// platform email takes, so the provider's overrides (a redirect, the staging banner) apply to all.
+export function sendEmailHandler(provider: EmailProvider, resolve?: CopyResolver) {
   return async (job: { data: SendEmailPayload }): Promise<void> => {
-    const { to, locale, template, params } = job.data;
-    await provider.send(renderEmail(template, locale, to, params));
+    const { to, locale, template, params, copy } = job.data;
+    const text = copy ?? (resolve ? await resolve(template, locale) : undefined);
+    await provider.send(renderEmail(template, locale, to, params, text));
   };
 }

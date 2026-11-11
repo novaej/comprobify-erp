@@ -206,7 +206,8 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/tenancy/members.ts` | Invitations, role changes, removal, issue-point restrictions, all mirrored in the twin |
 | `packages/core/src/certificates/` | P12 parsing, the RUC match, key encryption |
 | `packages/core/src/testing/` | Test helpers, such as generated P12 files (`@comprobify/core/testing`) |
-| `packages/core/src/email/` | Email templates, Mailgun and the local log provider |
+| `packages/core/src/email/` | Email templates (`templates.ts`, the layout), the copy and its placeholders (`copy.ts`, `DEFAULT_COPY`), the published versions read by the worker (`store.ts`: `loadCopy`, `syncEmailTemplates`), Mailgun and the local log provider; provider builders are used only in `apps/worker/src/index.ts` (lint-enforced), so every email goes through one wrapped path (ADR-037) |
+| `packages/core/src/platform/email-templates.ts`, `apps/web/src/app/[locale]/(admin)/admin/emails/` | The super admin's email editor: drafts, preview, test to oneself, publish, history (FR-NOT-3, FR-ADM-4) |
 | `apps/web/src/server/session.ts` | `getSession` and `requireSession` for pages |
 | `apps/web/src/server/request.ts` | `currentHeaders()` and `requestMeta()`: the cookies as they are now, and the client address |
 | `apps/web/src/server/shell.ts` | `loadShell`: session, organizations, active organization, actor, certificate status |

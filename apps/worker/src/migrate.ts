@@ -5,6 +5,7 @@ import {
   installJobs,
   publishAgreements,
   syncCatalog,
+  syncEmailTemplates,
   syncPrices,
 } from '@comprobify/core';
 import { createDatabase } from '@comprobify/db';
@@ -32,6 +33,12 @@ try {
   const priced = await syncPrices(owner);
   if (priced.length > 0)
     logger.info(`Placeholder prices for ${priced.join(', ')}`, { event: 'prices.seeded' });
+  // ADR-037: today's email texts as version 1 for any template and language that has none.
+  const seeded = await syncEmailTemplates(owner);
+  if (seeded.length > 0)
+    logger.info(`Seeded email templates: ${seeded.join(', ')}`, {
+      event: 'email_templates.seeded',
+    });
   const assigned = await assignDefaultPlans(owner);
   if (assigned > 0)
     logger.info(`Put ${assigned} tenants on the default plan`, { event: 'plans.defaulted' });

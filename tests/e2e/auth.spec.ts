@@ -1843,6 +1843,80 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await look(page, 'admin-module');
   });
 
+  // FR-NOT-3, ADR-037: the operator edits an email, previews it, sends itself a test and
+  // publishes it; going back to the old text is publishing it again as a new version.
+  test('edits an email, previews it, tests it and publishes it (FR-NOT-3, FR-ADM-4)', async ({
+    page,
+  }) => {
+    // Three screens, each checked in both themes and on a phone, plus the preview frame.
+    test.setTimeout(90_000);
+    await signIn(page, email, newPassword);
+    await page.getByLabel('Código', { exact: true }).fill(await totp());
+    await page.getByRole('button', { name: 'Verificar' }).click();
+    await expect(page).toHaveURL(/\/es\/dashboard$/);
+    await page.goto('/es/admin/emails');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Correos');
+    await look(page, 'admin-emails');
+    await page
+      .getByRole('row', { name: /Paso al plan Gratis/ })
+      .getByRole('link', { name: /Editar .* en Inglés/ })
+      .click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Paso al plan Gratis');
+    await page.getByLabel('Título').fill('You are on the Free plan now');
+    await page.getByRole('button', { name: 'Guardar borrador' }).click();
+    await expect(page.getByText('Borrador guardado.')).toBeVisible();
+    // Axe can't look into the sandboxed preview, so the page is checked before it opens.
+    await look(page, 'admin-email');
+    await page.getByRole('button', { name: 'Vista previa' }).click();
+    await expect(
+      page
+        .frameLocator('iframe[title="El correo como se vería"]')
+        .getByRole('heading', { name: 'You are on the Free plan now' }),
+    ).toBeVisible();
+
+    // The test goes to the signed-in super admin, marked, written from the draft.
+    await page.getByRole('button', { name: 'Enviarme una prueba' }).click();
+    await expect(page.getByText('Prueba enviada a tu correo.')).toBeVisible();
+    const client = new Client({ connectionString: process.env.DATABASE_URL });
+    await client.connect();
+    try {
+      const { rows } = await client.query<{ subject: string; heading: string }>(
+        `SELECT data->'copy'->>'subject' AS subject, data->'copy'->>'heading' AS heading
+         FROM pgboss.job WHERE name = 'email.send' AND data->>'template' = 'movedToFree'
+           AND data->>'to' = $1 AND data->'copy' IS NOT NULL
+         ORDER BY created_on DESC LIMIT 1`,
+        [email],
+      );
+      expect(rows[0]!.subject.startsWith('[Test] ')).toBe(true);
+      expect(rows[0]!.heading).toBe('You are on the Free plan now');
+    } finally {
+      await client.end();
+    }
+
+    await page.getByRole('button', { name: 'Publicar', exact: true }).click();
+    await page
+      .getByRole('dialog', { name: 'Publicar el borrador' })
+      .getByRole('button', { name: 'Publicar' })
+      .click();
+    await expect(page.getByText('Versión publicada.')).toBeVisible();
+    await expect(page.getByText('Versión 2 en uso')).toBeVisible();
+    await page
+      .getByRole('row', { name: /Versión 1/ })
+      .getByRole('button', { name: /Usar como borrador/ })
+      .click();
+    await expect(page.getByText('La versión pasó a tu borrador.')).toBeVisible();
+    await page.getByLabel('Título').fill('Your company is on the Free plan');
+    await page.getByRole('button', { name: 'Descartar el borrador' }).click();
+    await page
+      .getByRole('dialog', { name: 'Descartar el borrador' })
+      .getByRole('button', { name: 'Descartar el borrador' })
+      .click();
+    await expect(page.getByText('Borrador descartado.')).toBeVisible();
+    // A fresh load closes the preview, which axe can't enter.
+    await page.reload();
+    await look(page, 'admin-email-history');
+  });
+
   // Milestone 2 gate: switching a feature for one company changes its screens; core refuses
   // what the screen no longer offers (tests/integration/milestone-2-gate.test.ts).
   test('changes what the company can do when the super admin sets an exception (ADR-011)', async ({

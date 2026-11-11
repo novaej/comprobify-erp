@@ -57,6 +57,7 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [034](034-the-iva-rate-and-its-history.md) | The IVA rate and its history | Accepted |
 | [035](035-personalizado-billing-and-complimentary-add-ons.md) | Personalizado billing and complimentary add-ons | Accepted |
 | [036](036-the-notification-centre.md) | The notification centre | Accepted |
+| [037](037-email-templates-in-the-database.md) | Email templates in the database | Accepted |
 
 ## Old ADRs to read before each milestone
 

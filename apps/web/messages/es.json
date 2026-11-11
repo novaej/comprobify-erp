@@ -896,7 +896,11 @@
     "SUBSCRIPTION_COMPLIMENTARY": "La empresa es de cortesía: no se le cobra.",
     "PAYMENT_IN_PROGRESS": "La empresa tiene otro pago abierto.",
     "RENEWAL_ALREADY_PAID": "La empresa ya pagó el próximo periodo; haz el cambio cuando empiece.",
-    "RENEWAL_IN_REVIEW": "La renovación está en revisión; resuélvela primero."
+    "RENEWAL_IN_REVIEW": "La renovación está en revisión; resuélvela primero.",
+    "EMAIL_TEMPLATE_PLACEHOLDER_UNKNOWN": "El texto usa un campo que este correo no tiene. Revisa los campos que puedes usar.",
+    "EMAIL_TEMPLATE_PLACEHOLDER_MISSING": "Al texto le falta un campo obligatorio de este correo.",
+    "EMAIL_TEMPLATE_NO_DRAFT": "No hay un borrador.",
+    "EMAIL_TEMPLATE_UNCHANGED": "El borrador es igual a la versión en uso."
   },
   "pageTitles": {
     "login": "Iniciar sesión",
@@ -957,7 +961,9 @@
     "adminPayment": "Pago",
     "adminInvoicing": "Por facturar",
     "adminCards": "Cobros con tarjeta",
-    "notifications": "Notificaciones"
+    "notifications": "Notificaciones",
+    "adminEmails": "Correos",
+    "adminEmail": "Correo"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -975,7 +981,8 @@
     "prices": "Precios",
     "payments": "Pagos",
     "invoicing": "Por facturar",
-    "cards": "Cobros con tarjeta"
+    "cards": "Cobros con tarjeta",
+    "emails": "Correos"
   },
   "catalog": {
     "plansTitle": "Planes",
@@ -3008,5 +3015,115 @@
     "NOTIFICATION_NOT_AVAILABLE": "Ese aviso no es para tu rol.",
     "NOTIFICATION_MANDATORY": "Ese aviso es obligatorio: no se puede apagar.",
     "NOTIFICATION_CHANNEL_UNAVAILABLE": "Ese aviso no se envía por ese medio."
+  },
+  "adminEmails": {
+    "title": "Correos",
+    "description": "Los correos que Comprobify escribe: los de la cuenta y los avisos. Edita el texto de cada uno en cada idioma; lo que publiques es lo que reciben las empresas desde ese momento.",
+    "table": {
+      "email": "Correo"
+    },
+    "languages": {
+      "es": "Español",
+      "en": "Inglés"
+    },
+    "version": "Versión {version}",
+    "draft": "Borrador",
+    "edit": "Editar {email} en {language}",
+    "status": {
+      "IN_USE": "En uso",
+      "PUBLISHED": "Publicada",
+      "DRAFT": "Borrador",
+      "DISCARDED": "Descartada"
+    },
+    "templates": {
+      "verifyEmail": {
+        "name": "Confirmar el correo",
+        "use": "Al crear una cuenta, para confirmar el correo."
+      },
+      "resetPassword": {
+        "name": "Restablecer la contraseña",
+        "use": "Cuando alguien pide una contraseña nueva."
+      },
+      "invitation": {
+        "name": "Invitación a una empresa",
+        "use": "Cuando un propietario invita a alguien a su empresa."
+      },
+      "renewalDue": {
+        "name": "Se acerca la renovación",
+        "use": "Siete días antes de que termine el periodo pagado."
+      },
+      "graceStarted": {
+        "name": "Renovación sin pagar",
+        "use": "El día que termina el periodo sin pago: empieza la gracia."
+      },
+      "pastDue": {
+        "name": "Suscripción vencida",
+        "use": "Cuando termina la gracia: solo consultar y pagar."
+      },
+      "movedToFree": {
+        "name": "Paso al plan Gratis",
+        "use": "Cuando la empresa vuelve al plan Gratis."
+      },
+      "paymentRepriced": {
+        "name": "Cambio de IVA en un pago",
+        "use": "Cuando una tasa nueva de IVA cambia un pago pendiente."
+      },
+      "renewalRepriced": {
+        "name": "Cambio de valor de la renovación",
+        "use": "Cuando cambia el precio negociado y hay una renovación abierta."
+      },
+      "paymentVerified": {
+        "name": "Pago confirmado",
+        "use": "Cuando se confirma una transferencia o se aprueba una tarjeta."
+      },
+      "paymentRejected": {
+        "name": "Comprobante rechazado",
+        "use": "Cuando se rechaza el comprobante de una transferencia."
+      }
+    },
+    "editor": {
+      "title": "Texto del correo",
+      "description": "El diseño es fijo: tú escribes el asunto, el título, el mensaje, el botón y el pie. Guarda para tener un borrador, mira la vista previa o envíate una prueba, y publica cuando esté bien.",
+      "inUse": "Versión {version} en uso",
+      "draft": "Borrador {version}",
+      "allowed": "Campos que puedes usar",
+      "required": "Campos obligatorios",
+      "none": "Ninguno",
+      "subject": "Asunto",
+      "heading": "Título",
+      "body": "Mensaje",
+      "button": "Texto del botón",
+      "footer": "Pie",
+      "footerHint": "Opcional.",
+      "save": "Guardar borrador",
+      "saved": "Borrador guardado.",
+      "unsaved": "Hay cambios sin guardar.",
+      "saveFirst": "Guarda el borrador primero.",
+      "preview": "Vista previa",
+      "previewTitle": "Vista previa",
+      "previewDescription": "Con valores de ejemplo. No se envía nada.",
+      "previewFrame": "El correo como se vería",
+      "test": "Enviarme una prueba",
+      "testSent": "Prueba enviada a tu correo.",
+      "publish": "Publicar",
+      "published": "Versión publicada.",
+      "publishTitle": "Publicar el borrador",
+      "publishDescription": "Desde ahora los correos de este tipo salen con este texto. Las versiones anteriores quedan en el historial.",
+      "discard": "Descartar el borrador",
+      "discarded": "Borrador descartado.",
+      "discardTitle": "Descartar el borrador",
+      "discardDescription": "Se pierde este texto. El que está en uso no cambia.",
+      "historyTitle": "Historial",
+      "historyDescription": "Cada versión que ha tenido este correo. Para volver a una, úsala como borrador y publícala: queda como una versión nueva.",
+      "versionColumn": "Versión",
+      "statusColumn": "Estado",
+      "whenColumn": "Fecha",
+      "authorColumn": "Quién",
+      "actionsColumn": "Acciones",
+      "versionLabel": "Versión {version}",
+      "useAsDraft": "Usar como borrador",
+      "useAsDraftFor": "(versión {version})",
+      "restored": "La versión pasó a tu borrador."
+    }
   }
 }

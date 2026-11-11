@@ -896,7 +896,11 @@
     "SUBSCRIPTION_COMPLIMENTARY": "The company is complimentary: it isn't charged.",
     "PAYMENT_IN_PROGRESS": "The company has another open payment.",
     "RENEWAL_ALREADY_PAID": "The company already paid the next period; make the change once it starts.",
-    "RENEWAL_IN_REVIEW": "The renewal is in review; settle it first."
+    "RENEWAL_IN_REVIEW": "The renewal is in review; settle it first.",
+    "EMAIL_TEMPLATE_PLACEHOLDER_UNKNOWN": "The text uses a field this email doesn't have. Check the fields you can use.",
+    "EMAIL_TEMPLATE_PLACEHOLDER_MISSING": "The text lacks a required field of this email.",
+    "EMAIL_TEMPLATE_NO_DRAFT": "There is no draft.",
+    "EMAIL_TEMPLATE_UNCHANGED": "The draft is the same as the version in use."
   },
   "pageTitles": {
     "login": "Sign in",
@@ -957,7 +961,9 @@
     "adminPayment": "Payment",
     "adminInvoicing": "To invoice",
     "adminCards": "Card charges",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "adminEmails": "Emails",
+    "adminEmail": "Email"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -975,7 +981,8 @@
     "prices": "Prices",
     "payments": "Payments",
     "invoicing": "To invoice",
-    "cards": "Card charges"
+    "cards": "Card charges",
+    "emails": "Emails"
   },
   "catalog": {
     "plansTitle": "Plans",
@@ -3008,5 +3015,115 @@
     "NOTIFICATION_NOT_AVAILABLE": "That notice isn't for your role.",
     "NOTIFICATION_MANDATORY": "That notice is mandatory: it can't be turned off.",
     "NOTIFICATION_CHANNEL_UNAVAILABLE": "That notice isn't sent that way."
+  },
+  "adminEmails": {
+    "title": "Emails",
+    "description": "The emails Comprobify writes: the account ones and the notices. Edit each one's text in each language; what you publish is what companies receive from then on.",
+    "table": {
+      "email": "Email"
+    },
+    "languages": {
+      "es": "Spanish",
+      "en": "English"
+    },
+    "version": "Version {version}",
+    "draft": "Draft",
+    "edit": "Edit {email} in {language}",
+    "status": {
+      "IN_USE": "In use",
+      "PUBLISHED": "Published",
+      "DRAFT": "Draft",
+      "DISCARDED": "Discarded"
+    },
+    "templates": {
+      "verifyEmail": {
+        "name": "Confirm the email",
+        "use": "When an account is created, to confirm the address."
+      },
+      "resetPassword": {
+        "name": "Reset the password",
+        "use": "When someone asks for a new password."
+      },
+      "invitation": {
+        "name": "Invitation to a company",
+        "use": "When an owner invites someone to their company."
+      },
+      "renewalDue": {
+        "name": "Renewal coming up",
+        "use": "Seven days before the paid period ends."
+      },
+      "graceStarted": {
+        "name": "Renewal unpaid",
+        "use": "The day the period ends unpaid: the grace starts."
+      },
+      "pastDue": {
+        "name": "Subscription past due",
+        "use": "When the grace ends: only viewing and paying."
+      },
+      "movedToFree": {
+        "name": "Moved to the Free plan",
+        "use": "When the company goes back to the Free plan."
+      },
+      "paymentRepriced": {
+        "name": "VAT change on a payment",
+        "use": "When a new VAT rate changes an open payment."
+      },
+      "renewalRepriced": {
+        "name": "Renewal amount change",
+        "use": "When the negotiated price changes and a renewal is open."
+      },
+      "paymentVerified": {
+        "name": "Payment confirmed",
+        "use": "When a transfer is confirmed or a card payment approved."
+      },
+      "paymentRejected": {
+        "name": "Proof rejected",
+        "use": "When a transfer's proof is rejected."
+      }
+    },
+    "editor": {
+      "title": "The email's text",
+      "description": "The layout is fixed: you write the subject, heading, message, button and footer. Save to keep a draft, look at the preview or send yourself a test, and publish when it's right.",
+      "inUse": "Version {version} in use",
+      "draft": "Draft {version}",
+      "allowed": "Fields you can use",
+      "required": "Required fields",
+      "none": "None",
+      "subject": "Subject",
+      "heading": "Heading",
+      "body": "Message",
+      "button": "Button text",
+      "footer": "Footer",
+      "footerHint": "Optional.",
+      "save": "Save draft",
+      "saved": "Draft saved.",
+      "unsaved": "There are unsaved changes.",
+      "saveFirst": "Save the draft first.",
+      "preview": "Preview",
+      "previewTitle": "Preview",
+      "previewDescription": "With sample values. Nothing is sent.",
+      "previewFrame": "The email as it would look",
+      "test": "Send me a test",
+      "testSent": "Test sent to your email.",
+      "publish": "Publish",
+      "published": "Version published.",
+      "publishTitle": "Publish the draft",
+      "publishDescription": "From now on emails of this kind go out with this text. Earlier versions stay in the history.",
+      "discard": "Discard the draft",
+      "discarded": "Draft discarded.",
+      "discardTitle": "Discard the draft",
+      "discardDescription": "This text is lost. The one in use doesn't change.",
+      "historyTitle": "History",
+      "historyDescription": "Every version this email has had. To go back to one, use it as a draft and publish it: it becomes a new version.",
+      "versionColumn": "Version",
+      "statusColumn": "Status",
+      "whenColumn": "Date",
+      "authorColumn": "By",
+      "actionsColumn": "Actions",
+      "versionLabel": "Version {version}",
+      "useAsDraft": "Use as draft",
+      "useAsDraftFor": "(version {version})",
+      "restored": "The version is now your draft."
+    }
   }
 }

@@ -27,7 +27,6 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 Gate: reports match seeded data; templates editable (PRD section 15). Pruning old notifications waits for the retention work (below), which needs a narrow exception to the no-delete rule.
 
-- [ ] 2. Email templates in the database, versioned per language and editable by the super admin, with the Spanish fallback; the existing account and billing emails move out of code (FR-NOT-3, FR-ADM-4)
 - [ ] 3. The other notification types: document rejected, send failed or re-issued, authorization overdue, certificate expiring and expired, quota at 80 % and 100 %, batch completed, document authorized (aggregated per minute), the mandatory price-rise notice and modules or limits leaving a plan; the operator's own (a transfer reported, a card payment applied), which need platform-side tables
 - [ ] 4. The dashboard (FR-REP-1)
 - [ ] 5. Reports with CSV export, and the accountant's ZIP of a month's authorized XMLs (FR-REP-2, FR-REP-3)

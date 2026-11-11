@@ -5,6 +5,7 @@ import {
   installJobs,
   publishAgreements,
   syncCatalog,
+  syncEmailTemplates,
   syncPrices,
 } from '@comprobify/core';
 import { createDatabase } from '@comprobify/db';
@@ -20,6 +21,7 @@ export default async function setup(): Promise<void> {
   });
   await syncCatalog(owner);
   await syncPrices(owner);
+  await syncEmailTemplates(owner);
   await assignDefaultPlans(owner);
   await publishAgreements(owner);
   await owner.close();

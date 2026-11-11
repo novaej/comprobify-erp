@@ -48,7 +48,7 @@ Under `apps/web/src/app/[locale]/`: `(auth)` holds the sign-in screens and sends
 
 ## Identity
 
-Better Auth handles credentials, database sessions and tokens (ADR-009); its tables are global, with no `tenant_id`. Pages call server actions, which call `packages/core/src/identity`; no Better Auth HTTP route is mounted. Our code adds the rate limits, the verification page that consumes its token only on `POST`, and the idle timeout: `last_activity_at` moves only when the browser reports real input, and reading a session never extends it. Emails go through the `email.send` job.
+Better Auth handles credentials, database sessions and tokens (ADR-009); its tables are global, with no `tenant_id`. Pages call server actions, which call `packages/core/src/identity`; no Better Auth HTTP route is mounted. Our code adds the rate limits, the verification page that consumes its token only on `POST`, and the idle timeout: `last_activity_at` moves only when the browser reports real input, and reading a session never extends it. Emails go through the `email.send` job. The text of each email is a versioned row in `email_templates` the super admin edits (ADR-037); the worker reads the latest published version in the recipient's language, falling back to Spanish and then the copy in code. Only the worker builds an email provider (lint-enforced), so redirects and test banners apply to every send.
 
 ## Tenancy and RLS
 

@@ -124,6 +124,11 @@ export const PLATFORM_AUDIT_ACTIONS = [
   // FR-BILL-2: the IVA on subscriptions (ADR-034).
   'iva.scheduled',
   'iva.withdrawn',
+  // FR-NOT-3 (ADR-037): the emails the platform writes.
+  'email_template.drafted',
+  'email_template.published',
+  'email_template.discarded',
+  'email_template.test_sent',
 ] as const;
 
 export const platformAuditEvents = pgTable(

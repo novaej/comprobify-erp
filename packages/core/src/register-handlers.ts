@@ -11,7 +11,7 @@ import {
   sendDocument,
 } from './documents';
 import { completeBatches, feedBatches, processItem } from './bulk';
-import { sendEmailHandler, type EmailProvider } from './email';
+import { loadCopy, sendEmailHandler, type EmailProvider } from './email';
 import { createRateLimiter, pruneIdentityTables } from './identity';
 import { verifyStockLevels } from './inventory';
 import { heartbeatHandler, type Jobs } from './jobs';
@@ -42,7 +42,10 @@ export async function registerHandlers(jobs: Jobs, deps: HandlerDeps): Promise<v
   const { logger, emailProvider, identityDb, clock } = deps;
   const sending = { db: deps.db, sri: deps.sri, jobs, clock, logger };
   await jobs.work('system.heartbeat', heartbeatHandler(logger));
-  await jobs.work('email.send', sendEmailHandler(emailProvider));
+  await jobs.work(
+    'email.send',
+    sendEmailHandler(emailProvider, (template, locale) => loadCopy(deps.db, template, locale)),
+  );
   await jobs.work('identity.prune', async (job) => {
     const now = () => clock.now();
     const pruned = await pruneIdentityTables(identityDb, createRateLimiter(identityDb, now), now());

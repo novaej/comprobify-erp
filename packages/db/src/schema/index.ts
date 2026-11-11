@@ -3,6 +3,7 @@ export * from './audit';
 export * from './billing';
 export * from './bulk';
 export * from './documents';
+export * from './email-templates';
 export * from './entitlements';
 export * from './identity';
 export * from './inventory';
