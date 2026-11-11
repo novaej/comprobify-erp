@@ -39,7 +39,7 @@ import {
   type PlatformActor,
 } from '../kernel';
 import { companyRow, realTenantOf } from '../tenancy';
-import { notify, type NotifyDeps } from '../notifications';
+import { announceOperators, notify, type NotifyDeps } from '../notifications';
 import { ivaRateOn } from './iva';
 import { grantPack, refundPack } from './packs';
 import { priceOn, YEARLY_MONTHS } from './prices';
@@ -556,6 +556,7 @@ export async function submitProof(
   ctx: ActorContext,
   db: Database,
   raw: SubmitProofInput,
+  notice: Pick<NotifyDeps, 'jobs'>,
 ): Promise<void> {
   requirePermission(ctx, 'billing.manage');
   const input = submitProofInput.parse(raw);
@@ -602,6 +603,12 @@ export async function submitProof(
       actorUserId: ctx.userId ?? null,
       action: 'payment.reported',
       details: { code: payment.code, files: files.length, reference: input.reference },
+    });
+    // The operator has a transfer to review (FR-NOT-2, ADR-036).
+    await announceOperators(notice.jobs, tx, {
+      tenantId,
+      type: 'PAYMENT_REPORTED',
+      params: { amount: payment.totalAmount, code: payment.code },
     });
   });
 }

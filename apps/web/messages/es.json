@@ -963,7 +963,8 @@
     "adminCards": "Cobros con tarjeta",
     "notifications": "Notificaciones",
     "adminEmails": "Correos",
-    "adminEmail": "Correo"
+    "adminEmail": "Correo",
+    "adminNotifications": "Avisos de la plataforma"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -982,7 +983,8 @@
     "payments": "Pagos",
     "invoicing": "Por facturar",
     "cards": "Cobros con tarjeta",
-    "emails": "Correos"
+    "emails": "Correos",
+    "notifications": "Avisos"
   },
   "catalog": {
     "plansTitle": "Planes",
@@ -3071,6 +3073,16 @@
         "label": "Baja un límite",
         "title": "Baja un límite de tu plan",
         "body": "Desde el {date}, tu plan permite {count} {name}."
+      },
+      "PAYMENT_REPORTED": {
+        "label": "Pago reportado",
+        "title": "Hay un pago por revisar",
+        "body": "{name} reportó una transferencia de ${amount}."
+      },
+      "CARD_PAYMENT_APPLIED": {
+        "label": "Pago con tarjeta",
+        "title": "Se aplicó un pago con tarjeta",
+        "body": "{name} pagó ${amount} con tarjeta. Falta registrar su factura."
       }
     }
   },
@@ -3188,6 +3200,14 @@
       "planLimitLowering": {
         "name": "Baja un límite",
         "use": "Cuando baja un límite del plan, con fecha."
+      },
+      "paymentReported": {
+        "name": "Pago reportado (operador)",
+        "use": "Al operador, cuando una empresa reporta una transferencia."
+      },
+      "cardPaymentApplied": {
+        "name": "Pago con tarjeta (operador)",
+        "use": "Al operador, cuando se aplica un pago con tarjeta."
       }
     },
     "editor": {
@@ -3234,5 +3254,9 @@
       "useAsDraftFor": "(versión {version})",
       "restored": "La versión pasó a tu borrador."
     }
+  },
+  "adminNotifications": {
+    "title": "Avisos de la plataforma",
+    "description": "Lo que la plataforma le avisó: pagos por revisar y cobros con tarjeta. Cada administrador marca los suyos como leídos."
   }
 }

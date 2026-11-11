@@ -168,6 +168,14 @@ describe('card payments through Payphone', () => {
       status: 'APPROVED',
     });
     expect(fake.calls).toHaveLength(calls);
+    // The operators are told once of the applied charge (FR-NOT-2).
+    const operatorNotices = await db.withSystem('test: read operator notices', ({ executeSql }) =>
+      executeSql(
+        `SELECT 1 FROM platform_notifications WHERE type = 'CARD_PAYMENT_APPLIED' AND params->>'code' = $1`,
+        [initial.code],
+      ),
+    );
+    expect(operatorNotices.rows).toHaveLength(1);
     expect(
       await failure(startCardPayment(await owner(), db, { paymentId: initial.id }, deps)),
     ).toBe('PAYMENT_NOT_PAYABLE');
@@ -288,11 +296,16 @@ describe('card payments through Payphone', () => {
     ).toBe('CARD_TOO_MANY_ATTEMPTS');
     await reconcile();
     // A transfer under review could otherwise be paid twice.
-    await submitProof(await owner(), db, {
-      paymentId: payment1.id,
-      reference: 'SPI-1',
-      files: [{ filename: 'p.png', content: PNG }],
-    });
+    await submitProof(
+      await owner(),
+      db,
+      {
+        paymentId: payment1.id,
+        reference: 'SPI-1',
+        files: [{ filename: 'p.png', content: PNG }],
+      },
+      testNotice,
+    );
     expect(
       await failure(startCardPayment(await owner(), db, { paymentId: payment1.id }, deps)),
     ).toBe('PAYMENT_IN_REVIEW');

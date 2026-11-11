@@ -23,7 +23,7 @@ import {
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, superAdmin } from './helpers';
+import { appDatabase, superAdmin, testNotice } from './helpers';
 
 type Sent = { to: string; locale: string; template: string; params: Record<string, string> };
 
@@ -350,16 +350,21 @@ describe('the notification centre', () => {
     const payer = await as('owner', org.twinTenantId);
     const payment = await startPaidPlan(payer, db, { planKey: 'STARTER', interval: 'MONTHLY' });
     const report = () =>
-      submitProof(payer, db, {
-        paymentId: payment.id,
-        reference: 'SPI-1',
-        files: [
-          {
-            filename: 'p.png',
-            content: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1]),
-          },
-        ],
-      });
+      submitProof(
+        payer,
+        db,
+        {
+          paymentId: payment.id,
+          reference: 'SPI-1',
+          files: [
+            {
+              filename: 'p.png',
+              content: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1]),
+            },
+          ],
+        },
+        testNotice,
+      );
     await report();
     sent = [];
     await reviewPayment(

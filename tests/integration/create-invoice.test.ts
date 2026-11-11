@@ -315,13 +315,18 @@ describe('creating an invoice', () => {
       baseAmount: '5.00',
       totalAmount: '5.75',
     });
-    await submitProof(live, db, {
-      paymentId: pack.id,
-      reference: 'SPI-PACK',
-      files: [
-        { filename: 'p.png', content: Buffer.from([0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10]) },
-      ],
-    });
+    await submitProof(
+      live,
+      db,
+      {
+        paymentId: pack.id,
+        reference: 'SPI-PACK',
+        files: [
+          { filename: 'p.png', content: Buffer.from([0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10]) },
+        ],
+      },
+      testNotice,
+    );
     await reviewPayment(
       { ...(await superAdmin(db)), clock },
       db,

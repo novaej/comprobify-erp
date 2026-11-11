@@ -7,8 +7,12 @@ import { Bell } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import {
-  markAllReadAction,
-  markReadAction,
+  markAllPlatformReadAction,
+  markPlatformReadAction,
+} from '@/app/[locale]/(admin)/admin/notifications/actions';
+import {
+  markAllReadAction as markAllCompanyRead,
+  markReadAction as markCompanyRead,
 } from '@/app/[locale]/(app)/(shell)/notifications/actions';
 import { Link } from '@/i18n/navigation';
 import { ToneBadge } from '../tone-badge';
@@ -16,7 +20,18 @@ import { useNotificationText, type NotificationItem } from './notification-text'
 
 // FR-NOT-1: the bell in the top bar. It shows how many are unread and the latest few; the count
 // is read with the page and again after any change here, never by polling (mistake 16).
-export function NotificationBell({ unread, items }: { unread: number; items: NotificationItem[] }) {
+export function NotificationBell({
+  unread,
+  items,
+  scope = 'company',
+}: {
+  unread: number;
+  items: NotificationItem[];
+  // The platform area has its own notices, marked read and listed apart from a company's.
+  scope?: 'company' | 'platform';
+}) {
+  const markReadAction = scope === 'platform' ? markPlatformReadAction : markCompanyRead;
+  const markAllReadAction = scope === 'platform' ? markAllPlatformReadAction : markAllCompanyRead;
   const t = useTranslations('notifications');
   const locale = useLocale();
   const { text, when } = useNotificationText();
@@ -115,7 +130,7 @@ export function NotificationBell({ unread, items }: { unread: number; items: Not
         )}
         <div className="border-t border-border px-3 py-2 text-center">
           <Link
-            href="/notifications"
+            href={scope === 'platform' ? '/admin/notifications' : '/notifications'}
             onClick={() => setOpen(false)}
             className="text-sm text-primary underline-offset-4 hover:underline"
           >

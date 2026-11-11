@@ -20,16 +20,28 @@ import {
 } from '@/components/stack-table';
 import { ToneBadge } from '@/components/tone-badge';
 import { Link } from '@/i18n/navigation';
-import { markAllReadAction, markReadAction } from './actions';
+import {
+  markAllPlatformReadAction,
+  markPlatformReadAction,
+} from '../../../(admin)/admin/notifications/actions';
+import {
+  markAllReadAction as markAllCompanyRead,
+  markReadAction as markCompanyRead,
+} from './actions';
 
 // FR-NOT-1: the member's notifications, each leading to what it is about.
 export function NotificationList({
   items,
   unreadOnly,
+  scope = 'company',
 }: {
   items: NotificationItem[];
   unreadOnly: boolean;
+  // The platform's notices (a super admin's) are marked read by their own actions.
+  scope?: 'company' | 'platform';
 }) {
+  const markReadAction = scope === 'platform' ? markPlatformReadAction : markCompanyRead;
+  const markAllReadAction = scope === 'platform' ? markAllPlatformReadAction : markAllCompanyRead;
   const t = useTranslations('notifications');
   const locale = useLocale();
   const { text, when } = useNotificationText();

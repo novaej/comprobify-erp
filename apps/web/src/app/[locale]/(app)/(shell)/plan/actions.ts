@@ -140,7 +140,7 @@ export async function cancelPaymentAction(_: ActionState, form: FormData): Promi
 }
 
 export async function submitProofAction(_: ActionState, form: FormData): Promise<ActionState> {
-  const { actor, db } = await context(form);
+  const { actor, db, notice } = await context(form);
   const files = await Promise.all(
     form
       .getAll('files')
@@ -152,11 +152,12 @@ export async function submitProofAction(_: ActionState, form: FormData): Promise
   );
   if (files.length === 0) return { error: 'PROOF_REQUIRED' };
   return run(form, () =>
-    submitProof(actor, db, {
-      paymentId: text(form, 'paymentId'),
-      reference: text(form, 'reference'),
-      files,
-    }),
+    submitProof(
+      actor,
+      db,
+      { paymentId: text(form, 'paymentId'), reference: text(form, 'reference'), files },
+      notice,
+    ),
   );
 }
 

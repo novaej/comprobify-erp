@@ -111,11 +111,16 @@ describe("the operator's billing work", () => {
       interval: 'MONTHLY',
     });
     paymentId = initial.id;
-    await submitProof(await owner(), db, {
-      paymentId,
-      reference: 'SPI-1',
-      files: [{ filename: 'p.png', content: PNG }],
-    });
+    await submitProof(
+      await owner(),
+      db,
+      {
+        paymentId,
+        reference: 'SPI-1',
+        files: [{ filename: 'p.png', content: PNG }],
+      },
+      testNotice,
+    );
     await reviewPayment(operator, db, { paymentId, decision: 'VERIFIED' }, testNotice);
   });
 

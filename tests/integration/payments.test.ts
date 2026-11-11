@@ -63,7 +63,7 @@ describe('payments', () => {
       )
     ).rows[0];
   const report = async (paymentId: string, files = [{ filename: 'pago.png', content: PNG }]) =>
-    submitProof(await owner(), db, { paymentId, reference: 'SPI-123456', files });
+    submitProof(await owner(), db, { paymentId, reference: 'SPI-123456', files }, testNotice);
 
   beforeAll(async () => {
     db = appDatabase();

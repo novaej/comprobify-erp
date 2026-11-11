@@ -67,11 +67,16 @@ describe('Milestone 8 gate: upgrade, renewal and expiry on a fake clock', () => 
       )
     ).rows[0];
   const byTransfer = async (paymentId: string) => {
-    await submitProof(await owner(), db, {
-      paymentId,
-      reference: `SPI-${paymentId.slice(0, 6)}`,
-      files: [{ filename: 'p.png', content: PNG }],
-    });
+    await submitProof(
+      await owner(),
+      db,
+      {
+        paymentId,
+        reference: `SPI-${paymentId.slice(0, 6)}`,
+        files: [{ filename: 'p.png', content: PNG }],
+      },
+      testNotice,
+    );
     await reviewPayment(
       { ...operator, clock },
       db,

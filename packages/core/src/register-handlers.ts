@@ -16,7 +16,7 @@ import { loadCopy, sendEmailHandler, type EmailProvider } from './email';
 import { createRateLimiter, pruneIdentityTables } from './identity';
 import { verifyStockLevels } from './inventory';
 import { heartbeatHandler, type Jobs } from './jobs';
-import { deliverNotificationEvent, watchCertificates } from './notifications';
+import { deliverNotificationEvent, deliverOperatorEvent, watchCertificates } from './notifications';
 import { sendPurchaseOrderEmail } from './purchasing';
 import type { KeyCipher } from './certificates';
 import type { IssueDeps } from './documents';
@@ -53,6 +53,9 @@ export async function registerHandlers(jobs: Jobs, deps: HandlerDeps): Promise<v
       { db: deps.db, notice: { jobs, appUrl: deps.billing.appUrl } },
       job.data,
     ),
+  );
+  await jobs.work('platform.notify', (job) =>
+    deliverOperatorEvent({ db: deps.db, notice: { jobs, appUrl: deps.billing.appUrl } }, job.data),
   );
   const watch = {
     db: deps.db,

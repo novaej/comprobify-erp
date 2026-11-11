@@ -81,3 +81,11 @@ A price that rises, a module that loses functions or leaves a plan, and a plan l
 - `PLAN_CONTENT_LEAVING` goes to the companies that hold the module through their plan or as an add-on, and `PLAN_LIMIT_LOWERING` to those on the plan, with the new value. Nothing is told for a change that applies at once (a draft plan, a coming-soon module, a limit going up).
 - Notices carry `name` and `nameEn`, so the bell and each member's email name the plan, module or limit in their own language.
 - The `email.send` payload schema drops keys it doesn't list. A unit test now holds it to every word a template may use.
+
+## Addendum: notices for the operators (2026-11-11)
+
+A transfer reported by a company and a card payment applied are the operator's work, outside any company. They go to every super admin, with no choices to make: the notice is in a platform bell and on a page, `/admin/notifications`, and by email.
+
+- **Tables.** `platform_notifications` (type, plain params, link, a unique `dedupe_key`) and `platform_notification_receipts` (one per super admin, with `read_at`). Both are platform tables: only system context writes them (`app_protect_platform_table`), so a super admin marks their own receipts read through core, which filters by the caller, and no company can touch them. No new env var: the recipients are the accounts flagged `is_super_admin`.
+- **How it is told.** A card payment is applied in system context, so `tellOperators` writes it there. A transfer is reported in the company's transaction, which can't write platform tables: `announceOperators` queues `platform.notify` in it (rule 10) and the job calls `tellOperators` in system context, with a random key so a retry tells once. The company's name is read when the operators are told.
+- **Types.** `PAYMENT_REPORTED` and `CARD_PAYMENT_APPLIED`, each with an editable email template (`paymentReported`, `cardPaymentApplied`). A super admin created after a notice does not see it.

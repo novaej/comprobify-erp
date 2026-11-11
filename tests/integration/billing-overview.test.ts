@@ -95,11 +95,16 @@ describe('the billing overview', () => {
   it('shows a bought add-on, the plan paid for and its payments', async () => {
     const operator = { ...(await superAdmin(db)), clock };
     const pay = async (id: string) => {
-      await submitProof(await owner(), db, {
-        paymentId: id,
-        reference: 'SPI-1',
-        files: [{ filename: 'p.png', content: PNG }],
-      });
+      await submitProof(
+        await owner(),
+        db,
+        {
+          paymentId: id,
+          reference: 'SPI-1',
+          files: [{ filename: 'p.png', content: PNG }],
+        },
+        testNotice,
+      );
       await reviewPayment(operator, db, { paymentId: id, decision: 'VERIFIED' }, testNotice);
     };
     const initial = await startPaidPlan(await owner(), db, {

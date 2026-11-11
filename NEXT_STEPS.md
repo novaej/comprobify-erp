@@ -16,9 +16,6 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 - **Milestone 9 (also):** a re-issue skipped at a month boundary is only logged; tell the company too (FR-DOC-6, FR-NOT-2).
 - **Owner, before go-live:** the real prices, pack sizes and plan limits in place of the placeholders (platform area: Precios, Planes), the operator's bank account (`BANK_TRANSFER_*`) and Payphone's production credentials (ADR-027, ADR-033).
 - **Milestone 9 (also):** in Por facturar, a way to close a payment that needs no invoice (the operator's own company, a test), with a reason; until then, mark the operator's company complimentary.
-- **Milestone 9 (also):** billing notifications: the operator emailed when a company reports a transfer and when a card payment applies (an invoice is owed); a payment verified or rejected (to the company) and a proof submitted (to the operator), logged in the activity log today (ADR-029); and the renewal cycle's steps, emailed today, in the notification centre too (ADR-032).
-- **Milestone 9 (also):** the mandatory notification announcing a price rise to the companies that pay it (FR-BILL-6, ADR-027).
-- **Milestone 9 (also):** email the companies on a plan when a module or a lower limit is scheduled to leave it, as with price changes (FR-BILL-6, FR-NOT-2); a page for the platform activity log (`platform_audit_events`).
 - **Not scheduled:** the vehicle plate on invoices of transport operators, excluding taxis (Anexo 25, Ficha v2.33), if such companies sign up.
 - **Milestone 9:** CSV import and export of clients and products (FR-MD-1), before the CSV batches that need it.
 - **Not scheduled:** ownership transfer (PRD section 3). Today nobody can change or remove the owner.
@@ -27,7 +24,6 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 Gate: reports match seeded data; templates editable (PRD section 15). Pruning old notifications waits for the retention work (below), which needs a narrow exception to the no-delete rule.
 
-- [ ] 3. The other notification types. Done: documents rejected, not sent, overdue, re-issued, authorized (grouped per minute), batch completed, certificate expiring and expired, and quota at 80 % and 100 % (ADR-036). Left: the operator's own (a transfer reported, a card payment applied), which need platform-side tables and go to every super admin
 - [ ] 4. The dashboard (FR-REP-1)
 - [ ] 5. Reports with CSV export, and the accountant's ZIP of a month's authorized XMLs (FR-REP-2, FR-REP-3)
 - [ ] 6. CSV import and export of clients and products (FR-MD-1), then CSV batches for bulk invoicing

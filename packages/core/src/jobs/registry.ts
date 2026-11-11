@@ -1,7 +1,7 @@
 import type { Queue } from 'pg-boss';
 import { z } from 'zod';
 import { sendEmailPayload } from '../email';
-import { notificationEventPayload } from '../notifications';
+import { notificationEventPayload, operatorEventPayload } from '../notifications';
 
 const documentRef = z.object({ tenantId: z.uuid(), documentId: z.uuid() });
 
@@ -124,6 +124,12 @@ export const queues = {
     payload: notificationEventPayload,
     options: { retryLimit: 5, retryDelay: 30, retryBackoff: true, expireInSeconds: 120 },
     concurrency: 5,
+  },
+  // FR-NOT-2 (ADR-036): an event told to the platform's operators, queued where the cause is.
+  'platform.notify': {
+    payload: operatorEventPayload,
+    options: { retryLimit: 5, retryDelay: 30, retryBackoff: true, expireInSeconds: 120 },
+    concurrency: 2,
   },
   // FR-NOT-2: the certificate reminders, once a day, and the document quota warnings.
   'certificates.watch': {

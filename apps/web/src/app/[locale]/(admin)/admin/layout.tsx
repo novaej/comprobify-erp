@@ -1,8 +1,11 @@
+import { platformNotificationSummary } from '@comprobify/core';
 import type { ReactNode } from 'react';
 import { AdminNav } from '@/components/shell/admin-nav';
 import { TopBar } from '@/components/shell/top-bar';
 import { SkipToContent } from '@/components/skip-to-content';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 import { loadPlatform } from '@/server/platform';
+import { getRuntime } from '@/server/runtime';
 import { ActivityTracker } from '../../(app)/activity-tracker';
 
 // ADR-010: platform work, outside any company. Its own sidebar, no switcher, no tenant.
@@ -14,16 +17,31 @@ export default async function AdminLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const { session } = await loadPlatform(locale);
+  const { session, actor } = await loadPlatform(locale);
+  const { db } = await getRuntime();
+  // FR-NOT-2: the platform bell, read with the page.
+  const summary = await platformNotificationSummary(actor, db);
+  const bell = (
+    <NotificationBell
+      scope="platform"
+      unread={summary.unread}
+      items={summary.items.map((item) => ({
+        ...item,
+        environment: 'PRODUCTION' as const,
+        createdAt: item.createdAt.toISOString(),
+        readAt: item.readAt?.toISOString() ?? null,
+      }))}
+    />
+  );
 
   return (
     <>
       <SkipToContent />
       <ActivityTracker />
       <div className="flex h-screen flex-col overflow-hidden md:flex-row">
-        <AdminNav user={{ name: session.user.name, email: session.user.email }} />
+        <AdminNav user={{ name: session.user.name, email: session.user.email }} bell={bell} />
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <TopBar />
+          <TopBar bell={bell} />
           <main
             id="main-content"
             tabIndex={-1}

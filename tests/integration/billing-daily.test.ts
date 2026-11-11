@@ -65,11 +65,16 @@ describe('the daily billing job', () => {
       )
     ).rows[0] as { id: string; status: string; total: string } | undefined;
   const report = async (company: Company, paymentId: string) =>
-    submitProof(await owner(company), db, {
-      paymentId,
-      reference: 'SPI-1',
-      files: [{ filename: 'p.png', content: PNG }],
-    });
+    submitProof(
+      await owner(company),
+      db,
+      {
+        paymentId,
+        reference: 'SPI-1',
+        files: [{ filename: 'p.png', content: PNG }],
+      },
+      testNotice,
+    );
   const pay = async (company: Company, paymentId: string) => {
     await report(company, paymentId);
     await reviewPayment(

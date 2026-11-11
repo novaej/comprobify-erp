@@ -76,11 +76,16 @@ describe('plan changes', () => {
   // The company reports the transfer and the operator verifies it.
   const pay = async (payment: PaymentView | null) => {
     expect(payment).not.toBeNull();
-    await submitProof(await owner(), db, {
-      paymentId: payment!.id,
-      reference: 'SPI-1',
-      files: [{ filename: 'p.png', content: PNG }],
-    });
+    await submitProof(
+      await owner(),
+      db,
+      {
+        paymentId: payment!.id,
+        reference: 'SPI-1',
+        files: [{ filename: 'p.png', content: PNG }],
+      },
+      testNotice,
+    );
     await reviewPayment(
       { ...operator, clock },
       db,
@@ -280,11 +285,16 @@ describe('plan changes', () => {
     expect((await owner()).entitlements.features).toContain('DOC_TYPE_06');
     const next = await renewal();
     expect(next).toMatchObject({ baseAmount: '13.90' });
-    await submitProof(await owner(), db, {
-      paymentId: next!.id,
-      reference: 'SPI-2',
-      files: [{ filename: 'p.png', content: PNG }],
-    });
+    await submitProof(
+      await owner(),
+      db,
+      {
+        paymentId: next!.id,
+        reference: 'SPI-2',
+        files: [{ filename: 'p.png', content: PNG }],
+      },
+      testNotice,
+    );
     expect(await failure(requestSeats(await owner(), db, { extraSeats: 0 }))).toBe(
       'RENEWAL_IN_REVIEW',
     );

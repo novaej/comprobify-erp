@@ -13,7 +13,7 @@ import {
 } from '@comprobify/db';
 import { z } from 'zod';
 import { recordAudit } from '../audit';
-import { notify, type NotifyDeps } from '../notifications';
+import { notify, tellOperators, type NotifyDeps } from '../notifications';
 import {
   DomainError,
   ecuadorDate,
@@ -369,6 +369,12 @@ export async function applyCardAttempt(
       tenantId: payment.tenantId,
       type: 'PAYMENT_VERIFIED',
       params: { amount: payment.totalAmount, date: ecuadorDate(now), code: payment.code },
+    });
+    await tellOperators(txAll, notice, {
+      tenantId: payment.tenantId,
+      type: 'CARD_PAYMENT_APPLIED',
+      params: { amount: payment.totalAmount, code: payment.code },
+      dedupeKey: `card:${attempt.id}`,
     });
     return 'APPROVED';
   });

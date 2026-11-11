@@ -5,6 +5,7 @@ import { ThemeToggle } from '@comprobify/ui/theme';
 import {
   ArrowLeftRight,
   Banknote,
+  Bell,
   Blocks,
   CreditCard,
   Building2,
@@ -20,7 +21,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { signOutAction } from '@/app/[locale]/(app)/actions';
 import { Link, usePathname } from '@/i18n/navigation';
 import { LocaleSwitcher } from '../locale-switcher';
@@ -35,6 +36,7 @@ type AdminItem = {
     | 'payments'
     | 'invoicing'
     | 'cards'
+    | 'notifications'
     | 'plans'
     | 'modules'
     | 'prices'
@@ -58,6 +60,12 @@ const GROUPS: { group: 'operate' | 'catalog'; items: AdminItem[] }[] = [
         section: '/admin/invoicing',
       },
       { href: '/admin/cards', icon: CreditCard, labelKey: 'cards', section: '/admin/cards' },
+      {
+        href: '/admin/notifications',
+        icon: Bell,
+        labelKey: 'notifications',
+        section: '/admin/notifications',
+      },
     ],
   },
   {
@@ -72,7 +80,14 @@ const GROUPS: { group: 'operate' | 'catalog'; items: AdminItem[] }[] = [
 ];
 
 // The platform's sidebar: the same look as the app's, without a company or switcher.
-export function AdminNav({ user }: { user: { name: string; email: string } }) {
+export function AdminNav({
+  user,
+  bell,
+}: {
+  user: { name: string; email: string };
+  // The platform bell, shown in the mobile bar; desktop has it in the top bar.
+  bell?: ReactNode;
+}) {
   const t = useTranslations('adminNav');
   const tNav = useTranslations('nav');
   const tTheme = useTranslations('theme');
@@ -185,6 +200,7 @@ export function AdminNav({ user }: { user: { name: string; email: string } }) {
           <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
           {t('title')}
         </span>
+        {bell && <div className="ml-auto">{bell}</div>}
       </div>
 
       {open && (

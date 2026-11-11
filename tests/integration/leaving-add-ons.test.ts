@@ -94,11 +94,16 @@ describe('add-ons leaving during the period they would be charged for', () => {
     expect(initial).toMatchObject({ baseAmount: '14.90', ivaAmount: '2.24', totalAmount: '17.14' });
 
     // Paid: the removed add-on goes now, the kept one stays, the plan's own modules too.
-    await submitProof(await owner(), db, {
-      paymentId: initial.id,
-      reference: 'SPI-1',
-      files: [{ filename: 'p.png', content: PNG }],
-    });
+    await submitProof(
+      await owner(),
+      db,
+      {
+        paymentId: initial.id,
+        reference: 'SPI-1',
+        files: [{ filename: 'p.png', content: PNG }],
+      },
+      testNotice,
+    );
     await reviewPayment(operator, db, { paymentId: initial.id, decision: 'VERIFIED' }, testNotice);
     const features = (await owner()).entitlements.features;
     expect(features).not.toContain('INVENTORY');

@@ -70,11 +70,16 @@ describe('Personalizado billing and complimentary add-ons', () => {
       )
     ).rows[0];
   const pay = async (company: Company, paymentId: string) => {
-    await submitProof(await owner(company), db, {
-      paymentId,
-      reference: 'SPI-1',
-      files: [{ filename: 'p.png', content: PNG }],
-    });
+    await submitProof(
+      await owner(company),
+      db,
+      {
+        paymentId,
+        reference: 'SPI-1',
+        files: [{ filename: 'p.png', content: PNG }],
+      },
+      testNotice,
+    );
     await reviewPayment(
       { ...operator, clock },
       db,

@@ -168,6 +168,20 @@ export const DEFAULT_COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       button: 'Ver el plan',
       footer: '',
     },
+    paymentReported: {
+      subject: '{organization} reportó un pago de {amount}',
+      heading: 'Hay un pago por revisar',
+      body: '{organization} reportó una transferencia de {amount}. Revisa el comprobante y verifícala o recházala.',
+      button: 'Revisar pagos',
+      footer: '',
+    },
+    cardPaymentApplied: {
+      subject: '{organization} pagó {amount} con tarjeta',
+      heading: 'Se aplicó un pago con tarjeta',
+      body: '{organization} pagó {amount} con tarjeta y su plan ya está al día. Falta registrar la factura de este cobro.',
+      button: 'Ver pagos',
+      footer: '',
+    },
   },
   en: {
     verifyEmail: {
@@ -324,6 +338,20 @@ export const DEFAULT_COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       button: 'View the plan',
       footer: '',
     },
+    paymentReported: {
+      subject: '{organization} reported a payment of {amount}',
+      heading: 'A payment is waiting for review',
+      body: '{organization} reported a transfer of {amount}. Check the proof and verify or reject it.',
+      button: 'Review payments',
+      footer: '',
+    },
+    cardPaymentApplied: {
+      subject: '{organization} paid {amount} by card',
+      heading: 'A card payment was applied',
+      body: '{organization} paid {amount} by card and its plan is up to date. The invoice for this charge is still to be recorded.',
+      button: 'View payments',
+      footer: '',
+    },
   },
 };
 
@@ -368,6 +396,8 @@ export const TEMPLATE_PLACEHOLDERS: Record<
     allowed: ['organization', 'name', 'date', 'count'],
     required: ['name', 'date', 'count'],
   },
+  paymentReported: { allowed: ['organization', 'amount'], required: ['amount'] },
+  cardPaymentApplied: { allowed: ['organization', 'amount'], required: ['amount'] },
 };
 
 export const copyInput = z.object({

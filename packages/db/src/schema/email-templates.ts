@@ -40,6 +40,8 @@ export const EMAIL_TEMPLATES = [
   'priceRise',
   'planContentLeaving',
   'planLimitLowering',
+  'paymentReported',
+  'cardPaymentApplied',
 ] as const;
 export type EmailTemplateKey = (typeof EMAIL_TEMPLATES)[number];
 

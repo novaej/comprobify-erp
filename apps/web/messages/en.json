@@ -963,7 +963,8 @@
     "adminCards": "Card charges",
     "notifications": "Notifications",
     "adminEmails": "Emails",
-    "adminEmail": "Email"
+    "adminEmail": "Email",
+    "adminNotifications": "Platform notices"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -982,7 +983,8 @@
     "payments": "Payments",
     "invoicing": "To invoice",
     "cards": "Card charges",
-    "emails": "Emails"
+    "emails": "Emails",
+    "notifications": "Notices"
   },
   "catalog": {
     "plansTitle": "Plans",
@@ -3071,6 +3073,16 @@
         "label": "Limit going down",
         "title": "A limit of your plan is going down",
         "body": "From {date}, your plan allows {count} {name}."
+      },
+      "PAYMENT_REPORTED": {
+        "label": "Payment reported",
+        "title": "A payment is waiting for review",
+        "body": "{name} reported a transfer of ${amount}."
+      },
+      "CARD_PAYMENT_APPLIED": {
+        "label": "Card payment",
+        "title": "A card payment was applied",
+        "body": "{name} paid ${amount} by card. Its invoice is still to be recorded."
       }
     }
   },
@@ -3188,6 +3200,14 @@
       "planLimitLowering": {
         "name": "Limit going down",
         "use": "When a plan limit goes down, with a date."
+      },
+      "paymentReported": {
+        "name": "Payment reported (operator)",
+        "use": "To the operator, when a company reports a transfer."
+      },
+      "cardPaymentApplied": {
+        "name": "Card payment (operator)",
+        "use": "To the operator, when a card payment is applied."
       }
     },
     "editor": {
@@ -3234,5 +3254,9 @@
       "useAsDraftFor": "(version {version})",
       "restored": "The version is now your draft."
     }
+  },
+  "adminNotifications": {
+    "title": "Platform notices",
+    "description": "What the platform has told you: payments to review and card charges. Each super admin marks their own as read."
   }
 }

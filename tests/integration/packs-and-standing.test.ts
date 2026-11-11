@@ -54,11 +54,16 @@ describe('document packs and the write block', () => {
   const sql = (text: string, values: unknown[] = []) =>
     db.withSystem('test: packs and standing', ({ executeSql }) => executeSql(text, values));
   const pay = async (payment: { id: string }) => {
-    await submitProof(await owner(), db, {
-      paymentId: payment.id,
-      reference: 'SPI-1',
-      files: [{ filename: 'p.png', content: PNG }],
-    });
+    await submitProof(
+      await owner(),
+      db,
+      {
+        paymentId: payment.id,
+        reference: 'SPI-1',
+        files: [{ filename: 'p.png', content: PNG }],
+      },
+      testNotice,
+    );
     await reviewPayment(
       { ...operator, clock },
       db,

@@ -9,11 +9,13 @@ import {
   createMockSri,
   createSriClient,
   deliverNotificationEvent,
+  deliverOperatorEvent,
   feedBatches,
   processItem,
   sendDocument,
   verifyStockLevels,
   type NotificationEvent,
+  type OperatorEvent,
 } from '@comprobify/core';
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { createDatabase } from '@comprobify/db';
@@ -150,6 +152,28 @@ async function runSri(
         event,
       );
   } finally {
+    await db.close();
+  }
+}
+
+// The notices queued for the platform's operators, told here: the app has no worker. A key on
+// each event makes telling one twice harmless.
+async function tellOperators(): Promise<void> {
+  const silent = { debug() {}, info() {}, warn() {}, error() {}, child: () => silent };
+  const db = createDatabase({ connectionString: process.env.DATABASE_URL!, logger: silent });
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
+  try {
+    const { rows } = await client.query<{ data: OperatorEvent }>(
+      `SELECT data FROM pgboss.job WHERE name = 'platform.notify' ORDER BY created_on`,
+    );
+    const notice = {
+      appUrl: 'http://localhost',
+      jobs: { enqueue: () => Promise.resolve(null) },
+    };
+    for (const row of rows) await deliverOperatorEvent({ db, notice }, row.data);
+  } finally {
+    await client.end();
     await db.close();
   }
 }
@@ -2045,7 +2069,18 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await page.getByRole('button', { name: 'Verificar' }).click();
     await expect(page).toHaveURL(/\/es\/dashboard$/);
 
-    await page.goto('/es/admin/payments');
+    // The transfer reported earlier reached the operators (FR-NOT-2): in the bell and its page.
+    await tellOperators();
+    await page.goto('/es/admin/notifications');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Avisos de la plataforma');
+    await expect(page.getByText('Hay un pago por revisar')).toBeVisible();
+    await expect(
+      page.getByText(/Delta Comercial S\.A\. reportó una transferencia de \$91\.89/),
+    ).toBeVisible();
+    await look(page, 'admin-notifications');
+    await page.getByRole('link', { name: 'Hay un pago por revisar' }).click();
+    await expect(page).toHaveURL(/\/es\/admin\/payments$/);
+
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Pagos');
     await look(page, 'admin-payments');
     await page

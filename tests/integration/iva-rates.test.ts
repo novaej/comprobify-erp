@@ -18,7 +18,7 @@ import {
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, superAdmin, testLogger } from './helpers';
+import { appDatabase, superAdmin, testLogger, testNotice } from './helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
 
@@ -193,11 +193,16 @@ describe('the IVA rate and its history', () => {
     const next = await buyPack(await owner(), db, { packSize: 100 });
     expect(await payment(next.id)).toEqual({ rate: '13.00', iva: '0.65', total: '5.65' });
     // Not part of the rate change: the transfer flow still takes this payment as is.
-    await submitProof(await owner(), db, {
-      paymentId: next.id,
-      reference: 'SPI-1',
-      files: [{ filename: 'p.png', content: PNG }],
-    });
+    await submitProof(
+      await owner(),
+      db,
+      {
+        paymentId: next.id,
+        reference: 'SPI-1',
+        files: [{ filename: 'p.png', content: PNG }],
+      },
+      testNotice,
+    );
   });
 
   afterAll(async () => {

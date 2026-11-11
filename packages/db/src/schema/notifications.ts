@@ -139,3 +139,52 @@ export const notificationPreferences = pgTable(
     check('notification_preferences_channel_check', oneOf('channel', NOTIFICATION_CHANNELS)),
   ],
 );
+
+// FR-NOT-2 (ADR-036): what the platform's own operators are told, outside any company. They go
+// to every super admin; text is not stored, as for a company's.
+export const PLATFORM_NOTIFICATION_TYPES = ['PAYMENT_REPORTED', 'CARD_PAYMENT_APPLIED'] as const;
+export type PlatformNotificationType = (typeof PLATFORM_NOTIFICATION_TYPES)[number];
+
+// Platform data: only system context writes it (`app_protect_platform_table`).
+export const platformNotifications = pgTable(
+  'platform_notifications',
+  {
+    id: id(),
+    type: text('type', { enum: PLATFORM_NOTIFICATION_TYPES }).notNull(),
+    // Plain strings that fill the message: the company's name, an amount, a payment code.
+    params: jsonb('params').$type<Record<string, string>>().default({}).notNull(),
+    link: text('link').notNull(),
+    // What the event is about, so a retried job tells the operators once (NFR-JOB-1).
+    dedupeKey: text('dedupe_key'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex('platform_notifications_dedupe_unique')
+      .on(table.dedupeKey)
+      .where(sql`dedupe_key IS NOT NULL`),
+    check('platform_notifications_type_check', oneOf('type', PLATFORM_NOTIFICATION_TYPES)),
+    index('platform_notifications_recent').on(table.createdAt),
+  ],
+);
+
+export const platformNotificationReceipts = pgTable(
+  'platform_notification_receipts',
+  {
+    id: id(),
+    notificationId: uuid('notification_id')
+      .notNull()
+      .references(() => platformNotifications.id),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    readAt: timestamp('read_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    unique('platform_notification_receipts_one_per_user').on(table.notificationId, table.userId),
+    index('platform_notification_receipts_user_recent').on(table.userId, table.createdAt),
+    index('platform_notification_receipts_user_unread')
+      .on(table.userId)
+      .where(sql`read_at IS NULL`),
+  ],
+);
