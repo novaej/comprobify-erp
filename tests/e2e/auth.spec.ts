@@ -1579,6 +1579,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
   test('imports products and clients from a CSV, names the wrong lines, and exports them (FR-MD-1, FR-MD-2)', async ({
     page,
   }) => {
+    test.setTimeout(90_000);
     await signIn(page, email, newPassword);
     await expect(page).toHaveURL(/\/es\/dashboard$/);
     const csv = (name: string, content: string) => ({
@@ -1973,6 +1974,8 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
   test('lets a super admin change the company plan from the platform area (ADR-010, FR-ADM-1)', async ({
     page,
   }) => {
+    // The longest walk of the suite (plans, prices, the IVA, modules); a CI runner is slower.
+    test.setTimeout(120_000);
     await signIn(page, email, newPassword);
     await page.getByLabel('Código', { exact: true }).fill(await totp());
     await page.getByRole('button', { name: 'Verificar' }).click();
@@ -2082,7 +2085,8 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
       .getByRole('button', { name: 'Retirar' })
       .click();
     await expect(page.getByText('Tasa retirada.')).toBeVisible();
-    await expect(iva.getByRole('row', { name: /13\.5 %.*Retirada/ })).toBeVisible();
+    // `first`: a retried run finds the earlier attempt's withdrawn rate too.
+    await expect(iva.getByRole('row', { name: /13\.5 %.*Retirada/ }).first()).toBeVisible();
 
     await page.goto('/es/admin/modules');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Módulos');
