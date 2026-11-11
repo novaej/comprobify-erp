@@ -10,11 +10,13 @@ import {
   requirePermission,
   type ActorContext,
 } from '../kernel';
+import { reportMovements } from '../inventory';
+import { purchasesByProvider } from '../purchasing';
 import { agingReport } from '../receivables';
 
 // FR-REP-2: the reports a person reads on screen and downloads as CSV. One shape for all, so one
 // page and one download serve every report: columns with a kind, rows of plain strings.
-export const REPORTS = ['sales', 'documents', 'taxes', 'aging'] as const;
+export const REPORTS = ['sales', 'documents', 'taxes', 'aging', 'movements', 'purchases'] as const;
 export type ReportKey = (typeof REPORTS)[number];
 
 export const SALES_GROUPS = ['day', 'client', 'product'] as const;
@@ -103,6 +105,55 @@ export async function runReport(
       row.paid,
       row.balance,
     ]);
+  } else if (input.report === 'movements' || input.report === 'purchases') {
+    const stock = input.report === 'movements';
+    requirePermission(ctx, stock ? 'inventory.read' : 'purchasing.read');
+    requireFeature(ctx, stock ? 'INVENTORY' : 'PURCHASE_ORDERS');
+    ({ columns, rows } = await db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+      if (stock)
+        return {
+          columns: [
+            col('date', 'date'),
+            col('movement', 'code'),
+            col('code', 'text'),
+            col('product', 'text'),
+            col('warehouse', 'text'),
+            col('quantity', 'quantity'),
+            col('unitCost', 'amount'),
+            col('value', 'amount'),
+            col('reason', 'text'),
+          ],
+          rows: (await reportMovements(tx, ctx.tenantId, from, to)).map((row) => [
+            row.date,
+            row.type,
+            row.code,
+            row.product,
+            row.warehouse,
+            row.quantity,
+            row.unitCost,
+            row.value,
+            row.reason ?? '',
+          ]),
+        };
+      return {
+        columns: [
+          col('identification', 'text'),
+          col('provider', 'text'),
+          col('orders', 'integer'),
+          col('base', 'amount'),
+          col('iva', 'amount'),
+          col('total', 'amount'),
+        ],
+        rows: (await purchasesByProvider(tx, ctx.tenantId, from, to)).map((row) => [
+          row.identification,
+          row.name,
+          String(row.orders),
+          row.subtotal,
+          row.iva,
+          row.total,
+        ]),
+      };
+    }));
   } else {
     requirePermission(ctx, 'documents.read');
     ({ columns, rows } = await db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
@@ -197,7 +248,7 @@ export async function runReport(
   }
 
   // Sums only for what is money or a count, and only where the rows are parts of one whole.
-  const summed = input.report === 'sales' || input.report === 'taxes' || input.report === 'aging';
+  const summed = ['sales', 'taxes', 'aging', 'purchases'].includes(input.report);
   const totals = summed
     ? columns.map((column, index) =>
         SUMMED.includes(column.kind) && !(input.report === 'aging' && column.key === 'daysOverdue')

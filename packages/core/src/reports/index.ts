@@ -16,3 +16,5 @@ export type {
   ReportResult,
   SalesGroup,
 } from './reports';
+export { accountantExport, accountantMonth } from './accountant';
+export type { AccountantExport } from './accountant';

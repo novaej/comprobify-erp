@@ -63,7 +63,16 @@ export default async function ReportPage({
   const report = key as Exclude<ReportKey, 'aging'>;
   const { actor } = await loadShell(locale);
   if (!hasFeature(actor, 'REPORTS_BASIC')) return <FeatureLocked actor={actor} />;
-  if (!actor.permissions.includes('reports.read') || !actor.permissions.includes('documents.read'))
+  // Each report needs the module it reads from; core checks again.
+  const source = { movements: 'inventory', purchases: 'purchasing' }[report as string];
+  if (source === 'inventory' && !hasFeature(actor, 'INVENTORY'))
+    return <FeatureLocked actor={actor} />;
+  if (source === 'purchasing' && !hasFeature(actor, 'PURCHASE_ORDERS'))
+    return <FeatureLocked actor={actor} />;
+  if (
+    !actor.permissions.includes('reports.read') ||
+    !actor.permissions.includes(`${source ?? 'documents'}.read` as 'documents.read')
+  )
     return <NoAccess />;
 
   const { db } = await getRuntime();

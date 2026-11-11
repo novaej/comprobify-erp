@@ -3323,6 +3323,14 @@
       "valuation": {
         "name": "Inventory valuation",
         "description": "Stock at average cost, by product and warehouse."
+      },
+      "movements": {
+        "name": "Stock movements",
+        "description": "Stock coming in, going out and adjusted over the range, with its cost."
+      },
+      "purchases": {
+        "name": "Purchases by provider",
+        "description": "What you ordered from each provider over the range, without drafts or cancelled orders."
       }
     },
     "filters": {
@@ -3339,7 +3347,7 @@
     "download": "Download CSV",
     "total": "Total",
     "emptyTitle": "No results",
-    "empty": "There are no authorized documents in that range.",
+    "empty": "There is no data in that range.",
     "truncated": "The first {count} are shown. Download the CSV to see them all.",
     "columns": {
       "date": "Date",
@@ -3362,7 +3370,22 @@
       "daysOverdue": "Days late",
       "bucket": "Age",
       "paid": "Paid",
-      "balance": "Balance"
+      "balance": "Balance",
+      "movement": "Movement",
+      "warehouse": "Warehouse",
+      "unitCost": "Unit cost",
+      "value": "Value",
+      "reason": "Reason",
+      "provider": "Provider",
+      "orders": "Orders"
+    },
+    "accountant": {
+      "title": "Accountant export",
+      "description": "Every XML the SRI authorized in a month, in one ZIP file. Documents voided afterwards go in a folder of their own.",
+      "month": "Month",
+      "download": "Download ZIP",
+      "EXPORT_EMPTY": "There are no authorized documents in {month}.",
+      "EXPORT_TOO_LARGE": "There are too many documents in {month} for one file."
     }
   },
   "reportsError": {

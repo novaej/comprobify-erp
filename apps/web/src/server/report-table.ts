@@ -19,6 +19,7 @@ export async function reportTable(
   const t = await getTranslations({ locale, namespace: 'reports' });
   const tDocs = await getTranslations({ locale, namespace: 'documents' });
   const tBuckets = await getTranslations({ locale, namespace: 'receivables.buckets' });
+  const tMovements = await getTranslations({ locale, namespace: 'inventory.types' });
   const spanish = locale !== 'en';
   const tag = spanish ? 'es-EC' : 'en';
   const money = new Intl.NumberFormat(tag, { style: 'currency', currency: 'USD' });
@@ -29,6 +30,7 @@ export async function reportTable(
       return tDocs(`statuses.${value}` as 'statuses.AUTHORIZED');
     if (key === 'type' && tDocs.has(`types.${value}` as 'types.01'))
       return tDocs(`types.${value}` as 'types.01');
+    if (key === 'movement' && tMovements.has(value as 'SALE')) return tMovements(value as 'SALE');
     if (key === 'bucket' && tBuckets.has(value as 'CURRENT')) return tBuckets(value as 'CURRENT');
     return value;
   };

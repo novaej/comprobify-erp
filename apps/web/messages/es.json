@@ -3323,6 +3323,14 @@
       "valuation": {
         "name": "Valoración del inventario",
         "description": "Existencias a costo promedio, por producto y bodega."
+      },
+      "movements": {
+        "name": "Movimientos de inventario",
+        "description": "Entradas, salidas y ajustes de existencias del rango, con su costo."
+      },
+      "purchases": {
+        "name": "Compras por proveedor",
+        "description": "Lo que pediste a cada proveedor en el rango, sin contar borradores ni anuladas."
       }
     },
     "filters": {
@@ -3339,7 +3347,7 @@
     "download": "Descargar CSV",
     "total": "Total",
     "emptyTitle": "Sin resultados",
-    "empty": "No hay documentos autorizados en ese rango.",
+    "empty": "No hay datos en ese rango.",
     "truncated": "Se muestran los primeros {count}. Descarga el CSV para ver todos.",
     "columns": {
       "date": "Fecha",
@@ -3362,7 +3370,22 @@
       "daysOverdue": "Días de atraso",
       "bucket": "Antigüedad",
       "paid": "Cobrado",
-      "balance": "Saldo"
+      "balance": "Saldo",
+      "movement": "Movimiento",
+      "warehouse": "Bodega",
+      "unitCost": "Costo unitario",
+      "value": "Valor",
+      "reason": "Motivo",
+      "provider": "Proveedor",
+      "orders": "Órdenes"
+    },
+    "accountant": {
+      "title": "Exportación para el contador",
+      "description": "Todos los XML autorizados por el SRI de un mes, en un solo archivo ZIP. Los comprobantes que se anularon después van en una carpeta aparte.",
+      "month": "Mes",
+      "download": "Descargar ZIP",
+      "EXPORT_EMPTY": "No hay comprobantes autorizados en {month}.",
+      "EXPORT_TOO_LARGE": "Hay demasiados comprobantes en {month} para un solo archivo."
     }
   },
   "reportsError": {

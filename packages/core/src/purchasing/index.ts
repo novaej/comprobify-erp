@@ -38,3 +38,5 @@ export {
   purchaseOrderNumber,
 } from './status';
 export type { PurchaseOrderStatus } from './status';
+export { purchasesByProvider } from './report';
+export type { ProviderPurchases } from './report';

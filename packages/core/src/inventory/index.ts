@@ -48,3 +48,5 @@ export { verifyStockLevels } from './verify';
 export type { StockDrift } from './verify';
 export { lowStock } from './low-stock';
 export type { LowStock } from './low-stock';
+export { reportMovements } from './movement-report';
+export type { ReportMovement } from './movement-report';

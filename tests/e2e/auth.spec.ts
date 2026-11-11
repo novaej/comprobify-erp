@@ -1611,6 +1611,27 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page.getByRole('table', { name: 'Resumen de impuestos' })).toContainText('15 %');
     await look(page, 'report-taxes');
 
+    // Stock movements read the same way, from the day's receipts and adjustments.
+    await page.goto('/es/reports/movements');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Movimientos de inventario');
+    await expect(page.getByRole('table', { name: 'Movimientos de inventario' })).toContainText(
+      'Café molido',
+    );
+    await look(page, 'report-movements');
+
+    // The accountant's file: a ZIP of the month's authorizations, and a clear word for an empty month.
+    await page.goto('/es/reports');
+    await expect(page.getByRole('heading', { name: 'Exportación para el contador' })).toBeVisible();
+    await look(page, 'reports-accountant');
+    const zip = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Descargar ZIP' }).click();
+    const archive = await zip;
+    expect(archive.suggestedFilename()).toMatch(/^comprobantes-\d{4}-\d{2}\.zip$/);
+    expect((await readFile(await archive.path())).subarray(0, 2).toString()).toBe('PK');
+    await page.goto('/es/reports/accountant/zip?month=2020-01');
+    await expect(page).toHaveURL(/\/es\/reports\?problem=EXPORT_EMPTY/);
+    await expect(page.getByText('No hay comprobantes autorizados en 2020-01.')).toBeVisible();
+
     // A range that ends before it starts says so, and shows no table.
     await page.goto('/es/reports/sales?from=2026-12-01&to=2026-11-01');
     await expect(page.getByText('La fecha final es anterior a la inicial.')).toBeVisible();

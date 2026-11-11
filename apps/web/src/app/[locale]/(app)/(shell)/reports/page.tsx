@@ -1,19 +1,27 @@
-import { hasFeature, type Permission } from '@comprobify/core';
-import { BarChart3, ChevronRight } from 'lucide-react';
+import { ecuadorDate, hasFeature, type Permission } from '@comprobify/core';
+import { AlertCircle, BarChart3, ChevronRight } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { Banner } from '@/components/banner';
 import { FeatureLocked } from '@/components/feature-locked';
 import { NoAccess } from '@/components/no-access';
 import { PageHeader } from '@/components/page-header';
 import { Link } from '@/i18n/navigation';
 import { pageTitle } from '@/server/page-title';
 import { loadShell } from '@/server/shell';
+import { AccountantExport } from './accountant-export';
 
 export const generateMetadata = pageTitle('reports');
 
 // FR-REP-2: where the reports start. Each links to a screen with its range; a person sees only
 // the reports their role and plan reach.
-export default async function ReportsPage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params;
+export default async function ReportsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ problem?: string; month?: string }>;
+}) {
+  const [{ locale }, search] = await Promise.all([params, searchParams]);
   setRequestLocale(locale);
   const { actor } = await loadShell(locale);
   if (!hasFeature(actor, 'REPORTS_BASIC')) return <FeatureLocked actor={actor} />;
@@ -31,6 +39,16 @@ export default async function ReportsPage({ params }: { params: Promise<{ locale
       shown: can('sales.read') && hasFeature(actor, 'RECEIVABLES'),
     },
     {
+      key: 'movements',
+      href: '/reports/movements',
+      shown: can('inventory.read') && hasFeature(actor, 'INVENTORY'),
+    },
+    {
+      key: 'purchases',
+      href: '/reports/purchases',
+      shown: can('purchasing.read') && hasFeature(actor, 'PURCHASE_ORDERS'),
+    },
+    {
       key: 'valuation',
       href: '/inventory/valuation',
       shown: can('inventory.read') && hasFeature(actor, 'INVENTORY'),
@@ -40,6 +58,11 @@ export default async function ReportsPage({ params }: { params: Promise<{ locale
   return (
     <div className="max-w-4xl">
       <PageHeader title={t('title')} description={t('description')} />
+      {(search.problem === 'EXPORT_EMPTY' || search.problem === 'EXPORT_TOO_LARGE') && (
+        <Banner tone="warning" icon={AlertCircle}>
+          {t(`accountant.${search.problem}`, { month: search.month ?? '' })}
+        </Banner>
+      )}
       <ul className="grid gap-3 sm:grid-cols-2">
         {entries.map(({ key, href }) => (
           <li key={key}>
@@ -61,6 +84,9 @@ export default async function ReportsPage({ params }: { params: Promise<{ locale
           </li>
         ))}
       </ul>
+      {can('reports.export') && can('documents.read') && (
+        <AccountantExport month={ecuadorDate(new Date()).slice(0, 7)} />
+      )}
     </div>
   );
 }

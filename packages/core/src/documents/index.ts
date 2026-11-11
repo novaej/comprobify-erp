@@ -106,6 +106,7 @@ export {
 export type { DocumentTemplate, TemplateContent } from './templates';
 export { quotaUsage } from './compose';
 export {
+  authorizedXmls,
   documentsIssued,
   salesBy,
   salesByProduct,
@@ -115,6 +116,7 @@ export {
   topProducts,
 } from './figures';
 export type {
+  AuthorizedXml,
   IssuedRow,
   ProductSalesRow,
   SalesFigure,

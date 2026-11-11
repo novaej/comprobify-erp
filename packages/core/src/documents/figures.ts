@@ -280,3 +280,41 @@ export async function documentsIssued(
     )
     .orderBy(asc(documents.issueDate), asc(documents.series), asc(documents.sequential));
 }
+
+export type AuthorizedXml = {
+  documentType: string;
+  series: string;
+  sequential: number;
+  status: DocumentStatus;
+  xml: string;
+};
+
+// FR-REP-3: the SRI's authorization of each document made in a range, kept as it was answered.
+// A voided document was authorized first, so it is here too, with its status.
+export async function authorizedXmls(
+  tx: Tx['db'],
+  tenantId: string,
+  from: string,
+  to: string,
+): Promise<AuthorizedXml[]> {
+  const { documents } = schema;
+  const rows = await tx
+    .select({
+      documentType: documents.documentType,
+      series: documents.series,
+      sequential: documents.sequential,
+      status: documents.status,
+      xml: documents.authorizationXml,
+    })
+    .from(documents)
+    .where(
+      and(
+        eq(documents.tenantId, tenantId),
+        inArray(documents.status, ['AUTHORIZED', 'VOIDED']),
+        gte(documents.issueDate, from),
+        lte(documents.issueDate, to),
+      ),
+    )
+    .orderBy(asc(documents.documentType), asc(documents.series), asc(documents.sequential));
+  return rows.flatMap((row) => (row.xml ? [{ ...row, xml: row.xml }] : []));
+}
