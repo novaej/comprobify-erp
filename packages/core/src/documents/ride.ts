@@ -15,14 +15,14 @@ import { companyLogo, documentLogo } from '../tenancy';
 import type { Jobs, QueuePayload } from '../jobs';
 import type { Logger } from '@comprobify/config/logger';
 import type { Row } from './sending';
+import { documentNumber } from './number';
 
 // FR-DOC-10 and FR-DOC-11. Both files come from the XML SRI authorized, never from live
 // data; only the logo is current.
 
 const RIDE_STATUSES = ['AUTHORIZED', 'VOIDED'];
 
-const number = (row: Row) =>
-  `${row.series.slice(0, 3)}-${row.series.slice(3)}-${String(row.sequential).padStart(9, '0')}`;
+const number = documentNumber;
 
 async function files(row: Row, logo: Buffer | null) {
   if (!row.authorizationXml || !row.authorizationNumber || !row.authorizedAt)

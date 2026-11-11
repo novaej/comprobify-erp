@@ -308,6 +308,16 @@ describe('bulk invoicing', () => {
     expect(await completeBatches(bulk)).toBeGreaterThanOrEqual(1);
     expect(await view(twin, batch.id)).toMatchObject({ status: 'COMPLETED' });
     expect((await getSaleOrder(await actor(twin), db, ids[0]!)).status).toBe('INVOICED');
+    // FR-BULK-3: the company is told, by a job queued with the completion.
+    const told = await db.withSystem('test: batch notice', ({ executeSql }) =>
+      executeSql<{ data: { params: { count: string } } }>(
+        `SELECT data FROM pgboss.job WHERE name = 'notifications.send'
+         AND data->>'type' = 'BATCH_COMPLETED' AND data->>'link' = $1`,
+        [`/bulk-invoicing/${batch.id}`],
+      ),
+    );
+    expect(told.rows).toHaveLength(1);
+    expect(told.rows[0]!.data.params.count).toBe('3');
   });
 
   it('finds the invoice a crashed try made instead of making another', async () => {

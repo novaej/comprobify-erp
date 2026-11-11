@@ -3,6 +3,7 @@ import { and, eq, schema, type Database } from '@comprobify/db';
 import { invoiceOrderRemainder, type IssueDeps } from '../documents';
 import { isDomainError, type Clock } from '../kernel';
 import type { Jobs } from '../jobs';
+import { announce } from '../notifications';
 import { resolveActor } from '../tenancy';
 import { FINAL_DOCUMENT_STATUSES } from './status';
 
@@ -116,16 +117,16 @@ export async function processItem(
 
 // A batch is done when nothing is queued or being made and every invoice has its final answer
 // from SRI (FR-BULK-3). Marked here, on a schedule, so documents never need to know batches
-// exist. The in-app notification comes with notifications (Milestone 9); today it is logged.
+// exist. The company is told, and the batch logged.
 export async function completeBatches(
-  deps: Pick<BulkDeps, 'db' | 'clock' | 'logger'>,
+  deps: Pick<BulkDeps, 'db' | 'jobs' | 'clock' | 'logger'>,
 ): Promise<number> {
   // Our own constants, never input.
   const final = FINAL_DOCUMENT_STATUSES.map((status) => `'${status}'`).join(', ');
   const completed = await deps.db.withSystem(
     'mark bulk batches whose invoices have all been answered',
-    async ({ executeSql }) => {
-      const { rows } = await executeSql<{ id: string; tenantId: string; total: number }>(
+    async (tx) => {
+      const { rows } = await tx.executeSql<{ id: string; tenantId: string; total: number }>(
         `UPDATE bulk_batches b SET status = 'COMPLETED', completed_at = $1
          WHERE b.status = 'PROCESSING' AND NOT EXISTS (
            SELECT 1 FROM bulk_batch_items i
@@ -136,6 +137,14 @@ export async function completeBatches(
          RETURNING b.id, b.tenant_id AS "tenantId", b.total_items AS total`,
         [deps.clock.now()],
       );
+      // FR-BULK-3: told in the same transaction that closes the batch.
+      for (const batch of rows)
+        await announce(deps.jobs, tx, {
+          tenantId: batch.tenantId,
+          type: 'BATCH_COMPLETED',
+          params: { count: String(batch.total) },
+          link: `/bulk-invoicing/${batch.id}`,
+        });
       return rows;
     },
   );

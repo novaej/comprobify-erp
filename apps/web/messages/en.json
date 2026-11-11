@@ -3006,6 +3006,36 @@
         "label": "Proof rejected",
         "title": "Proof rejected",
         "body": "We couldn't accept the proof for your payment of ${amount}: {reason}. Send a new one or pay by card."
+      },
+      "DOCUMENT_REJECTED": {
+        "label": "Document not authorized",
+        "title": "A document was not authorized",
+        "body": "SRI did not accept document {number}. Open it to see why and correct it."
+      },
+      "DOCUMENT_SEND_FAILED": {
+        "label": "Document not sent",
+        "title": "We could not send a document",
+        "body": "Document {number} did not reach SRI on its issue day. Issue it again with today's date or correct it."
+      },
+      "DOCUMENT_OVERDUE": {
+        "label": "No answer from SRI",
+        "title": "SRI has not answered",
+        "body": "24 hours have passed since SRI received document {number} and it still has not answered."
+      },
+      "DOCUMENT_REISSUED": {
+        "label": "Document issued again",
+        "title": "A document was issued again",
+        "body": "Document {number} was issued again with the date {date}."
+      },
+      "DOCUMENTS_AUTHORIZED": {
+        "label": "Documents authorized",
+        "title": "{count, plural, one {# document was authorized} other {# documents were authorized}}",
+        "body": "SRI authorized {count, plural, one {# document} other {# documents}} in the last minute."
+      },
+      "BATCH_COMPLETED": {
+        "label": "Batch finished",
+        "title": "A batch of invoices finished",
+        "body": "All {count} invoices in the batch have SRI's answer."
       }
     }
   },
@@ -3079,6 +3109,22 @@
       "paymentRejected": {
         "name": "Proof rejected",
         "use": "When a transfer's proof is rejected."
+      },
+      "documentRejected": {
+        "name": "Document not authorized",
+        "use": "When SRI does not authorize a document."
+      },
+      "documentSendFailed": {
+        "name": "Document not sent",
+        "use": "When a document did not reach SRI on its issue day."
+      },
+      "documentOverdue": {
+        "name": "No answer from SRI",
+        "use": "When 24 hours pass without an answer from SRI."
+      },
+      "batchCompleted": {
+        "name": "Batch finished",
+        "use": "When every invoice of a batch has its answer."
       }
     },
     "editor": {

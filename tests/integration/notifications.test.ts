@@ -221,7 +221,12 @@ describe('the notification centre', () => {
     expect((await notificationPreferences(owner, db)).map((row) => row.type)).toContain(
       'PAYMENT_VERIFIED',
     );
-    expect(await notificationPreferences(await as('sales'), db)).toEqual([]);
+    // Sales issues documents but doesn't manage billing.
+    const salesTypes = (await notificationPreferences(await as('sales'), db)).map(
+      (row) => row.type,
+    );
+    expect(salesTypes).toContain('DOCUMENT_REJECTED');
+    expect(salesTypes).not.toContain('PAYMENT_VERIFIED');
     expect(
       await failure(
         setNotificationPreference(await as('sales'), db, {

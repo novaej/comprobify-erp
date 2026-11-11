@@ -3006,6 +3006,36 @@
         "label": "Comprobante rechazado",
         "title": "Comprobante rechazado",
         "body": "No pudimos aceptar el comprobante de tu pago de ${amount}: {reason}. Envía uno nuevo o paga con tarjeta."
+      },
+      "DOCUMENT_REJECTED": {
+        "label": "Documento no autorizado",
+        "title": "El documento no fue autorizado",
+        "body": "SRI no aceptó el documento {number}. Ábrelo para ver el motivo y corregirlo."
+      },
+      "DOCUMENT_SEND_FAILED": {
+        "label": "Documento no enviado",
+        "title": "No pudimos enviar un documento",
+        "body": "El documento {number} no llegó al SRI el día de su emisión. Emítelo de nuevo con la fecha de hoy o corrígelo."
+      },
+      "DOCUMENT_OVERDUE": {
+        "label": "Sin respuesta del SRI",
+        "title": "El SRI no responde",
+        "body": "Pasaron 24 horas desde que el SRI recibió el documento {number} y aún no responde."
+      },
+      "DOCUMENT_REISSUED": {
+        "label": "Documento emitido de nuevo",
+        "title": "Un documento se emitió de nuevo",
+        "body": "El documento {number} se emitió de nuevo con fecha {date}."
+      },
+      "DOCUMENTS_AUTHORIZED": {
+        "label": "Documentos autorizados",
+        "title": "{count, plural, one {Se autorizó # documento} other {Se autorizaron # documentos}}",
+        "body": "El SRI autorizó {count, plural, one {# documento} other {# documentos}} en el último minuto."
+      },
+      "BATCH_COMPLETED": {
+        "label": "Lote terminado",
+        "title": "Terminó un lote de facturas",
+        "body": "Las {count} facturas del lote ya tienen respuesta del SRI."
       }
     }
   },
@@ -3079,6 +3109,22 @@
       "paymentRejected": {
         "name": "Comprobante rechazado",
         "use": "Cuando se rechaza el comprobante de una transferencia."
+      },
+      "documentRejected": {
+        "name": "Documento no autorizado",
+        "use": "Cuando el SRI no autoriza un documento."
+      },
+      "documentSendFailed": {
+        "name": "Documento no enviado",
+        "use": "Cuando un documento no llegó al SRI el día de su emisión."
+      },
+      "documentOverdue": {
+        "name": "Sin respuesta del SRI",
+        "use": "Cuando pasan 24 horas sin respuesta del SRI."
+      },
+      "batchCompleted": {
+        "name": "Lote terminado",
+        "use": "Cuando todas las facturas de un lote tienen respuesta."
       }
     },
     "editor": {

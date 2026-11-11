@@ -428,6 +428,13 @@
       "when": 1794351191983,
       "tag": "0060_email_templates",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1794356281078,
+      "tag": "0061_more_notifications",
+      "breakpoints": true
     }
   ]
 }

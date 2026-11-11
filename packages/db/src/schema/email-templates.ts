@@ -29,6 +29,10 @@ export const EMAIL_TEMPLATES = [
   'renewalRepriced',
   'paymentVerified',
   'paymentRejected',
+  'documentRejected',
+  'documentSendFailed',
+  'documentOverdue',
+  'batchCompleted',
 ] as const;
 export type EmailTemplateKey = (typeof EMAIL_TEMPLATES)[number];
 

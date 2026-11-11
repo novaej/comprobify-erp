@@ -77,7 +77,7 @@ The web app only hides or locks: nav items carry a feature key, a page behind on
 
 ## Notifications
 
-`notify` (ADR-036) is the one way to tell a company something, in the caller's transaction. The catalogue in code gives each type its channels, defaults, audience permission and whether it is mandatory; `notify` finds the members whose role holds that permission, applies what each chose, writes a notification and a receipt per member for the app, and enqueues `email.send` for those with the email channel. Text is never stored: a notification keeps its type and plain parameters and is written when shown, in the reader's language. The bell and the Notificaciones page read the member's own receipts.
+`notify` (ADR-036) is the one way to tell a company something, in the caller's transaction. The catalogue in code gives each type its channels, defaults, audience permission and whether it is mandatory; `notify` finds the members whose role holds that permission, applies what each chose, writes a notification and a receipt per member for the app, and enqueues `email.send` for those with the email channel. Text is never stored: a notification keeps its type and plain parameters and is written when shown, in the reader's language. The bell and the Notificaciones page read the member's own receipts. Events that happen where no actor is at hand (SRI's answers, the overdue sweep, a batch closing) are queued as `notifications.send` in the transaction that caused them; the job finds the real company (a test copy's notices live there too), tells its members, and keeps a retry from telling twice with a `dedupe_key`. Authorizations are grouped: one notice per company per minute, with a running count.
 
 ## Billing
 

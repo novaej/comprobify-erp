@@ -16,8 +16,13 @@ import {
   type EmailMessage,
   type PlatformActor,
 } from '@comprobify/core';
-import { emailTemplateStatusTriggerBody } from '@comprobify/db';
-import { eq, schema, type Database } from '@comprobify/db';
+import {
+  EMAIL_TEMPLATES,
+  emailTemplateStatusTriggerBody,
+  eq,
+  schema,
+  type Database,
+} from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appDatabase, superAdmin } from './helpers';
 
@@ -81,7 +86,7 @@ describe('email templates', () => {
     );
     expect((rows[0] as { prosrc: string }).prosrc).toContain(emailTemplateStatusTriggerBody());
     const summary = await listEmailTemplates(operator, db);
-    expect(summary).toHaveLength(11);
+    expect(summary).toHaveLength(EMAIL_TEMPLATES.length);
     for (const entry of summary)
       for (const locale of entry.locales) expect(locale.version).toBeGreaterThanOrEqual(1);
     // Safe to run again.

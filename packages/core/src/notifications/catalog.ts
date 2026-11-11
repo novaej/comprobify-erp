@@ -30,6 +30,29 @@ const billing = (emailTemplate: EmailTemplate): NotificationSpec => ({
   link: '/plan',
 });
 
+// What happened to a document or a batch: both channels on, to whoever issues documents.
+const documents = (emailTemplate: EmailTemplate, link = '/documents'): NotificationSpec => ({
+  channels: BOTH,
+  defaults: BOTH,
+  mandatory: false,
+  audience: 'documents.issue',
+  emailTemplate,
+  link,
+});
+
+// In the app only: a log of what went well, not worth an email.
+const inAppOnly = (
+  defaults: NotificationSpec['defaults'],
+  audience: NotificationSpec['audience'],
+): NotificationSpec => ({
+  channels: ['IN_APP'],
+  defaults,
+  mandatory: false,
+  audience,
+  emailTemplate: null,
+  link: '/documents',
+});
+
 // Typed over the names in the schema, so a type can't be added in one place only.
 export const NOTIFICATIONS: Record<NotificationType, NotificationSpec> = {
   RENEWAL_DUE: billing('renewalDue'),
@@ -40,6 +63,14 @@ export const NOTIFICATIONS: Record<NotificationType, NotificationSpec> = {
   RENEWAL_REPRICED: billing('renewalRepriced'),
   PAYMENT_VERIFIED: billing('paymentVerified'),
   PAYMENT_REJECTED: billing('paymentRejected'),
+  DOCUMENT_REJECTED: documents('documentRejected'),
+  DOCUMENT_SEND_FAILED: documents('documentSendFailed'),
+  DOCUMENT_OVERDUE: documents('documentOverdue'),
+  DOCUMENT_REISSUED: inAppOnly(['IN_APP'], 'documents.issue'),
+  // One notice with a count per minute, off until a member asks for it (a company authorizing
+  // hundreds a day would drown in them).
+  DOCUMENTS_AUTHORIZED: inAppOnly([], 'documents.read'),
+  BATCH_COMPLETED: documents('batchCompleted', '/bulk-invoicing'),
 };
 
 export type Catalogue = Record<NotificationType, NotificationSpec>;

@@ -4,7 +4,9 @@ import type { Jobs } from '../jobs';
 import { endOfEcuadorDay, type Clock } from '../kernel';
 import { SRI_SEQUENTIAL_TAKEN, SriTransportError, type SriClient, type SriMessage } from '../sri';
 import { AUTHORIZATION_OVERDUE_AFTER, nextAuthorizationCheck, nextSendAttempt } from './calendar';
+import { announce } from '../notifications';
 import { recordExchange } from './exchanges';
+import { documentNumber } from './number';
 import { stockOnAuthorized } from './stock';
 import { assertTransition, type DocumentStatus } from './status';
 
@@ -74,6 +76,26 @@ export async function transition(
 async function update(tx: Tx, row: Row, changes: Changes): Promise<void> {
   await tx.db.update(schema.documents).set(changes).where(eq(schema.documents.id, row.id));
 }
+
+// FR-NOT-2: tell the company what happened to a document, in this transaction.
+export const tell = (
+  jobs: SendingDeps['jobs'],
+  tx: Tx,
+  row: Pick<Row, 'id' | 'tenantId' | 'series' | 'sequential'>,
+  type:
+    | 'DOCUMENT_REJECTED'
+    | 'DOCUMENT_SEND_FAILED'
+    | 'DOCUMENT_OVERDUE'
+    | 'DOCUMENT_REISSUED'
+    | 'DOCUMENTS_AUTHORIZED',
+  params: Record<string, string> = {},
+) =>
+  announce(jobs, tx, {
+    tenantId: row.tenantId,
+    type,
+    params: { number: documentNumber(row), ...params },
+    link: `/documents/${row.id}`,
+  });
 
 const summary = (messages: SriMessage[]) =>
   messages.map(({ identifier, message, additionalInfo }) => ({
@@ -158,6 +180,7 @@ export async function sendDocument(deps: SendingDeps, ref: DocumentRef): Promise
       return;
     }
     const taken = outcome.messages.some((message) => message.identifier === SRI_SEQUENTIAL_TAKEN);
+    await tell(deps.jobs, tx, row, 'DOCUMENT_REJECTED');
     await transition(
       tx,
       row,
@@ -191,6 +214,7 @@ export async function applyFinalAnswer(
   const details = { operation, source: answer.source, messages: summary(answer.messages) };
   const received = await toReceived(tx, row, now, details);
   if (answer.status === 'AUTHORIZED') return authorize(jobs, tx, received, answer, details);
+  await tell(jobs, tx, received, 'DOCUMENT_REJECTED');
   return transition(tx, received, 'NOT_AUTHORIZED', {}, { details });
 }
 
@@ -215,6 +239,7 @@ async function authorize(
     { details },
   );
   await stockOnAuthorized(tx, authorized);
+  await tell(jobs, tx, authorized, 'DOCUMENTS_AUTHORIZED');
   await jobs.enqueue(tx, 'documents.email', {
     tenantId: row.tenantId,
     documentId: row.id,
@@ -267,6 +292,7 @@ export async function checkAfterDeadline(deps: SendingDeps, ref: DocumentRef): P
         },
       );
     await update(tx, current, checked);
+    await tell(deps.jobs, tx, current, 'DOCUMENT_SEND_FAILED');
   });
 }
 
@@ -298,6 +324,7 @@ export async function checkAuthorization(deps: SendingDeps, ref: DocumentRef): P
       return;
     }
     if (answer?.status === 'NOT_AUTHORIZED') {
+      await tell(deps.jobs, tx, current, 'DOCUMENT_REJECTED');
       await transition(
         tx,
         current,
@@ -320,21 +347,30 @@ export async function checkAuthorization(deps: SendingDeps, ref: DocumentRef): P
   });
 }
 
-// FR-DOC-5: alert once per document with no final answer 24 hours after RECEIVED. The
-// in-app notification comes with notifications (Milestone 9); today it is logged.
+// FR-DOC-5: alert once per document with no final answer 24 hours after RECEIVED: a notification
+// to the company, and a log line for the operator.
 export async function alertOverdueAuthorizations(deps: SendingDeps): Promise<number> {
   const now = deps.clock.now();
   const cutoff = new Date(now.getTime() - AUTHORIZATION_OVERDUE_AFTER);
   const overdue = await deps.db.withSystem(
     'mark documents with no SRI answer 24 hours after reception',
-    ({ db: tx }) =>
-      tx
+    async (tx) => {
+      const marked = await tx.db
         .update(schema.documents)
         .set({ overdueAlertedAt: now })
         .where(
           sql`${schema.documents.status} = 'RECEIVED' AND ${schema.documents.overdueAlertedAt} IS NULL AND ${schema.documents.receivedAt} < ${cutoff}`,
         )
-        .returning({ tenantId: schema.documents.tenantId, accessKey: schema.documents.accessKey }),
+        .returning({
+          id: schema.documents.id,
+          tenantId: schema.documents.tenantId,
+          accessKey: schema.documents.accessKey,
+          series: schema.documents.series,
+          sequential: schema.documents.sequential,
+        });
+      for (const document of marked) await tell(deps.jobs, tx, document, 'DOCUMENT_OVERDUE');
+      return marked;
+    },
   );
   for (const document of overdue)
     deps.logger.warn('No SRI answer 24 hours after reception', {

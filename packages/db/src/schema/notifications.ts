@@ -9,6 +9,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { oneOf } from './checks';
@@ -29,6 +30,13 @@ export const NOTIFICATION_TYPES = [
   // The operator's decision on a transfer, and a card payment applied (FR-BILL-3).
   'PAYMENT_VERIFIED',
   'PAYMENT_REJECTED',
+  // What happened to a document at SRI, and to a batch of them (FR-DOC-4 to FR-DOC-6, FR-BULK-3).
+  'DOCUMENT_REJECTED',
+  'DOCUMENT_SEND_FAILED',
+  'DOCUMENT_OVERDUE',
+  'DOCUMENT_REISSUED',
+  'DOCUMENTS_AUTHORIZED',
+  'BATCH_COMPLETED',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
@@ -54,10 +62,15 @@ export const notifications = pgTable(
     // Where it leads, without the language prefix, such as /plan.
     link: text('link').notNull(),
     environment: text('environment', { enum: TENANT_MODES }).notNull(),
+    // What the event is about, so a retried job tells the company once (NFR-JOB-1).
+    dedupeKey: text('dedupe_key'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     unique('notifications_tenant_id_unique').on(table.tenantId, table.id),
+    uniqueIndex('notifications_dedupe_unique')
+      .on(table.tenantId, table.dedupeKey)
+      .where(sql`dedupe_key IS NOT NULL`),
     check('notifications_type_check', oneOf('type', NOTIFICATION_TYPES)),
     check('notifications_environment_check', oneOf('environment', TENANT_MODES)),
   ],

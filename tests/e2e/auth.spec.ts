@@ -8,10 +8,12 @@ import {
   createKeyCipher,
   createMockSri,
   createSriClient,
+  deliverNotificationEvent,
   feedBatches,
   processItem,
   sendDocument,
   verifyStockLevels,
+  type NotificationEvent,
 } from '@comprobify/core';
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { createDatabase } from '@comprobify/db';
@@ -119,10 +121,17 @@ async function runSri(
     const mock = createMockSri();
     if (answer === 'return')
       mock.queue('reception', { kind: 'returned', code: '35', message: 'DOCUMENTO INVÁLIDO' });
+    // The app has no worker: the notices an answer queues are told here, after it is saved.
+    const events: NotificationEvent[] = [];
     const deps = {
       db,
       sri: createSriClient({ transport: mock.transport }),
-      jobs: { enqueue: () => Promise.resolve(null) },
+      jobs: {
+        enqueue: (_tx: unknown, queue: string, data: unknown) => {
+          if (queue === 'notifications.send') events.push(data as NotificationEvent);
+          return Promise.resolve(null);
+        },
+      },
       clock: { now: () => new Date() },
       logger: silent,
     };
@@ -135,6 +144,11 @@ async function runSri(
       await deps.sri.send(row!.signed_xml, row!.ambiente);
       await checkAuthorization(deps, ref);
     }
+    for (const event of events)
+      await deliverNotificationEvent(
+        { db, notice: { appUrl: 'http://localhost', jobs: deps.jobs } },
+        event,
+      );
   } finally {
     await db.close();
   }
@@ -645,6 +659,12 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(
       page.getByRole('alert').filter({ hasText: 'Por qué el SRI lo devolvió' }),
     ).toContainText('DOCUMENTO INVÁLIDO');
+    // FR-NOT-2: the company is told, with a way to the document.
+    await page.getByRole('button', { name: /^Notificaciones, \d+ sin leer$/ }).click();
+    await expect(page.getByRole('list', { name: 'Notificaciones' })).toContainText(
+      'El documento no fue autorizado',
+    );
+    await page.keyboard.press('Escape');
     await page.goto('/es/documents/pending');
     const needsYou = page.getByRole('table', { name: /Necesitan que los corrijas/ });
     await expect(needsYou).toContainText('Devuelto');

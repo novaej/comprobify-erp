@@ -1,6 +1,7 @@
 import type { Queue } from 'pg-boss';
 import { z } from 'zod';
 import { sendEmailPayload } from '../email';
+import { notificationEventPayload } from '../notifications';
 
 const documentRef = z.object({ tenantId: z.uuid(), documentId: z.uuid() });
 
@@ -117,6 +118,12 @@ export const queues = {
     payload: z.object({}),
     options: { policy: 'short', retryLimit: 1, expireInSeconds: 240 },
     concurrency: 1,
+  },
+  // FR-NOT-2 (ADR-036): an event told to a company, queued in the transaction that caused it.
+  'notifications.send': {
+    payload: notificationEventPayload,
+    options: { retryLimit: 5, retryDelay: 30, retryBackoff: true, expireInSeconds: 120 },
+    concurrency: 5,
   },
   'identity.prune': {
     payload: z.object({}),

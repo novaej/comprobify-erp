@@ -26,6 +26,8 @@ export type EmailParams = {
   rate?: string | undefined;
   // A rejection's code, written out in the reader's language.
   reason?: string | undefined;
+  number?: string | undefined;
+  count?: string | undefined;
 };
 
 const REJECTION_REASONS: Record<EmailLocale, Record<string, string>> = {
@@ -62,6 +64,8 @@ export function renderEmail(
       .replaceAll('{date}', params.date ?? '')
       .replaceAll('{amount}', params.amount ?? '')
       .replaceAll('{rate}', params.rate ?? '')
+      .replaceAll('{number}', params.number ?? '')
+      .replaceAll('{count}', params.count ?? '')
       .replaceAll(
         '{reason}',
         params.reason ? (REJECTION_REASONS[locale][params.reason] ?? params.reason) : '',

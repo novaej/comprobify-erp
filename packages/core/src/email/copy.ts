@@ -91,6 +91,34 @@ export const DEFAULT_COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       button: 'Ver el pago',
       footer: 'Si ya corregiste el problema, envía el comprobante otra vez desde el pago.',
     },
+    documentRejected: {
+      subject: 'SRI no autorizó el documento {number} de {organization}',
+      heading: 'El documento {number} no fue autorizado',
+      body: 'SRI no aceptó el documento {number}. Ábrelo para ver el motivo y corregirlo: se reenvía con el mismo número.',
+      button: 'Ver el documento',
+      footer: '',
+    },
+    documentSendFailed: {
+      subject: 'El documento {number} de {organization} no llegó al SRI',
+      heading: 'No pudimos enviar el documento {number}',
+      body: 'El documento {number} no llegó al SRI el día de su emisión. Ábrelo para emitirlo de nuevo con la fecha de hoy o corregirlo.',
+      button: 'Ver el documento',
+      footer: '',
+    },
+    documentOverdue: {
+      subject: 'El SRI no responde por el documento {number} de {organization}',
+      heading: 'El SRI aún no responde por {number}',
+      body: 'Pasaron 24 horas desde que el SRI recibió el documento {number} y no hay respuesta. Sigue siendo del SRI: lo revisamos de nuevo cada cierto tiempo.',
+      button: 'Ver el documento',
+      footer: '',
+    },
+    batchCompleted: {
+      subject: 'Terminó el lote de {organization}: {count} facturas',
+      heading: 'Terminó tu lote de facturas',
+      body: 'Las {count} facturas del lote ya tienen respuesta del SRI. Revisa cuáles quedaron sin autorizar.',
+      button: 'Ver el lote',
+      footer: '',
+    },
   },
   en: {
     verifyEmail: {
@@ -170,6 +198,34 @@ export const DEFAULT_COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       button: 'View the payment',
       footer: 'If you already fixed the problem, send the proof again from the payment.',
     },
+    documentRejected: {
+      subject: 'SRI did not authorize document {number} of {organization}',
+      heading: 'Document {number} was not authorized',
+      body: 'SRI did not accept document {number}. Open it to see why and correct it: it is sent again with the same number.',
+      button: 'View the document',
+      footer: '',
+    },
+    documentSendFailed: {
+      subject: 'Document {number} of {organization} did not reach SRI',
+      heading: 'We could not send document {number}',
+      body: 'Document {number} did not reach SRI on its issue day. Open it to issue it again with today’s date or to correct it.',
+      button: 'View the document',
+      footer: '',
+    },
+    documentOverdue: {
+      subject: 'SRI has not answered for document {number} of {organization}',
+      heading: 'SRI has not answered for {number} yet',
+      body: '24 hours have passed since SRI received document {number} and there is no answer. SRI still holds it: we check again from time to time.',
+      button: 'View the document',
+      footer: '',
+    },
+    batchCompleted: {
+      subject: 'The batch of {organization} is done: {count} invoices',
+      heading: 'Your batch of invoices is done',
+      body: 'All {count} invoices in the batch have SRI’s answer. Check which ones were not authorized.',
+      button: 'View the batch',
+      footer: '',
+    },
   },
 };
 
@@ -197,6 +253,10 @@ export const TEMPLATE_PLACEHOLDERS: Record<
     allowed: ['organization', 'amount', 'reason'],
     required: ['amount', 'reason'],
   },
+  documentRejected: { allowed: ['organization', 'number'], required: ['number'] },
+  documentSendFailed: { allowed: ['organization', 'number'], required: ['number'] },
+  documentOverdue: { allowed: ['organization', 'number'], required: ['number'] },
+  batchCompleted: { allowed: ['organization', 'count'], required: ['count'] },
 };
 
 export const copyInput = z.object({

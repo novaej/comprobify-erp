@@ -56,3 +56,12 @@ The daily billing job, the price re-pricing notices and the operator's decision 
 - Preferences multiply by company: a member of two companies sets each separately.
 - Old notifications aren't removed yet. Pruning needs a narrow exception to the no-delete rule, and comes with the retention work (`NEXT_STEPS.md`).
 - Notifications to the operator (a transfer reported, a card payment applied) need platform-side tables, since they belong to no company. They reuse this catalogue and come in a later step.
+
+## Addendum: events with no actor (2026-11-10)
+
+SRI's answers, the overdue sweep and a batch closing happen in the worker, in a company's or its test copy's transaction. `notify` needs the real company and its members, which a test copy's transaction can't read, so these call `announce`, which queues `notifications.send` in the same transaction (rule 10). The job runs in system context, finds the real company and calls `notify` with the test copy's mode as the environment.
+
+- **Retries tell once.** `announce` gives each event a random `dedupeKey`, which the job passes to `notify`; `notifications` has a unique index on (tenant, key), so a retried job writes nothing and emails no one.
+- **Authorizations are grouped.** `DOCUMENTS_AUTHORIZED` has no key: an event inside 60 seconds of a notice's creation adds one to its `count` (one `UPDATE`, under an advisory lock per company and type), and a later one opens a new notice. It is in the app only and off by default, so no row exists until a member turns it on.
+- **What fires.** `DOCUMENT_REJECTED` when SRI returns or does not authorize a document (code 45 included); `DOCUMENT_SEND_FAILED` only after the deadline check leaves a document unsent, not on each retry; `DOCUMENT_OVERDUE` once per document after 24 hours; `DOCUMENT_REISSUED` when it is re-issued; `BATCH_COMPLETED` when the batch closes.
+

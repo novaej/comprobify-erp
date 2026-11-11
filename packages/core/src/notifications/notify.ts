@@ -18,7 +18,7 @@ export type NotifyDeps = { jobs: Pick<Jobs, 'enqueue'>; appUrl: string };
 
 // Plain strings that fill a message. `date` is an ISO date; `amount` is before any currency sign.
 export type NotificationParams = Partial<
-  Record<'date' | 'amount' | 'rate' | 'reason' | 'code', string>
+  Record<'date' | 'amount' | 'rate' | 'reason' | 'code' | 'number' | 'count', string>
 >;
 
 const formatDate = (date: string, locale: 'es' | 'en') =>
@@ -54,6 +54,10 @@ export async function notify(
     type: NotificationType;
     params?: NotificationParams;
     environment?: TenantMode;
+    // Where it leads when not the type's page, such as one document.
+    link?: string;
+    // What the event is about: a second call with the same key tells no one (NFR-JOB-1).
+    dedupeKey?: string;
   },
   catalogue: Catalogue = NOTIFICATIONS,
 ): Promise<number> {
@@ -99,24 +103,31 @@ export async function notify(
   }));
 
   const inApp = told.filter((row) => row.channels.includes('IN_APP'));
-  if (inApp.length > 0) {
+  const link = input.link ?? spec.link;
+  // With a key the row is written even when no one reads it in the app: it is the record that
+  // the event was told.
+  if (inApp.length > 0 || input.dedupeKey) {
     const [notification] = await tx.db
       .insert(schema.notifications)
       .values({
         tenantId: input.tenantId,
         type: input.type,
         params: { ...input.params } as Record<string, string>,
-        link: spec.link,
+        link,
         environment: input.environment ?? 'PRODUCTION',
+        dedupeKey: input.dedupeKey ?? null,
       })
+      .onConflictDoNothing()
       .returning({ id: schema.notifications.id });
-    await tx.db.insert(schema.notificationReceipts).values(
-      inApp.map((row) => ({
-        tenantId: input.tenantId,
-        notificationId: notification!.id,
-        userId: row.member.userId,
-      })),
-    );
+    if (!notification) return 0;
+    if (inApp.length > 0)
+      await tx.db.insert(schema.notificationReceipts).values(
+        inApp.map((row) => ({
+          tenantId: input.tenantId,
+          notificationId: notification.id,
+          userId: row.member.userId,
+        })),
+      );
   }
 
   const emailed = told.filter((row) => row.channels.includes('EMAIL') && spec.emailTemplate);
@@ -129,12 +140,14 @@ export async function notify(
         locale,
         template: spec.emailTemplate!,
         params: {
-          url: `${deps.appUrl}/${locale}${spec.link}`,
+          url: `${deps.appUrl}/${locale}${link}`,
           organization: company.name,
           ...(input.params?.date ? { date: formatDate(input.params.date, locale) } : {}),
           ...(input.params?.amount ? { amount: `$${input.params.amount}` } : {}),
           ...(input.params?.rate ? { rate: `${Number(input.params.rate)} %` } : {}),
           ...(input.params?.reason ? { reason: input.params.reason } : {}),
+          ...(input.params?.number ? { number: input.params.number } : {}),
+          ...(input.params?.count ? { count: input.params.count } : {}),
         },
       });
     }

@@ -15,6 +15,7 @@ import { loadCopy, sendEmailHandler, type EmailProvider } from './email';
 import { createRateLimiter, pruneIdentityTables } from './identity';
 import { verifyStockLevels } from './inventory';
 import { heartbeatHandler, type Jobs } from './jobs';
+import { deliverNotificationEvent } from './notifications';
 import { sendPurchaseOrderEmail } from './purchasing';
 import type { KeyCipher } from './certificates';
 import type { IssueDeps } from './documents';
@@ -45,6 +46,12 @@ export async function registerHandlers(jobs: Jobs, deps: HandlerDeps): Promise<v
   await jobs.work(
     'email.send',
     sendEmailHandler(emailProvider, (template, locale) => loadCopy(deps.db, template, locale)),
+  );
+  await jobs.work('notifications.send', (job) =>
+    deliverNotificationEvent(
+      { db: deps.db, notice: { jobs, appUrl: deps.billing.appUrl } },
+      job.data,
+    ),
   );
   await jobs.work('identity.prune', async (job) => {
     const now = () => clock.now();
@@ -88,7 +95,7 @@ export async function registerHandlers(jobs: Jobs, deps: HandlerDeps): Promise<v
     await feedBatches({ db: deps.db, jobs, clock, logger });
   });
   await jobs.work('bulk.complete', async () => {
-    await completeBatches({ db: deps.db, clock, logger });
+    await completeBatches({ db: deps.db, jobs, clock, logger });
   });
   await jobs.work('billing.daily', async () => {
     await runBillingDay({ db: deps.db, jobs, clock, logger, ...deps.billing });

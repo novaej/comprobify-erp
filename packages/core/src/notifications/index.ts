@@ -1,5 +1,7 @@
 export { NOTIFICATIONS } from './catalog';
 export type { Catalogue, NotificationSpec } from './catalog';
+export { announce, deliverNotificationEvent, notificationEventPayload } from './events';
+export type { EventDeps, NotificationEvent } from './events';
 export { channelsFor, notify } from './notify';
 export type { NotificationParams, NotifyDeps } from './notify';
 export {

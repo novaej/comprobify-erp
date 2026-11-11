@@ -20,7 +20,7 @@ import {
 } from '../sri';
 import { activeCertificate } from '../tenancy';
 import { recordExchange, recordVersion } from './exchanges';
-import { applyFinalAnswer, locked, transition, type SendingDeps } from './sending';
+import { applyFinalAnswer, locked, tell, transition, type SendingDeps } from './sending';
 import type { Jobs } from '../jobs';
 
 // FR-DOC-6: on the day after, each document SRI never got is re-checked and, if SRI still
@@ -210,6 +210,7 @@ export async function reissueDocument(
       signedXml,
       actorUserId: job.actorUserId ?? null,
     });
+    await tell(deps.jobs, tx, current, 'DOCUMENT_REISSUED', { date: today });
     await deps.jobs.enqueue(tx, 'sri.send', ref);
   });
   logger.info('Re-issued with today’s date', {

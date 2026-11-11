@@ -290,7 +290,7 @@ gate('Milestone 7 gate: a big batch beside another company’s single invoices',
       await until(
         'the batch to finish',
         async () => {
-          await completeBatches({ db, clock: systemClock, logger: testLogger() });
+          await completeBatches({ db, jobs, clock: systemClock, logger: testLogger() });
           return (await getBatch(big, db, batch.id, { limit: 1 })).status === 'COMPLETED';
         },
         30 * 60_000,

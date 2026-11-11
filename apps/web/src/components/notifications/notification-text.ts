@@ -37,6 +37,8 @@ export function useNotificationText() {
         date: params.date ? date.format(new Date(`${params.date}T12:00:00Z`)) : '',
         rate: params.rate ? String(Number(params.rate)) : '',
         code: params.code ?? '',
+        number: params.number ?? '',
+        count: Number(params.count ?? 0),
         reason: params.reason && tReasons.has(params.reason) ? tReasons(params.reason) : '',
       };
       const key = item.type;
