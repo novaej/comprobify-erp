@@ -65,7 +65,7 @@ export {
   sendDocument,
 } from './sending';
 export type { DocumentRef, SendingDeps } from './sending';
-export { nextAuthorizationCheck, nextSendAttempt } from './calendar';
+export { AUTHORIZATION_OVERDUE_AFTER, nextAuthorizationCheck, nextSendAttempt } from './calendar';
 export { enqueueReissues, reissueDocument, requestReissue } from './reissue';
 export type { ReissueDeps } from './reissue';
 export { voidDeadline, voidDocument, voidInput } from './void';

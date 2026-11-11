@@ -25,7 +25,7 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 Gate: reports match seeded data; templates editable (PRD section 15). Pruning old notifications waits for the retention work (below), which needs a narrow exception to the no-delete rule.
 
-- [ ] 7. The rest of the platform area: a jobs view with a retry of failed ones and the documents overdue at SRI across companies, the platform activity log, a document's SRI exchanges with their retention, closing a payment that needs no invoice (FR-ADM-5)
+- [ ] 7. The rest of the platform area. Done: the jobs view (queues, failed jobs with a retry, documents overdue at SRI across companies; FR-ADM-5). Left: the platform activity log, a document's SRI exchanges with their retention, and closing a payment that needs no invoice (the operator's own company)
 - [ ] 8. Gate
 
 ## Upcoming milestones

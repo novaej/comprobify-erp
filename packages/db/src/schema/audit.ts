@@ -124,6 +124,8 @@ export const PLATFORM_AUDIT_ACTIONS = [
   // FR-BILL-2: the IVA on subscriptions (ADR-034).
   'iva.scheduled',
   'iva.withdrawn',
+  // FR-ADM-5: a failed job put back in the queue by the operator.
+  'job.retried',
   // FR-NOT-3 (ADR-037): the emails the platform writes.
   'email_template.drafted',
   'email_template.published',

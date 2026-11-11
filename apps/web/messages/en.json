@@ -938,7 +938,8 @@
     "EMAIL_TEMPLATE_PLACEHOLDER_UNKNOWN": "The text uses a field this email doesn't have. Check the fields you can use.",
     "EMAIL_TEMPLATE_PLACEHOLDER_MISSING": "The text lacks a required field of this email.",
     "EMAIL_TEMPLATE_NO_DRAFT": "There is no draft.",
-    "EMAIL_TEMPLATE_UNCHANGED": "The draft is the same as the version in use."
+    "EMAIL_TEMPLATE_UNCHANGED": "The draft is the same as the version in use.",
+    "JOB_NOT_FAILED": "Only a job that failed can be retried."
   },
   "pageTitles": {
     "login": "Sign in",
@@ -1004,7 +1005,8 @@
     "adminEmail": "Email",
     "adminNotifications": "Platform notices",
     "reports": "Reports",
-    "importBulkBatch": "Import invoices from a CSV"
+    "importBulkBatch": "Import invoices from a CSV",
+    "adminJobs": "Jobs"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -1024,7 +1026,8 @@
     "invoicing": "To invoice",
     "cards": "Card charges",
     "emails": "Emails",
-    "notifications": "Notices"
+    "notifications": "Notices",
+    "jobs": "Jobs"
   },
   "catalog": {
     "plansTitle": "Plans",
@@ -3502,5 +3505,38 @@
     "REPORT_RANGE_INVALID": "The end date is before the start date.",
     "REPORT_RANGE_TOO_LONG": "Ask for a year at most.",
     "UNKNOWN": "The report could not be made. Try again."
+  },
+  "adminJobs": {
+    "title": "Jobs",
+    "description": "How each system queue is doing, the jobs that failed, and the documents SRI has not answered.",
+    "queuesTitle": "Queues",
+    "queue": "Queue",
+    "schedule": "Schedule",
+    "waiting": "Waiting",
+    "active": "Running",
+    "completed": "Completed",
+    "failed": "Failed",
+    "lastRun": "Last run",
+    "lastFailure": "Last failure",
+    "failedTitle": "Failed jobs",
+    "failedEmptyTitle": "No failed jobs",
+    "failedEmpty": "Every recent job finished well.",
+    "failedAt": "Failed",
+    "retries": "Retries",
+    "error": "Error",
+    "actions": "Actions",
+    "retry": "Retry",
+    "retryFor": "the job in the {queue} queue",
+    "retryTitle": "Retry this job?",
+    "retryDescription": "The job goes back to the {queue} queue. Jobs can be repeated safely: if one already did part of its work, it does not duplicate it.",
+    "retried": "Job returned to the queue.",
+    "overdueTitle": "Documents SRI has not answered",
+    "overdueDescription": "Received by SRI more than 24 hours ago and still not authorized, across all companies. The company has been told and the system keeps checking.",
+    "overdueEmptyTitle": "Nothing overdue",
+    "overdueEmpty": "SRI answered every document received more than a day ago.",
+    "company": "Company",
+    "document": "Document",
+    "receivedAt": "Received",
+    "test": "Test"
   }
 }

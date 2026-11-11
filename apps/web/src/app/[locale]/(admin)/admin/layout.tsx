@@ -44,8 +44,9 @@ export default async function AdminLayout({
           <TopBar bell={bell} />
           <main
             id="main-content"
-            tabIndex={-1}
-            className="relative flex-1 overflow-y-auto p-4 outline-none md:p-8"
+            // In the tab order, as in the app: it scrolls, so a keyboard must be able to reach it.
+            tabIndex={0}
+            className="relative flex-1 overflow-y-auto p-4 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset md:p-8"
           >
             {children}
           </main>

@@ -1997,6 +1997,13 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await page.goto('/es/admin/queue');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Cola de facturación masiva');
     await look(page, 'admin-queue');
+
+    // FR-ADM-5: the system's queues, their failed jobs and the documents SRI holds.
+    await page.goto('/es/admin/jobs');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Trabajos');
+    await expect(page.getByRole('table', { name: 'Colas' })).toContainText('sri.send');
+    await expect(page.getByRole('heading', { name: 'Trabajos fallidos' })).toBeVisible();
+    await look(page, 'admin-jobs');
     await page.goto('/es/admin');
     await page.getByRole('searchbox', { name: 'Buscar por RUC o nombre' }).fill(companyRuc);
     await page.getByRole('button', { name: 'Buscar' }).click();

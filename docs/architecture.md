@@ -217,7 +217,7 @@ Reports (FR-REP-2) are `runReport(ctx, db, input, options)`: a name, a date rang
 
 ## Jobs
 
-Queues are declared in `packages/core/src/jobs/registry.ts` with a Zod payload, options and concurrency. Schedules are declared there too, in `America/Guayaquil`. The migrate step creates the queues; the worker applies the schedules at start and removes ones no longer declared. Handlers must be idempotent (NFR-JOB-1).
+Queues are declared in `packages/core/src/jobs/registry.ts` with a Zod payload, options and concurrency. Schedules are declared there too, in `America/Guayaquil`. The migrate step creates the queues; the worker applies the schedules at start and removes ones no longer declared. Handlers must be idempotent (NFR-JOB-1). The platform area has a Trabajos page (`platform/jobs.ts`, FR-ADM-5): each queue's counts by state, its schedule and last run, read from pg-boss's own tables in system context; the failed jobs by their error, never their data (it can hold a link with a token); a retry through the queue's API, recorded as `job.retried` in the platform log; and the documents SRI has held for more than a day across companies.
 
 ## Startup
 

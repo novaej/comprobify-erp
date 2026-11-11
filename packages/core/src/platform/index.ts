@@ -36,6 +36,7 @@ import {
 export * from './billing';
 export * from './catalog';
 export * from './email-templates';
+export * from './jobs';
 
 // The super admin area (ADR-010, FR-ADM-1): platform work outside any tenant. Each
 // function owns its system-context transaction and records the change in the company's
