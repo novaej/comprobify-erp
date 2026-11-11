@@ -16,7 +16,13 @@ export async function invoicingQueue(actor: PlatformActor, db: Database): Promis
     const rows = await tx
       .select()
       .from(schema.payments)
-      .where(and(eq(schema.payments.status, 'VERIFIED'), isNull(schema.payments.invoicedAt)))
+      .where(
+        and(
+          eq(schema.payments.status, 'VERIFIED'),
+          isNull(schema.payments.invoicedAt),
+          isNull(schema.payments.invoiceWaivedAt),
+        ),
+      )
       .orderBy(asc(schema.payments.verifiedAt))
       .limit(500);
     return reviewRowsOf(tx, rows);
@@ -30,7 +36,7 @@ export async function setPaymentInvoiced(
   input: { paymentId: string; documentId: string; actorUserId: string; now: Date },
 ): Promise<void> {
   const payment = await lockPayment(tx, input.paymentId);
-  if (payment.status !== 'VERIFIED' || payment.invoicedAt)
+  if (payment.status !== 'VERIFIED' || payment.invoicedAt || payment.invoiceWaivedAt)
     throw new DomainError('PAYMENT_NOT_INVOICEABLE', 'Only a verified payment not invoiced yet');
   const [used] = await tx
     .select({ code: schema.payments.code })
@@ -52,12 +58,37 @@ export async function setPaymentInvoiced(
   });
 }
 
+// A verified payment that needs no invoice (the operator's own company, a test) leaves the queue
+// with the reason, recorded in the company's activity log. In the caller's system-context
+// transaction.
+export async function setPaymentInvoiceWaived(
+  tx: Tx['db'],
+  input: { paymentId: string; reason: string; actorUserId: string; now: Date },
+): Promise<void> {
+  const payment = await lockPayment(tx, input.paymentId);
+  if (payment.status !== 'VERIFIED' || payment.invoicedAt || payment.invoiceWaivedAt)
+    throw new DomainError('PAYMENT_NOT_INVOICEABLE', 'Only a verified payment not invoiced yet');
+  await tx
+    .update(schema.payments)
+    .set({ invoiceWaivedAt: input.now, invoiceWaivedReason: input.reason })
+    .where(eq(schema.payments.id, payment.id));
+  await recordAudit(tx, {
+    tenantId: payment.tenantId,
+    actorUserId: input.actorUserId,
+    action: 'payment.invoice_waived',
+    details: { code: payment.code, reason: input.reason },
+  });
+}
+
 // What the invoice must match: the company it bills and the amount paid.
 export async function paymentToInvoice(
   tx: Tx['db'],
   paymentId: string,
 ): Promise<{ ruc: string; totalAmount: string }> {
   const payment = await lockPayment(tx, paymentId);
+  // Checked first, so a payment already closed says so before an invoice is looked for.
+  if (payment.status !== 'VERIFIED' || payment.invoicedAt || payment.invoiceWaivedAt)
+    throw new DomainError('PAYMENT_NOT_INVOICEABLE', 'Only a verified payment not invoiced yet');
   const company = await companyRow(tx, payment.tenantId);
   return { ruc: company.ruc, totalAmount: payment.totalAmount };
 }

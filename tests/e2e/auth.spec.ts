@@ -2095,6 +2095,16 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     // `first`: a retried run finds the earlier attempt's withdrawn rate too.
     await expect(iva.getByRole('row', { name: /13\.5 %.*Retirada/ }).first()).toBeVisible();
 
+    // The platform's own log of what was changed above, newest first.
+    await page.goto('/es/admin/activity');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Registro de la plataforma');
+    await expect(page.getByRole('table', { name: 'Registro de la plataforma' })).toContainText(
+      'Publicó un precio',
+    );
+    await look(page, 'admin-activity');
+    await page.getByRole('link', { name: /^Precios \(/ }).click();
+    await expect(page).toHaveURL(/group=price/);
+
     await page.goto('/es/admin/modules');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Módulos');
     await look(page, 'admin-modules');
@@ -2327,6 +2337,15 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await record.getByRole('button', { name: 'Registrar factura' }).click();
     await expect(record.getByText('No hay una factura con esa clave de acceso.')).toBeVisible();
     await record.getByRole('button', { name: 'Cancelar' }).click();
+
+    // A payment that needs no invoice is closed with its reason, and leaves the queue.
+    await owed.getByRole('button', { name: 'Sin factura' }).click();
+    const waive = page.getByRole('dialog', { name: 'Cerrar sin factura' });
+    await look(page, 'admin-invoicing-waive');
+    await waive.getByLabel('Motivo').fill('Pago de la empresa del operador');
+    await waive.getByRole('button', { name: 'Sin factura' }).click();
+    await expect(page.getByText('Pago cerrado sin factura.')).toBeVisible();
+    await expect(page.getByRole('row', { name: /Delta Comercial S\.A\./ })).toHaveCount(0);
 
     await page.goto('/es/admin/cards');
     await expect(page.getByText('Nada por resolver')).toBeVisible();

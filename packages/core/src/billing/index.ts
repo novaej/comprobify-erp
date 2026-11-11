@@ -101,6 +101,7 @@ export {
   resolveCardAttempt,
   resolveCardInput,
   setPaymentInvoiced,
+  setPaymentInvoiceWaived,
 } from './operator';
 export type { CardAttention } from './operator';
 // For the screens: the reasons a transfer is rejected (FR-BILL-3).

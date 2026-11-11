@@ -67,6 +67,7 @@ export const AUDIT_ACTIONS = [
   'payment.card_duplicate',
   // FR-BILL-4, FR-ADM-2: the operator's invoice for a payment, and a card charge settled by hand.
   'payment.invoiced',
+  'payment.invoice_waived',
   'payment.card_resolved',
   // ADR-034: an unpaid payment charged again at a new IVA rate.
   'payment.repriced',

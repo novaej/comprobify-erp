@@ -5,6 +5,7 @@ import {
   refundPayment,
   resolveCardAttempt,
   reviewPayment,
+  waivePaymentInvoice,
   type PaymentRejectionReason,
 } from '@comprobify/core';
 import { revalidatePath } from 'next/cache';
@@ -74,5 +75,15 @@ export async function markInvoicedAction(_: ActionState, form: FormData): Promis
 export async function resolveCardAction(_: ActionState, form: FormData): Promise<ActionState> {
   return run(form, ({ actor, db }) =>
     resolveCardAttempt(actor, db, { attemptId: text(form, 'attemptId'), note: text(form, 'note') }),
+  );
+}
+
+// FR-BILL-4: a verified payment that needs no invoice leaves the queue, with the operator's reason.
+export async function waiveInvoiceAction(_: ActionState, form: FormData): Promise<ActionState> {
+  return run(form, ({ actor, db }) =>
+    waivePaymentInvoice(actor, db, {
+      paymentId: text(form, 'paymentId'),
+      reason: text(form, 'reason'),
+    }),
   );
 }

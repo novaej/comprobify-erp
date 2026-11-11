@@ -16,6 +16,7 @@ import {
   Package,
   ReceiptText,
   Menu,
+  ScrollText,
   ShieldCheck,
   Tag,
   X,
@@ -39,6 +40,7 @@ type AdminItem = {
     | 'invoicing'
     | 'cards'
     | 'notifications'
+    | 'activity'
     | 'plans'
     | 'modules'
     | 'prices'
@@ -63,6 +65,12 @@ const GROUPS: { group: 'operate' | 'catalog'; items: AdminItem[] }[] = [
         section: '/admin/invoicing',
       },
       { href: '/admin/cards', icon: CreditCard, labelKey: 'cards', section: '/admin/cards' },
+      {
+        href: '/admin/activity',
+        icon: ScrollText,
+        labelKey: 'activity',
+        section: '/admin/activity',
+      },
       {
         href: '/admin/notifications',
         icon: Bell,

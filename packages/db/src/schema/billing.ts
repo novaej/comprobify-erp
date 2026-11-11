@@ -191,6 +191,10 @@ export const payments = pgTable(
     // document is the operator's company's, so no foreign key reaches across.
     invoiceDocumentId: uuid('invoice_document_id'),
     invoicedAt: timestamp('invoiced_at', { withTimezone: true }),
+    // Closed with no invoice owed, with the operator's reason (the operator's own company, a
+    // test). Never both this and an invoice.
+    invoiceWaivedAt: timestamp('invoice_waived_at', { withTimezone: true }),
+    invoiceWaivedReason: text('invoice_waived_reason'),
     createdBy: uuid('created_by').references(() => users.id),
     reportedAt: timestamp('reported_at', { withTimezone: true }),
     verifiedAt: timestamp('verified_at', { withTimezone: true }),
@@ -236,6 +240,10 @@ export const payments = pgTable(
     check(
       'payments_verified_check',
       sql`(status IN ('VERIFIED', 'REFUNDED')) = (verified_at IS NOT NULL)`,
+    ),
+    check(
+      'payments_invoice_waived_check',
+      sql`(invoice_waived_at IS NULL) = (invoice_waived_reason IS NULL) AND (invoice_waived_at IS NULL OR invoiced_at IS NULL)`,
     ),
     check('payments_refunded_check', sql`(status = 'REFUNDED') = (refunded_at IS NOT NULL)`),
     // A rejection keeps its reason when the payment is later cancelled.

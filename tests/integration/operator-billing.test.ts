@@ -16,6 +16,7 @@ import {
   submitProof,
   type ActorContext,
   type CreatedOrganization,
+  waivePaymentInvoice,
   type PlatformActor,
 } from '@comprobify/core';
 import { createFakePayphone, createTestP12, testRuc } from '@comprobify/core/testing';
@@ -206,5 +207,71 @@ describe("the operator's billing work", () => {
         resolveCardAttempt(operator, db, { attemptId: duplicate!.id, note: 'Otra vez' }),
       ),
     ).toBe('CARD_NOT_TO_RESOLVE');
+  });
+
+  it('closes a payment that needs no invoice, with its reason, once', async () => {
+    // A company of its own: the others already pay for a plan.
+    const other = await onboard('Sigma S.A.', ownerId);
+    const payer = await resolveActor(db, {
+      userId: ownerId,
+      tenantId: other.twinTenantId,
+      clock,
+    });
+    const next = await startPaidPlan(payer, db, { planKey: 'STARTER', interval: 'MONTHLY' });
+    const waive = (reason: string) =>
+      waivePaymentInvoice(operator, db, { paymentId: next.id, reason });
+    // Only a verified payment is owed an invoice at all.
+    expect(await failure(waive('La empresa del operador'))).toBe('PAYMENT_NOT_INVOICEABLE');
+    await submitProof(
+      payer,
+      db,
+      { paymentId: next.id, reference: 'SPI-2', files: [{ filename: 'p.png', content: PNG }] },
+      testNotice,
+    );
+    await reviewPayment(operator, db, { paymentId: next.id, decision: 'VERIFIED' }, testNotice);
+    expect((await invoicingQueue(operator, db)).map((row) => row.id)).toContain(next.id);
+
+    // A reason is required.
+    await expect(waive('')).rejects.toThrow();
+    await waive('Pago de la empresa del operador');
+    expect((await invoicingQueue(operator, db)).map((row) => row.id)).not.toContain(next.id);
+    const row = (
+      await sql(
+        `SELECT invoice_waived_reason AS reason, invoice_waived_at IS NOT NULL AS waived, invoiced_at FROM payments WHERE id = $1`,
+        [next.id],
+      )
+    ).rows[0];
+    expect(row).toEqual({
+      reason: 'Pago de la empresa del operador',
+      waived: true,
+      invoiced_at: null,
+    });
+    const audit = await sql(
+      `SELECT details FROM audit_events WHERE tenant_id = $1 AND action = 'payment.invoice_waived'`,
+      [other.realTenantId],
+    );
+    expect(audit.rows).toEqual([
+      { details: { code: next.code, reason: 'Pago de la empresa del operador' } },
+    ]);
+
+    // Closed means closed: not again, and no invoice can be recorded for it afterwards.
+    expect(await failure(waive('Otra vez'))).toBe('PAYMENT_NOT_INVOICEABLE');
+    expect(
+      await failure(
+        markPaymentInvoiced(operator, db, { paymentId: next.id, accessKey: '1'.repeat(49) }),
+      ),
+    ).toBe('PAYMENT_NOT_INVOICEABLE');
+    const [stranger] = await db.identity
+      .insert(schema.users)
+      .values({ name: 'Nadie', email: `ow.${randomUUID()}@example.com`, emailVerified: true })
+      .returning({ id: schema.users.id });
+    expect(
+      await failure(
+        waivePaymentInvoice({ userId: stranger!.id, isSuperAdmin: true as const, clock }, db, {
+          paymentId: next.id,
+          reason: 'No soy operador',
+        }),
+      ),
+    ).toBe('FORBIDDEN');
   });
 });

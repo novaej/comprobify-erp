@@ -489,6 +489,7 @@
         "refunded": "Payment refunded",
         "card_duplicate": "recorded a duplicate card charge, to refund",
         "invoiced": "recorded the invoice for a payment",
+        "invoice_waived": "closed a payment without an invoice",
         "card_resolved": "settled a card charge",
         "repriced": "recalculated an open payment at the new VAT"
       }
@@ -1006,7 +1007,8 @@
     "adminNotifications": "Platform notices",
     "reports": "Reports",
     "importBulkBatch": "Import invoices from a CSV",
-    "adminJobs": "Jobs"
+    "adminJobs": "Jobs",
+    "adminActivity": "Platform log"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -1027,7 +1029,8 @@
     "cards": "Card charges",
     "emails": "Emails",
     "notifications": "Notices",
-    "jobs": "Jobs"
+    "jobs": "Jobs",
+    "activity": "Log"
   },
   "catalog": {
     "plansTitle": "Plans",
@@ -3047,7 +3050,13 @@
     "recordDescription": "The invoice issued for {payment}.",
     "accessKey": "Access key",
     "accessKeyHint": "All 49 digits. It must be authorized, for the company's RUC and for the payment's total.",
-    "recorded": "Invoice recorded."
+    "recorded": "Invoice recorded.",
+    "waive": "No invoice",
+    "waiveTitle": "Close without an invoice",
+    "waiveDescription": "Payment {payment} leaves the queue without an invoice. The reason stays on the payment and in the company’s log.",
+    "waiveReason": "Reason",
+    "waiveReasonHint": "For example: a payment by the operator’s own company, or a test.",
+    "waived": "Payment closed without an invoice."
   },
   "adminCards": {
     "title": "Card charges",
@@ -3538,5 +3547,54 @@
     "document": "Document",
     "receivedAt": "Received",
     "test": "Test"
+  },
+  "adminActivity": {
+    "title": "Platform log",
+    "description": "What the administrators changed that reaches every company: plans, modules, prices, the IVA, the email texts and retried jobs. It is never edited.",
+    "filter": "Filter by type",
+    "all": "All",
+    "groups": {
+      "module": "Modules",
+      "plan": "Plans",
+      "price": "Prices",
+      "iva": "IVA",
+      "email_template": "Emails",
+      "job": "Jobs"
+    },
+    "table": {
+      "when": "When",
+      "who": "Who",
+      "what": "What",
+      "details": "Details"
+    },
+    "emptyTitle": "No activity",
+    "empty": "No changes recorded yet.",
+    "pagination": {
+      "label": "Pagination",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page}"
+    },
+    "actions": {
+      "module_created": "Created a module",
+      "module_updated": "Changed a module",
+      "module_feature_added": "Added a function to a module",
+      "module_feature_removed": "Removed a function from a module",
+      "plan_created": "Created a plan",
+      "plan_updated": "Changed a plan",
+      "plan_module_added": "Added a module to a plan",
+      "plan_module_removed": "Removed a module from a plan",
+      "plan_limit_changed": "Changed a plan limit",
+      "price_drafted": "Drafted a price",
+      "price_published": "Published a price",
+      "price_discarded": "Discarded a price",
+      "iva_scheduled": "Scheduled an IVA rate",
+      "iva_withdrawn": "Withdrew an IVA rate",
+      "job_retried": "Retried a failed job",
+      "email_template_drafted": "Saved an email draft",
+      "email_template_published": "Published an email",
+      "email_template_discarded": "Discarded an email draft",
+      "email_template_test_sent": "Sent an email test"
+    }
   }
 }

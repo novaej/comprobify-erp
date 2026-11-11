@@ -489,6 +489,7 @@
         "refunded": "Pago reembolsado",
         "card_duplicate": "registró un cobro con tarjeta duplicado, por devolver",
         "invoiced": "registró la factura de un pago",
+        "invoice_waived": "cerró un pago sin factura",
         "card_resolved": "resolvió un cobro con tarjeta",
         "repriced": "recalculó un pago pendiente con el nuevo IVA"
       }
@@ -1006,7 +1007,8 @@
     "adminNotifications": "Avisos de la plataforma",
     "reports": "Reportes",
     "importBulkBatch": "Importar facturas de un CSV",
-    "adminJobs": "Trabajos"
+    "adminJobs": "Trabajos",
+    "adminActivity": "Registro de la plataforma"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -1027,7 +1029,8 @@
     "cards": "Cobros con tarjeta",
     "emails": "Correos",
     "notifications": "Avisos",
-    "jobs": "Trabajos"
+    "jobs": "Trabajos",
+    "activity": "Registro"
   },
   "catalog": {
     "plansTitle": "Planes",
@@ -3047,7 +3050,13 @@
     "recordDescription": "La factura emitida por {payment}.",
     "accessKey": "Clave de acceso",
     "accessKeyHint": "Los 49 dígitos. Debe estar autorizada, para el RUC de la empresa y por el total del pago.",
-    "recorded": "Factura registrada."
+    "recorded": "Factura registrada.",
+    "waive": "Sin factura",
+    "waiveTitle": "Cerrar sin factura",
+    "waiveDescription": "El pago {payment} sale de la cola sin factura. Queda el motivo en el pago y en el registro de la empresa.",
+    "waiveReason": "Motivo",
+    "waiveReasonHint": "Por ejemplo: pago de la empresa del operador, o una prueba.",
+    "waived": "Pago cerrado sin factura."
   },
   "adminCards": {
     "title": "Cobros con tarjeta",
@@ -3538,5 +3547,54 @@
     "document": "Comprobante",
     "receivedAt": "Recibido",
     "test": "Pruebas"
+  },
+  "adminActivity": {
+    "title": "Registro de la plataforma",
+    "description": "Lo que los administradores cambiaron y que llega a todas las empresas: planes, módulos, precios, el IVA, los textos de los correos y los trabajos reintentados. No se modifica.",
+    "filter": "Filtrar por tipo",
+    "all": "Todo",
+    "groups": {
+      "module": "Módulos",
+      "plan": "Planes",
+      "price": "Precios",
+      "iva": "IVA",
+      "email_template": "Correos",
+      "job": "Trabajos"
+    },
+    "table": {
+      "when": "Cuándo",
+      "who": "Quién",
+      "what": "Qué",
+      "details": "Detalle"
+    },
+    "emptyTitle": "Sin movimientos",
+    "empty": "Aún no hay cambios registrados.",
+    "pagination": {
+      "label": "Paginación",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page": "Página {page}"
+    },
+    "actions": {
+      "module_created": "Creó un módulo",
+      "module_updated": "Cambió un módulo",
+      "module_feature_added": "Agregó una función a un módulo",
+      "module_feature_removed": "Quitó una función de un módulo",
+      "plan_created": "Creó un plan",
+      "plan_updated": "Cambió un plan",
+      "plan_module_added": "Agregó un módulo a un plan",
+      "plan_module_removed": "Quitó un módulo de un plan",
+      "plan_limit_changed": "Cambió un límite de un plan",
+      "price_drafted": "Preparó un precio",
+      "price_published": "Publicó un precio",
+      "price_discarded": "Descartó un precio",
+      "iva_scheduled": "Programó una tasa de IVA",
+      "iva_withdrawn": "Retiró una tasa de IVA",
+      "job_retried": "Reintentó un trabajo fallido",
+      "email_template_drafted": "Guardó el borrador de un correo",
+      "email_template_published": "Publicó un correo",
+      "email_template_discarded": "Descartó el borrador de un correo",
+      "email_template_test_sent": "Envió una prueba de un correo"
+    }
   }
 }

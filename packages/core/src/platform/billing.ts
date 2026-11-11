@@ -1,6 +1,6 @@
 import type { Database } from '@comprobify/db';
 import { z } from 'zod';
-import { paymentToInvoice, setPaymentInvoiced } from '../billing';
+import { paymentToInvoice, setPaymentInvoiced, setPaymentInvoiceWaived } from '../billing';
 import { documentByAccessKey } from '../documents';
 import { assertSuperAdmin } from '../identity';
 import { Dec, DomainError, type PlatformActor } from '../kernel';
@@ -43,4 +43,29 @@ export async function markPaymentInvoiced(
       now: actor.clock.now(),
     });
   });
+}
+
+export const waiveInvoiceInput = z.object({
+  paymentId: z.uuid(),
+  // Why no invoice is owed: the operator's own company, a test. Kept with the payment and in the
+  // company's activity log.
+  reason: z.string().trim().min(3).max(300),
+});
+
+// FR-BILL-4: a verified payment that needs no invoice leaves the invoicing queue with a reason.
+export async function waivePaymentInvoice(
+  actor: PlatformActor,
+  db: Database,
+  raw: z.input<typeof waiveInvoiceInput>,
+): Promise<void> {
+  await assertSuperAdmin(db.identity, actor);
+  const input = waiveInvoiceInput.parse(raw);
+  await db.withSystem('super admin: close a payment that needs no invoice', ({ db: tx }) =>
+    setPaymentInvoiceWaived(tx, {
+      paymentId: input.paymentId,
+      reason: input.reason,
+      actorUserId: actor.userId,
+      now: actor.clock.now(),
+    }),
+  );
 }

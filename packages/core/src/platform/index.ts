@@ -33,6 +33,7 @@ import {
   type CompanyRow,
 } from '../tenancy';
 
+export * from './activity';
 export * from './billing';
 export * from './catalog';
 export * from './email-templates';
