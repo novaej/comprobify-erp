@@ -7,7 +7,7 @@ import {
 } from '@comprobify/core';
 import { buttonVariants } from '@comprobify/ui/components/button';
 import { cn } from '@comprobify/ui/lib/utils';
-import { HandCoins } from 'lucide-react';
+import { Download, HandCoins } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { EmptyState } from '@/components/empty-state';
 import { FeatureLocked } from '@/components/feature-locked';
@@ -70,7 +70,22 @@ export default async function ReceivablesPage({
 
   return (
     <div className="max-w-6xl">
-      <PageHeader title={t('title')} description={t('description', { date: date(report.asOf) })} />
+      <PageHeader
+        title={t('title')}
+        description={t('description', { date: date(report.asOf) })}
+        action={
+          actor.permissions.includes('reports.export') && report.rows.length > 0 ? (
+            // A file download, not a page: a plain link to the route.
+            <a
+              href={`/${locale}/reports/aging/csv`}
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
+            >
+              <Download className="mr-1.5 h-4 w-4" aria-hidden />
+              {t('download')}
+            </a>
+          ) : undefined
+        }
+      />
       <section aria-labelledby="aging-title" className="mb-6">
         <h2 id="aging-title" className="sr-only">
           {t('summary')}

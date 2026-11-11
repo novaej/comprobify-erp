@@ -45,3 +45,12 @@ export function csvDecimal(value: string, delimiter: Csv['delimiter']): string {
   const trimmed = value.trim();
   return delimiter === ';' ? trimmed.replace(',', '.') : trimmed;
 }
+
+// A cell as spreadsheets read it: quoted when it holds the delimiter, a quote or a line break.
+const cell = (value: string, delimiter: string) =>
+  value.includes(delimiter) || /["\r\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
+
+// The file a spreadsheet opens directly: a byte-order mark so Excel reads UTF-8, CRLF lines.
+export function toCsv(rows: string[][], delimiter: Csv['delimiter']): string {
+  return `\uFEFF${rows.map((row) => row.map((value) => cell(value, delimiter)).join(delimiter)).join('\r\n')}\r\n`;
+}

@@ -25,7 +25,7 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 Gate: reports match seeded data; templates editable (PRD section 15). Pruning old notifications waits for the retention work (below), which needs a narrow exception to the no-delete rule.
 
-- [ ] 5. Reports with CSV export, and the accountant's ZIP of a month's authorized XMLs (FR-REP-2, FR-REP-3)
+- [ ] 5. The rest of the reports and the accountant's export. Done: sales (by day, client or product), documents issued, the IVA summary and the receivables aging, each on screen and as CSV (FR-REP-2). Left: stock movements and purchases by provider as reports of the same shape (add to `REPORTS` in `reports/reports.ts`), and the ZIP of a month's authorized XMLs, with the voided ones apart (FR-REP-3, needs `reports.export`); retenciones in the tax summary arrive with the document type (post-MVP); XLSX is not planned, CSV opens in Excel
 - [ ] 6. CSV import and export of clients and products (FR-MD-1), then CSV batches for bulk invoicing
 - [ ] 7. The rest of the platform area: a jobs view with a retry of failed ones and the documents overdue at SRI across companies, the platform activity log, a document's SRI exchanges with their retention, closing a payment that needs no invoice (FR-ADM-5)
 - [ ] 8. Gate

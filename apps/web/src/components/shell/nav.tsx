@@ -3,6 +3,7 @@
 import { cn } from '@comprobify/ui/lib/utils';
 import { ThemeToggle } from '@comprobify/ui/theme';
 import {
+  BarChart3,
   Boxes,
   Building2,
   ChevronLeft,
@@ -47,6 +48,7 @@ type NavItem = {
     | 'purchaseOrders'
     | 'saleOrders'
     | 'receivables'
+    | 'reports'
     | 'bulkInvoicing'
     | 'company'
     | 'users'
@@ -138,6 +140,14 @@ const NAV_ITEMS: NavItem[] = [
     group: 'operate',
     permission: 'sales.read',
     feature: 'RECEIVABLES',
+  },
+  {
+    href: '/reports',
+    icon: BarChart3,
+    labelKey: 'reports',
+    group: 'operate',
+    permission: 'reports.read',
+    feature: 'REPORTS_BASIC',
   },
   {
     href: '/settings',

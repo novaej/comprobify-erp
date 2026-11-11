@@ -208,7 +208,8 @@
     "purchaseOrders": "Purchase orders",
     "saleOrders": "Sale orders",
     "receivables": "Receivables",
-    "bulkInvoicing": "Bulk invoicing"
+    "bulkInvoicing": "Bulk invoicing",
+    "reports": "Reports"
   },
   "shell": {
     "sandboxTitle": "You're in the test environment",
@@ -1001,7 +1002,8 @@
     "notifications": "Notifications",
     "adminEmails": "Emails",
     "adminEmail": "Email",
-    "adminNotifications": "Platform notices"
+    "adminNotifications": "Platform notices",
+    "reports": "Reports"
   },
   "adminNav": {
     "title": "Platform administration",
@@ -2598,7 +2600,8 @@
       "voidedDone": "Payment voided.",
       "voidReason": "Reason",
       "voidReasonHint": "For example: it was recorded twice."
-    }
+    },
+    "download": "Download CSV"
   },
   "receivablesError": {
     "PAYMENT_EXCEEDS_BALANCE": "The payment is more than is owed. Reload the page: another may already have been recorded.",
@@ -3295,5 +3298,76 @@
   "adminNotifications": {
     "title": "Platform notices",
     "description": "What the platform has told you: payments to review and card charges. Each super admin marks their own as read."
+  },
+  "reports": {
+    "title": "Reports",
+    "description": "Sales, documents and taxes over a date range, and other reports on your operation. They download as CSV to open in Excel.",
+    "back": "Back to reports",
+    "reports": {
+      "sales": {
+        "name": "Sales",
+        "description": "Net sales by day, client or product, less credit notes."
+      },
+      "documents": {
+        "name": "Documents issued",
+        "description": "Every document in the range, with its status."
+      },
+      "taxes": {
+        "name": "Tax summary",
+        "description": "Base and IVA by rate, for the monthly declaration."
+      },
+      "aging": {
+        "name": "Receivables",
+        "description": "What your clients owe, by how late it is."
+      },
+      "valuation": {
+        "name": "Inventory valuation",
+        "description": "Stock at average cost, by product and warehouse."
+      }
+    },
+    "filters": {
+      "from": "From",
+      "to": "To",
+      "groupBy": "Group by",
+      "apply": "Show report"
+    },
+    "groups": {
+      "day": "Day",
+      "client": "Client",
+      "product": "Product"
+    },
+    "download": "Download CSV",
+    "total": "Total",
+    "emptyTitle": "No results",
+    "empty": "There are no authorized documents in that range.",
+    "truncated": "The first {count} are shown. Download the CSV to see them all.",
+    "columns": {
+      "date": "Date",
+      "invoices": "Invoices",
+      "base": "Base",
+      "iva": "IVA",
+      "total": "Total",
+      "identification": "ID",
+      "client": "Client",
+      "buyer": "Buyer",
+      "code": "Code",
+      "product": "Product",
+      "quantity": "Quantity",
+      "rate": "Rate",
+      "type": "Type",
+      "number": "Number",
+      "status": "Status",
+      "issueDate": "Issued",
+      "dueDate": "Due",
+      "daysOverdue": "Days late",
+      "bucket": "Age",
+      "paid": "Paid",
+      "balance": "Balance"
+    }
+  },
+  "reportsError": {
+    "REPORT_RANGE_INVALID": "The end date is before the start date.",
+    "REPORT_RANGE_TOO_LONG": "Ask for a year at most.",
+    "UNKNOWN": "The report could not be made. Try again."
   }
 }

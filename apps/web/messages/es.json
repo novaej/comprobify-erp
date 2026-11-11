@@ -208,7 +208,8 @@
     "purchaseOrders": "Órdenes de compra",
     "saleOrders": "Pedidos de venta",
     "receivables": "Cuentas por cobrar",
-    "bulkInvoicing": "Facturación masiva"
+    "bulkInvoicing": "Facturación masiva",
+    "reports": "Reportes"
   },
   "shell": {
     "sandboxTitle": "Estás en el ambiente de pruebas",
@@ -1001,7 +1002,8 @@
     "notifications": "Notificaciones",
     "adminEmails": "Correos",
     "adminEmail": "Correo",
-    "adminNotifications": "Avisos de la plataforma"
+    "adminNotifications": "Avisos de la plataforma",
+    "reports": "Reportes"
   },
   "adminNav": {
     "title": "Administración de la plataforma",
@@ -2598,7 +2600,8 @@
       "voidedDone": "Cobro anulado.",
       "voidReason": "Motivo",
       "voidReasonHint": "Por ejemplo: se registró dos veces."
-    }
+    },
+    "download": "Descargar CSV"
   },
   "receivablesError": {
     "PAYMENT_EXCEEDS_BALANCE": "El cobro supera lo que se debe. Recarga la página: puede que ya se haya registrado otro.",
@@ -3295,5 +3298,76 @@
   "adminNotifications": {
     "title": "Avisos de la plataforma",
     "description": "Lo que la plataforma le avisó: pagos por revisar y cobros con tarjeta. Cada administrador marca los suyos como leídos."
+  },
+  "reports": {
+    "title": "Reportes",
+    "description": "Ventas, documentos e impuestos de un rango de fechas, y otros reportes de tu operación. Se descargan en CSV para abrirlos en Excel.",
+    "back": "Volver a reportes",
+    "reports": {
+      "sales": {
+        "name": "Ventas",
+        "description": "Ventas netas por día, por cliente o por producto, descontando las notas de crédito."
+      },
+      "documents": {
+        "name": "Documentos emitidos",
+        "description": "Todos los comprobantes del rango, con su estado."
+      },
+      "taxes": {
+        "name": "Resumen de impuestos",
+        "description": "Base e IVA por tarifa, para la declaración mensual."
+      },
+      "aging": {
+        "name": "Cuentas por cobrar",
+        "description": "Lo que te deben tus clientes, por antigüedad."
+      },
+      "valuation": {
+        "name": "Valoración del inventario",
+        "description": "Existencias a costo promedio, por producto y bodega."
+      }
+    },
+    "filters": {
+      "from": "Desde",
+      "to": "Hasta",
+      "groupBy": "Agrupar por",
+      "apply": "Ver reporte"
+    },
+    "groups": {
+      "day": "Día",
+      "client": "Cliente",
+      "product": "Producto"
+    },
+    "download": "Descargar CSV",
+    "total": "Total",
+    "emptyTitle": "Sin resultados",
+    "empty": "No hay documentos autorizados en ese rango.",
+    "truncated": "Se muestran los primeros {count}. Descarga el CSV para ver todos.",
+    "columns": {
+      "date": "Fecha",
+      "invoices": "Facturas",
+      "base": "Base",
+      "iva": "IVA",
+      "total": "Total",
+      "identification": "Identificación",
+      "client": "Cliente",
+      "buyer": "Comprador",
+      "code": "Código",
+      "product": "Producto",
+      "quantity": "Cantidad",
+      "rate": "Tarifa",
+      "type": "Tipo",
+      "number": "Número",
+      "status": "Estado",
+      "issueDate": "Emisión",
+      "dueDate": "Vencimiento",
+      "daysOverdue": "Días de atraso",
+      "bucket": "Antigüedad",
+      "paid": "Cobrado",
+      "balance": "Saldo"
+    }
+  },
+  "reportsError": {
+    "REPORT_RANGE_INVALID": "La fecha final es anterior a la inicial.",
+    "REPORT_RANGE_TOO_LONG": "Pide un año como máximo.",
+    "UNKNOWN": "No se pudo generar el reporte. Intenta de nuevo."
   }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { csvDecimal, parseCsv } from './csv';
+import { csvDecimal, parseCsv, toCsv } from './csv';
 
 describe('parseCsv', () => {
   it('reads a comma file with quotes and a trailing blank line', () => {
@@ -31,5 +31,22 @@ describe('parseCsv', () => {
       ['a', 'b'],
       ['1', '2'],
     ]);
+  });
+});
+
+describe('toCsv', () => {
+  it('quotes what needs it, and what it writes parses back', () => {
+    const rows = [
+      ['code', 'name'],
+      ['A', 'Café, molido'],
+      ['B', 'Dice "hola"'],
+      ['C', 'dos\nlíneas'],
+    ];
+    for (const delimiter of [',', ';'] as const) {
+      const text = toCsv(rows, delimiter);
+      expect(text.startsWith('\uFEFF')).toBe(true);
+      expect(text.endsWith('\r\n')).toBe(true);
+      expect(parseCsv(text).rows).toEqual(rows);
+    }
   });
 });

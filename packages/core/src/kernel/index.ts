@@ -30,4 +30,4 @@ export {
   type DecValue,
 } from './money';
 export { isWrite, requirePermission } from './permissions';
-export { csvDecimal, parseCsv, type Csv } from './csv';
+export { csvDecimal, parseCsv, toCsv, type Csv } from './csv';

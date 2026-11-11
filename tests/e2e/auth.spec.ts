@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
 import { base32 } from '@better-auth/utils/base32';
 import { createOTP } from '@better-auth/utils/otp';
@@ -1573,6 +1574,46 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     // A status leads to the list filtered by it.
     await page.getByRole('link', { name: 'Autorizado', exact: true }).first().click();
     await expect(page).toHaveURL(/\/es\/documents\?status=AUTHORIZED/);
+  });
+
+  test('reads the sales and tax reports and downloads one as a CSV (FR-REP-2)', async ({
+    page,
+  }) => {
+    await signIn(page, email, newPassword);
+    await expect(page).toHaveURL(/\/es\/dashboard$/);
+    const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
+    await nav.getByRole('link', { name: 'Reportes' }).click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Reportes');
+    await look(page, 'reports');
+
+    await page
+      .getByRole('link', { name: /Ventas/ })
+      .first()
+      .click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ventas');
+    const sales = page.getByRole('table', { name: 'Ventas' });
+    await expect(sales.getByRole('row', { name: /^Total \d/ })).toContainText('$');
+    await look(page, 'report-sales');
+
+    // The file a Spanish spreadsheet opens: ';' between fields, a header, a row per day.
+    const download = page.waitForEvent('download');
+    await page.getByRole('link', { name: 'Descargar CSV' }).click();
+    const file = await download;
+    expect(file.suggestedFilename()).toMatch(
+      /^report-sales-\d{4}-\d{2}-\d{2}_\d{4}-\d{2}-\d{2}\.csv$/,
+    );
+    const csv = await readFile(await file.path(), 'utf8');
+    expect(csv.startsWith('\uFEFFFecha;Facturas;Base;IVA;Total')).toBe(true);
+    expect(csv.split('\r\n').length).toBeGreaterThan(2);
+
+    await page.goto('/es/reports/taxes');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Resumen de impuestos');
+    await expect(page.getByRole('table', { name: 'Resumen de impuestos' })).toContainText('15 %');
+    await look(page, 'report-taxes');
+
+    // A range that ends before it starts says so, and shows no table.
+    await page.goto('/es/reports/sales?from=2026-12-01&to=2026-11-01');
+    await expect(page.getByText('La fecha final es anterior a la inicial.')).toBeVisible();
   });
 
   test('finds no drift between the stock levels and their ledger after the day (FR-INV-2, Milestone 5 gate)', async () => {

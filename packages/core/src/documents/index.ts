@@ -105,7 +105,22 @@ export {
 } from './templates';
 export type { DocumentTemplate, TemplateContent } from './templates';
 export { quotaUsage } from './compose';
-export { salesFigure, statusCounts, topProducts } from './figures';
-export type { SalesFigure, TopProduct } from './figures';
+export {
+  documentsIssued,
+  salesBy,
+  salesByProduct,
+  salesFigure,
+  statusCounts,
+  taxSummary,
+  topProducts,
+} from './figures';
+export type {
+  IssuedRow,
+  ProductSalesRow,
+  SalesFigure,
+  SalesRow,
+  TaxRow,
+  TopProduct,
+} from './figures';
 export type { QuotaUsage } from './compose';
 export { QUOTA_WARNING_PERCENT, watchQuota } from './quota-watch';
