@@ -17,9 +17,10 @@ Add a screenshot when the problem is how something looks. "Looks wrong" is enoug
 | Part | Flows |
 |---|---|
 | 0 | [Prerequisites](#part-0-prerequisites) |
+| P | [The public pages](#part-p-the-public-pages) · P1–P3 |
 | A | [Accounts](#part-a-accounts) · A1–A3 |
 | B | [The company](#part-b-the-company) · B1–B4 |
-| C | [Plan and payments](#part-c-plan-and-payments) · C1–C4 |
+| C | [Plan and payments](#part-c-plan-and-payments) · C1–C5 |
 | D | [Master data](#part-d-master-data) · D1–D4 |
 | E | [Inventory](#part-e-inventory) · E1–E3 |
 | F | [Documents](#part-f-documents) · F1–F7 |
@@ -31,7 +32,7 @@ Add a screenshot when the problem is how something looks. "Looks wrong" is enoug
 | L | [Dashboard and reports](#part-l-dashboard-and-reports) · L1–L3 |
 | M | [Going live](#part-m-going-live) · M1–M3 |
 | N | [The platform area](#part-n-the-platform-area) · N1–N7 |
-| R | [Real services (optional)](#part-r-real-services-optional) · R1–R3 |
+| R | [The real SRI (optional)](#part-r-the-real-sri-optional) · R1 |
 
 ---
 
@@ -57,7 +58,30 @@ BANK_TRANSFER_ACCOUNT_HOLDER=Comprobify Operadora S.A.
 BANK_TRANSFER_IDENTIFICATION=1790012345001
 ```
 
-Keep `SRI_MOCK_MODE=true`, `EMAIL_PROVIDER` empty and the Payphone lines commented out.
+Keep `SRI_MOCK_MODE=true` (the mock SRI answers like SRI; see [R1](#r1--the-real-sri-test-environment) for the real one).
+
+**Emails: real ones, to your inbox (recommended).** With a Mailgun key and domain set and `EMAIL_PROVIDER` left empty, the worker really sends. Add `EMAIL_REDIRECT_TO` so every email of the run comes to your address instead of the made-up ones (`owner@andina.test` and the rest don't exist):
+
+```bash
+MAILGUN_API_KEY=<your key>
+MAILGUN_DOMAIN=<your sending domain>
+MAILGUN_REGION=us            # or eu
+EMAIL_FROM=Comprobify <no-reply@<your sending domain>>
+EMAIL_REDIRECT_TO=<your own address>
+```
+
+Each email arrives with `[REDIRIGIDO]` in the subject and a red line saying who it would have gone to, so you can tell the owner's from the invitee's. A Mailgun *sandbox* domain only delivers to addresses you authorized in its console: authorize the redirect address there. The buyer's copy of an invoice carries the RIDE and XML, so you see the real attachment too.
+
+**Emails: only in the terminal.** Leave the Mailgun lines unset (or set `EMAIL_PROVIDER=log`) and nothing is sent: the worker writes each email to the `pnpm dev` terminal, link included.
+
+**Cards through Payphone (to run flow C5).** Payphone's widget only renders on a domain registered in its console, so this needs its test application and an address it accepts:
+
+```bash
+PAYPHONE_TOKEN=<test application token>
+PAYPHONE_STORE_ID=<its store id>
+```
+
+Register the address you open the app on and `<address>/es/plan/card-return` as the return address (steps in [payphone-test-card.md](payphone-test-card.md)). I have not checked whether Payphone accepts `localhost`. If it doesn't, give the app a public https address with a tunnel (Cloudflare Tunnel or ngrok both work), register that, set `APP_URL=<that address>` in `.env`, and open the app through it for the whole run. Without Payphone credentials, skip C5: the card flow is covered by the automated tests against a fake Payphone, and only the real widget is untested.
 
 ### 0.2 A clean database
 
@@ -79,6 +103,12 @@ pnpm test-certificate 1714070046001 10   # a second company whose signature expi
 
 Each writes `test-<ruc>.p12` in the repository root; the password is `secret`. They are git-ignored.
 
+**Using your own signature.** You can use your own `.p12` and RUC for **Comercial Andina**, the main company, instead of the first generated one. Only that one: a RUC belongs to one company, the certificate must match its company's RUC, and the other two need the generated ones (the operator's RUC is the `OPERATOR_RUC` of 0.1, and a certificate that ends in 10 days can't be a real one). Then:
+
+- Skip the first command, and wherever this script says `1712345678001`, `Comercial Andina` and `test-1712345678001.p12`, use your RUC, your legal name and your file with your password. The place it matters is **C3**: recording the operator's invoice checks that the buyer's RUC is the company's.
+- While `SRI_MOCK_MODE=true` nothing reaches SRI, and locally every document is issued for SRI's test environment even after going live (M1), so signing is the only real part. The same company then serves the real-SRI flow R1.
+- Your private key is stored, encrypted, in the local database with the placeholder key of `.env.example`. Reset the database when you are done (`pnpm db:reset local`), and never commit the file.
+
 ### 0.4 Start
 
 ```bash
@@ -87,7 +117,7 @@ pnpm dev
 
 Wait for the worker's `Worker started`. Open http://localhost:3000/es.
 
-**Where emails go.** Nothing is sent. The worker writes each email to the `pnpm dev` terminal as an `email.logged` line, with the address, the template and the link. When a step says "open the link in the email", copy it from there. It helps to keep that terminal visible.
+**Where emails go.** With Mailgun set (0.1), to your inbox; open the links from there. Without it, nothing is sent: the worker writes each email to the `pnpm dev` terminal as an `email.logged` line, with the address, the template and the link, and a step that says "open the link in the email" means copy it from there. Either way, steps that mention "in the terminal" mean: in your inbox when emails are real.
 
 **Running a scheduled job now.** Some checks run on a schedule (the certificate check at 07:00, the quota every 15 minutes). To run one immediately, with `pnpm dev` running:
 
@@ -118,7 +148,7 @@ Use these throughout, so later flows can refer to them. All passwords: `una clav
 
 | Thing | Value |
 |---|---|
-| Customer company | Comercial Andina S.A., RUC `1712345678001` |
+| Customer company | Comercial Andina S.A., RUC `1712345678001` (or your own RUC and legal name, if you use your own signature: see 0.3) |
 | Operator company | Comprobify Operadora S.A., RUC `1790012345001` |
 | Second company | Andina Norte S.A., RUC `1714070046001` (signature expires in 10 days) |
 | Client, person | María Pérez, cédula `1710034065`, `maria@cliente.test` |
@@ -130,6 +160,49 @@ Use these throughout, so later flows can refer to them. All passwords: `una clav
 
 ---
 
+## Part P: The public pages
+
+Seen signed out, so use a private window. They need no company; run them any time after Part 0, and P2's last step after N2.
+
+### P1 · The landing page
+
+**Needs:** Part 0.
+
+| # | Do | Expect |
+|---|---|---|
+| 1 | http://localhost:3000 | The landing page in Spanish: the headline, a sample invoice that steps through Firmado, Recibido, Autorizado and stamps "Autorizado por el SRI", three short points, **Crear cuenta gratis** |
+| 2 | **Ver cómo funciona**, and the header's **Cómo empezar** | Scrolls to the three steps; the timeline fills as you scroll and the picture beside it changes |
+| 3 | Look at the comprobantes strip | Factura, Nota de crédito and Guía de remisión ticked; Retención and Liquidación de compra marked as coming |
+| 4 | Look at the plans | Gratis, Emprende, Negocio, Empresa with prices before IVA and their monthly documents; one marked **Más popular** |
+| 5 | Open two questions in the FAQ | Each opens and closes; opening one closes the other |
+| 6 | Header: **EN**, the theme button, then the phone width (browser's responsive mode) | English; dark theme; on the phone the links move into the menu button, and nothing scrolls sideways |
+| 7 | **Crear cuenta gratis** | The registration form |
+| 8 | Signed in as Ana, open `/es` | The header shows **Ir a mi cuenta** instead of the sign-in links |
+
+### P2 · Pricing
+
+**Needs:** Part 0. Step 6 needs N2 done.
+
+| # | Do | Expect |
+|---|---|---|
+| 1 | Header → **Precios** | The four plans with prices before IVA ("+ IVA"), their limits and the modules each includes |
+| 2 | **Anual** | Prices are ten months' worth; "Equivalente a … /mes" appears; documents become a year's worth |
+| 3 | Look under the cards | The extra-user price, the payment methods, the add-on modules with prices |
+| 4 | **Compara los planes**: scroll the table sideways on the phone width | Limits and a tick or dash per module; the table scrolls inside itself, not the page |
+| 5 | Compare the prices with the owner's **Plan** → **Elegir un plan** | The same plans and amounts |
+| 6 | As the operator, publish a new price for Negocio (N2, the earliest date), then reload the pricing page after 30 seconds | Negocio still shows today's price, with "El precio cambia a … a partir del …". With a date of today (a plan nobody pays) the new price shows instead |
+
+### P3 · Support
+
+**Needs:** Part 0 (`SUPPORT_EMAIL` set; add `SUPPORT_PHONE=+593…` to try the WhatsApp card).
+
+| # | Do | Expect |
+|---|---|---|
+| 1 | Header → **Soporte**, or the footer's **Soporte** | The email card, and a WhatsApp card if `SUPPORT_PHONE` is set; the email opens your mail app, the number opens WhatsApp |
+| 2 | Empty `SUPPORT_EMAIL`, restart, reload | "No hay datos de contacto configurados todavía." |
+
+---
+
 ## Part A: Accounts
 
 ### A1 · Register and confirm the email
@@ -138,7 +211,7 @@ Use these throughout, so later flows can refer to them. All passwords: `una clav
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Owner window: http://localhost:3000 | It goes to `/es`, in Spanish |
+| 1 | Owner window: http://localhost:3000 | It goes to `/es`, the landing page (P1), in Spanish. **Crear cuenta** in its header leads to the form |
 | 2 | **Crear cuenta**: Ana Owner, `owner@andina.test`, the password twice | A "check your email" page |
 | 3 | In the terminal, find the `verifyEmail` email for `owner@andina.test` and open its link | A page with a **Confirmar mi correo** button; nothing is confirmed just by opening it |
 | 4 | Click **Confirmar mi correo** | Signed in, sent to set up a company |
@@ -182,10 +255,10 @@ Use these throughout, so later flows can refer to them. All passwords: `una clav
 | # | Do | Expect |
 |---|---|---|
 | 1 | Owner window: fill the company form with RUC `1712345678001`, Comercial Andina S.A., an address, the main branch `001` Matriz, issue point `001` | Fields check as you go: a RUC with a bad structure is refused |
-| 2 | Upload `test-1712345678001.p12`, password `secret` | Accepted. Try once with a wrong password first: refused, clearly |
+| 2 | Upload `test-1712345678001.p12`, password `secret` (or your own file and password) | Accepted. Try once with a wrong password first: refused, clearly |
 | 3 | **Crear mi empresa** | The dashboard, "Tu empresa está lista", a yellow "ambiente de pruebas" banner, **SRI Pruebas** in the sidebar |
 | 4 | Look at the sidebar | The organization switcher, Pruebas selected; Producción disabled with "Disponible cuando tu empresa pase a producción" |
-| 5 | Upload the operator's certificate in a fresh company form instead (don't submit), with RUC `1712345678001` | Refused: the certificate's RUC doesn't match |
+| 5 | In a fresh company form (don't submit), upload `test-1790012345001.p12` with the company's RUC | Refused: the certificate's RUC doesn't match |
 
 ### B2 · The legal documents
 
@@ -259,7 +332,7 @@ Use these throughout, so later flows can refer to them. All passwords: `una clav
 | # | Do | Expect |
 |---|---|---|
 | 1 | Operator window: **Mi cuenta** → **Configurar mi empresa**: RUC `1790012345001`, Comprobify Operadora S.A., `test-1790012345001.p12` | The company, in its test copy, beside the platform area |
-| 2 | In it, create a client: Comercial Andina, RUC `1712345678001` | Created |
+| 2 | In it, create a client: Comercial Andina, with the company's RUC (`1712345678001`, or yours) | Created |
 | 3 | **Nueva factura** for that client: one line "Plan Empresa, mensual", 1 × 79,90, IVA 15 %, paid by transfer | Total $91,89; **Emitir factura** → authorized by the mock SRI within seconds |
 | 4 | Copy the invoice's 49-digit access key from its page | |
 | 5 | Platform area → **Por facturar** | Comercial Andina's payment, with **Registrar factura** and **Sin factura** |
@@ -277,6 +350,23 @@ Use these throughout, so later flows can refer to them. All passwords: `una clav
 | 3 | Operator: verify it | The owner's plan page shows the pack's documents |
 | 4 | Operator: **Por facturar** → **Sin factura** on it; try with no reason, then "Prueba del QA" | Refused without a reason; then "Pago cerrado sin factura." and it leaves the queue |
 | 5 | Owner: **Actividad** | "cerró un pago sin factura", with the reason |
+
+### C5 · Pay by card through Payphone
+
+**Needs:** C2, and the Payphone settings of 0.1 (skip this flow without them). **Leaves:** a paid pack and a payment by card; a notice for the operator.
+
+| # | Do | Expect |
+|---|---|---|
+| 1 | Owner: **Plan** → **Paquetes de comprobantes** → buy the smallest again | A payment card "Por pagar", with **Transferencia** and **Tarjeta** |
+| 2 | **Tarjeta** | Payphone's widget loads below |
+| 3 | Pay with Payphone's test card | Payphone sends you back to `/es/plan/card-return`; "Pago aprobado" |
+| 4 | **Volver al plan** | The pack's documents are added; the payment shows "Pagado", by card |
+| 5 | Reload the return page | "Pago aprobado" again, and no second charge in Payphone's dashboard |
+| 6 | Operator: the bell | "Se aplicó un pago con tarjeta"; a `cardPaymentApplied` email |
+| 7 | Operator: **Por facturar** | The payment, method **Tarjeta**, owed an invoice; record or close it as in C3 and C4 |
+| 8 | Owner: buy another pack, **Tarjeta**, and decline with Payphone's declined test card | "El pago no se completó"; the payment is still "Por pagar" and can be paid by transfer |
+
+If the widget doesn't load, or the return page shows an error, see "If something goes wrong" in [payphone-test-card.md](payphone-test-card.md).
 
 ---
 
@@ -445,7 +535,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 | 2 | Filter by status, by issue point, by dates; search by a number and by an access key | Each narrows the list; **Limpiar** brings it back |
 | 3 | **Todo lo pendiente** | Nothing pending, or only what is waiting for SRI |
 
-**SRI's refusals are not here:** the mock SRI authorizes everything, so a returned or not-authorized invoice, its correction and resend, and a send that never reached SRI can't be made by hand locally. They are covered by the automated tests, and by R3 with the real SRI.
+**SRI's refusals are not here:** the mock SRI authorizes everything, so a returned or not-authorized invoice, its correction and resend, and a send that never reached SRI can't be made by hand locally. They are covered by the automated tests, and by R1 with the real SRI.
 
 ---
 
@@ -798,21 +888,13 @@ All as Oscar, in the operator window.
 
 ---
 
-## Part R: Real services (optional)
+## Part R: The real SRI (optional)
 
-These need accounts and keys of your own. Each is independent of the others.
+Needs your own signature. Independent of everything above.
 
-### R1 · Real emails, to your inbox
+### R1 · The real SRI, test environment
 
-In `.env`: `EMAIL_PROVIDER=mailgun`, the Mailgun key and domain, and `EMAIL_REDIRECT_TO=<your address>`, so every email of the run comes to you instead of the made-up addresses. Restart `pnpm dev` and repeat A2 step 3, C1 and F1. Expect real emails, the RIDE attached, readable on a phone.
-
-### R2 · A card payment through Payphone
-
-Follow [payphone-test-card.md](payphone-test-card.md). Payphone's widget only renders on a domain registered with them; if `localhost` can't be registered, this waits for staging.
-
-### R3 · The real SRI, test environment
-
-With your own signature (a `.p12` for your RUC), against SRI's test environment (*celcer*), not production. In `.env`: `SRI_MOCK_MODE=false`; restart. Set up a company with your real RUC and certificate, and issue an invoice in its test copy. Expect a real authorization in SRI's test environment, then try what the mock can't do: an invoice to an identification SRI doesn't know (expect "No autorizado" with SRI's reason, then **Corregir y reenviar** as the same number), and **Reenviar** after it's authorized. Set `SRI_MOCK_MODE=true` again when done.
+The mock SRI authorizes everything, so a returned or not-authorized invoice, its correction and resend, and a send that never reached SRI can't be made by hand locally. This makes them with SRI's own test environment. With your own signature (a `.p12` for your RUC), against SRI's test environment (*celcer*), not production. In `.env`: `SRI_MOCK_MODE=false`; restart. Set up a company with your real RUC and certificate, and issue an invoice in its test copy. Expect a real authorization in SRI's test environment, then try what the mock can't do: an invoice to an identification SRI doesn't know (expect "No autorizado" with SRI's reason, then **Corregir y reenviar** as the same number), and **Reenviar** after it's authorized. Set `SRI_MOCK_MODE=true` again when done.
 
 ---
 
@@ -821,7 +903,7 @@ With your own signature (a `.p12` for your RUC), against SRI's test environment 
 These are covered by the automated tests, or need time to pass, or wait for Milestone 10:
 
 - **The renewal cycle over days:** renewal due, grace, past due, the move to Gratis. Proven by the Milestone 8 gate on a fake clock. Locally a period is a month long.
-- **SRI's refusals** with the mock (returned, not authorized, a send that failed, the next-day re-issue): the integration and E2E suites cover them; R3 shows them on the real SRI.
+- **SRI's refusals** with the mock (returned, not authorized, a send that failed, the next-day re-issue): the integration and E2E suites cover them; R1 shows them on the real SRI.
 - **Load:** 1,000 invoices beside another company (`pnpm test:bulk-gate`) and the 10,000 of NFR-PERF-3, in Milestone 10.
 - **Backups and restore, the data migration from the old system, a deploy:** Milestone 10.
 - **Every screen in both themes and at phone width:** checked by the E2E suite with axe. If something looks wrong on your phone, report it in the flow where you saw it.

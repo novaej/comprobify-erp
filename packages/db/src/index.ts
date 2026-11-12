@@ -115,6 +115,7 @@ export {
   count,
   desc,
   eq,
+  gt,
   gte,
   ilike,
   inArray,

@@ -187,6 +187,11 @@ export const webEnvSchema = z
     OPERATOR_RUC: operatorRuc,
     OPERATOR_ADDRESS: z.string().optional(),
     SUPPORT_EMAIL: z.email().optional(),
+    // WhatsApp number on the public support page, with country code (+593…); optional.
+    SUPPORT_PHONE: z
+      .string()
+      .regex(/^\+?[0-9][0-9 ()-]{6,20}$/, 'must be a phone number, like +593 99 123 4567')
+      .optional(),
     CONSUMER_FINAL_MAX_AMOUNT: consumerFinalMaxAmount,
     ...payphoneShape,
     ...bankShape,

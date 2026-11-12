@@ -15,7 +15,9 @@ test.describe('a Spanish browser', () => {
     await page.goto('/');
     await expect(page).toHaveURL(/\/es$/);
     await expect(page.locator('html')).toHaveAttribute('lang', 'es');
-    await expect(page.getByText('La base está lista', { exact: false })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Facturación electrónica sin complicaciones' }),
+    ).toBeVisible();
   });
 });
 
@@ -31,7 +33,9 @@ test.describe('an English browser', () => {
 test('English is served under /en', async ({ page }) => {
   await page.goto('/en');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await expect(page.getByText('The foundations are ready', { exact: false })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Electronic invoicing, without the headaches' }),
+  ).toBeVisible();
 });
 
 test('unknown pages get the localized 404', async ({ page }) => {

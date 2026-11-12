@@ -6,6 +6,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Added
 
+- The public pages: a landing page, a pricing page built from the live plans and prices, and a support page with the operator's contact details, in Spanish and English, with their own header and footer. Editing a price in the platform area reaches the pricing page within 30 seconds, with an announced change shown as "El precio cambia a…". `SUPPORT_PHONE` (optional) adds a WhatsApp card (FR-UX-5).
 - pnpm workspace with Turborepo, strict TypeScript, ESLint and Prettier.
 - Lint rules for the core module boundaries (NFR-ARCH-1, NFR-ARCH-4, NFR-ARCH-5).
 - `CLAUDE.md`, the stack ADRs and the first setup docs.

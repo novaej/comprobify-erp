@@ -36,7 +36,7 @@ ESLint enforces the core rules: no Next.js or React in core, no `process.env` ou
 
 ## Web routes
 
-Under `apps/web/src/app/[locale]/`: `(auth)` holds the sign-in screens and sends signed-in users to the dashboard; `(app)` requires a session, and inside it `(shell)` requires an organization and renders the sidebar. Onboarding and the account page sit in `(app)` outside the shell, so they work before the first organization exists. `loadShell` picks the active organization with `chooseActiveOrganization`, the same rule the account page uses, and builds the actor context once per request.
+Under `apps/web/src/app/[locale]/`: `(marketing)` holds the public landing, pricing and support pages with their own header and footer; the pricing page reads plans and prices through core's `publicPricing`, so a price edited by the operator shows with no release. `(auth)` holds the sign-in screens and sends signed-in users to the dashboard; `(app)` requires a session, and inside it `(shell)` requires an organization and renders the sidebar. Onboarding and the account page sit in `(app)` outside the shell, so they work before the first organization exists. `loadShell` picks the active organization with `chooseActiveOrganization`, the same rule the account page uses, and builds the actor context once per request.
 
 ## A request
 

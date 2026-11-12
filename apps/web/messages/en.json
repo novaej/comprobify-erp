@@ -11,11 +11,6 @@
     "toLight": "Switch to light mode",
     "toDark": "Switch to dark mode"
   },
-  "home": {
-    "title": "Comprobify ERP",
-    "description": "The foundations are ready. Modules arrive in the next milestones.",
-    "status": "In progress"
-  },
   "apiError": {
     "UNKNOWN": "An unexpected error occurred."
   },
@@ -124,11 +119,6 @@
     "activeTest": "Test, active",
     "activeProduction": "Production, active",
     "addCompany": "New company"
-  },
-  "homeLinks": {
-    "signIn": "Sign in",
-    "register": "Create account",
-    "account": "Go to my account"
   },
   "onboarding": {
     "title": "Set up your company",
@@ -3645,5 +3635,273 @@
     "raw": "View the full answer",
     "rawCut": "The first {count} characters are shown.",
     "rawCleared": "The full answer was removed after {days} days; this summary remains."
+  },
+  "landing": {
+    "seo": {
+      "title": "Comprobify — Electronic invoicing and business management for Ecuador",
+      "description": "Issue, sign and authorize invoices, credit notes and delivery guides with the SRI, and manage inventory, purchasing and sales. Start free in the test environment."
+    },
+    "hero": {
+      "title": "Electronic invoicing, without the headaches",
+      "subtitle": "Issue, sign and authorize documents directly with the SRI, and run your inventory, purchasing and sales in the same place.",
+      "cta": {
+        "register": "Create a free account",
+        "howItWorks": "See how it works"
+      },
+      "trust": {
+        "sri": {
+          "title": "Online authorization",
+          "description": "Your documents are sent and authorized directly with the SRI."
+        },
+        "signing": {
+          "title": "Signed with your certificate",
+          "description": "Use your own electronic certificate, nothing to install."
+        },
+        "operations": {
+          "title": "More than invoicing",
+          "description": "Inventory, purchase and sale orders, collections and reports in the same account."
+        }
+      },
+      "sample": {
+        "stamp": "Authorized by the SRI",
+        "caption": "How a document moves: signed, received and authorized.",
+        "ride": {
+          "issuer": "ESTUDIO ANDINA S.A.",
+          "issuerTrade": "ESTUDIO ANDINA",
+          "addressLabel": "Dirección Matriz:",
+          "address": "Av. Amazonas N35-17 y Japón, Quito",
+          "accounting": "OBLIGADO A LLEVAR CONTABILIDAD",
+          "accountingValue": "NO",
+          "rucLabel": "R.U.C.:",
+          "ruc": "1790000000001",
+          "invoice": "FACTURA",
+          "numberLabel": "No.",
+          "authNumber": "NÚMERO DE AUTORIZACIÓN",
+          "authDate": "FECHA Y HORA DE AUTORIZACIÓN",
+          "authDateValue": "16/10/2026 09:41:07",
+          "environment": "AMBIENTE:",
+          "environmentValue": "PRUEBAS",
+          "emission": "EMISIÓN:",
+          "emissionValue": "NORMAL",
+          "status": "ESTADO:",
+          "accessKey": "CLAVE DE ACCESO",
+          "buyerLabel": "Razón social / Nombres y apellidos",
+          "buyer": "Cliente de Ejemplo S.A.",
+          "idLabel": "Identificación",
+          "id": "0990000000001",
+          "dateLabel": "Fecha",
+          "date": "16/10/2026",
+          "qty": "Cant.",
+          "description": "Descripción",
+          "unitPrice": "P. unitario",
+          "lineTotal": "Total",
+          "item": "Servicios profesionales",
+          "payment": "Forma de pago",
+          "paymentValue": "20 - Otros con utilización del sistema financiero",
+          "subtotal": "SUBTOTAL 15%",
+          "vat": "IVA 15%",
+          "total": "VALOR TOTAL",
+          "statusSigned": "SIGNED",
+          "statusReceived": "RECEIVED",
+          "statusAuthorized": "AUTHORIZED"
+        }
+      }
+    },
+    "steps": {
+      "title": "Get started in three steps",
+      "subtitle": "Create your account, set up your company and issue.",
+      "stepLabel": "Step {number}",
+      "step1": {
+        "title": "Create your free account",
+        "description": "All you need is an email. You start in the test environment, at no cost."
+      },
+      "step2": {
+        "title": "Set up your company",
+        "description": "Enter your RUC, upload your signing certificate (.p12) and define your branch and issue point."
+      },
+      "step3": {
+        "title": "Issue your first invoice",
+        "description": "Fill in the form, sign and send. Comprobify builds the XML, handles the SRI authorization and your RIDE PDF."
+      },
+      "cta": "Create a free account",
+      "ctaNote": "Free in the test environment. No commitment.",
+      "mocks": {
+        "signup": {
+          "title": "Create account",
+          "email": "Email",
+          "emailValue": "you@company.com",
+          "password": "Password",
+          "passwordValue": "••••••••••",
+          "submit": "Create account"
+        },
+        "company": {
+          "title": "Your company",
+          "ruc": "RUC",
+          "rucValue": "1790000000001",
+          "name": "Business name",
+          "nameValue": "Estudio Andina S.A.",
+          "certFile": "firma_electronica.p12",
+          "certValid": "Valid until 03/14/2028",
+          "branch": "Branch / issue point",
+          "branchValue": "001 / 001"
+        },
+        "invoice": {
+          "title": "New invoice",
+          "buyer": "Customer",
+          "buyerValue": "Consumidor Final",
+          "item": "Details",
+          "itemValue": "Consulting service",
+          "total": "Total",
+          "sign": "Sign",
+          "signSend": "Sign and send"
+        }
+      }
+    },
+    "docTypes": {
+      "title": "Documents you can issue",
+      "subtitle": "The SRI electronic documents Comprobify signs and authorizes today, and the ones coming.",
+      "names": {
+        "01": "Invoice",
+        "04": "Credit note",
+        "06": "Delivery guide",
+        "07": "Withholding",
+        "03": "Purchase settlement"
+      },
+      "soon": "Coming soon",
+      "upcomingNote": "Types marked with a clock are not available yet. We are enabling them progressively."
+    },
+    "pricingTeaser": {
+      "title": "Start free, grow when you need to",
+      "description": "Plans by document volume and the modules you use. Change or cancel your plan any time.",
+      "cta": "See plans and pricing"
+    },
+    "faq": {
+      "certificate": {
+        "question": "Do I need an electronic signing certificate?",
+        "answer": "Yes, and that is an SRI requirement, not ours. Comprobify does not issue or generate signing certificates: you must obtain your .p12 file from an accredited certification authority in Ecuador. Once you have it, you upload it to Comprobify and we sign your documents with it. We also notify you by email and in the app when it is about to expire."
+      },
+      "testing": {
+        "question": "Can I test before issuing for real?",
+        "answer": "Yes. Every company has a test copy that issues against the SRI test environment, with no tax validity, and does not use your quota. When you are ready you go live from the app: your customers, products and templates are copied to the real company; the test documents stay in the test copy."
+      },
+      "payment": {
+        "question": "How do I pay for the subscription?",
+        "answer": "You can pay by bank transfer or by card. With a transfer we show you the account details, you make the payment and upload the receipt; with a card you pay on the spot. Your plan activates as soon as the payment is verified. You can change plan, add modules or buy document packs whenever you want; before you confirm, Plan and payments shows what will be charged."
+      },
+      "sequentials": {
+        "question": "I already invoice in another system. Do I lose my numbering?",
+        "answer": "No. You can set the next sequential per document type and per branch, so you continue exactly where you left off without duplicating numbers."
+      },
+      "modules": {
+        "question": "Is it only for invoicing?",
+        "answer": "No. Besides invoices, credit notes and delivery guides, you can add inventory, purchase and sale orders, bulk invoicing and advanced reports. Each plan includes some modules and the rest are added separately; the pricing page shows it all."
+      },
+      "authorization": {
+        "question": "How do I know the SRI authorized my document?",
+        "answer": "Comprobify sends the document, checks the authorization and notifies you when the status changes, in the app and by email. From the document itself you download the authorized XML and the RIDE PDF."
+      },
+      "title": "Frequently asked questions",
+      "subtitle": "What people ask us most before getting started.",
+      "moreTitle": "Can't find your answer?",
+      "moreText": "Write to us and we'll help you sort it out.",
+      "moreLink": "Contact support"
+    },
+    "finalCta": {
+      "title": "Issue your first invoice today",
+      "subtitle": "Create your free account and try the SRI test environment before invoicing in production.",
+      "register": "Create a free account",
+      "support": "Talk to support"
+    }
+  },
+  "marketing": {
+    "nav": {
+      "label": "Main",
+      "howToStart": "How to start",
+      "pricing": "Pricing",
+      "support": "Support",
+      "login": "Sign in",
+      "register": "Create account",
+      "account": "Go to my account",
+      "menu": "Menu",
+      "openMenu": "Open menu",
+      "closeMenu": "Close menu"
+    },
+    "footer": {
+      "groups": {
+        "product": "Product",
+        "account": "Account",
+        "help": "Help"
+      },
+      "tagline": "Electronic invoicing and business management for Ecuador, signed and authorized directly with the SRI.",
+      "email": "Write to us"
+    }
+  },
+  "pricing": {
+    "seo": {
+      "title": "Plans & pricing",
+      "description": "Compare Comprobify's plans: included documents, modules, and monthly and yearly pricing."
+    },
+    "title": "Plans & pricing",
+    "subtitle": "Start free in the SRI test environment. Move to production when you're ready.",
+    "badge": {
+      "popular": "Most popular"
+    },
+    "interval": {
+      "label": "Billing period",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "yearlyDiscount": "2 months free"
+    },
+    "free": "Free",
+    "perMonth": "/mo",
+    "perYear": "/yr",
+    "yearlyEquivalent": "Equivalent to {price}/mo",
+    "plusIva": "+ VAT",
+    "upcomingPriceNote": "The price changes to {price} a month from {date}.",
+    "extraSeatNote": "You can add more users after signing up, for {price}",
+    "paymentMethodsNote": "Pay by bank transfer or card.",
+    "cta": "Sign up",
+    "ctaFree": "Get started free",
+    "addOns": {
+      "title": "Add-on modules",
+      "subtitle": "Add only what you need to any plan that does not include it."
+    },
+    "features": {
+      "quota": "{count, plural, one {# document/month} other {# documents/month}}",
+      "quotaYearly": "{count, plural, one {# document/year} other {# documents/year}}",
+      "unlimitedQuota": "Unlimited documents",
+      "branches": "{count, plural, one {# branch} other {# branches}}",
+      "unlimitedBranches": "Unlimited branches",
+      "issuePoints": "{count, plural, one {# issue point per branch} other {# issue points per branch}}",
+      "unlimitedIssuePoints": "Unlimited issue points",
+      "users": "{count, plural, one {# user} other {# users}}",
+      "unlimitedUsers": "Unlimited users"
+    },
+    "compare": {
+      "title": "Compare plans",
+      "subtitle": "What each plan includes, side by side.",
+      "feature": "Feature",
+      "unlimited": "Unlimited",
+      "perMonth": "{count}/mo",
+      "perYear": "{count}/yr",
+      "included": "Included",
+      "notIncluded": "Not included",
+      "rows": {
+        "quota": "Documents included",
+        "users": "Users",
+        "branches": "Branches",
+        "issuePoints": "Issue points per branch"
+      }
+    }
+  },
+  "support": {
+    "title": "Support",
+    "description": "Have questions or need help? Reach out through any of these channels.",
+    "noContact": "No contact details are configured yet.",
+    "emailLabel": "Email",
+    "emailDescription": "Write to us and we'll get back to you as soon as possible.",
+    "phoneLabel": "WhatsApp",
+    "phoneDescription": "Message us on WhatsApp during business hours.",
+    "hours": "If you already have an account, tell us your company RUC so we can help faster."
   }
 }

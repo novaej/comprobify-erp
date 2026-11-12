@@ -54,6 +54,8 @@ export type Runtime = {
   sri: SriClient;
   // Null while the legal texts are under review (AGREEMENTS_ENABLED=false).
   agreementParties: AgreementParties | null;
+  // Shown on the public support page; either may be missing.
+  support: { email: string | null; phone: string | null };
 };
 
 // On globalThis: Next bundles instrumentation and routes separately, so a
@@ -157,6 +159,7 @@ async function start(): Promise<Runtime> {
       consumerFinalMaxAmount: env.CONSUMER_FINAL_MAX_AMOUNT,
     },
     // Env validation guarantees these when agreements are on.
+    support: { email: env.SUPPORT_EMAIL ?? null, phone: env.SUPPORT_PHONE ?? null },
     agreementParties: env.AGREEMENTS_ENABLED
       ? {
           operator: {

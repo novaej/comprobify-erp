@@ -11,11 +11,6 @@
     "toLight": "Cambiar a modo claro",
     "toDark": "Cambiar a modo oscuro"
   },
-  "home": {
-    "title": "Comprobify ERP",
-    "description": "La base está lista. Los módulos llegan en los próximos hitos.",
-    "status": "En construcción"
-  },
   "apiError": {
     "UNKNOWN": "Ha ocurrido un error inesperado."
   },
@@ -124,11 +119,6 @@
     "activeTest": "Pruebas, activa",
     "activeProduction": "Producción, activa",
     "addCompany": "Nueva empresa"
-  },
-  "homeLinks": {
-    "signIn": "Iniciar sesión",
-    "register": "Crear cuenta",
-    "account": "Ir a mi cuenta"
   },
   "onboarding": {
     "title": "Configura tu empresa",
@@ -3645,5 +3635,273 @@
     "raw": "Ver la respuesta completa",
     "rawCut": "Se muestran los primeros {count} caracteres.",
     "rawCleared": "La respuesta completa se eliminó pasados {days} días; queda este resumen."
+  },
+  "landing": {
+    "seo": {
+      "title": "Comprobify — Facturación electrónica y gestión para Ecuador",
+      "description": "Emite, firma y autoriza facturas, notas de crédito y guías de remisión con el SRI, y gestiona inventario, compras y ventas. Empieza gratis en el ambiente de pruebas."
+    },
+    "hero": {
+      "title": "Facturación electrónica sin complicaciones",
+      "subtitle": "Emite, firma y autoriza comprobantes directamente con el SRI, y lleva tu inventario, compras y ventas en el mismo lugar.",
+      "cta": {
+        "register": "Crear cuenta gratis",
+        "howItWorks": "Ver cómo funciona"
+      },
+      "trust": {
+        "sri": {
+          "title": "Autorización en línea",
+          "description": "Tus comprobantes se envían y se autorizan directamente con el SRI."
+        },
+        "signing": {
+          "title": "Firma con tu certificado",
+          "description": "Usa tu propio certificado electrónico, sin instalar nada."
+        },
+        "operations": {
+          "title": "Más que facturar",
+          "description": "Inventario, órdenes de compra y de venta, cobros y reportes en la misma cuenta."
+        }
+      },
+      "sample": {
+        "stamp": "Autorizado por el SRI",
+        "caption": "Así avanza un comprobante: firmado, recibido y autorizado.",
+        "ride": {
+          "issuer": "ESTUDIO ANDINA S.A.",
+          "issuerTrade": "ESTUDIO ANDINA",
+          "addressLabel": "Dirección Matriz:",
+          "address": "Av. Amazonas N35-17 y Japón, Quito",
+          "accounting": "OBLIGADO A LLEVAR CONTABILIDAD",
+          "accountingValue": "NO",
+          "rucLabel": "R.U.C.:",
+          "ruc": "1790000000001",
+          "invoice": "FACTURA",
+          "numberLabel": "No.",
+          "authNumber": "NÚMERO DE AUTORIZACIÓN",
+          "authDate": "FECHA Y HORA DE AUTORIZACIÓN",
+          "authDateValue": "16/10/2026 09:41:07",
+          "environment": "AMBIENTE:",
+          "environmentValue": "PRUEBAS",
+          "emission": "EMISIÓN:",
+          "emissionValue": "NORMAL",
+          "status": "ESTADO:",
+          "accessKey": "CLAVE DE ACCESO",
+          "buyerLabel": "Razón social / Nombres y apellidos",
+          "buyer": "Cliente de Ejemplo S.A.",
+          "idLabel": "Identificación",
+          "id": "0990000000001",
+          "dateLabel": "Fecha",
+          "date": "16/10/2026",
+          "qty": "Cant.",
+          "description": "Descripción",
+          "unitPrice": "P. unitario",
+          "lineTotal": "Total",
+          "item": "Servicios profesionales",
+          "payment": "Forma de pago",
+          "paymentValue": "20 - Otros con utilización del sistema financiero",
+          "subtotal": "SUBTOTAL 15%",
+          "vat": "IVA 15%",
+          "total": "VALOR TOTAL",
+          "statusSigned": "FIRMADO",
+          "statusReceived": "RECIBIDO",
+          "statusAuthorized": "AUTORIZADO"
+        }
+      }
+    },
+    "steps": {
+      "title": "Empieza en tres pasos",
+      "subtitle": "Crea tu cuenta, configura tu empresa y emite.",
+      "stepLabel": "Paso {number}",
+      "step1": {
+        "title": "Crea tu cuenta gratis",
+        "description": "Solo necesitas un correo. Empiezas en el ambiente de pruebas, sin costo."
+      },
+      "step2": {
+        "title": "Configura tu empresa",
+        "description": "Ingresa tu RUC, sube tu certificado de firma (.p12) y define tu establecimiento y punto de emisión."
+      },
+      "step3": {
+        "title": "Emite tu primera factura",
+        "description": "Llena el formulario, firma y envía. Comprobify genera el XML, gestiona la autorización del SRI y tu RIDE en PDF."
+      },
+      "cta": "Crear cuenta gratis",
+      "ctaNote": "Gratis en el ambiente de pruebas. Sin compromiso.",
+      "mocks": {
+        "signup": {
+          "title": "Crear cuenta",
+          "email": "Correo",
+          "emailValue": "tu@empresa.com",
+          "password": "Contraseña",
+          "passwordValue": "••••••••••",
+          "submit": "Crear cuenta"
+        },
+        "company": {
+          "title": "Tu empresa",
+          "ruc": "RUC",
+          "rucValue": "1790000000001",
+          "name": "Razón social",
+          "nameValue": "Estudio Andina S.A.",
+          "certFile": "firma_electronica.p12",
+          "certValid": "Válido hasta 14/03/2028",
+          "branch": "Establecimiento / punto de emisión",
+          "branchValue": "001 / 001"
+        },
+        "invoice": {
+          "title": "Nueva factura",
+          "buyer": "Cliente",
+          "buyerValue": "Consumidor Final",
+          "item": "Detalle",
+          "itemValue": "Servicio de consultoría",
+          "total": "Total",
+          "sign": "Firmar",
+          "signSend": "Firmar y enviar"
+        }
+      }
+    },
+    "docTypes": {
+      "title": "Comprobantes que puedes emitir",
+      "subtitle": "Los comprobantes electrónicos del SRI que Comprobify firma y autoriza hoy, y los que vienen.",
+      "names": {
+        "01": "Factura",
+        "04": "Nota de crédito",
+        "06": "Guía de remisión",
+        "07": "Retención",
+        "03": "Liquidación de compra"
+      },
+      "soon": "Próximamente",
+      "upcomingNote": "Los tipos marcados con reloj aún no están disponibles. Los estamos habilitando progresivamente."
+    },
+    "pricingTeaser": {
+      "title": "Empieza gratis, crece cuando lo necesites",
+      "description": "Planes según tu volumen de comprobantes y los módulos que uses. Cambia o cancela tu plan cuando quieras.",
+      "cta": "Ver planes y precios"
+    },
+    "faq": {
+      "certificate": {
+        "question": "¿Necesito un certificado de firma electrónica?",
+        "answer": "Sí, y es un requisito del SRI, no nuestro. Comprobify no emite ni genera certificados de firma: debes obtener tu archivo .p12 de una entidad de certificación acreditada en Ecuador. Una vez que lo tengas, lo subes a Comprobify y nosotros firmamos tus comprobantes con él. Además te avisamos por correo y en la app cuando esté por vencer."
+      },
+      "testing": {
+        "question": "¿Puedo probar antes de facturar de verdad?",
+        "answer": "Sí. Cada empresa tiene una copia de pruebas que emite contra el ambiente de pruebas del SRI, sin validez tributaria, y no consume tu cupo. Cuando estés listo pasas a producción desde la app: tus clientes, productos y plantillas se copian a la empresa real; los comprobantes de prueba se quedan en la copia de pruebas."
+      },
+      "payment": {
+        "question": "¿Cómo se paga la suscripción?",
+        "answer": "Puedes pagar por transferencia bancaria o con tarjeta. Con transferencia te mostramos los datos de la cuenta, haces el pago y subes el comprobante; con tarjeta pagas en el momento. Tu plan se activa en cuanto el pago se verifica. Puedes cambiar de plan, agregar módulos o comprar paquetes de comprobantes cuando quieras; antes de confirmar, Plan y pagos te muestra cuánto se cobra."
+      },
+      "sequentials": {
+        "question": "Ya facturo en otro sistema. ¿Pierdo mi numeración?",
+        "answer": "No. Puedes fijar el siguiente secuencial por tipo de comprobante y por establecimiento, para continuar exactamente donde lo dejaste sin duplicar números."
+      },
+      "modules": {
+        "question": "¿Solo sirve para facturar?",
+        "answer": "No. Además de facturas, notas de crédito y guías de remisión, puedes agregar inventario, órdenes de compra y de venta, facturación masiva y reportes avanzados. Cada plan incluye algunos módulos y el resto se agrega por separado; todo se ve en la página de precios."
+      },
+      "authorization": {
+        "question": "¿Cómo sé si el SRI autorizó mi comprobante?",
+        "answer": "Comprobify envía el comprobante, consulta la autorización y te avisa cuando cambia el estado, en la app y por correo. Desde el mismo comprobante descargas el XML autorizado y el RIDE en PDF."
+      },
+      "title": "Preguntas frecuentes",
+      "subtitle": "Lo que más nos preguntan antes de empezar.",
+      "moreTitle": "¿No encuentras tu respuesta?",
+      "moreText": "Escríbenos y te ayudamos a resolverlo.",
+      "moreLink": "Contactar a soporte"
+    },
+    "finalCta": {
+      "title": "Emite tu primera factura hoy",
+      "subtitle": "Crea tu cuenta gratis y prueba en el ambiente del SRI antes de facturar en producción.",
+      "register": "Crear cuenta gratis",
+      "support": "Hablar con soporte"
+    }
+  },
+  "marketing": {
+    "nav": {
+      "label": "Principal",
+      "howToStart": "Cómo empezar",
+      "pricing": "Precios",
+      "support": "Soporte",
+      "login": "Iniciar sesión",
+      "register": "Crear cuenta",
+      "account": "Ir a mi cuenta",
+      "menu": "Menú",
+      "openMenu": "Abrir menú",
+      "closeMenu": "Cerrar menú"
+    },
+    "footer": {
+      "groups": {
+        "product": "Producto",
+        "account": "Cuenta",
+        "help": "Ayuda"
+      },
+      "tagline": "Facturación electrónica y gestión para Ecuador, firmada y autorizada directamente con el SRI.",
+      "email": "Escríbenos"
+    }
+  },
+  "pricing": {
+    "seo": {
+      "title": "Planes y precios",
+      "description": "Compara los planes de Comprobify: comprobantes incluidos, módulos, precios mensuales y anuales."
+    },
+    "title": "Planes y precios",
+    "subtitle": "Comienza gratis en el ambiente de pruebas del SRI. Pasa a producción cuando estés listo.",
+    "badge": {
+      "popular": "Más popular"
+    },
+    "interval": {
+      "label": "Periodo de facturación",
+      "monthly": "Mensual",
+      "yearly": "Anual",
+      "yearlyDiscount": "2 meses gratis"
+    },
+    "free": "Gratis",
+    "perMonth": "/mes",
+    "perYear": "/año",
+    "yearlyEquivalent": "Equivalente a {price}/mes",
+    "plusIva": "+ IVA",
+    "upcomingPriceNote": "El precio cambia a {price} al mes a partir del {date}.",
+    "extraSeatNote": "Puedes agregar más usuarios después de registrarte, por {price}",
+    "paymentMethodsNote": "Pagas por transferencia bancaria o con tarjeta.",
+    "cta": "Registrarme",
+    "ctaFree": "Empezar gratis",
+    "addOns": {
+      "title": "Módulos adicionales",
+      "subtitle": "Agrega solo lo que necesitas a cualquier plan que no lo incluya."
+    },
+    "features": {
+      "quota": "{count, plural, one {# comprobante/mes} other {# comprobantes/mes}}",
+      "quotaYearly": "{count, plural, one {# comprobante/año} other {# comprobantes/año}}",
+      "unlimitedQuota": "Comprobantes ilimitados",
+      "branches": "{count, plural, one {# sucursal} other {# sucursales}}",
+      "unlimitedBranches": "Sucursales ilimitadas",
+      "issuePoints": "{count, plural, one {# punto de emisión por sucursal} other {# puntos de emisión por sucursal}}",
+      "unlimitedIssuePoints": "Puntos de emisión ilimitados",
+      "users": "{count, plural, one {# usuario} other {# usuarios}}",
+      "unlimitedUsers": "Usuarios ilimitados"
+    },
+    "compare": {
+      "title": "Compara los planes",
+      "subtitle": "Lo que incluye cada plan, lado a lado.",
+      "feature": "Característica",
+      "unlimited": "Ilimitados",
+      "perMonth": "{count}/mes",
+      "perYear": "{count}/año",
+      "included": "Incluido",
+      "notIncluded": "No incluido",
+      "rows": {
+        "quota": "Comprobantes incluidos",
+        "users": "Usuarios",
+        "branches": "Sucursales",
+        "issuePoints": "Puntos de emisión por sucursal"
+      }
+    }
+  },
+  "support": {
+    "title": "Soporte",
+    "description": "¿Tienes preguntas o necesitas ayuda? Contáctanos por cualquiera de estos medios.",
+    "noContact": "No hay datos de contacto configurados todavía.",
+    "emailLabel": "Correo electrónico",
+    "emailDescription": "Escríbenos y te responderemos lo antes posible.",
+    "phoneLabel": "WhatsApp",
+    "phoneDescription": "Escríbenos por WhatsApp en horario de oficina.",
+    "hours": "Si ya tienes una cuenta, indícanos el RUC de tu empresa para ayudarte más rápido."
   }
 }

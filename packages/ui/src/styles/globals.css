@@ -268,3 +268,105 @@ textarea[data-slot='textarea']:not(:focus-visible):not([aria-invalid='true']),
     padding: 0;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Marketing landing decoration.
+ *
+ * Animations sit inside `prefers-reduced-motion: no-preference`; the static styles stay
+ * outside, so the page reads the same with the motion off.
+ * ------------------------------------------------------------------------- */
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+/* Fades the grid out from behind the hero document toward the edges. */
+@utility mask-hero-fade {
+  mask-image: radial-gradient(ellipse 75% 85% at 72% 40%, black 20%, transparent 75%);
+}
+
+@utility mask-hero-fade-left {
+  mask-image: radial-gradient(ellipse 75% 85% at 28% 40%, black 20%, transparent 75%);
+}
+
+@keyframes glow-drift {
+  0% {
+    transform: translate3d(-4%, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(4%, 3%, 0) scale(1.12);
+  }
+}
+
+/* Hero sample RIDE: the status line steps Firmado -> Recibido -> Autorizado,
+   then the authorization details fill in and the stamp lands. Outside the
+   motion guard only the final state is visible, so reduced-motion (or no JS)
+   shows the finished, authorized document. */
+.hero-status-early {
+  opacity: 0;
+}
+
+@keyframes hero-status-window {
+  0% {
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes hero-late-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hero-stamp-in {
+  from {
+    opacity: 0;
+    transform: scale(1.35) rotate(-6deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(-6deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-status-early {
+    animation: hero-status-window 1.6s ease-in-out var(--hero-delay, 0s) both;
+  }
+
+  .hero-late {
+    animation: hero-late-in 0.4s ease-out 3.9s both;
+  }
+
+  .hero-stamp {
+    animation: hero-stamp-in 0.35s cubic-bezier(0.2, 0.9, 0.3, 1) 4.2s both;
+  }
+
+  /* Armed by HeroPlayOnView until the card scrolls into view. */
+  .hero-armed :is(.hero-status-early, .hero-late, .hero-stamp) {
+    animation-play-state: paused;
+  }
+
+  .animate-glow-drift {
+    animation: glow-drift 16s ease-in-out infinite alternate;
+  }
+
+  /* Smooth in-page jumps for the marketing anchor links. */
+  html {
+    scroll-behavior: smooth;
+  }
+}

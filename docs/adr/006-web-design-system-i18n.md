@@ -20,7 +20,7 @@ The ERP must keep the look and feel of `comprobify-web` (FR-UX-2), Spanish first
 
 **Ported later, with their screens:** the marketing decoration and hero animations (FR-UX-5), plus `nav.tsx`, status badges, banners and the notification bell. These depend on auth or document state, which don't exist yet.
 
-**Fonts:** Geist and Geist Mono through `next/font`, as today. Bricolage Grotesque arrives with the marketing pages.
+**Fonts:** Geist and Geist Mono through `next/font`, as today. Bricolage Grotesque (`font-display`) arrived with the marketing pages.
 
 **Theme switching: the previous web app's own shim** (now in `packages/ui/src/theme`), not `next-themes`. That library's injected script triggers a React 19 warning, so the old app replaced it. The shim keeps the same public API and prevents the flash of the wrong theme through a `beforeInteractive` script in the root layout. Found while porting: the old app describes that script but never shipped it, so it is new here. The shim also reads its state through `useSyncExternalStore`, because React 19's hooks lint rejects copying it into state inside an effect.
 

@@ -157,6 +157,19 @@ describe('legal agreements', () => {
   });
 });
 
+describe('the support phone', () => {
+  it('is optional, and must look like a phone number', () => {
+    expect(loadWebEnv(web).SUPPORT_PHONE).toBeUndefined();
+    expect(loadWebEnv({ ...web, SUPPORT_PHONE: '' }).SUPPORT_PHONE).toBeUndefined();
+    expect(loadWebEnv({ ...web, SUPPORT_PHONE: '+593 99 123 4567' })).toMatchObject({
+      SUPPORT_PHONE: '+593 99 123 4567',
+    });
+    expect(failure(() => loadWebEnv({ ...web, SUPPORT_PHONE: 'call me' }))).toContain(
+      'SUPPORT_PHONE',
+    );
+  });
+});
+
 describe('the operator RUC (Anexo 26)', () => {
   it('is required in production, so no invoice leaves out "RUC Proveedor"', () => {
     const message = failure(() => loadWebEnv({ ...web, APP_ENV: 'production' }));

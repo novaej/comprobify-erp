@@ -11,6 +11,8 @@ export {
   YEARLY_MONTHS,
 } from './prices';
 export type { DraftPriceInput, PriceLine, PricedThing, PublishPriceInput } from './prices';
+export { publicPricing } from './public-pricing';
+export type { PublicPlan, PublicPricing } from './public-pricing';
 export { STARTING_PRICES, STARTING_PRICES_FROM } from './starting-prices';
 export {
   ACTIVE_PROOFS_PER_PAYMENT,

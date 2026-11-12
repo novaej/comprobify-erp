@@ -103,7 +103,7 @@ ESLint enforces it (`eslint.config.mjs`): core can't import Next.js or React, no
 
 **Holds:** Next.js pages, server actions, route handlers and the UI strings.
 
-- `src/app/[locale]/`: the pages, under the language (`/es`, `/en`). Route groups split them by who may enter: `(auth)` for signing in, `(app)` for a signed-in person, with `(shell)` inside it for everything that needs a company and draws the sidebar, and `(admin)` for the platform area.
+- `src/app/[locale]/`: the pages, under the language (`/es`, `/en`). Route groups split them by who may enter: `(marketing)` for the public landing, pricing and support pages, `(auth)` for signing in, `(app)` for a signed-in person, with `(shell)` inside it for everything that needs a company and draws the sidebar, and `(admin)` for the platform area.
 - `src/server/`: what pages and actions share on the server: the runtime (database, job queue, settings, built once per process), the session, loading the shell and the active company.
 - `src/components/`: the shared screen blocks.
 - `messages/es.json`, `messages/en.json`: every word on screen. Spanish is the default.
