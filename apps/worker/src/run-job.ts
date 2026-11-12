@@ -6,8 +6,14 @@ import { createJobs, schedules } from '@comprobify/core';
 
 const queue = process.argv[2];
 const scheduled = schedules.map((schedule) => schedule.queue);
-if (!queue || !(scheduled as string[]).includes(queue)) {
-  console.error(`Usage: pnpm run-job <queue>\nScheduled queues: ${scheduled.join(', ')}`);
+const usage = `Usage: pnpm run-job <queue>\nScheduled queues: ${scheduled.join(', ')}`;
+// Asking what can be run is not a failure.
+if (!queue) {
+  console.log(usage);
+  process.exit(0);
+}
+if (!(scheduled as string[]).includes(queue)) {
+  console.error(`Unknown queue "${queue}".\n${usage}`);
   process.exit(1);
 }
 
