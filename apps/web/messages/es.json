@@ -122,7 +122,8 @@
     "noCompanyTitle": "Todavía no tienes una empresa",
     "noCompanyDescription": "Configúrala para empezar a emitir comprobantes. Si te invitaron, abre el enlace del correo.",
     "activeTest": "Pruebas, activa",
-    "activeProduction": "Producción, activa"
+    "activeProduction": "Producción, activa",
+    "addCompany": "Nueva empresa"
   },
   "homeLinks": {
     "signIn": "Iniciar sesión",
@@ -209,7 +210,8 @@
     "saleOrders": "Pedidos de venta",
     "receivables": "Cuentas por cobrar",
     "bulkInvoicing": "Facturación masiva",
-    "reports": "Reportes"
+    "reports": "Reportes",
+    "newOrganization": "Nueva empresa"
   },
   "shell": {
     "sandboxTitle": "Estás en el ambiente de pruebas",

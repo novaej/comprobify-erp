@@ -127,6 +127,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - The QA script for the full review (`docs/guides/qa-script.md`): small flows from one local reset, each leaving data for the next, with the legal texts on; `pnpm run-job <queue>` runs a scheduled job now (local and staging only), and `pnpm test-certificate <ruc> <days>` makes a signature that expires that soon.
 - A guide to how the repository is organized (`docs/guides/repo-structure.md`): the folders, the layers and which may import which, what each holds and why, where a new thing goes, and one request followed through every layer.
 - The repository stands alone: the old-ADR table, PRD Appendix A's porting map and every citation of an old ADR or path into the previous repositories are gone, their reasoning kept in place. When the PRD is silent, the rule is now to decide and record it in an ADR. What is still to copy from them before they are deleted (deploy patterns, the API docs site) is in `NEXT_STEPS.md`.
+- Nueva empresa (FR-USR-5): the organization switcher ends with an entry to set up another company, and **Mi cuenta** keeps its button once you have one, so an account can own several companies, each its own RUC, signature and plan. After setting one up, the shell refreshes to it. The RUC in the switcher's menu now has enough contrast.
 
 ### Changed
 

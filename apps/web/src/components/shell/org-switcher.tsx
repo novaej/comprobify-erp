@@ -1,11 +1,11 @@
 'use client';
 
 import { cn } from '@comprobify/ui/lib/utils';
-import { Building2, Check, ChevronDown } from 'lucide-react';
+import { Building2, Check, ChevronDown, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { switchOrganizationAction } from '@/app/[locale]/(app)/(shell)/actions';
-import { useRouter } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 
 export type SwitcherOrganization = {
   realTenantId: string;
@@ -16,6 +16,7 @@ export type SwitcherOrganization = {
 };
 
 // FR-USR-5: one entry per organization, and a Producción / Pruebas toggle for the active one.
+// The menu ends with setting up another company: one account may own several, each its own RUC.
 export function OrgSwitcher({
   organizations,
   activeRealTenantId,
@@ -154,12 +155,22 @@ export function OrgSwitcher({
                 <Building2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate">{organization.name}</span>
-                  <span className="block font-mono text-2xs opacity-70">{organization.ruc}</span>
+                  <span className="block font-mono text-2xs">{organization.ruc}</span>
                 </span>
                 {current && <Check className="h-3.5 w-3.5 shrink-0" aria-hidden />}
               </button>
             );
           })}
+          <div className="my-1 border-t border-sidebar-border" role="none" />
+          <Link
+            href="/onboarding"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            {t('newOrganization')}
+          </Link>
         </div>
       )}
     </div>

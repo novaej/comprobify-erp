@@ -46,11 +46,15 @@ export default async function AccountPage({
       <SectionCard
         title={t('organizations')}
         action={
-          organizations.length > 0 ? undefined : (
-            <Link href="/onboarding" className={buttonVariants({ size: 'sm' })}>
-              {t('setUpCompany')}
-            </Link>
-          )
+          <Link
+            href="/onboarding"
+            className={buttonVariants({
+              size: 'sm',
+              variant: organizations.length > 0 ? 'outline' : 'default',
+            })}
+          >
+            {organizations.length > 0 ? t('addCompany') : t('setUpCompany')}
+          </Link>
         }
       >
         {organizations.length === 0 ? (

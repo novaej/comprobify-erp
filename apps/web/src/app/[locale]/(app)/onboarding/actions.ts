@@ -1,6 +1,7 @@
 'use server';
 
 import { onboardOrganization, switchOrganization, systemClock } from '@comprobify/core';
+import { revalidatePath } from 'next/cache';
 import { redirect } from '@/i18n/navigation';
 import { toActionState, type ActionState } from '@/server/actions';
 import { getRuntime } from '@/server/runtime';
@@ -63,6 +64,10 @@ export async function onboardAction(_: ActionState, form: FormData): Promise<Act
       tenantId: created.twinTenantId,
     });
   });
-  if (state.done && twinTenantId) redirect({ href: '/dashboard?welcome=1', locale });
+  if (state.done && twinTenantId) {
+    // A second company changes the shell's active company: refresh its layout (mistake 28).
+    revalidatePath(`/${locale}`, 'layout');
+    redirect({ href: '/dashboard?welcome=1', locale });
+  }
   return state;
 }

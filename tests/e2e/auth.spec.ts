@@ -2454,4 +2454,45 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await emailSwitch.click();
     await expect(emailSwitch).toBeChecked();
   });
+
+  test('sets up a second company from the switcher and moves between them (FR-USR-5)', async ({
+    page,
+  }) => {
+    await signIn(page, email, newPassword);
+    await page.getByLabel('Código', { exact: true }).fill(await totp());
+    await page.getByRole('button', { name: 'Verificar' }).click();
+    await expect(page).toHaveURL(/\/es\/dashboard$/);
+    const nav = page.getByRole('navigation', { name: 'Navegación principal' }).last();
+    const switcher = nav.getByRole('button', { name: /Cambiar de empresa/ });
+    await switcher.click();
+    await look(page, 'org-switcher');
+    await page.getByRole('menuitem', { name: 'Nueva empresa' }).click();
+    await expect(page).toHaveURL(/\/es\/onboarding$/);
+
+    const ruc = testRuc();
+    await page.getByLabel('RUC').fill(ruc);
+    await page.getByLabel('Razón social').fill('Delta Norte S.A.');
+    await page.getByLabel('Dirección matriz').fill('Av. 6 de Diciembre, Quito');
+    await page.getByLabel('Contraseña de la firma').fill('clave');
+    await page.getByLabel('Archivo de firma (.p12)').setInputFiles({
+      name: 'firma.p12',
+      mimeType: 'application/x-pkcs12',
+      buffer: createTestP12({ ruc, password: 'clave' }),
+    });
+    await page.getByRole('button', { name: 'Crear mi empresa' }).click();
+    await expect(page).toHaveURL(/\/es\/dashboard\?welcome=1$/);
+    // The new company is the active one, in its test copy, with its own name in the shell.
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Delta Norte S.A.');
+    await expect(nav.getByText('SRI Pruebas')).toBeVisible();
+
+    // Both are in the switcher, and the first is one click away.
+    await switcher.click();
+    await expect(page.getByRole('menuitem', { name: /Delta Norte S\.A\./ })).toBeVisible();
+    await page.getByRole('menuitem', { name: /Delta Comercial S\.A\./ }).click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Delta Comercial S.A.');
+
+    // The account page offers it too, now that there is a company.
+    await page.goto('/es/account');
+    await expect(page.getByRole('link', { name: 'Nueva empresa' })).toBeVisible();
+  });
 });

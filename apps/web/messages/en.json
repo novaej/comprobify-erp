@@ -122,7 +122,8 @@
     "noCompanyTitle": "You don't have a company yet",
     "noCompanyDescription": "Set it up to start issuing documents. If you were invited, open the link in the email.",
     "activeTest": "Test, active",
-    "activeProduction": "Production, active"
+    "activeProduction": "Production, active",
+    "addCompany": "New company"
   },
   "homeLinks": {
     "signIn": "Sign in",
@@ -209,7 +210,8 @@
     "saleOrders": "Sale orders",
     "receivables": "Receivables",
     "bulkInvoicing": "Bulk invoicing",
-    "reports": "Reports"
+    "reports": "Reports",
+    "newOrganization": "New company"
   },
   "shell": {
     "sandboxTitle": "You're in the test environment",

@@ -258,7 +258,7 @@ Use these throughout, so later flows can refer to them. All passwords: `una clav
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Operator window: go to http://localhost:3000/es/onboarding and set up a company: RUC `1790012345001`, Comprobify Operadora S.A., `test-1790012345001.p12` | The company, in its test copy, beside the platform area |
+| 1 | Operator window: **Mi cuenta** → **Configurar mi empresa**: RUC `1790012345001`, Comprobify Operadora S.A., `test-1790012345001.p12` | The company, in its test copy, beside the platform area |
 | 2 | In it, create a client: Comercial Andina, RUC `1712345678001` | Created |
 | 3 | **Nueva factura** for that client: one line "Plan Empresa, mensual", 1 × 79,90, IVA 15 %, paid by transfer | Total $91,89; **Emitir factura** → authorized by the mock SRI within seconds |
 | 4 | Copy the invoice's 49-digit access key from its page | |
@@ -629,7 +629,7 @@ And for each: open a document or an order, so the read side is seen too.
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Owner: go to http://localhost:3000/es/onboarding and set up another company: RUC `1714070046001`, Andina Norte S.A., `test-1714070046001.p12`. **Note:** nothing in the app links here once you have a company; tell me whether a "new company" entry is wanted | A second company; the switcher lists both |
+| 1 | Owner: the organization switcher → **Nueva empresa** (also on **Mi cuenta**): RUC `1714070046001`, Andina Norte S.A., `test-1714070046001.p12` | Andina Norte's dashboard, in its test copy; the switcher lists both, with their RUCs |
 | 2 | Its dashboard | The certificate card: "Por vencer", the date 10 days out; a certificate banner |
 | 3 | `pnpm run-job certificates.watch` | The bell in Andina Norte: "Tu firma electrónica vence pronto", 10 days; a `certificateExpiring` email in the terminal |
 | 4 | Run it again | No second notice |
