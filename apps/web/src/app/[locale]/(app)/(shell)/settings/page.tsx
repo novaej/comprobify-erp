@@ -1,6 +1,7 @@
 import {
   companySettings,
   hasFeature,
+  limitOf,
   ISSUABLE_DOCUMENT_TYPES,
   SRI_DOCUMENT_TYPES,
   TAX_REGIMES,
@@ -39,7 +40,15 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
             label: tSri(`documentTypes.${code}`),
           })),
           inventory: hasFeature(actor, 'INVENTORY'),
+          logoPrints: hasFeature(actor, 'RIDE_LOGO'),
+          // Null is unlimited. The buttons are disabled at the limit, as in Usuarios.
+          maxBranches: limitOf(actor.entitlements, 'MAX_BRANCHES'),
+          maxPoints: limitOf(actor.entitlements, 'MAX_ISSUE_POINTS_PER_BRANCH'),
+          canSeePlan: actor.permissions.includes('billing.read'),
           offered: ISSUABLE_DOCUMENT_TYPES.filter((type) => hasFeature(actor, `DOC_TYPE_${type}`)),
+          typesLocked: ISSUABLE_DOCUMENT_TYPES.some(
+            (type) => !hasFeature(actor, `DOC_TYPE_${type}`),
+          ),
         }}
       />
     </div>

@@ -508,6 +508,16 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Empresa');
     await look(page, 'settings');
 
+    // The logo is kept on the free plan and prints once the plan has Marca.
+    await expect(page.getByText('Todavía no hay un logo.')).toBeVisible();
+    await page.getByLabel('Archivo del logo').setInputFiles({
+      name: 'logo.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]),
+    });
+    await page.getByRole('button', { name: 'Subir logo' }).click();
+    await expect(page.getByText('Hay un logo guardado.')).toBeVisible();
+
     await page.getByRole('button', { name: 'Editar', exact: true }).click();
     const tax = page.getByRole('dialog', { name: 'Editar los datos tributarios' });
     await tax.getByRole('combobox', { name: 'Régimen' }).click();
@@ -518,19 +528,13 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page.getByText('Cambios guardados.')).toBeVisible();
     await expect(page.getByRole('main')).toContainText('RIMPE Emprendedor');
 
-    // Gratis allows one branch: the second is refused, with the reason.
-    await page.getByRole('button', { name: 'Agregar establecimiento' }).click();
-    const branch = page.getByRole('dialog', { name: 'Agregar establecimiento' });
-    await branch.getByRole('textbox', { name: 'Código del establecimiento' }).fill('002');
-    await branch.getByRole('textbox', { name: 'Nombre', exact: true }).fill('Norte');
-    await branch
-      .getByRole('textbox', { name: 'Dirección', exact: true })
-      .fill('Av. 6 de Diciembre');
-    await branch.getByRole('button', { name: 'Crear' }).click();
-    await expect(branch.getByRole('alert')).toHaveText(
-      'Tu plan no permite más. Revisa los límites en Plan.',
-    );
-    await branch.getByRole('button', { name: 'Cancelar' }).click();
+    // Gratis allows one branch and one issue point: the add buttons are off, with the reason.
+    await expect(page.getByRole('button', { name: 'Agregar establecimiento' })).toBeDisabled();
+    await expect(page.getByText(/^Tu plan permite 1 establecimiento/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Agregar punto' })).toBeDisabled();
+    await expect(
+      page.getByText(/^Tu plan permite 1 punto de emisión por establecimiento/),
+    ).toBeVisible();
 
     await page.getByRole('button', { name: 'Tipos de comprobante de 001-001' }).click();
     const types = page.getByRole('dialog', { name: 'Tipos de comprobante de 001-001' });
@@ -1908,7 +1912,16 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
       await expect(page.locator('article')).not.toContainText('{{');
       await look(page, 'legal-document');
       await page.goBack();
-      await page.getByLabel(/He leído y acepto, en nombre de mi empresa/).check();
+      // One tick per document.
+      for (const name of [
+        'Términos de Servicio',
+        'Política de Privacidad',
+        'Acuerdo de Procesamiento',
+      ]) {
+        await page
+          .getByLabel(new RegExp(`He leído y acepto, en nombre de mi empresa: ${name}`))
+          .check();
+      }
       await page.getByRole('button', { name: 'Aceptar', exact: true }).click();
       await expect(page.getByText('Documentos aceptados.')).toBeVisible();
       await expect(list.getByText(/Aceptado el/)).toHaveCount(3);

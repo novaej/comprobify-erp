@@ -72,6 +72,8 @@ export type CompanySettings = {
     taxRegime: (typeof TAX_REGIMES)[number];
   };
   negativeStock: (typeof NEGATIVE_STOCK_RULES)[number];
+  // Whether a logo is stored, whatever the plan; it prints only with the Marca module.
+  hasLogo: boolean;
   branches: {
     id: string;
     code: string;
@@ -116,6 +118,8 @@ export async function companySettings(ctx: ActorContext, db: Database): Promise<
         taxRegime: tenant!.taxRegime,
       },
       negativeStock: tenant!.negativeStock,
+      hasLogo:
+        (await tx.select({ id: schema.tenantLogos.tenantId }).from(schema.tenantLogos)).length > 0,
       branches: branchRows.map((branch) => ({
         id: branch.id,
         code: branch.code,

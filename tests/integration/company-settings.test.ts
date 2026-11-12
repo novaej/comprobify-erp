@@ -8,6 +8,7 @@ import {
   goLive,
   resolveActor,
   setIssuePointDocumentType,
+  setCompanyLogo,
   setIssuePointPaused,
   setOverride,
   updateCompanyProfile,
@@ -101,6 +102,21 @@ describe('company settings', () => {
     const viewer = { ...owner, permissions: [] } satisfies ActorContext;
     await expect(updateCompanyProfile(viewer, db, profile)).rejects.toMatchObject({
       code: 'FORBIDDEN',
+    });
+  });
+
+  it('sets a logo on the company and its twin, from any plan, and refuses a non-image', async () => {
+    const org = await company();
+    const owner = await actor(org.twinTenantId);
+    expect((await companySettings(owner, db)).hasLogo).toBe(false);
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
+    await setCompanyLogo(owner, db, png);
+    for (const tenantId of [org.realTenantId, org.twinTenantId])
+      expect((await companySettings(await actor(tenantId), db)).hasLogo).toBe(true);
+    // Replacing keeps one logo.
+    await setCompanyLogo(owner, db, png);
+    await expect(setCompanyLogo(owner, db, Buffer.from('not an image'))).rejects.toMatchObject({
+      code: 'INVALID_LOGO',
     });
   });
 

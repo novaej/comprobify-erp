@@ -6,6 +6,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Added
 
+- A logo card on Empresa: upload or replace the logo after onboarding, for the company and its test copy, on any plan; it prints on documents with the Marca module (FR-ONB-2, FR-PLAN-3).
 - The public pages: a landing page, a pricing page built from the live plans and prices, and a support page with the operator's contact details, in Spanish and English, with their own header and footer. Editing a price in the platform area reaches the pricing page within 30 seconds, with an announced change shown as "El precio cambia a…". `SUPPORT_PHONE` (optional) adds a WhatsApp card (FR-UX-5).
 - pnpm workspace with Turborepo, strict TypeScript, ESLint and Prettier.
 - Lint rules for the core module boundaries (NFR-ARCH-1, NFR-ARCH-4, NFR-ARCH-5).
@@ -132,6 +133,8 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Changed
 
+- Empresa turns off **Agregar establecimiento** and **Agregar punto** at the plan's limit and says why, with a link to the plan, as Usuarios does for invitations; core still refuses past the limit (FR-PLAN-3).
+- Accepting the legal texts takes one tick per document still pending, instead of one for all three; each is still recorded as its own acceptance (FR-ONB-8).
 - The IVA on subscriptions moves from `IVA_RATE` to a dated table with its history (migration 0057, ADR-034), seeded with 15 % from 1 April 2024 and edited on the platform's Precios page. On the day a new rate starts, the daily job re-prices unpaid open payments and emails the payer the new total; a reported transfer keeps its rate. `IVA_RATE` is no longer read (FR-BILL-2).
 - Going live can copy the test copy's active products, clients, providers and invoice templates to the real company, once and in the go-live transaction: what the real company already has is left alone, and templates are moved to the copies. The go-live event records how many (FR-ONB-5, ADR-025).
 - An invoice stops offering "Nota de crédito" once nothing is left to credit (FR-SAL-8).
@@ -139,6 +142,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Fixed
 
+- Actividad, viewed from the test copy, now includes the changes made to the company itself (accepting the legal texts, tax data, plan), which are recorded on the real company and were missing there (FR-NOT-4).
 - Asking for a new password reset link cancels the ones not used yet, so only the latest email works (FR-ONB-7).
 - Opening a password reset link that was already used or has expired now says so, instead of showing the form (FR-ONB-7).
 - An email verification link can no longer be used twice: once the account is verified it is refused, instead of verifying and signing the person in again (FR-ONB-1).

@@ -1,22 +1,26 @@
 'use client';
 
-import { Button } from '@comprobify/ui/components/button';
+import { Button, buttonVariants } from '@comprobify/ui/components/button';
 import { Input } from '@comprobify/ui/components/input';
 import { Switch } from '@comprobify/ui/components/switch';
-import { FileStack, Pencil, Plus } from 'lucide-react';
+import { FileStack, Info, Pencil, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
+import { ActionForm } from '@/components/action-form';
+import { Banner } from '@/components/banner';
 import { ChoiceSelect, type Choice } from '@/components/choice-select';
 import { DetailTile } from '@/components/detail-tile';
 import { FormDialog } from '@/components/form-dialog';
 import { FormField } from '@/components/form-field';
 import { SectionCard } from '@/components/section-card';
 import { ToneBadge } from '@/components/tone-badge';
+import { Link } from '@/i18n/navigation';
 import { useServerAction } from '@/components/use-server-action';
 import {
   createIssuePointAction,
   saveBranchAction,
   setDocumentTypesAction,
+  setLogoAction,
   setNegativeStockAction,
   setPausedAction,
   updateProfileAction,
@@ -36,6 +40,14 @@ export type SettingsView = {
   negativeStock: 'BLOCK' | 'ALLOW';
   // The Inventario module, which the negative-stock rule belongs to.
   inventory: boolean;
+  hasLogo: boolean;
+  maxBranches: number | null;
+  maxPoints: number | null;
+  canSeePlan: boolean;
+  // Some document type the app can issue is not in the plan.
+  typesLocked: boolean;
+  // The Marca module: only then does the logo print on documents.
+  logoPrints: boolean;
   branches: {
     id: string;
     code: string;
@@ -70,6 +82,10 @@ export function SettingsManager({ settings }: { settings: SettingsView }) {
   const typeLabel = new Map(settings.documentTypes.map((type) => [type.value, type.label]));
   const regimeLabel = new Map(settings.regimes.map((regime) => [regime.value, regime.label]));
   const { profile } = settings;
+  // At the plan's limit the add buttons are off and the card says why, like Usuarios.
+  const pointsFull = (used: number) => settings.maxPoints !== null && used >= settings.maxPoints;
+  const branchesFull =
+    settings.maxBranches !== null && settings.branches.length >= settings.maxBranches;
 
   return (
     <div className="space-y-4">
@@ -115,6 +131,7 @@ export function SettingsManager({ settings }: { settings: SettingsView }) {
             size="sm"
             variant="outline"
             onClick={() => setDialog({ kind: 'branch', branch: null })}
+            disabled={branchesFull}
           >
             <Plus className="mr-1.5 h-4 w-4" aria-hidden />
             {t('addBranch')}
@@ -122,6 +139,12 @@ export function SettingsManager({ settings }: { settings: SettingsView }) {
         }
       >
         <div className="space-y-4">
+          {branchesFull && (
+            <PlanLimitNote
+              message={t('branchesFull', { count: settings.maxBranches ?? 0 })}
+              canSeePlan={settings.canSeePlan}
+            />
+          )}
           {settings.branches.map((branch) => (
             <section
               key={branch.id}
@@ -149,12 +172,21 @@ export function SettingsManager({ settings }: { settings: SettingsView }) {
                     size="sm"
                     variant="ghost"
                     onClick={() => setDialog({ kind: 'point', branch })}
+                    disabled={pointsFull(branch.issuePoints.length)}
                   >
                     <Plus className="mr-1.5 h-4 w-4" aria-hidden />
                     {t('addPoint')}
                   </Button>
                 </div>
               </div>
+              {pointsFull(branch.issuePoints.length) && (
+                <div className="border-b border-border px-4 py-3">
+                  <PlanLimitNote
+                    message={t('pointsFull', { count: settings.maxPoints ?? 0 })}
+                    canSeePlan={settings.canSeePlan}
+                  />
+                </div>
+              )}
               {branch.issuePoints.length === 0 ? (
                 <p className="px-4 py-3 text-sm text-muted-foreground">{t('noPoints')}</p>
               ) : (
@@ -174,6 +206,8 @@ export function SettingsManager({ settings }: { settings: SettingsView }) {
           ))}
         </div>
       </SectionCard>
+
+      <LogoCard hasLogo={settings.hasLogo} prints={settings.logoPrints} />
 
       {settings.inventory && <StockRuleCard allowed={settings.negativeStock === 'ALLOW'} />}
 
@@ -215,6 +249,60 @@ export function SettingsManager({ settings }: { settings: SettingsView }) {
         />
       )}
     </div>
+  );
+}
+
+function PlanLimitNote({ message, canSeePlan }: { message: string; canSeePlan: boolean }) {
+  const t = useTranslations('settings');
+  return (
+    <Banner
+      tone="warning"
+      icon={Info}
+      role="note"
+      className="mb-0"
+      action={
+        canSeePlan ? (
+          <Link href="/plan" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+            {t('seePlan')}
+          </Link>
+        ) : undefined
+      }
+    >
+      {message}
+    </Banner>
+  );
+}
+
+// The logo for the RIDE: kept on any plan, printed with the Marca module (FR-PLAN-3).
+function LogoCard({ hasLogo, prints }: { hasLogo: boolean; prints: boolean }) {
+  const t = useTranslations('settings');
+  return (
+    <SectionCard title={t('logoTitle')} description={t('logoDescription')}>
+      <p className="mb-3 text-sm">
+        {hasLogo ? t('logoSet') : t('logoNone')}
+        {!prints && <span className="text-muted-foreground"> {t('logoNeedsBrand')}</span>}
+      </p>
+      <ActionForm action={setLogoAction} errors="settingsError" success={t('logoSaved')}>
+        {(pending) => (
+          <div className="flex flex-wrap items-end gap-3">
+            <FormField label={t('logoFile')}>
+              {(props) => (
+                <Input
+                  {...props}
+                  name="logo"
+                  type="file"
+                  accept="image/png,image/jpeg,image/gif"
+                  required
+                />
+              )}
+            </FormField>
+            <Button type="submit" variant="outline" disabled={pending}>
+              {hasLogo ? t('logoReplace') : t('logoUpload')}
+            </Button>
+          </div>
+        )}
+      </ActionForm>
+    </SectionCard>
   );
 }
 
@@ -523,7 +611,9 @@ function TypesDialog({
           </label>
         ))}
       </div>
-      <p className="text-xs text-muted-foreground">{t('moreTypesSoon')}</p>
+      {settings.typesLocked && (
+        <p className="text-xs text-muted-foreground">{t('moreTypesInPlan')}</p>
+      )}
     </FormDialog>
   );
 }

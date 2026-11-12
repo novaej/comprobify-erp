@@ -21,7 +21,9 @@ process.env.MIGRATION_DATABASE_URL = e2e.E2E_MIGRATION_DATABASE_URL;
 
 // E2E_BASE_URL points at a running app, such as the Docker stack on :8080.
 // Without it, Playwright starts the built web app itself.
-const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
+// E2E_PORT moves the app it starts, so a `pnpm dev` left running on :3000 is never the one tested.
+const port = process.env.E2E_PORT ?? '3000';
+const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${port}`;
 
 const AGREEMENTS_ON = {
   AGREEMENTS_ENABLED: 'true',
@@ -47,10 +49,11 @@ export default defineConfig({
     ? undefined
     : {
         // Migrate first: Playwright starts this before any global setup would run.
-        command:
-          'pnpm --silent --filter @comprobify/worker db:migrate && pnpm --filter @comprobify/web start',
+        command: `pnpm --silent --filter @comprobify/worker db:migrate && pnpm --filter @comprobify/web start -p ${port}`,
         url: `${baseURL}/health`,
-        reuseExistingServer: !process.env.CI,
+        // Never reuse: whatever already answers may be a dev server on another database, and the
+        // tests would register accounts in it.
+        reuseExistingServer: false,
         timeout: 60_000,
         // The server Playwright starts has the legal texts on, so CI covers acceptance. It
         // never calls SRI or Payphone, whatever .env says (ADR-014, ADR-033).

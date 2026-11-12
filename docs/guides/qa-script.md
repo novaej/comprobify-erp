@@ -41,15 +41,15 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | Flow | What | Status |
 |---|---|---|
 | P1 | The landing page | ✅ |
-| P2 | Pricing | 🟡 steps 1–4 passed; 5 and 6 need a company and the operator |
+| P2 | Pricing | 🟡 steps 1–5 passed; 6 needs the operator (after N2) |
 | P3 | Support | ✅ |
 | A1 | Register and confirm the email | ✅ |
 | A2 | Sign out, a wrong password, a reset | ✅ |
-| A3 | The operator: super admin with two-step verification | ⬜ |
-| B1 | Set up the company | ⬜ |
-| B2 | The legal documents | ⬜ |
-| B3 | Company settings | ⬜ |
-| B4 | What the free plan includes | ⬜ |
+| A3 | The operator: super admin with two-step verification | ✅ |
+| B1 | Set up the company | ✅ |
+| B2 | The legal documents | ✅ |
+| B3 | Company settings | ✅ |
+| B4 | What the free plan includes | ✅ |
 | C1 | Choose a plan and report the transfer | ⬜ |
 | C2 | The operator verifies the payment | ⬜ |
 | C3 | The operator invoices the payment | ⬜ |
@@ -262,7 +262,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 | 2 | **Anual** | Prices are ten months' worth; "Equivalente a … /mes" appears; documents become a year's worth |
 | 3 | Look under the cards | The extra-user price, the payment methods, the add-on modules with prices |
 | 4 | **Compara los planes**: scroll the table sideways on the phone width | Limits and a tick or dash per module; the table scrolls inside itself, not the page |
-| 5 | Signed in as Ana (after B1), open **Plan y pagos** in the sidebar and click **Elegir un plan** (monthly and yearly) | The same plans, with the same prices before IVA as the public page: Emprende, Negocio and Empresa, monthly and yearly. Gratis is not offered there, since a free plan isn't bought |
+| 5 | Signed in as Ana (after B1), open **Plan** in the sidebar (its page is titled "Plan y pagos") and click **Elegir un plan** (monthly and yearly) | The same plans, with the same prices before IVA as the public page: Emprende, Negocio and Empresa, monthly and yearly. Gratis is not offered there, since a free plan isn't bought |
 | 6 | As the operator, publish a new price for Negocio (N2, the earliest date), then reload the pricing page after 30 seconds | Negocio still shows today's price, with "El precio cambia a … a partir del …". With a date of today (a plan nobody pays) the new price shows instead |
 
 ### P3 · Support
@@ -335,7 +335,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 | 2 | Upload `test-1712345678001.p12`, password `secret` (or your own file and password) | Accepted. Try once with a wrong password first: refused, clearly |
 | 3 | **Crear mi empresa** | The dashboard, "Tu empresa está lista", a yellow "ambiente de pruebas" banner, **SRI Pruebas** in the sidebar |
 | 4 | Look at the sidebar | The organization switcher, Pruebas selected; Producción disabled with "Disponible cuando tu empresa pase a producción" |
-| 5 | In a fresh company form (don't submit), upload `test-1790012345001.p12` with the company's RUC | Refused: the certificate's RUC doesn't match |
+| 5 | Open the organization switcher and choose **Nueva empresa**. In the form, type RUC `1714070046001` (Andina Norte, which you set up for real later; nothing is created here), any name and address, and upload `test-1790012345001.p12` (it belongs to a different RUC). Don't submit | Refused: the certificate's RUC doesn't match. Leave the form with the browser's back button |
 
 ### B2 · The legal documents
 
@@ -346,7 +346,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 | 1 | Dashboard | A blue banner "Acepta los documentos legales" with **Revisar y aceptar** |
 | 2 | **Revisar y aceptar** | Three documents (Términos, Privacidad, Acuerdo de Procesamiento de Datos), each **Pendiente** |
 | 3 | Open each | The company's own copy: Comercial Andina's name and RUC and the operator's details filled in, no `{{…}}` left |
-| 4 | Back, tick "He leído y acepto, en nombre de mi empresa", **Aceptar** | "Documentos aceptados.", each "Aceptado el …" |
+| 4 | Back: there is one tick per document ("He leído y acepto, en nombre de mi empresa: Términos de Servicio", and the same for the other two). Try **Aceptar** with one left unticked, then tick all three and **Aceptar** | The browser asks for the missing tick; with all three: "Documentos aceptados.", each "Aceptado el …" |
 | 5 | Dashboard | The banner is gone |
 | 6 | **Actividad** in the sidebar | The acceptance is in the log, with who and when |
 
@@ -358,9 +358,9 @@ Seen signed out, so use a private window. They need no company; run them any tim
 |---|---|---|
 | 1 | **Empresa** in the sidebar | Tax data, the certificate, branches and issue points |
 | 2 | **Editar los datos tributarios**: set **RIMPE Emprendedor**, save; then set it back | Saved each time; the change appears in **Actividad** |
-| 3 | Upload a logo (a PNG) | Shown on the page |
-| 4 | **Agregar establecimiento** | Refused: the Gratis plan allows one branch (this changes after C2) |
-| 5 | Open the issue point 001-001's document types | Factura on; the others follow the plan |
+| 3 | In the **Logo** card, choose a PNG (up to 500 KB) and **Subir logo** | "Logo guardado." and "Hay un logo guardado."; on the free plan it says it prints once the plan has Marca. A text file renamed to .png is refused. (It shows on documents after C2, when the plan includes Marca.) |
+| 4 | Look at **Agregar establecimiento** and **Agregar punto** | Both are disabled, each with a note: "Tu plan permite 1 establecimiento…" and "…1 punto de emisión por establecimiento…", and a **Ver el plan** button (this changes after C2) |
+| 5 | Open the issue point 001-001's document types | Only Factura is listed, on, and a note says the other types come with their module in Plan |
 
 ### B4 · What the free plan includes
 
@@ -369,7 +369,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 | # | Do | Expect |
 |---|---|---|
 | 1 | **Plan** in the sidebar | Gratis, its modules and limits (5 documents, 1 user, 1 branch), and **Elegir un plan** |
-| 2 | Open **Inventario**, **Órdenes de compra**, **Pedidos de venta**, **Facturación masiva** | Each shows a lock: "tu plan no incluye…", with a link to the plan |
+| 2 | Look at the sidebar, then type these addresses in the browser one by one: `/es/inventory`, `/es/purchase-orders`, `/es/sale-orders`, `/es/bulk-invoicing` | The sidebar doesn't list Inventario, Órdenes de compra, Pedidos de venta or Facturación masiva, since the plan lacks them. Each address shows a lock: "tu plan no incluye…", with a link to the plan |
 | 3 | **Usuarios** → **Invitar** | Refused: the plan allows one user |
 
 ---

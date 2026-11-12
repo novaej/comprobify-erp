@@ -27,11 +27,12 @@ The isolation sweep fills every tenant table with rows for two companies and a t
 
 They use their own database, `comprobify_erp_e2e` (`E2E_DATABASE_URL`, `E2E_MIGRATION_DATABASE_URL`; the name must end in `_e2e`), and Playwright migrates it before starting the app; the Docker stack's migrate step does it there. Every run leaves its accounts, companies and test plans behind, because nothing is deleted, so it is never the database used with `pnpm dev`. The Docker stack uses it too, so the tests can read its queued emails. `pnpm db:reset e2e` starts it over.
 
-Playwright starts the built app on `:3000` unless `E2E_BASE_URL` is set:
+Playwright starts the built app on `:3000` (or `E2E_PORT`) unless `E2E_BASE_URL` is set. It never reuses a server already running there: a `pnpm dev` on `:3000` would be on another database, and the tests would register accounts in it, so with that port taken the run fails; set `E2E_PORT` instead:
 
 ```bash
 pnpm build && pnpm test:e2e
 E2E_BASE_URL=http://localhost:8080 pnpm test:e2e   # against the Docker stack
+E2E_PORT=3100 pnpm test:e2e                        # its own app on another port, with `pnpm dev` still running
 ```
 
 The account tests read the verification and reset links from the queued `email.send` jobs, so they need `DATABASE_URL` and no worker. Without a proxy in front, the app sees a loopback address and skips the per-IP rate limits, so E2E runs can repeat; through the Docker stack, the sign-up limit of 5 per address per hour applies.

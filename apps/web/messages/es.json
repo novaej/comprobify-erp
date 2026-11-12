@@ -535,7 +535,7 @@
       "PRIVACY": "Política de Privacidad",
       "DPA": "Acuerdo de Procesamiento de Datos"
     },
-    "acceptLabel": "He leído y acepto, en nombre de mi empresa, los Términos de Servicio, la Política de Privacidad y el Acuerdo de Procesamiento de Datos.",
+    "acceptLabel": "He leído y acepto, en nombre de mi empresa: {document}.",
     "accept": "Aceptar",
     "accepting": "Aceptando...",
     "ownerAccepts": "El propietario de la empresa debe aceptarlos.",
@@ -1439,13 +1439,25 @@
     "documentTypesFor": "Tipos de comprobante de {point}",
     "documentTypesDescription": "Activa los que este punto emite. Desactivar uno no afecta lo ya emitido.",
     "notInPlan": "Fuera de tu plan",
-    "moreTypesSoon": "Las notas de crédito y las guías de remisión llegarán pronto.",
     "inventoryTitle": "Inventario",
     "inventoryDescription": "Cómo se comportan las existencias al salir mercadería.",
     "negativeStock": "Permitir existencias negativas",
     "negativeStockHint": "Apagado, una salida que supera lo disponible se rechaza. Encendido, se registra y la existencia queda bajo cero hasta la siguiente entrada.",
     "negativeStockAllowed": "Se permiten existencias negativas.",
-    "negativeStockBlocked": "Las salidas sin existencias se rechazan."
+    "negativeStockBlocked": "Las salidas sin existencias se rechazan.",
+    "logoTitle": "Logo",
+    "logoDescription": "La imagen que sale en el encabezado de tus RIDE y de tus órdenes en PDF. PNG, JPEG o GIF de hasta 500 KB. Aplica también a la copia de pruebas.",
+    "logoSet": "Hay un logo guardado.",
+    "logoNone": "Todavía no hay un logo.",
+    "logoNeedsBrand": "Se imprime en tus documentos cuando tu plan incluya el módulo Marca.",
+    "logoFile": "Archivo del logo",
+    "logoUpload": "Subir logo",
+    "logoReplace": "Reemplazar logo",
+    "logoSaved": "Logo guardado.",
+    "moreTypesInPlan": "Aquí aparecen los comprobantes que tu plan incluye. Las notas de crédito y las guías de remisión se agregan con su módulo, en Plan.",
+    "branchesFull": "Tu plan permite {count, plural, one {# establecimiento} other {# establecimientos}} y ya están todos creados.",
+    "pointsFull": "Tu plan permite {count, plural, one {# punto de emisión} other {# puntos de emisión}} por establecimiento y ya están todos creados.",
+    "seePlan": "Ver el plan"
   },
   "settingsError": {
     "FORBIDDEN": "Tu rol no permite cambiar los datos de la empresa.",
@@ -3786,7 +3798,7 @@
       },
       "payment": {
         "question": "¿Cómo se paga la suscripción?",
-        "answer": "Puedes pagar por transferencia bancaria o con tarjeta. Con transferencia te mostramos los datos de la cuenta, haces el pago y subes el comprobante; con tarjeta pagas en el momento. Tu plan se activa en cuanto el pago se verifica. Puedes cambiar de plan, agregar módulos o comprar paquetes de comprobantes cuando quieras; antes de confirmar, Plan y pagos te muestra cuánto se cobra."
+        "answer": "Puedes pagar por transferencia bancaria o con tarjeta. Con transferencia te mostramos los datos de la cuenta, haces el pago y subes el comprobante; con tarjeta pagas en el momento. Tu plan se activa en cuanto el pago se verifica. Puedes cambiar de plan, agregar módulos o comprar paquetes de comprobantes cuando quieras; antes de confirmar, la sección Plan te muestra cuánto se cobra."
       },
       "sequentials": {
         "question": "Ya facturo en otro sistema. ¿Pierdo mi numeración?",

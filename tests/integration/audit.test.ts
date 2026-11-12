@@ -16,6 +16,7 @@ import {
   onboardOrganization,
   recordSessionStart,
   resolveActor,
+  setNegativeStockRule,
   type ActorContext,
   type Auth,
   type CreatedOrganization,
@@ -123,6 +124,17 @@ describe('audit log and go-live', () => {
     expect(await actions(twinCtx)).toEqual(
       expect.arrayContaining(['organization.created', 'certificate.uploaded']),
     );
+  });
+
+  it('shows the test copy the changes made to the company itself', async () => {
+    // Recorded on the real company; the owner looking at the test copy must still see it.
+    await setNegativeStockRule(ownerCtx, db, 'BLOCK');
+    const twinCtx = await resolveActor(db, { userId: owner, tenantId: org.twinTenantId, clock });
+    expect(await actions(twinCtx)).toContain('organization.settings_changed');
+    // Recorded on both at creation, shown once.
+    expect(
+      (await actions(twinCtx)).filter((action) => action === 'organization.created'),
+    ).toHaveLength(1);
   });
 
   it('records member changes in the company log, with who did it to whom', async () => {

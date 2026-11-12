@@ -1,5 +1,7 @@
 import { eq, schema, type Database, type Tx } from '@comprobify/db';
-import { DomainError, hasFeature, type ActorContext } from '../kernel';
+import { recordAudit } from '../audit';
+import { DomainError, hasFeature, requirePermission, type ActorContext } from '../kernel';
+import { pairOf } from './pair';
 
 export const LOGO_MAX_BYTES = 500 * 1024;
 
@@ -46,4 +48,34 @@ export async function documentLogo(
     .from(schema.tenantLogos)
     .where(eq(schema.tenantLogos.tenantId, tenantId));
   return row?.content ?? null;
+}
+
+// Replaces the logo of the company and its twin together, on any plan: it prints on documents
+// only while the plan has RIDE_LOGO, so a company can set it before buying Marca.
+export async function setCompanyLogo(
+  ctx: ActorContext,
+  db: Database,
+  file: Uint8Array,
+): Promise<void> {
+  requirePermission(ctx, 'organization.manage');
+  const logo = sniffLogo(Buffer.from(file));
+  await db.withSystem('replace the logo of a company and its twin', async ({ db: tx }) => {
+    const pair = await pairOf(tx, ctx.tenantId);
+    for (const tenantId of [pair.realTenantId, pair.twinTenantId]) {
+      if (!tenantId) continue;
+      await tx
+        .insert(schema.tenantLogos)
+        .values({ tenantId, ...logo })
+        .onConflictDoUpdate({
+          target: schema.tenantLogos.tenantId,
+          set: { content: logo.content, contentType: logo.contentType },
+        });
+    }
+    await recordAudit(tx, {
+      tenantId: pair.realTenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'organization.settings_changed',
+      details: { logo: true },
+    });
+  });
 }

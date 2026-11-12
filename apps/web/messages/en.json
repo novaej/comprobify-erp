@@ -535,7 +535,7 @@
       "PRIVACY": "Privacy Policy",
       "DPA": "Data Processing Agreement"
     },
-    "acceptLabel": "I've read and accept, on behalf of my company, the Terms of Service, the Privacy Policy and the Data Processing Agreement.",
+    "acceptLabel": "I've read and accept, on behalf of my company: {document}.",
     "accept": "Accept",
     "accepting": "Accepting...",
     "ownerAccepts": "The company's owner must accept them.",
@@ -1439,13 +1439,25 @@
     "documentTypesFor": "Document types of {point}",
     "documentTypesDescription": "Turn on the ones this point issues. Turning one off leaves what was issued alone.",
     "notInPlan": "Not in your plan",
-    "moreTypesSoon": "Credit notes and delivery guides are coming soon.",
     "inventoryTitle": "Inventory",
     "inventoryDescription": "How stock behaves when goods go out.",
     "negativeStock": "Allow negative stock",
     "negativeStockHint": "Off, an outflow beyond what is available is refused. On, it is recorded and the stock stays below zero until the next receipt.",
     "negativeStockAllowed": "Negative stock is allowed.",
-    "negativeStockBlocked": "Outflows without stock are refused."
+    "negativeStockBlocked": "Outflows without stock are refused.",
+    "logoTitle": "Logo",
+    "logoDescription": "The image shown in the header of your RIDE and your PDF orders. PNG, JPEG or GIF up to 500 KB. It also applies to the test copy.",
+    "logoSet": "A logo is stored.",
+    "logoNone": "There is no logo yet.",
+    "logoNeedsBrand": "It prints on your documents once your plan includes the Branding module.",
+    "logoFile": "Logo file",
+    "logoUpload": "Upload logo",
+    "logoReplace": "Replace logo",
+    "logoSaved": "Logo saved.",
+    "moreTypesInPlan": "Only the document types your plan includes are listed. Credit notes and delivery guides come with their module, in Plan.",
+    "branchesFull": "Your plan allows {count, plural, one {# branch} other {# branches}}, and all are created.",
+    "pointsFull": "Your plan allows {count, plural, one {# issue point} other {# issue points}} per branch, and all are created.",
+    "seePlan": "See the plan"
   },
   "settingsError": {
     "FORBIDDEN": "Your role can't change the company details.",
@@ -3786,7 +3798,7 @@
       },
       "payment": {
         "question": "How do I pay for the subscription?",
-        "answer": "You can pay by bank transfer or by card. With a transfer we show you the account details, you make the payment and upload the receipt; with a card you pay on the spot. Your plan activates as soon as the payment is verified. You can change plan, add modules or buy document packs whenever you want; before you confirm, Plan and payments shows what will be charged."
+        "answer": "You can pay by bank transfer or by card. With a transfer we show you the account details, you make the payment and upload the receipt; with a card you pay on the spot. Your plan activates as soon as the payment is verified. You can change plan, add modules or buy document packs whenever you want; before you confirm, the Plan section shows what will be charged."
       },
       "sequentials": {
         "question": "I already invoice in another system. Do I lose my numbering?",

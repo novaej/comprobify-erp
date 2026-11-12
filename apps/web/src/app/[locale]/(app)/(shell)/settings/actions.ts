@@ -3,6 +3,7 @@
 import {
   createBranch,
   createIssuePoint,
+  setCompanyLogo,
   setIssuePointDocumentType,
   setIssuePointPaused,
   setNegativeStockRule,
@@ -97,4 +98,13 @@ export async function setNegativeStockAction(_: ActionState, form: FormData): Pr
   return run(form, () =>
     setNegativeStockRule(actor, db, text(form, 'allow') === 'true' ? 'ALLOW' : 'BLOCK'),
   );
+}
+
+export async function setLogoAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const { actor } = await loadShell(localeOf(form));
+  const { db } = await getRuntime();
+  const file = form.get('logo');
+  if (!(file instanceof File) || file.size === 0) return { error: 'INVALID_LOGO' };
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  return run(form, () => setCompanyLogo(actor, db, bytes));
 }

@@ -2,6 +2,7 @@ import {
   AUDIT_ACTIONS,
   desc,
   eq,
+  inArray,
   PLATFORM_AUDIT_ACTIONS,
   schema,
   sql,
@@ -100,7 +101,8 @@ export type AuditEntry = {
   details: Record<string, unknown>;
 };
 
-// The company's log, newest first.
+// The company's log, newest first. Changes to the company itself (settings, agreements, plan)
+// are recorded on the real company, so the test copy shows its own events and the company's.
 export async function listAuditEvents(
   ctx: ActorContext,
   db: Database,
@@ -108,22 +110,65 @@ export async function listAuditEvents(
 ): Promise<AuditEntry[]> {
   requirePermission(ctx, 'audit.read');
   const limit = Math.min(Math.max(options.limit ?? 100, 1), 500);
-  return db.withTenant({ tenantId: ctx.tenantId }, ({ db: tx }) => {
-    const { auditEvents, users } = schema;
-    return tx
-      .select({
-        id: auditEvents.id,
-        action: auditEvents.action,
-        occurredAt: auditEvents.occurredAt,
-        actorName: users.name,
-        subjectName: sql<
-          string | null
-        >`(SELECT u.name FROM ${users} u WHERE u.id = ${auditEvents.subjectUserId})`,
-        details: auditEvents.details,
-      })
-      .from(auditEvents)
-      .leftJoin(users, eq(users.id, auditEvents.actorUserId))
-      .orderBy(desc(auditEvents.occurredAt))
-      .limit(limit);
-  });
+  // System context, only to find the real company of a test copy: the ids it reads are the
+  // actor's own company and its twin, never another's.
+  const rows = await db.withSystem(
+    'read the log of a company and its test copy',
+    async ({ db: tx }) => {
+      const { auditEvents, users, tenants } = schema;
+      const [self] = await tx
+        .select({ twinOf: tenants.twinOf })
+        .from(tenants)
+        .where(eq(tenants.id, ctx.tenantId));
+      const ids = self?.twinOf ? [ctx.tenantId, self.twinOf] : [ctx.tenantId];
+      return (
+        tx
+          .select({
+            id: auditEvents.id,
+            tenantId: auditEvents.tenantId,
+            action: auditEvents.action,
+            occurredAt: auditEvents.occurredAt,
+            actorName: users.name,
+            subjectName: sql<
+              string | null
+            >`(SELECT u.name FROM ${users} u WHERE u.id = ${auditEvents.subjectUserId})`,
+            details: auditEvents.details,
+          })
+          .from(auditEvents)
+          .leftJoin(users, eq(users.id, auditEvents.actorUserId))
+          .where(inArray(auditEvents.tenantId, ids))
+          .orderBy(desc(auditEvents.occurredAt))
+          // Twice as many, as the pairs below collapse.
+          .limit(limit * 2)
+      );
+    },
+  );
+  // Some events are recorded on both the company and its test copy (creation, the certificate):
+  // same moment and actor (their details may differ, such as the mode). Shown once.
+  const seen = new Map<string, string>();
+  return rows
+    .filter((row) => {
+      const key = [
+        row.action,
+        row.actorName,
+        row.subjectName,
+        // To the second: both rows come from one action.
+        Math.floor(row.occurredAt.getTime() / 1000),
+      ].join('|');
+      const first = seen.get(key);
+      // Only a twin of an event already listed from the other company; two of the same company
+      // in one second are both real.
+      if (first !== undefined && first !== row.tenantId) return false;
+      seen.set(key, first ?? row.tenantId);
+      return true;
+    })
+    .map((row) => ({
+      id: row.id,
+      action: row.action,
+      occurredAt: row.occurredAt,
+      actorName: row.actorName,
+      subjectName: row.subjectName,
+      details: row.details,
+    }))
+    .slice(0, limit);
 }

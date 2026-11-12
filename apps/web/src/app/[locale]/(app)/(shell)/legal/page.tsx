@@ -97,7 +97,9 @@ export default async function LegalPage({ params }: { params: Promise<{ locale: 
       {pending &&
         (actor.permissions.includes('organization.accept_agreements') ? (
           <SectionCard title={t('acceptTitle')} description={t('acceptDescription')}>
-            <AcceptAgreementsForm />
+            <AcceptAgreementsForm
+              pending={status.filter((row) => !row.accepted).map((row) => row.type)}
+            />
           </SectionCard>
         ) : (
           <p className="text-sm text-muted-foreground">{t('ownerAccepts')}</p>
