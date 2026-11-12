@@ -101,7 +101,7 @@
     "subtitle": "Elige una nueva contraseña para tu cuenta.",
     "submit": "Restablecer contraseña",
     "submitting": "Restableciendo...",
-    "invalidLinkMessage": "Este enlace para restablecer tu contraseña no es válido o le falta el código.",
+    "invalidLinkMessage": "Este enlace para restablecer tu contraseña no es válido, ya se usó o expiró. Pide uno nuevo.",
     "requestNewLink": "Solicitar un nuevo enlace"
   },
   "account": {

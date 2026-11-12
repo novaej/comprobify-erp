@@ -51,7 +51,7 @@ export function ConfirmDialog({
             {error}
           </p>
         )}
-        <DialogFooter>
+        <DialogFooter className="sm:flex-wrap">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>
             {t('cancel')}
           </Button>
@@ -59,6 +59,8 @@ export function ConfirmDialog({
             variant={destructive ? 'destructive' : 'default'}
             onClick={onConfirm}
             disabled={pending}
+            // A long label wraps instead of pushing the dialog wider than the screen.
+            className="h-auto min-h-8 whitespace-normal"
           >
             {confirmLabel}
           </Button>

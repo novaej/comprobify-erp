@@ -14,31 +14,52 @@ const STEPS = [1, 2, 3] as const;
 export function LandingSteps() {
   const t = useTranslations('landing.steps');
   const locale = useLocale();
-  const [reached, setReached] = useState(0);
-  const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
+  // The step whose picture shows; the rail fills up to it.
+  const [active, setActive] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const listRef = useRef<HTMLOListElement>(null);
 
+  // Starts once the list is on screen: it walks through the steps, then stops. A click takes
+  // over. Skipped with reduced motion, where the steps are chosen by hand.
   useEffect(() => {
-    if (typeof IntersectionObserver === 'undefined') return;
+    const node = listRef.current;
+    if (!node || typeof IntersectionObserver === 'undefined') return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          const index = Number((entry.target as HTMLElement).dataset.index);
-          // Never un-highlights, so scrolling back up doesn't flicker.
-          setReached((prev) => Math.max(prev, index + 1));
-        }
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        setPlaying(true);
+        observer.disconnect();
       },
-      { threshold: 0.5 },
+      { threshold: 0.6 },
     );
-    for (const node of itemRefs.current) if (node) observer.observe(node);
+    observer.observe(node);
     return () => observer.disconnect();
   }, []);
 
-  const active = Math.max(reached, 1) - 1;
+  useEffect(() => {
+    if (!playing) return;
+    const timer = setInterval(() => {
+      setActive((current) => {
+        if (current >= STEPS.length - 1) {
+          clearInterval(timer);
+          return current;
+        }
+        return current + 1;
+      });
+    }, 2200);
+    return () => clearInterval(timer);
+  }, [playing]);
+
+  const choose = (index: number) => {
+    setPlaying(false);
+    setActive(index);
+  };
+  const reached = active + 1;
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-center lg:gap-14">
-      <ol className="relative space-y-8">
+      <ol ref={listRef} className="relative space-y-8">
         <span aria-hidden className="absolute top-5 bottom-5 left-5 w-px bg-border">
           <span
             style={{ height: `${(reached / STEPS.length) * 100}%` }}
@@ -48,15 +69,12 @@ export function LandingSteps() {
         {STEPS.map((n, index) => {
           const Icon = ICONS[index]!;
           return (
-            <li
-              key={n}
-              data-index={index}
-              ref={(node) => {
-                itemRefs.current[index] = node;
-              }}
-              className="relative flex gap-4"
-            >
-              <span
+            <li key={n} className="relative flex gap-4">
+              <button
+                type="button"
+                onClick={() => choose(index)}
+                aria-label={t(`step${n}.title`)}
+                aria-current={index === active ? 'step' : undefined}
                 className={cn(
                   'relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-colors duration-500 motion-reduce:transition-none',
                   index < reached
@@ -65,7 +83,7 @@ export function LandingSteps() {
                 )}
               >
                 <Icon className="h-4 w-4" aria-hidden />
-              </span>
+              </button>
               <div className="pt-0.5">
                 <span className="text-xs font-semibold text-primary">
                   {t('stepLabel', { number: n })}

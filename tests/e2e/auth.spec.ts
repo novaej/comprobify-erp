@@ -338,13 +338,19 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await page.getByRole('button', { name: 'Enviar enlace' }).click();
     await expect(page.getByText('Si ese correo corresponde a una cuenta')).toBeVisible();
 
-    await page.goto(await emailLink(email, 'resetPassword'));
+    const resetLink = await emailLink(email, 'resetPassword');
+    await page.goto(resetLink);
     await look(page, 'reset-password');
     await page.getByLabel('Contraseña', { exact: true }).fill(newPassword);
     await page.getByLabel('Confirmar contraseña').fill(newPassword);
     await page.getByRole('button', { name: 'Restablecer contraseña' }).click();
     await expect(page).toHaveURL(/\/es\/login\?reason=reset$/);
     await expect(page.getByText('Tu contraseña cambió')).toBeVisible();
+
+    // The same link is spent: it says so instead of offering the form again.
+    await page.goto(resetLink);
+    await expect(page.getByText('ya se usó o expiró')).toBeVisible();
+    await expect(page.getByLabel('Confirmar contraseña')).toHaveCount(0);
 
     await signIn(page, email, newPassword);
     await expect(page).toHaveURL(/\/es\/onboarding$/);
@@ -409,6 +415,12 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await nav.getByRole('link', { name: 'Mi cuenta' }).click();
     await expect(page.getByText('Pruebas, activa')).toBeVisible();
     await look(page, 'account');
+    // The long "sign out everywhere" label must wrap, not widen the dialog.
+    await page.getByRole('button', { name: 'Cerrar sesión en todos los dispositivos' }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    expect(await dialog.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+    await page.keyboard.press('Escape');
   });
 
   test('shows the plan, its modules and limits (FR-PLAN-4)', async ({ page }) => {

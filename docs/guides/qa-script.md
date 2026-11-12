@@ -12,7 +12,7 @@ For each flow, one line per problem:
 B3 · step 4 · Expected the branch limit message; got a blank error.
 ```
 
-Add a screenshot when the problem is how something looks. "Looks wrong" is enough to start with. Mark a flow ✅ when every step matched, or ❌ with the step numbers that didn't. Retest a flow from its first step once its fix lands.
+Add a screenshot when the problem is how something looks. "Looks wrong" is enough to start with. Mark a flow ✅ when every step matched, or ❌ with the step numbers that didn't, in the [Progress](#progress) table. Retest a flow from its first step once its fix lands.
 
 | Part | Flows |
 |---|---|
@@ -33,6 +33,71 @@ Add a screenshot when the problem is how something looks. "Looks wrong" is enoug
 | M | [Going live](#part-m-going-live) · M1–M3 |
 | N | [The platform area](#part-n-the-platform-area) · N1–N7 |
 | R | [The real SRI (optional)](#part-r-the-real-sri-optional) · R1 |
+
+## Progress
+
+Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), 🟡 partly done, ⬜ not run. Edit the file directly; the flows below are in the same order.
+
+| Flow | What | Status |
+|---|---|---|
+| P1 | The landing page | ✅ |
+| P2 | Pricing | 🟡 steps 1–4 passed; 5 and 6 need a company and the operator |
+| P3 | Support | ✅ |
+| A1 | Register and confirm the email | ✅ |
+| A2 | Sign out, a wrong password, a reset | ✅ |
+| A3 | The operator: super admin with two-step verification | ⬜ |
+| B1 | Set up the company | ⬜ |
+| B2 | The legal documents | ⬜ |
+| B3 | Company settings | ⬜ |
+| B4 | What the free plan includes | ⬜ |
+| C1 | Choose a plan and report the transfer | ⬜ |
+| C2 | The operator verifies the payment | ⬜ |
+| C3 | The operator invoices the payment | ⬜ |
+| C4 | A document pack, closed without an invoice | ⬜ |
+| C5 | Pay by card through Payphone | ⬜ |
+| D1 | Products and services | ⬜ |
+| D2 | Clients | ⬜ |
+| D3 | Providers | ⬜ |
+| D4 | Products and clients by CSV | ⬜ |
+| E1 | Opening balances | ⬜ |
+| E2 | Adjustments | ⬜ |
+| E3 | Valuation and the nightly check | ⬜ |
+| F1 | An invoice, from the keyboard | ⬜ |
+| F2 | Consumidor final and its limit | ⬜ |
+| F3 | Templates | ⬜ |
+| F4 | A credit note | ⬜ |
+| F5 | A guía de remisión | ⬜ |
+| F6 | Void an invoice | ⬜ |
+| F7 | Finding documents | ⬜ |
+| G1 | A purchase order | ⬜ |
+| G2 | Receive it in parts | ⬜ |
+| G3 | Cancel an order | ⬜ |
+| H1 | A sale order holds stock | ⬜ |
+| H2 | Invoice the order in parts | ⬜ |
+| H3 | Collect and the aging report | ⬜ |
+| I1 | From sale orders | ⬜ |
+| I2 | From a CSV | ⬜ |
+| J1 | Invite the team | ⬜ |
+| J2 | What each role sees and may do | ⬜ |
+| J3 | Limit, change and remove | ⬜ |
+| J4 | Two-step verification for everyone | ⬜ |
+| K1 | The bell and preferences | ⬜ |
+| K2 | Authorizations, grouped | ⬜ |
+| K3 | The certificate about to expire | ⬜ |
+| L1 | The dashboard | ⬜ |
+| L2 | Reports | ⬜ |
+| L3 | The accountant's export | ⬜ |
+| M1 | Take the company to production | ⬜ |
+| M2 | The first production invoice | ⬜ |
+| M3 | The quota fills up | ⬜ |
+| N1 | A company's plan, exceptions and suspension | ⬜ |
+| N2 | Prices and the IVA | ⬜ |
+| N3 | Plans and modules | ⬜ |
+| N4 | The email editor | ⬜ |
+| N5 | Jobs and notices | ⬜ |
+| N6 | The platform log | ⬜ |
+| N7 | SRI's answers for a document | ⬜ |
+| R1 | The real SRI, test environment | ⬜ |
 
 ---
 
@@ -90,6 +155,14 @@ pnpm db:reset local     # type the database name when asked; it migrates too
 ```
 
 This clears only `comprobify_erp_local`, the one `pnpm dev` uses. The test and E2E databases are not touched.
+
+### Attempt limits
+
+The app limits abuse, and a long test run can reach it ("Demasiados intentos"). Each limit counts per email or per IP address (the device's network address; locally none is seen, so only the per-email limits apply) and resets by itself: sign-in 5 wrong passwords per 15 minutes per email; password reset links 3 per hour per email; confirmation emails 5 per hour per email; sign-ups 5 per hour per IP address, so locally never. A2 asks for four reset links, so wait an hour between the first and last, or clear the counters during a run:
+
+```bash
+docker exec postgres18 psql -U comprobify_erp_owner -d comprobify_erp_local -c "DELETE FROM rate_limit_hits"
+```
 
 ### 0.3 Test certificates
 
@@ -171,7 +244,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 | # | Do | Expect |
 |---|---|---|
 | 1 | http://localhost:3000 | The landing page in Spanish: the headline, a sample invoice that steps through Firmado, Recibido, Autorizado and stamps "Autorizado por el SRI", three short points, **Crear cuenta gratis** |
-| 2 | **Ver cómo funciona**, and the header's **Cómo empezar** | Scrolls to the three steps; the timeline fills as you scroll and the picture beside it changes |
+| 2 | **Ver cómo funciona**, and the header's **Cómo empezar** | Scrolls to the three steps. After a moment the picture beside them goes from sign-up to company to invoice, one every two seconds, and the line fills. Clicking a step's circle shows its picture |
 | 3 | Look at the comprobantes strip | Factura, Nota de crédito and Guía de remisión ticked; Retención and Liquidación de compra marked as coming |
 | 4 | Look at the plans | Gratis, Emprende, Negocio, Empresa with prices before IVA and their monthly documents; one marked **Más popular** |
 | 5 | Open two questions in the FAQ | Each opens and closes; opening one closes the other |
@@ -189,7 +262,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 | 2 | **Anual** | Prices are ten months' worth; "Equivalente a … /mes" appears; documents become a year's worth |
 | 3 | Look under the cards | The extra-user price, the payment methods, the add-on modules with prices |
 | 4 | **Compara los planes**: scroll the table sideways on the phone width | Limits and a tick or dash per module; the table scrolls inside itself, not the page |
-| 5 | Compare the prices with the owner's **Plan** → **Elegir un plan** | The same plans and amounts |
+| 5 | Signed in as Ana (after B1), open **Plan y pagos** in the sidebar and click **Elegir un plan** (monthly and yearly) | The same plans, with the same prices before IVA as the public page: Emprende, Negocio and Empresa, monthly and yearly. Gratis is not offered there, since a free plan isn't bought |
 | 6 | As the operator, publish a new price for Negocio (N2, the earliest date), then reload the pricing page after 30 seconds | Negocio still shows today's price, with "El precio cambia a … a partir del …". With a date of today (a plan nobody pays) the new price shows instead |
 
 ### P3 · Support
@@ -199,7 +272,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 | # | Do | Expect |
 |---|---|---|
 | 1 | Header → **Soporte**, or the footer's **Soporte** | The email card, and a WhatsApp card if `SUPPORT_PHONE` is set; the email opens your mail app, the number opens WhatsApp |
-| 2 | Empty `SUPPORT_EMAIL`, restart, reload | "No hay datos de contacto configurados todavía." |
+| 2 | Set `AGREEMENTS_ENABLED=false` (the legal texts need `SUPPORT_EMAIL`), empty `SUPPORT_EMAIL`, restart, reload | "No hay datos de contacto configurados todavía." |
 
 ---
 
@@ -215,7 +288,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 | 2 | **Crear cuenta**: Ana Owner, `owner@andina.test`, the password twice | A "check your email" page |
 | 3 | In the terminal, find the `verifyEmail` email for `owner@andina.test` and open its link | A page with a **Confirmar mi correo** button; nothing is confirmed just by opening it |
 | 4 | Click **Confirmar mi correo** | Signed in, sent to set up a company |
-| 5 | Open the same link again | It says the link was already used, or expired |
+| 5 | Sign out, then open the same link again, and press **Confirmar mi correo** | It says the link is not valid or already expired. (Signed in, the page sends you on to the app instead.) |
 
 ### A2 · Sign out, a wrong password, a reset
 
@@ -226,9 +299,13 @@ Seen signed out, so use a private window. They need no company; run them any tim
 | 1 | Sign out (account menu) | Back at the sign-in page |
 | 2 | Sign in with a wrong password | A clear "wrong email or password" message, no detail of which one |
 | 3 | **¿Olvidaste tu contraseña?**, enter `owner@andina.test` | "If the account exists, we sent a link" |
-| 4 | Open the `resetPassword` link from the terminal; set a new password, then set it back to `una clave de prueba larga` the same way | Each time: the new password works, the old one doesn't |
-| 5 | Sign in normally | Signed in |
-| 6 | Switch the language to EN and back, and the theme to dark and back | Everything changes at once and stays after a reload |
+| 4 | In the terminal, find the `resetPassword` email for `owner@andina.test` and open its link. Type a new password twice, for example `otra clave de prueba larga`, and submit | You land on the sign-in page with a "password changed" message |
+| 5 | Sign in with `otra clave de prueba larga` | Signed in. Sign out |
+| 6 | Try to sign in with the old one, `una clave de prueba larga` | Refused with the "wrong email or password" message |
+| 7 | Clear the counters (Attempt limits, above), then repeat steps 3 and 4 to set it back to `una clave de prueba larga`, then sign in with it | Signed in, and the other password no longer works. (Everything after this assumes the original password.) |
+| 8 | Open the first reset link again (the one used in step 4) | It says the link was already used or expired, with no password form |
+| 9 | Clear the counters again if you hit the limit, then ask for two reset links in a row, then open the first | It says the link was already used or expired; the second one works |
+| 10 | Switch the language to EN and back, and the theme to dark and back | Everything changes at once and stays after a reload |
 
 ### A3 · The operator: super admin with two-step verification
 

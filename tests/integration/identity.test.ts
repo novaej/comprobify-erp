@@ -98,6 +98,10 @@ describe('identity', () => {
     await expect(identity.signIn({ email, password }, meta())).resolves.toEqual({
       twoFactorRequired: false,
     });
+    // The link is spent: opening it again must not verify, or sign anyone in, a second time.
+    await expect(
+      identity.verifyEmail({ token: sent[`verify:${email.toLowerCase()}`]! }, meta()),
+    ).rejects.toMatchObject({ code: 'INVALID_TOKEN' });
   });
 
   // Better Auth answers a duplicate like a new sign-up, so the form can't reveal
@@ -246,8 +250,12 @@ describe('identity', () => {
     await cookieFor(email);
     await identity.requestPasswordReset({ email }, meta());
     const token = sent[`reset:${email}`]!;
+    expect(await identity.resetLinkValid(token)).toBe(true);
+    expect(await identity.resetLinkValid('not-a-real-token')).toBe(false);
 
     await identity.resetPassword({ token, password: 'a brand new passphrase' }, meta());
+    // The page can tell a used link before anyone types a password.
+    expect(await identity.resetLinkValid(token)).toBe(false);
     await expect(
       identity.resetPassword({ token, password: 'yet another passphrase' }, meta()),
     ).rejects.toMatchObject({ code: 'INVALID_TOKEN' });
@@ -264,6 +272,22 @@ describe('identity', () => {
     await expect(
       identity.signIn({ email, password: 'a brand new passphrase' }, meta()),
     ).resolves.toEqual({ twoFactorRequired: false });
+  });
+
+  it('replaces an unused reset link when another is requested', async () => {
+    const email = await verifiedUser();
+    delete sent[`reset:${email}`];
+    await identity.requestPasswordReset({ email }, meta());
+    const first = sent[`reset:${email}`]!;
+    await identity.requestPasswordReset({ email }, meta());
+    const second = sent[`reset:${email}`]!;
+    expect(second).not.toBe(first);
+    expect(await identity.resetLinkValid(first)).toBe(false);
+    expect(await identity.resetLinkValid(second)).toBe(true);
+    await expect(
+      identity.resetPassword({ token: first, password: 'a brand new passphrase' }, meta()),
+    ).rejects.toMatchObject({ code: 'INVALID_TOKEN' });
+    await identity.resetPassword({ token: second, password: 'a brand new passphrase' }, meta());
   });
 
   it('answers a reset request for an unknown email the same way', async () => {

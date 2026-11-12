@@ -3,6 +3,7 @@ import { AuthCard, AuthShell, Notice } from '@/components/auth-shell';
 import { BackLink, FooterLink } from '../back-link';
 import { ResetPasswordForm } from '../forms';
 import { pageTitle } from '@/server/page-title';
+import { getRuntime } from '@/server/runtime';
 
 export const generateMetadata = pageTitle('resetPassword');
 
@@ -18,6 +19,8 @@ export default async function ResetPasswordPage({
   setRequestLocale(locale);
   const t = await getTranslations('resetPassword');
   const tAuth = await getTranslations('auth');
+  // A link already used, or past its hour, says so here rather than after typing a password.
+  const usable = token ? await (await getRuntime()).identity.resetLinkValid(token) : false;
 
   return (
     <AuthShell
@@ -25,7 +28,7 @@ export default async function ResetPasswordPage({
       description={t('subtitle')}
       topLeft={<BackLink href="/login">{tAuth('backToLogin')}</BackLink>}
     >
-      {token ? (
+      {usable && token ? (
         <AuthCard>
           <ResetPasswordForm token={token} />
         </AuthCard>

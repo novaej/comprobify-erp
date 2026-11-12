@@ -1,4 +1,4 @@
-import { and, eq, gte, lt, schema, type IdentityDb } from '@comprobify/db';
+import { and, eq, gte, ilike, lt, schema, type IdentityDb } from '@comprobify/db';
 import { APIError } from 'better-auth/api';
 import { z } from 'zod';
 import { emailLocale } from '../email';
@@ -79,6 +79,19 @@ async function mapAuthErrors<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
+// The address a verification token names. Read only to refuse a spent link: Better Auth still
+// checks the signature, so a forged token gets nothing from this.
+function emailInToken(value: string): string | null {
+  try {
+    const payload = JSON.parse(Buffer.from(value.split('.')[1] ?? '', 'base64url').toString()) as {
+      email?: unknown;
+    };
+    return typeof payload.email === 'string' ? payload.email.toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
+
 // How often a still-active session's last_activity_at is written.
 const ACTIVITY_WRITE_INTERVAL_MS = 60_000;
 
@@ -136,7 +149,33 @@ export function createIdentity({ auth, db, rateLimiter, clock }: IdentityOptions
     async verifyEmail(raw: z.input<typeof verifyEmailInput>, meta: RequestMeta): Promise<void> {
       const { token } = verifyEmailInput.parse(raw);
       if (meta.ip) await rateLimiter.consume('verification:ip', meta.ip);
+      // Better Auth's token is a signed value, not a stored one, so it stays valid after use
+      // and would sign the person in again. Once the account is verified the link is spent.
+      const address = emailInToken(token);
+      if (address) {
+        const [user] = await db
+          .select({ verified: schema.users.emailVerified })
+          .from(schema.users)
+          .where(eq(schema.users.email, address));
+        if (user?.verified) throw new DomainError('INVALID_TOKEN', 'This link was already used');
+      }
       await mapAuthErrors(() => auth.api.verifyEmail({ query: { token }, headers: meta.headers }));
+    },
+
+    // Read-only, for the page that shows the form: a link already used or past its hour says so
+    // up front. The POST still decides; this never consumes (Appendix B, lesson 5).
+    async resetLinkValid(raw: string): Promise<boolean> {
+      const { token: value } = resetPasswordInput.pick({ token: true }).parse({ token: raw });
+      const [row] = await db
+        .select({ id: schema.verifications.id })
+        .from(schema.verifications)
+        .where(
+          and(
+            eq(schema.verifications.identifier, `reset-password:${value}`),
+            gte(schema.verifications.expiresAt, clock.now()),
+          ),
+        );
+      return Boolean(row);
     },
 
     async resendVerification(raw: z.input<typeof emailInput>, meta: RequestMeta): Promise<void> {
@@ -153,6 +192,21 @@ export function createIdentity({ auth, db, rateLimiter, clock }: IdentityOptions
       const input = emailInput.parse(raw);
       await rateLimiter.consume('password-reset:email', input.email);
       if (meta.ip) await rateLimiter.consume('password-reset:ip', meta.ip);
+      // A new link replaces the ones not used yet: only the latest email works. Done for an
+      // unknown address too, so the answer stays the same whether or not it has an account.
+      const [account] = await db
+        .select({ id: schema.users.id })
+        .from(schema.users)
+        .where(eq(schema.users.email, input.email));
+      if (account)
+        await db
+          .delete(schema.verifications)
+          .where(
+            and(
+              eq(schema.verifications.value, account.id),
+              ilike(schema.verifications.identifier, 'reset-password:%'),
+            ),
+          );
       await mapAuthErrors(() =>
         auth.api.requestPasswordReset({ body: { email: input.email }, headers: meta.headers }),
       );

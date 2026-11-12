@@ -139,6 +139,10 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Fixed
 
+- Asking for a new password reset link cancels the ones not used yet, so only the latest email works (FR-ONB-7).
+- Opening a password reset link that was already used or has expired now says so, instead of showing the form (FR-ONB-7).
+- An email verification link can no longer be used twice: once the account is verified it is refused, instead of verifying and signing the person in again (FR-ONB-1).
+- The confirm dialog wraps a long button label, so "Cerrar sesión en todos los dispositivos" no longer scrolls sideways.
 - A renewal paid before its period starts no longer applies what was due at the end straight away: the company keeps the plan it paid for until then, and the daily job moves it on that day (ADR-035).
 - A paid plan started while the operator's removal of an add-on is still pending no longer charges that add-on, and the add-on goes as soon as the first payment is verified, instead of staying free until its old date (ADR-030).
 - The RIDE draws a line under the last payment row (FR-DOC-10, ADR-015).

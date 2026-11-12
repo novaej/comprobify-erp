@@ -13,6 +13,13 @@ test.describe('the public pages', () => {
     // The teaser reads live prices: the placeholder for Emprende (STARTER) is $9,90 + IVA.
     await expect(page.getByText('$9,90').first()).toBeVisible();
     await expect(page.getByRole('link', { name: 'Crear cuenta gratis' }).first()).toBeVisible();
+    // The steps walk on their own once in view, and a click picks one.
+    await page.locator('#como-empezar').scrollIntoViewIfNeeded();
+    const last = page.getByRole('button', { name: 'Emite tu primera factura' });
+    await expect(last).toHaveAttribute('aria-current', 'step', { timeout: 8000 });
+    const first = page.getByRole('button', { name: 'Crea tu cuenta gratis' });
+    await first.click();
+    await expect(first).toHaveAttribute('aria-current', 'step');
     // The FAQ opens and closes with no script.
     const question = page.getByText('¿Solo sirve para facturar?');
     await question.click();

@@ -101,7 +101,7 @@
     "subtitle": "Choose a new password for your account.",
     "submit": "Reset password",
     "submitting": "Resetting...",
-    "invalidLinkMessage": "This password reset link is invalid or missing its code.",
+    "invalidLinkMessage": "This password reset link is invalid, was already used or has expired. Request a new one.",
     "requestNewLink": "Request a new link"
   },
   "account": {
