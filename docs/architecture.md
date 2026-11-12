@@ -1,6 +1,6 @@
 # Architecture
 
-How the system fits together. Requirements are in [PRD.md](PRD.md); the reasons behind each choice are in [adr/](adr/README.md).
+How the system fits together. Requirements are in [PRD.md](PRD.md); the reasons behind each choice are in [adr/](adr/README.md); how the folders and layers are organized, and why, is in [guides/repo-structure.md](guides/repo-structure.md).
 
 ## Processes
 

@@ -10,7 +10,8 @@
     "start": "tsx src/index.ts",
     "typecheck": "tsc",
     "test-certificate": "tsx src/test-certificate.ts",
-    "super-admin": "tsx --env-file-if-exists=../../.env src/super-admin.ts"
+    "super-admin": "tsx --env-file-if-exists=../../.env src/super-admin.ts",
+    "run-job": "tsx --env-file-if-exists=../../.env src/run-job.ts"
   },
   "dependencies": {
     "@comprobify/config": "workspace:*",

@@ -29,9 +29,9 @@ The `erp` in the names avoids the existing `comprobify_app` role, which belongs 
 
 Grants come from `ALTER DEFAULT PRIVILEGES`, so new tables need no grant lines. Withholding `DELETE` enforces "no hard deletes" in the database. Twin reset (Milestone 1) will use a dedicated function that refuses non-`TEST` tenants.
 
-**Boot guard.** Web and worker refuse to start if the connected role is a superuser or has `BYPASSRLS`, ported from `comprobify-web/scripts/check-db-role.js`, including the check that every protected table has RLS forced.
+**Boot guard.** Web and worker refuse to start if the connected role is a superuser or has `BYPASSRLS`, as the previous web app's startup check did, including the check that every protected table has RLS forced.
 
-**UUIDv7 from the native `uuidv7()`,** as the `DEFAULT` on every primary key. This carries over API ADR-020's choice of UUIDv7 without its hand-written function.
+**UUIDv7 from the native `uuidv7()`,** as the `DEFAULT` on every primary key. This keeps the previous system's choice of UUIDv7, without the hand-written function it needed before Postgres 18.
 
 DigitalOcean Managed Databases offers PostgreSQL 18 (confirmed by the owner), so production matches local and CI.
 

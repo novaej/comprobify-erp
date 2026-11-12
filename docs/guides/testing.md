@@ -43,3 +43,7 @@ Install the browser once with `pnpm --filter @comprobify/e2e-tests exec playwrig
 ## CI
 
 `.github/workflows/ci.yml` runs lint, format, types, unit tests and the audit; integration tests against a `postgres:18` service; the Docker build; and, on pushes to `main`, the E2E smoke test.
+
+## By hand
+
+The full review before deploying is one manual pass of the whole system, from [qa-script.md](qa-script.md): small flows run locally from one reset, each leaving data for the next. `pnpm run-job <queue>` runs a scheduled job on the spot for it.

@@ -2,7 +2,7 @@
 
 An ADR records a decision that is hard to reverse or not obvious from the code: its context, the choice, and the consequences. Write one when choosing between viable approaches, setting a pattern, or deciding not to do something that looks useful. Skip it for easily reversed details and routine fixes.
 
-Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accepted ADRs are not rewritten; a new ADR supersedes them. Numbers are independent of the old repositories, so write old ones as `API ADR-038`.
+Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accepted ADRs are not rewritten; a new ADR supersedes them.
 
 ## Template
 
@@ -59,17 +59,3 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [036](036-the-notification-centre.md) | The notification centre | Accepted |
 | [037](037-email-templates-in-the-database.md) | Email templates in the database | Accepted |
 | [038](038-retention-of-technical-duplicates.md) | Retention of technical duplicates | Accepted |
-
-## Old ADRs to read before each milestone
-
-Port the ones still valid as "carried over" ADRs here, linking the original in `../comprobify/docs/adr/`.
-
-| Milestone | API ADRs |
-|---|---|
-| 0 | 012, 020, 036, 037, 038, 039 |
-| 1 | 018, 035 (what to leave behind) |
-| 2 | 029, 031, 034 |
-| 3 | 003, 004 (carried over as 013), 006, 008, 009 |
-| 8 | 017, 022, 023, 025, 027, 028, 032, 033 |
-| 9 | 024 |
-| When Redis is added | 026 |

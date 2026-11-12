@@ -8,12 +8,12 @@ Accepted
 
 ## Context
 
-Carried over from API ADR-036, 037, 038 and 039, simplified. The old system reached fail-loud RLS in four steps, with separate tenant and issuer contexts, a shadow mode and a table-by-table rollout. This system starts empty, so it can go straight to the end state with one context (NFR-SEC-1, NFR-SEC-2).
+Carried over from the previous system's row-level security work, simplified. That system reached fail-loud RLS in four steps, with separate tenant and issuer contexts, a shadow mode and a table-by-table rollout. This system starts empty, so it can go straight to the end state with one context (NFR-SEC-1, NFR-SEC-2).
 
-Lessons kept from those ADRs:
-- A query that silently returns nothing is a worse failure than an error (API ADR-038).
-- Postgres evaluates both sides of an `OR`, so the system check must also live inside the raising function (API ADR-038).
-- A role that bypasses RLS makes every test pass for the wrong reason (API ADR-036).
+Lessons kept from it:
+- A query that silently returns nothing is a worse failure than an error.
+- Postgres evaluates both sides of an `OR`, so the system check must also live inside the raising function.
+- A role that bypasses RLS makes every test pass for the wrong reason.
 
 ## Decision
 
@@ -37,7 +37,7 @@ WITH CHECK (app_is_system() OR tenant_id = app_require_tenant_id())
 - `withTenant(ctx, fn)` runs `fn` in a transaction with the tenant context.
 - `withSystem(reason, fn)` requires a non-empty reason, logs it, and runs `fn` with the system context. The allowed callers are cross-tenant jobs and super admin.
 
-Context is passed explicitly, not through `AsyncLocalStorage` (API ADR-037). NFR-ARCH-5 already passes the actor and transaction handle as arguments, so ambient state would add a second, invisible path.
+Context is passed explicitly, not through `AsyncLocalStorage`, which the previous system tried and found hid which code ran in which context. NFR-ARCH-5 already passes the actor and transaction handle as arguments, so ambient state would add a second, invisible path.
 
 **Issue-point restrictions stay in core** as query filters (NFR-SEC-3). RLS covers tenant isolation only.
 
@@ -53,8 +53,8 @@ Milestone 0 has no tenant tables, because `tenants` belongs to Milestone 1. To k
 - There is no rollout state to reason about.
 
 ### Negative
-- Every query needs a transaction, which adds `BEGIN`, `set_config` and `COMMIT`. Pipelining in `pg` can reduce this to one round trip (API ADR-037); we'll measure before relying on it.
-- `app.rls_system` is a session setting, not a privilege. RLS guards against application bugs, not a compromised credential (API ADR-036).
+- Every query needs a transaction, which adds `BEGIN`, `set_config` and `COMMIT`. Pipelining in `pg` can reduce this to one round trip; we'll measure before relying on it.
+- `app.rls_system` is a session setting, not a privilege. RLS guards against application bugs, not a compromised credential.
 - A query Postgres can prove returns nothing may not raise. Nothing leaks in that case.
 
 ## Alternatives considered

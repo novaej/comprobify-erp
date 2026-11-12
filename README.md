@@ -5,6 +5,7 @@ Cloud ERP for small and medium Ecuadorian businesses, built around SRI electroni
 Under construction. It replaces the separate `comprobify` API and `comprobify-web` systems.
 
 - [Getting started](GETTING_STARTED.md)
+- [How the repository is organized](docs/guides/repo-structure.md)
 - [Product requirements](docs/PRD.md)
 - [Current progress](NEXT_STEPS.md)
 - [Architecture decisions](docs/adr/README.md)

@@ -9,11 +9,9 @@ This document specifies a **new system, built from scratch in a new repository**
 ## 0. How to use this document (for the builder)
 
 - Build in the order of section 15 (Delivery plan). Each milestone has acceptance gates; don't start the next one until the gates pass.
-- The two existing repositories are the **knowledge source**, read-only. Port proven pieces from them (listed in Appendix A) instead of reinventing them, adapting them to TypeScript and the new architecture. Never copy their two-system machinery (Appendix B lists what to leave behind).
-  - API: `../comprobify` (Node/Express, raw SQL, ADRs in `docs/adr/`, SRI rules in `CLAUDE.md`).
-  - Web: `../comprobify-web` (Next.js, the current design system and screens).
+- The previous two systems (an API and a web app) were the knowledge source. What was worth keeping has been carried into this repository, adapted to TypeScript and this architecture (Appendix A); their two-system machinery was left behind (Appendix B). This repository stands alone: nothing in it depends on them.
   - SRI technical spec: Ficha Técnica, esquema offline, v2.34 (July 2026). The owner has the PDF; ask for it before implementing a new document type.
-- When a requirement here conflicts with the old code, this document wins. When this document is silent, prefer the old system's behaviour and record the decision in an ADR.
+- When this document is silent, decide, and record the decision and its reasons in an ADR.
 - Every requirement has an id (`FR-…`, `NFR-…`). Reference ids in commits, tests and ADRs.
 - Write `CLAUDE.md` for the new repo in the first milestone (section 13) and keep it current; it is the primary guide for every later session.
 
@@ -53,7 +51,7 @@ The current product is an invoicing API with a web UI on top. The new product is
 | Accountant | Read-only plus exports and reports. New role, external accountants are common in Ecuador. |
 | Super admin | Platform operator (Comprobify staff): tenants, payments review, prices, agreements, templates, feature overrides, jobs. |
 
-- **FR-ROLE-1** Roles map to a fixed permission set (`ROLE_PERMISSIONS`, as in `comprobify-web/src/lib/rbac.ts`, extended for ERP modules). Custom roles are post-MVP.
+- **FR-ROLE-1** Roles map to a fixed permission set (`ROLE_PERMISSIONS`, carried over from the previous web app and extended for ERP modules). Custom roles are post-MVP.
 - **FR-ROLE-2** A user can be restricted to specific issue points (`UserIssuerAccess` today). Restrictions apply to every query and action, enforced server-side.
 - **FR-ROLE-3** Permissions are enforced in three layers: page, server action/route, and service (core). The core layer is the one that must never be skipped, because the public API will call it later.
 
@@ -95,7 +93,7 @@ The current product is an invoicing API with a web UI on top. The new product is
 ### 5.2 Users, sessions, security
 
 - **FR-USR-1** Invite users by email (token, set password), change role, remove (soft). Seat limit from entitlements (`USERS`), extra seats purchasable.
-- **FR-USR-2** Database-backed sessions (revocable), per-tenant idle timeout, absolute lifetime, "sign out everywhere". Learn from `comprobify-web`'s idle-timeout bug: only real user activity extends a session, not background polling.
+- **FR-USR-2** Database-backed sessions (revocable), per-tenant idle timeout, absolute lifetime, "sign out everywhere". Learn from the previous web app's idle-timeout bug: only real user activity extends a session, not background polling.
 - **FR-USR-3** Optional TOTP 2FA per user; tenants can require it.
 - **FR-USR-4** Rate limits and repeated-attempt detection on login, reset, verification and invite endpoints.
 - **FR-USR-5** Organization switcher for a user who belongs to several tenants (accountants). A real organization and its twin appear as one entry with a Producción / Pruebas toggle; the sandbox banner is shown whenever the active organization is a twin.
@@ -227,7 +225,7 @@ This is the most rule-dense module. Section 6 lists the SRI rules it must follow
 ### 5.13 Internationalization and UX
 
 - **FR-UX-1** Spanish default, English secondary; every string in message files; dates and money in Ecuadorian format.
-- **FR-UX-2** Same design system as `comprobify-web`: Tailwind v4 tokens from its `globals.css` (light/dark, success/warning/info palettes, sidebar/panel tokens), shadcn/ui `base-nova` style on Base UI, lucide icons, sonner toasts, the sidebar layout (tenant badge, issue-point switcher, user menu, notification bell), status badges, sandbox banner, certificate banner.
+- **FR-UX-2** The design system carried over from the previous web app (`packages/ui`): Tailwind v4 tokens (light/dark, success/warning/info palettes, sidebar/panel tokens), shadcn/ui `base-nova` style on Base UI, lucide icons, sonner toasts, the sidebar layout (tenant badge, issue-point switcher, user menu, notification bell), status badges, sandbox banner, certificate banner.
 - **FR-UX-3** Mobile-responsive everywhere (tables scroll horizontally, stacked forms).
 - **FR-UX-4** Keyboard-friendly line entry for orders and invoices (product search by code/name, quantity, tab through).
 - **FR-UX-5** Public marketing pages (landing, pricing from the plans table, support) in the same app.
@@ -239,7 +237,7 @@ Built after the ERP is complete, on top of the same core:
 - Outbound webhooks (HMAC-signed, retries, delivery log), including `DOCUMENT_REISSUED`.
 - Batches endpoint, `externalReference` on documents.
 - MCP server for AI assistants (read first, then write with preview → confirm), authenticated through the app's OAuth.
-- Public developer docs (es/en), ported from `comprobify/docs/site`. Not started until this phase.
+- Public developer docs (es/en), rewritten from the previous API's documentation site. Not started until this phase.
 
 **Design constraints so this is cheap later (MVP must respect them):**
 - **NFR-ARCH-1** All business logic lives in `packages/core`, callable with an explicit actor context `{ tenantId, tenantMode, userId | apiKeyId, permissions, issuePointIds }`. Server actions and route handlers are thin adapters. No business rule in a React component or server action.
@@ -458,7 +456,7 @@ Pin exact versions at project start (latest stable then); the choices:
 | Runtime | Node.js 24 LTS | Same as today. |
 | Monorepo | pnpm workspaces (+ Turborepo for task caching) | Shared core between web and worker. |
 | Web framework | Next.js (App Router), React 19 | Reuses the current UI and team knowledge; server actions for mutations. |
-| UI | Tailwind CSS v4, shadcn/ui (`base-nova`, Base UI), lucide, sonner, theme shim ported from `comprobify-web` (replaces next-themes), Recharts, react-day-picker | Same design system as `comprobify-web`. |
+| UI | Tailwind CSS v4, shadcn/ui (`base-nova`, Base UI), lucide, sonner, theme shim carried over from the previous web app (replaces next-themes), Recharts, react-day-picker | The previous web app's design system. |
 | Forms / validation | React Hook Form + Zod | Same as today; Zod schemas shared with core. |
 | Client data | TanStack Query for polling and live views only | Same rule as today (pages load via Server Components). |
 | i18n | next-intl (es default, en) | Same as today. |
@@ -482,7 +480,7 @@ Pin exact versions at project start (latest stable then); the choices:
 
 ## 11. UI and screens (MVP)
 
-Port layout, tokens and components from `comprobify-web` (Appendix A). Screens:
+Layout, tokens and components carried over from the previous web app (Appendix A). Screens:
 
 - Public: landing, pricing, support, login, register, verify email, forgot/reset password, accept invite, legal documents.
 - Onboarding wizard; issue-point picker/switcher.
@@ -520,7 +518,7 @@ Docs are part of every change, not a follow-up (a milestone isn't done until its
 | `CLAUDE.md` | AI assistants / developers | Architecture, module rules, critical rules, common mistakes (start with Appendix B's list), key files, commands. Kept current every milestone. |
 | `README.md`, `GETTING_STARTED.md` | Developers | What it is; local setup (Docker Postgres, env, seed, run web + worker, SRI test cert). |
 | `docs/architecture.md` | Developers | Diagrams, modules, data flow, jobs, tenancy. |
-| `docs/adr/` | Developers | One ADR per decision (stack, auth, pg-boss, RLS, environment column, retry calendar, re-issue, entitlements, costing method, …). Port still-valid old ADRs as "carried over" with links. |
+| `docs/adr/` | Developers | One ADR per decision (stack, auth, pg-boss, RLS, environment column, retry calendar, re-issue, entitlements, costing method, …). An ADR carried over from the previous system holds its full reasoning itself, with no link back. |
 | `docs/domain/sri.md` | Developers | Section 6 expanded: document types, XML, signing, statuses, error codes, retry calendar, re-issue, correction, void. |
 | `docs/domain/erp.md` | Developers | Orders, stock ledger, costing, partial invoicing rules. |
 | `docs/guides/coding-guidelines.md` | Developers | Patterns, adding a module, adding a document type, adding a job, adding an entitlement. |
@@ -594,28 +592,11 @@ Order rationale: the SRI engine (3) comes before ERP modules because every sales
 
 ---
 
-## Appendix A — Port from the existing repositories
+## Appendix A — What was carried over
 
-| From | What | Notes |
-|---|---|---|
-| `comprobify/helpers/signer.js` | XAdES-BES signing | Convert to TS, keep tests. |
-| `comprobify/helpers/access-key-generator.js` | Access key + Module 11 | Keep tests. |
-| `comprobify/src/builders/*` | Factura and NC XML builders | Keep element order. |
-| `comprobify/assets/*.xsd` | XSDs (factura 2.1.0, NC 1.1.0, xmldsig) | Add guía, retención, liquidación. |
-| `comprobify/helpers/ride-builder.js`, `src/services/ride.service.js` | RIDE PDF from authorized XML | |
-| `comprobify/src/services/sri.service.js` | SOAP envelopes, parsing, mock mode | Plus Consulta de validez client. |
-| `comprobify/src/services/document-transmission.service.js`, `sri-retry.service.js` | Send/authorize/deadline logic | Re-express as pg-boss jobs. |
-| `comprobify/db/migrations/*cat_*` | SRI catalogue seeds | |
-| `comprobify/src/services/subscription.service.js`, `pricing.service.js`, `tenant-quota.service.js`, `payphone-payment.service.js` | Billing rules | Port behaviour and tests, not structure. |
-| `comprobify/docs/email-templates/`, `docs/agreements/` | Email templates, legal texts | |
-| `comprobify/docs/adr/` | Decisions and their reasons | Read 004, 006, 008, 017, 018, 022–029, 032–038 before the matching milestone. |
-| `comprobify/docs/site/` | Public API documentation site (VitePress, es/en) | Milestone 11+ only. |
-| `comprobify-web/docs/site/` | Internal screen and architecture specs | Reference when porting a screen. Not a public site. |
-| `comprobify-web/src/app/globals.css`, `components.json`, `src/components/ui/*` | Design tokens and components | |
-| `comprobify-web/src/components/nav.tsx`, `status-badge.tsx`, banners, billing components, notification bell/panel | Layout and patterns | |
-| `comprobify-web/messages/*.json` | UI strings | Reuse keys where screens match. |
-| `comprobify-web/src/lib/rbac.ts` | Roles and permissions | Extend for ERP. |
-| `comprobify/terraform`, `deploy/`, `.github/workflows` (both repos) | Infra and deploy patterns | Simplify to one droplet, no RabbitMQ/Redis. |
+Everything this system needed from the previous repositories is now in this one, adapted to TypeScript and this architecture: the XAdES-BES signer, access keys and Module 11, the XML builders and XSDs, the SRI catalogues (`packages/core/src/sri`); the RIDE, the SOAP client and its mock; the send, authorize and deadline logic, re-expressed as pg-boss jobs (`packages/core/src/documents`); the billing rules and Payphone (`packages/core/src/billing`); the email texts and the legal texts; the design system, layout, banners and UI strings (`packages/ui`, `apps/web`); the roles and permissions; and the decisions still valid, as carried-over ADRs that hold their own reasoning.
+
+Two things are still to bring over before the previous repositories are deleted, tracked in `NEXT_STEPS.md`: the infrastructure and deploy patterns (Milestone 10), and the public API documentation site (Milestone 11+).
 
 ## Appendix B — Leave behind, and lessons to keep
 

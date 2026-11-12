@@ -21,9 +21,8 @@ Primary guide for AI assistants and developers. Every rule here takes precedence
 Comprobify is a cloud ERP for Ecuadorian SMBs built around SRI electronic invoicing: one Next.js app plus one worker, sharing one TypeScript core and one Postgres database. It replaces the `comprobify` API + `comprobify-web` pair.
 
 - Build in the order of PRD section 15. Each milestone is code + tests + docs, and its gate must pass before the next starts.
-- `../comprobify` and `../comprobify-web` are **read-only** references. Port what PRD Appendix A lists, adapted to TypeScript and this architecture. Never edit them, and never copy their `.env` files.
 - **This repo must stand alone: the old repositories will be deleted.** Never point code, comments or docs at them for content or reasoning (no "see API ADR-038", no paths into them). Copy what's needed into this repo and state the reason in place. A carried-over ADR holds the full reasoning itself.
-- PRD vs old code: the PRD wins. PRD silent: prefer old behaviour and record the decision in an ADR.
+- PRD silent: decide, and record the decision and its reasons in an ADR.
 - Reference requirement ids in commits, tests and ADRs.
 - Track progress in `NEXT_STEPS.md`, which holds pending work only: remove a step in the same change that finishes it, and a milestone's section when its gate passes.
 - SRI spec: Ficha Técnica v2.34, in `docs/reference/`. That folder is git-ignored and local only: never commit it, and ask the owner for the PDF if it's missing.
@@ -49,8 +48,9 @@ pnpm test:e2e            # Playwright, against the built app or E2E_BASE_URL; it
 pnpm build
 pnpm stack:up            # Docker stack on :8080: caddy, migrate, web, worker, using the postgres18 container
 pnpm stack:down
-pnpm test-certificate <ruc>   # a test P12 (password: secret) to try onboarding locally
+pnpm test-certificate <ruc> [days]  # a test P12 (password: secret) to try onboarding locally; days: expires that soon
 pnpm super-admin <email>      # give an existing account the platform area (--revoke takes it away)
+pnpm run-job <queue>          # run a scheduled job now, locally or on staging (the QA script uses it)
 ```
 
 ---
@@ -224,4 +224,4 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `tests/e2e/smoke.spec.ts` | Playwright smoke test |
 | `Dockerfile`, `infra/compose.yaml` | The image and the local stack |
 | `.github/workflows/ci.yml` | CI |
-| `docs/architecture.md`, `docs/guides/` | How the system fits together, and how to work in it |
+| `docs/architecture.md`, `docs/guides/` | How the system fits together, and how to work in it; `guides/repo-structure.md` explains the folders and layers and why |
