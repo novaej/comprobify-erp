@@ -4,27 +4,21 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 ## Carried forward
 
-- **Full review, before deploying (Milestone 10):** one manual QA pass of the whole system, run locally when everything is ready. It needs a written test script (a QA checklist, no code) covering every screen and flow by role (owner, admin, accounting, sales, purchasing, viewer, super admin), the happy paths and the edge cases (quota, SRI rejections, stock shortages, test and production mode, the twin, plans without a module). It takes in what earlier milestones left to walk through: the nightly stock check's log and the Compras and Solo lectura roles on purchasing and inventory; sale orders, invoicing in parts, the guía from an invoice, receivables and the go-live copy; bulk invoicing, its stack view and the platform queue page. Until then the owner hand-tests only when a milestone makes it mandatory.
+- **Full review, before deploying (Milestone 10):** one manual QA pass of the whole system, run locally when everything is ready. It needs a written test script (a QA checklist, no code) covering every screen and flow by role (owner, admin, accounting, sales, purchasing, viewer, super admin), the happy paths and the edge cases (quota, SRI rejections, stock shortages, test and production mode, the twin, plans without a module). It takes in what earlier milestones left to walk through: the nightly stock check's log and the Compras and Solo lectura roles on purchasing and inventory; sale orders, invoicing in parts, the guía from an invoice, receivables and the go-live copy; bulk invoicing, its stack view and the platform queue page; from Milestone 9, the notification centre and its preferences by role, the emails the platform writes (and the email editor), the dashboard and each report with its CSV and the accountant's ZIP, the CSV imports of products, clients and opening balances and the CSV invoice batches (a wrong file, a right one), and the platform area's jobs, activity log, SRI answers and invoice-free payments. Until then the owner hand-tests only when a milestone makes it mandatory.
 - **Milestone 6:** the order's invoice form takes one payment for the whole total; core takes several (ADR-022). Move the payment block of the invoice form into a shared component and offer it on both.
-- **Milestone 9 (also):** a minimum stock per product, so the dashboard's "low stock" (FR-REP-1) and the post-MVP stock-below-minimum notice (FR-NOT-2) mean below a threshold; today the dashboard lists stocked products with nothing available.
-- **Milestone 9 (also):** retenciones issued and received in the tax summary (FR-REP-2) arrive with the document type, after the MVP; XLSX is not planned, since the CSV opens in Excel. The accountant's ZIP is built in memory, up to 65,535 files (no ZIP64): revisit if a month ever comes near it.
+- **Not scheduled:** a minimum stock per product, so the dashboard's "low stock" (FR-REP-1) and the post-MVP stock-below-minimum notice (FR-NOT-2) mean below a threshold; today the dashboard lists stocked products with nothing available.
+- **Not scheduled:** retenciones issued and received in the tax summary (FR-REP-2) arrive with the document type, after the MVP; XLSX is not planned, since the CSV opens in Excel. The accountant's ZIP is built in memory, up to 65,535 files (no ZIP64): revisit if a month ever comes near it.
 - **Not scheduled:** a CSV batch could also import the file as sale orders to invoice from the batch screen, on plans with Sales (`SALE_ORDERS`); today a CSV makes invoices directly. A CSV batch pays every invoice with one method; per-invoice payment columns are not offered.
 - **Not scheduled:** a guía that leaves before its invoice (dispatch first): lines and quantities of the order, a shipped-so-far balance, and a way to tie the later invoice to it (ADR-023).
 - **Milestone 4:** only the first guía recipient is searchable by client; the others take their invoice through the invoice search (ADR-017). The guía is not offered by plate catalogue or carrier directory.
 - **Milestone 3:** certificate renewal (FR-ONB-3); twin reset.
 - **Owner, with live email:** the Mailgun webhook for the buyer's copy (delivered, failed, complained), matched by the `document-id` variable each message carries (FR-DOC-11). Needs the Mailgun signing key and a public URL.
 - **Milestone 10:** the 10,000-item bulk batch of NFR-PERF-3, and the caps (`BULK_LIMITS`: 50 per company, 150 overall) and the feeder's 5-second period tuned against what SRI accepts. At the defaults a lone company's batch moves at about 1 invoice a second (ADR-026, gate result), so 10,000 take about 2.5 hours; `pnpm test:bulk-gate` with `BULK_GATE_ITEMS=10000` is the run.
-- **Milestone 9 (also):** prune in-app notifications older than 180 days, the other periodic duplicate in `docs/legal/retention.md`: it needs its own narrow exception on the pattern of ADR-038 and a `RETENTION` line.
-- **Milestone 9 (also):** a re-issue skipped at a month boundary is only logged; tell the company too (FR-DOC-6, FR-NOT-2).
+- **Not scheduled:** prune in-app notifications older than 180 days, the other periodic duplicate in `docs/legal/retention.md`: it needs its own narrow exception on the pattern of ADR-038 and a `RETENTION` line.
+- **Not scheduled:** a re-issue skipped at a month boundary is only logged; tell the company too (FR-DOC-6, FR-NOT-2).
 - **Owner, before go-live:** the real prices, pack sizes and plan limits in place of the placeholders (platform area: Precios, Planes), the operator's bank account (`BANK_TRANSFER_*`) and Payphone's production credentials (ADR-027, ADR-033).
 - **Not scheduled:** the vehicle plate on invoices of transport operators, excluding taxis (Anexo 25, Ficha v2.33), if such companies sign up.
 - **Not scheduled:** ownership transfer (PRD section 3). Today nobody can change or remove the owner.
-
-## Milestone 9: Notifications, reports, admin
-
-Gate: reports match seeded data; templates editable (PRD section 15). Pruning old notifications waits for the retention work (below), which needs a narrow exception to the no-delete rule.
-
-- [ ] 8. Gate
 
 ## Upcoming milestones
 
