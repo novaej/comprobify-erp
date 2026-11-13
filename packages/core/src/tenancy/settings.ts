@@ -447,22 +447,105 @@ export async function setStartingSequentials(
   const entries = z.array(startingSequentialInput).max(500).parse(raw);
   const set: string[] = [];
   for (const entry of entries) {
-    if (entry.next === 1) continue;
     const pointId = await pointIn(tx, realTenantId, entry.branchCode, entry.pointCode);
-    const updated = await tx
+    const [current] = await tx
+      .select({ next: schema.documentSequences.nextValue })
+      .from(schema.documentSequences)
+      .where(
+        and(
+          eq(schema.documentSequences.issuePointId, pointId),
+          eq(schema.documentSequences.documentType, entry.documentType),
+        ),
+      );
+    if (!current) throw new DomainError('NOT_FOUND', 'That document type has no counter here');
+    // Unchanged: nothing to do. Lower: a number already given would be given again.
+    if (current.next === entry.next) continue;
+    if (current.next > entry.next)
+      throw new DomainError('SEQUENCE_BACKWARD', 'A sequential can only move forward');
+    await tx
       .update(schema.documentSequences)
       .set({ nextValue: entry.next, updatedAt: sql`now()` })
       .where(
         and(
           eq(schema.documentSequences.issuePointId, pointId),
           eq(schema.documentSequences.documentType, entry.documentType),
-          sql`${schema.documentSequences.nextValue} <= ${entry.next}`,
         ),
-      )
-      .returning({ id: schema.documentSequences.id });
-    if (updated.length === 0)
-      throw new DomainError('SEQUENCE_BACKWARD', 'A sequential can only move forward');
+      );
     set.push(`${entry.branchCode}-${entry.pointCode} ${entry.documentType}: ${entry.next}`);
   }
   return set;
 }
+
+export type ProductionSequential = {
+  branchCode: string;
+  pointCode: string;
+  documentType: string;
+  next: number;
+};
+
+// Only what exists: a counter appears when its type is enabled at the point.
+async function sequentialsOf(tx: Tx['db'], tenantId: string): Promise<ProductionSequential[]> {
+  const { documentSequences, issuePoints, branches } = schema;
+  const rows = await tx
+    .select({
+      branchCode: branches.code,
+      pointCode: issuePoints.code,
+      documentType: documentSequences.documentType,
+      next: documentSequences.nextValue,
+    })
+    .from(documentSequences)
+    .innerJoin(issuePoints, eq(issuePoints.id, documentSequences.issuePointId))
+    .innerJoin(branches, eq(branches.id, issuePoints.branchId))
+    .where(
+      and(
+        eq(documentSequences.tenantId, tenantId),
+        eq(issuePoints.active, true),
+        eq(branches.active, true),
+      ),
+    )
+    .orderBy(asc(branches.code), asc(issuePoints.code), asc(documentSequences.documentType));
+  return rows.map((row) => ({ ...row, next: Number(row.next) }));
+}
+
+// The real company's counters, read from its test copy too: the go-live form shows them.
+export async function productionSequentials(
+  ctx: ActorContext,
+  db: Database,
+): Promise<ProductionSequential[]> {
+  requirePermission(ctx, 'organization.manage');
+  return db.withSystem('read the production counters of a company', async ({ db: tx }) =>
+    sequentialsOf(tx, (await pairOf(tx, ctx.tenantId)).realTenantId),
+  );
+}
+
+// The counters of the company the actor is in: the test copy's while testing, the real
+// company's in production. They are separate (SRI rule 9), so each is edited where it is used.
+export async function companySequentials(
+  ctx: ActorContext,
+  db: Database,
+): Promise<ProductionSequential[]> {
+  requirePermission(ctx, 'organization.manage');
+  return db.withSystem('read the counters of the company the actor is in', async ({ db: tx }) =>
+    sequentialsOf(tx, ctx.tenantId),
+  );
+}
+
+// Moves the counters of the company the actor is in forward only: a number already issued is
+// never given again. Another provider's last number is set here, or at go-live.
+export const setCompanySequentials = (
+  ctx: ActorContext,
+  db: Database,
+  raw: z.input<typeof startingSequentialInput>[],
+) => {
+  requirePermission(ctx, 'organization.manage');
+  return db.withSystem('move the counters of a company forward', async ({ db: tx }) => {
+    const set = await setStartingSequentials(tx, ctx.tenantId, raw);
+    if (set.length > 0)
+      await recordAudit(tx, {
+        tenantId: ctx.tenantId,
+        actorUserId: ctx.userId ?? null,
+        action: 'organization.settings_changed',
+        details: { sequentials: set },
+      });
+  });
+};

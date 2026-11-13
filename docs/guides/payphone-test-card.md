@@ -31,7 +31,7 @@ Payphone's credentials stay in your own `.env`. Never commit them or paste them 
 | 5 | Volver al plan | The plan is Emprende with its monthly period, and the payment shows "Pagado" by card in Pagos |
 | 6 | As super admin, open Por facturar | The payment is listed, method Tarjeta, $11.39 |
 | 7 | Reload the return page from step 4 | "Pago aprobado" again, and no second charge in Payphone's dashboard |
-| 8 | Optional: open the widget again for a new payment, such as a document pack, and decline with Payphone's declined test card | "El pago no se completó", and the payment is still "Por pagar" |
+| 8 | Optional: open the widget for a new payment, such as a document pack, go back to **Transferencia** and cancel the payment | It asks first; the payment is "Cancelado" and nothing is charged. Payphone documents no declined test card and its widget refuses a wrong card before submitting, so a decline can't be provoked here; it is covered by the integration tests against a fake Payphone |
 
 ## If something goes wrong
 

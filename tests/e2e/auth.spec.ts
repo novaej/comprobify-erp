@@ -294,7 +294,14 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
   test('registers, and the emailed link only verifies on the button press', async ({ page }) => {
     await page.goto('/es/register');
     await look(page, 'register');
+    // A required field left empty is said in the app's language, under the field, in red.
+    await page.getByRole('button', { name: 'Crear cuenta' }).click();
+    await expect(page.getByText('Este campo es obligatorio.').first()).toBeVisible();
+    await expect(page.getByLabel('Nombre')).toBeFocused();
+    await expect(page.getByLabel('Nombre')).toHaveAttribute('aria-invalid', 'true');
     await page.getByLabel('Nombre').fill('Ana Pérez');
+    // Typing clears that field's message; the others stay until they are filled.
+    await expect(page.getByLabel('Nombre')).not.toHaveAttribute('aria-invalid', 'true');
     await page.getByLabel('Correo electrónico').fill(email);
     await page.getByLabel('Contraseña', { exact: true }).fill(password);
     await page.getByLabel('Confirmar contraseña').fill(password);
@@ -517,6 +524,11 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     });
     await page.getByRole('button', { name: 'Subir logo' }).click();
     await expect(page.getByText('Hay un logo guardado.')).toBeVisible();
+
+    // In the test copy the numbering is the test copy's own (ADR-039); the same value is a no-op.
+    await expect(page.getByRole('heading', { name: 'Numeración de pruebas' })).toBeVisible();
+    await page.getByRole('button', { name: 'Guardar numeración' }).click();
+    await expect(page.getByText('Numeración guardada.')).toBeVisible();
 
     await page.getByRole('button', { name: 'Editar', exact: true }).click();
     const tax = page.getByRole('dialog', { name: 'Editar los datos tributarios' });
@@ -2034,7 +2046,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await page
       .getByRole('navigation', { name: 'Navegación principal' })
       .last()
-      .getByRole('link', { name: 'Administración de la plataforma' })
+      .getByRole('link', { name: 'Administración' })
       .click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Empresas');
     await look(page, 'admin-companies');
@@ -2153,8 +2165,8 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
 
     // The platform's own log of what was changed above, newest first.
     await page.goto('/es/admin/activity');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Registro de la plataforma');
-    await expect(page.getByRole('table', { name: 'Registro de la plataforma' })).toContainText(
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Registro de administración');
+    await expect(page.getByRole('table', { name: 'Registro de administración' })).toContainText(
       'Publicó un precio',
     );
     await look(page, 'admin-activity');
@@ -2356,7 +2368,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     // The transfer reported earlier reached the operators (FR-NOT-2): in the bell and its page.
     await tellOperators();
     await page.goto('/es/admin/notifications');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Avisos de la plataforma');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Avisos de administración');
     await expect(page.getByText('Hay un pago por revisar')).toBeVisible();
     await expect(
       page.getByText(/Delta Comercial S\.A\. reportó una transferencia de \$91\.89/),

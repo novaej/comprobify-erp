@@ -22,6 +22,7 @@ import {
   setDocumentTypesAction,
   setLogoAction,
   setNegativeStockAction,
+  setSequentialsAction,
   setPausedAction,
   updateProfileAction,
 } from './actions';
@@ -41,6 +42,10 @@ export type SettingsView = {
   // The Inventario module, which the negative-stock rule belongs to.
   inventory: boolean;
   hasLogo: boolean;
+  // The real company's next numbers, by issue point and document type.
+  sequentials: { branchCode: string; pointCode: string; documentType: string; next: number }[];
+  // In the test copy, where the numbers are the test copy's.
+  testMode: boolean;
   maxBranches: number | null;
   maxPoints: number | null;
   canSeePlan: boolean;
@@ -207,6 +212,12 @@ export function SettingsManager({ settings }: { settings: SettingsView }) {
         </div>
       </SectionCard>
 
+      <SequentialsCard
+        sequentials={settings.sequentials}
+        typeLabel={typeLabel}
+        testMode={settings.testMode}
+      />
+
       <LogoCard hasLogo={settings.hasLogo} prints={settings.logoPrints} />
 
       {settings.inventory && <StockRuleCard allowed={settings.negativeStock === 'ALLOW'} />}
@@ -270,6 +281,61 @@ function PlanLimitNote({ message, canSeePlan }: { message: string; canSeePlan: b
     >
       {message}
     </Banner>
+  );
+}
+
+// FR-ONB-5: the numbers the company in use issues from, forward only. The test copy and the
+// real company each have their own (SRI rule 9), so each is set where it is used (ADR-039).
+function SequentialsCard({
+  sequentials,
+  typeLabel,
+  testMode,
+}: {
+  sequentials: SettingsView['sequentials'];
+  typeLabel: Map<string, string>;
+  testMode: boolean;
+}) {
+  const t = useTranslations('settings');
+  return (
+    <SectionCard
+      title={t(testMode ? 'sequentialsTestTitle' : 'sequentialsTitle')}
+      description={t(testMode ? 'sequentialsTestDescription' : 'sequentialsDescription')}
+    >
+      <ActionForm
+        action={setSequentialsAction}
+        errors="settingsError"
+        success={t('sequentialsSaved')}
+      >
+        {(pending) => (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              {sequentials.map((row) => {
+                const key = `${row.branchCode}-${row.pointCode}-${row.documentType}`;
+                const label = `${row.branchCode}-${row.pointCode} · ${typeLabel.get(row.documentType) ?? row.documentType}`;
+                return (
+                  <label key={key} className="flex items-center justify-between gap-3 text-sm">
+                    <span>{label}</span>
+                    <Input
+                      name={`seq:${key}`}
+                      type="number"
+                      min={row.next}
+                      max={999999999}
+                      step={1}
+                      defaultValue={row.next}
+                      className="w-36 text-right tabular-nums"
+                      aria-label={t('sequentialsNext', { label })}
+                    />
+                  </label>
+                );
+              })}
+            </div>
+            <Button type="submit" variant="outline" disabled={pending || sequentials.length === 0}>
+              {t('sequentialsSave')}
+            </Button>
+          </div>
+        )}
+      </ActionForm>
+    </SectionCard>
   );
 }
 

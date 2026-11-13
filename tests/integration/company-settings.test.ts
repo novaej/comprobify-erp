@@ -10,6 +10,9 @@ import {
   setIssuePointDocumentType,
   setCompanyLogo,
   setIssuePointPaused,
+  companySequentials,
+  productionSequentials,
+  setCompanySequentials,
   setOverride,
   updateCompanyProfile,
   type ActorContext,
@@ -246,5 +249,54 @@ describe('company settings', () => {
       tx.select({ liveAt: schema.tenants.liveAt }).from(schema.tenants),
     );
     expect(tenant!.liveAt).toBeNull();
+  });
+
+  it('moves the counters of the company the actor is in, forward only, each on its own', async () => {
+    const org = await company();
+    const testOwner = await actor(org.twinTenantId);
+    const entry = (next: number) => ({
+      branchCode: '001',
+      pointCode: '001',
+      documentType: '01' as const,
+      next,
+    });
+    expect(await companySequentials(testOwner, db)).toEqual([
+      { branchCode: '001', pointCode: '001', documentType: '01', next: 1 },
+    ]);
+    // In the test copy: only the test copy's counter moves.
+    await setCompanySequentials(testOwner, db, [entry(980)]);
+    await expect(sequences(org.twinTenantId)).resolves.toEqual([{ documentType: '01', next: 980 }]);
+    await expect(sequences(org.realTenantId)).resolves.toEqual([{ documentType: '01', next: 1 }]);
+    // The go-live form reads the real company's, from the test copy.
+    expect((await productionSequentials(testOwner, db))[0]!.next).toBe(1);
+    // In production: only the real company's.
+    const liveOwner = await actor(org.realTenantId);
+    await setCompanySequentials(liveOwner, db, [entry(300)]);
+    await expect(sequences(org.realTenantId)).resolves.toEqual([{ documentType: '01', next: 300 }]);
+    await expect(sequences(org.twinTenantId)).resolves.toEqual([{ documentType: '01', next: 980 }]);
+    // The same number is a no-op, a lower one would repeat a number.
+    await setCompanySequentials(testOwner, db, [entry(980)]);
+    await expect(setCompanySequentials(testOwner, db, [entry(10)])).rejects.toMatchObject({
+      code: 'SEQUENCE_BACKWARD',
+    });
+    await expect(sequences(org.twinTenantId)).resolves.toEqual([{ documentType: '01', next: 980 }]);
+
+    // At onboarding, for a business coming from another provider.
+    const migrated = await createOrganization(db, {
+      ownerUserId: ownerId,
+      ruc: testRuc(),
+      legalName: 'Omicron S.A.',
+      tradeName: null,
+      mainAddress: 'Quito',
+      branch: { code: '001', name: 'Matriz', address: null },
+      issuePointCode: '001',
+      firstInvoiceNumber: 4500,
+    });
+    await expect(sequences(migrated.realTenantId)).resolves.toEqual([
+      { documentType: '01', next: 4500 },
+    ]);
+    await expect(sequences(migrated.twinTenantId)).resolves.toEqual([
+      { documentType: '01', next: 1 },
+    ]);
   });
 });

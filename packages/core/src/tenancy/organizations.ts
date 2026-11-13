@@ -22,6 +22,9 @@ export const createOrganizationInput = z.object({
     address: z.string().trim().min(1).max(300).nullable(),
   }),
   issuePointCode: code,
+  // The next factura number of the real company, for a business coming from another provider.
+  // The test copy always counts from 1.
+  firstInvoiceNumber: z.number().int().min(1).max(999_999_999).default(1),
   requiredAccounting: z.boolean().default(false),
   // Asked at onboarding so a RIMPE company's first invoice carries its legend.
   taxRegime: z.enum(TAX_REGIMES).default('GENERAL'),
@@ -101,9 +104,12 @@ export async function createOrganization(
         await tx
           .insert(schema.issuePointDocumentTypes)
           .values({ tenantId: tenant.id, issuePointId: point!.id, documentType: '01' });
-        await tx
-          .insert(schema.documentSequences)
-          .values({ tenantId: tenant.id, issuePointId: point!.id, documentType: '01' });
+        await tx.insert(schema.documentSequences).values({
+          tenantId: tenant.id,
+          issuePointId: point!.id,
+          documentType: '01',
+          ...(tenant.id === real!.id ? { nextValue: input.firstInvoiceNumber } : {}),
+        });
         await tx
           .insert(warehouses)
           .values({ tenantId: tenant.id, branchId: branch!.id, name: input.branch.name });

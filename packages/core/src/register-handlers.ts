@@ -47,7 +47,11 @@ export async function registerHandlers(jobs: Jobs, deps: HandlerDeps): Promise<v
   await jobs.work('system.heartbeat', heartbeatHandler(logger));
   await jobs.work(
     'email.send',
-    sendEmailHandler(emailProvider, (template, locale) => loadCopy(deps.db, template, locale)),
+    sendEmailHandler(
+      emailProvider,
+      (template, locale) => loadCopy(deps.db, template, locale),
+      logger,
+    ),
   );
   await jobs.work('notifications.send', (job) =>
     deliverNotificationEvent(

@@ -62,14 +62,17 @@ export {
   createBranch,
   createIssuePoint,
   ISSUABLE_DOCUMENT_TYPES,
+  companySequentials,
+  productionSequentials,
   setIssuePointDocumentType,
   setIssuePointPaused,
   setNegativeStockRule,
+  setCompanySequentials,
   TAX_REGIMES,
   updateBranch,
   updateCompanyProfile,
 } from './settings';
-export type { CompanySettings } from './settings';
+export type { CompanySettings, ProductionSequential } from './settings';
 export {
   companyHeader,
   issuePointWarehouse,

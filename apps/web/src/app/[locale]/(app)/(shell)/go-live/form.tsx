@@ -7,7 +7,7 @@ import { ActionForm } from '@/components/action-form';
 import { FormActionBar } from '@/components/form-action-bar';
 import { goLiveAction } from './actions';
 
-export type StartingPoint = { key: string; label: string };
+export type StartingPoint = { key: string; label: string; current: number };
 export type MasterDataCounts = {
   products: number;
   clients: number;
@@ -62,10 +62,10 @@ export function GoLiveForm({
                       <Input
                         name={`seq:${point.key}`}
                         type="number"
-                        min={1}
+                        min={point.current}
                         max={999999999}
                         step={1}
-                        defaultValue={1}
+                        defaultValue={point.current}
                         className="w-36 text-right tabular-nums"
                         aria-label={t('startingFor', { point: point.label })}
                       />

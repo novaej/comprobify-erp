@@ -204,7 +204,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/notifications/` | The notification centre: the catalogue of types with their channels, defaults, audience and mandatory flag (`catalog.ts`), `notify` (the one way to tell a company, in the caller's transaction), what a member reads and sets (`queries.ts`), and `announce` / `deliverNotificationEvent` (`events.ts`) for events with no actor at hand, queued in the transaction that caused them, and `watchCertificates` (`watch.ts`; `watchQuota` is in `documents/quota-watch.ts`) for the warnings a schedule finds, and `platform.ts` for the operators' own notices (`tellOperators`, `announceOperators`, the super admin's reads); the tables are in `packages/db/src/schema/notifications.ts`, ADR-036 |
 | `apps/web/src/app/[locale]/(app)/(shell)/notifications/`, `apps/web/src/components/notifications/` | The Notificaciones page with its preferences, and the bell in the top bar |
 | `packages/core/src/audit/` | `recordAudit` (same transaction as the change), the activity list, sign-ins |
-| `packages/core/src/tenancy/settings.ts` | Tax data, branches, issue points, their document types, starting sequentials (all mirrored in the twin) |
+| `packages/core/src/tenancy/settings.ts` | Tax data, branches, issue points, their document types (mirrored in the twin), and the sequentials of the company in use, forward only (ADR-039) |
 | `packages/core/src/tenancy/members.ts` | Invitations, role changes, removal, issue-point restrictions, all mirrored in the twin |
 | `packages/core/src/certificates/` | P12 parsing, the RUC match, key encryption |
 | `packages/core/src/testing/` | Test helpers, such as generated P12 files (`@comprobify/core/testing`) |

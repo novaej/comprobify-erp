@@ -1,5 +1,6 @@
 import {
   AUDIT_ACTIONS,
+  and,
   desc,
   eq,
   inArray,
@@ -121,25 +122,47 @@ export async function listAuditEvents(
         .from(tenants)
         .where(eq(tenants.id, ctx.tenantId));
       const ids = self?.twinOf ? [ctx.tenantId, self.twinOf] : [ctx.tenantId];
-      return (
-        tx
-          .select({
-            id: auditEvents.id,
-            tenantId: auditEvents.tenantId,
-            action: auditEvents.action,
-            occurredAt: auditEvents.occurredAt,
-            actorName: users.name,
-            subjectName: sql<
-              string | null
-            >`(SELECT u.name FROM ${users} u WHERE u.id = ${auditEvents.subjectUserId})`,
-            details: auditEvents.details,
-          })
-          .from(auditEvents)
-          .leftJoin(users, eq(users.id, auditEvents.actorUserId))
-          .where(inArray(auditEvents.tenantId, ids))
-          .orderBy(desc(auditEvents.occurredAt))
-          // Twice as many, as the pairs below collapse.
-          .limit(limit * 2)
+      const found = await tx
+        .select({
+          id: auditEvents.id,
+          tenantId: auditEvents.tenantId,
+          action: auditEvents.action,
+          occurredAt: auditEvents.occurredAt,
+          actorName: users.name,
+          actorId: auditEvents.actorUserId,
+          isOperator: users.isSuperAdmin,
+          subjectName: sql<
+            string | null
+          >`(SELECT u.name FROM ${users} u WHERE u.id = ${auditEvents.subjectUserId})`,
+          details: auditEvents.details,
+        })
+        .from(auditEvents)
+        .leftJoin(users, eq(users.id, auditEvents.actorUserId))
+        .where(inArray(auditEvents.tenantId, ids))
+        .orderBy(desc(auditEvents.occurredAt))
+        // Twice as many, as the pairs below collapse.
+        .limit(limit * 2);
+      // A super admin who works on the company (verifying a payment) is not one of its people:
+      // the log says Comprobify, not their name, unless they also belong to this company.
+      const operators = [
+        ...new Set(found.filter((row) => row.isOperator && row.actorId).map((row) => row.actorId!)),
+      ];
+      const members = operators.length
+        ? await tx
+            .select({ userId: schema.memberships.userId })
+            .from(schema.memberships)
+            .where(
+              and(
+                inArray(schema.memberships.tenantId, ids),
+                inArray(schema.memberships.userId, operators),
+              ),
+            )
+        : [];
+      const belongs = new Set(members.map((row) => row.userId));
+      return found.map((row) =>
+        row.isOperator && row.actorId && !belongs.has(row.actorId)
+          ? { ...row, actorName: 'Comprobify' }
+          : row,
       );
     },
   );

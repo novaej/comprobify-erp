@@ -128,6 +128,20 @@ export function OnboardingForm({ regimes }: { regimes: Choice[] }) {
             <FormField label={t('branchAddress')} hint={t('branchAddressHint')}>
               {(props) => <Input {...props} name="branchAddress" />}
             </FormField>
+            <FormField label={t('firstInvoiceNumber')} hint={t('firstInvoiceNumberHint')}>
+              {(props) => (
+                <Input
+                  {...props}
+                  name="firstInvoiceNumber"
+                  type="number"
+                  min={1}
+                  max={999999999}
+                  step={1}
+                  defaultValue={1}
+                  className="tabular-nums"
+                />
+              )}
+            </FormField>
           </div>
         </details>
       </fieldset>

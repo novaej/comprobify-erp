@@ -2,6 +2,7 @@ import {
   companySettings,
   hasFeature,
   limitOf,
+  companySequentials,
   ISSUABLE_DOCUMENT_TYPES,
   SRI_DOCUMENT_TYPES,
   TAX_REGIMES,
@@ -25,6 +26,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
 
   const { db } = await getRuntime();
   const settings = await companySettings(actor, db);
+  const sequentials = await companySequentials(actor, db);
   const t = await getTranslations('settings');
   const tSri = await getTranslations('sri');
 
@@ -34,6 +36,8 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
       <SettingsManager
         settings={{
           ...settings,
+          sequentials,
+          testMode: actor.tenantMode !== 'PRODUCTION',
           regimes: TAX_REGIMES.map((regime) => ({ value: regime, label: t(`regimes.${regime}`) })),
           documentTypes: SRI_DOCUMENT_TYPES.map((code) => ({
             value: code,

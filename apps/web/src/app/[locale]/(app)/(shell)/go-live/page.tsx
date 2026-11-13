@@ -1,4 +1,4 @@
-import { companySettings, masterDataToCopy } from '@comprobify/core';
+import { companySettings, masterDataToCopy, productionSequentials } from '@comprobify/core';
 import { CheckCircle2, FlaskConical, Hash, Lock } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { NoAccess } from '@/components/no-access';
@@ -30,6 +30,8 @@ export default async function GoLivePage({ params }: { params: Promise<{ locale:
   // FR-ONB-5: one starting number per issue point and document type it issues.
   const { db } = await getRuntime();
   const settings = active.entry.live ? null : await companySettings(actor, db);
+  // Already set in Empresa or at onboarding: shown as the current number, not reset to 1.
+  const current = active.entry.live ? [] : await productionSequentials(actor, db);
   // FR-ONB-5: what the test copy holds, which going live can copy over once.
   const masterData = active.entry.live
     ? { products: 0, clients: 0, providers: 0, templates: 0 }
@@ -39,6 +41,13 @@ export default async function GoLivePage({ params }: { params: Promise<{ locale:
       point.documentTypes.map((type) => ({
         key: `${branch.code}-${point.code}-${type}`,
         label: `${branch.code}-${point.code} · ${tSri(`documentTypes.${type as '01'}`)}`,
+        current:
+          current.find(
+            (row) =>
+              row.branchCode === branch.code &&
+              row.pointCode === point.code &&
+              row.documentType === type,
+          )?.next ?? 1,
       })),
     ),
   );

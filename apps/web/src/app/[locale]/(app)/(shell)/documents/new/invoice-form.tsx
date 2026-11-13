@@ -234,6 +234,8 @@ export function InvoiceForm({
   const [announcement, setAnnouncement] = useState('');
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string>();
+  // The line field that is missing or refused, shown in red where it is, not only in the banner.
+  const [lineError, setLineError] = useState<{ line: string; field: string; message: string }>();
   const [pending, startTransition] = useTransition();
   // One per form: a double submit, or a retry after a lost answer, gets the same invoice.
   const [idempotencyKey] = useState(newKey);
@@ -266,10 +268,12 @@ export function InvoiceForm({
   }, 0n);
   const difference = totals.total - paid;
 
-  const updateLine = (key: string, change: Partial<Line>) =>
+  const updateLine = (key: string, change: Partial<Line>) => {
+    setLineError((current) => (current?.line === key ? undefined : current));
     setLines((current) =>
       current.map((line) => (line.key === key ? { ...line, ...change } : line)),
     );
+  };
 
   const addLine = () => {
     const line = blankLine();
@@ -385,7 +389,22 @@ export function InvoiceForm({
     startTransition(async () => {
       // Success redirects to the invoice; only a refusal comes back.
       const state = await (draft ? correctInvoiceAction : createInvoiceAction)({}, form);
-      if (state?.error) setError(tError.has(state.error) ? tError(state.error) : tError('UNKNOWN'));
+      if (state?.error) {
+        const base = tError.has(state.error) ? tError(state.error) : tError('UNKNOWN');
+        // Which line and field core refused, when it says (lines.0.code).
+        const [group, index, field] = state.path ?? [];
+        const where =
+          group === 'lines' && typeof index === 'number' && typeof field === 'string'
+            ? ` ${t('refusedAt', { line: index + 1, field: t.has(`fields.${field}`) ? t(`fields.${field}`) : field })}`
+            : '';
+        setError(`${base}${where}`);
+        const refused = group === 'lines' && typeof index === 'number' ? lines[index] : undefined;
+        if (refused && typeof field === 'string') {
+          setLineError({ line: refused.key, field, message: base });
+          setConfirming(false);
+          focusTarget.current = `${refused.key}:${field}`;
+        }
+      }
     });
   };
 
@@ -398,6 +417,21 @@ export function InvoiceForm({
       onSubmit={(event) => {
         event.preventDefault();
         setError(undefined);
+        setLineError(undefined);
+        // A line missing its code or description would be refused by core with no way to tell
+        // which: say it here and go to the field.
+        const gap = lines.findIndex((line) => line.code.trim() === '' || line.name.trim() === '');
+        if (gap >= 0) {
+          const line = lines[gap]!;
+          const field = line.code.trim() === '' ? 'code' : 'name';
+          const message = t(field === 'code' ? 'lineMissingCode' : 'lineMissingName', {
+            line: gap + 1,
+          });
+          setError(message);
+          setLineError({ line: line.key, field, message });
+          focusTarget.current = `${line.key}:${field}`;
+          return;
+        }
         if (canIssue) setConfirming(true);
       }}
     >
@@ -571,7 +605,16 @@ export function InvoiceForm({
                         aria-label={t('lines.line', { number: index + 1 })}
                         className="grid grid-cols-2 gap-3 rounded-lg border border-border p-3 @xl:grid-cols-4 @4xl:grid-cols-[7rem_minmax(0,1fr)_4.5rem_6.5rem_5.5rem_7.5rem_5.5rem_2.25rem] @4xl:items-start @4xl:border-0 @4xl:p-0 @4xl:px-3"
                       >
-                        <FormField label={t('lines.code')} required labelClassName={hidden}>
+                        <FormField
+                          label={t('lines.code')}
+                          required
+                          labelClassName={hidden}
+                          error={
+                            lineError?.line === line.key && lineError.field === 'code'
+                              ? lineError.message
+                              : undefined
+                          }
+                        >
                           {(a11y) => (
                             <Combobox
                               a11y={a11y}
@@ -595,6 +638,11 @@ export function InvoiceForm({
                           label={t('lines.name')}
                           required
                           labelClassName={hidden}
+                          error={
+                            lineError?.line === line.key && lineError.field === 'name'
+                              ? lineError.message
+                              : undefined
+                          }
                           className="col-span-2 @xl:col-span-3 @4xl:col-span-1"
                         >
                           {(a11y) => (
@@ -953,10 +1001,8 @@ export function InvoiceForm({
 
       <ConfirmDialog
         open={confirming}
-        onOpenChange={(open) => {
-          setConfirming(open);
-          if (!open) setError(undefined);
-        }}
+        // The error stays on the form after the box is closed, until the next attempt.
+        onOpenChange={setConfirming}
         title={copy.confirmTitle}
         description={copy.confirmDescription}
         detail={t('confirmDetail', {

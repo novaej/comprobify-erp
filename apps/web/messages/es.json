@@ -5,7 +5,10 @@
   "common": {
     "retry": "Reintentar",
     "cancel": "Cancelar",
-    "unlimited": "Ilimitado"
+    "unlimited": "Ilimitado",
+    "fieldRequired": "Este campo es obligatorio.",
+    "fieldInvalid": "Revisa este valor.",
+    "fieldOutOfRange": "El valor está fuera del rango permitido."
   },
   "theme": {
     "toLight": "Cambiar a modo claro",
@@ -149,7 +152,9 @@
     "branchAddress": "Dirección del establecimiento",
     "branchAddressHint": "Si la dejas vacía, usamos la dirección matriz.",
     "submit": "Crear mi empresa",
-    "submitting": "Creando tu empresa..."
+    "submitting": "Creando tu empresa...",
+    "firstInvoiceNumber": "Siguiente número de factura",
+    "firstInvoiceNumberHint": "Solo si vienes de otro proveedor: el siguiente al último que emitiste. Si empiezas ahora, deja 1."
   },
   "onboardingError": {
     "INVALID_RUC": "Ese RUC no es válido. Revisa los 13 dígitos.",
@@ -189,7 +194,7 @@
     "activity": "Actividad",
     "legal": "Documentos legales",
     "plan": "Plan",
-    "platformAdmin": "Administración de la plataforma",
+    "platformAdmin": "Administración",
     "clients": "Clientes",
     "products": "Productos",
     "company": "Empresa",
@@ -394,7 +399,7 @@
     "confirmCode": "Código de 6 dígitos de tu app",
     "confirm": "Confirmar y activar",
     "requiredByOrganization": "Tu empresa exige la verificación en dos pasos. Actívala para continuar.",
-    "requiredByPlatform": "La administración de la plataforma exige la verificación en dos pasos. Actívala para entrar."
+    "requiredByPlatform": "La administración exige la verificación en dos pasos. Actívala para entrar."
   },
   "securityError": {
     "INVALID_CREDENTIALS": "La contraseña no es correcta.",
@@ -894,7 +899,7 @@
     }
   },
   "adminError": {
-    "FORBIDDEN": "Solo la administración de la plataforma puede hacer esto.",
+    "FORBIDDEN": "Solo la administración de Comprobify puede hacer esto.",
     "NOT_FOUND": "No se encontró la empresa.",
     "PLAN_NOT_AVAILABLE": "Ese plan no está publicado.",
     "SAME_PLAN": "La empresa ya está en ese plan.",
@@ -952,12 +957,12 @@
     "legal": "Documentos legales",
     "legalDocument": "Documento legal",
     "invite": "Invitación",
-    "admin": "Empresas · Plataforma",
-    "adminCompany": "Empresa · Plataforma",
-    "adminPlans": "Planes · Plataforma",
-    "adminPlan": "Plan · Plataforma",
-    "adminModules": "Módulos · Plataforma",
-    "adminModule": "Módulo · Plataforma",
+    "admin": "Empresas · Administración",
+    "adminCompany": "Empresa · Administración",
+    "adminPlans": "Planes · Administración",
+    "adminPlan": "Plan · Administración",
+    "adminModules": "Módulos · Administración",
+    "adminModule": "Módulo · Administración",
     "clients": "Clientes",
     "products": "Productos y servicios",
     "settings": "Empresa",
@@ -996,17 +1001,17 @@
     "notifications": "Notificaciones",
     "adminEmails": "Correos",
     "adminEmail": "Correo",
-    "adminNotifications": "Avisos de la plataforma",
+    "adminNotifications": "Avisos de administración",
     "reports": "Reportes",
     "importBulkBatch": "Importar facturas de un CSV",
     "adminJobs": "Trabajos",
-    "adminActivity": "Registro de la plataforma",
+    "adminActivity": "Registro de administración",
     "adminExchanges": "Respuestas del SRI"
   },
   "adminNav": {
-    "title": "Administración de la plataforma",
-    "navigation": "Navegación de la plataforma",
-    "badge": "Plataforma",
+    "title": "Administración",
+    "navigation": "Navegación de administración",
+    "badge": "Administración",
     "groups": {
       "operate": "Operación",
       "catalog": "Catálogo"
@@ -1045,7 +1050,7 @@
       "AVAILABLE": "Disponible",
       "COMING_SOON": "Próximamente"
     },
-    "operatorOnly": "Solo la plataforma",
+    "operatorOnly": "Solo administración",
     "base": "Base",
     "baseHint": "En todos los planes",
     "newPlan": "Nuevo plan",
@@ -1060,7 +1065,7 @@
     "nameEn": "Nombre en inglés",
     "status": "Estado",
     "selfService": "Se compra desde la aplicación",
-    "selfServiceHint": "Si no, solo la plataforma lo asigna, como Personalizado.",
+    "selfServiceHint": "Si no, solo la administración lo asigna, como Personalizado.",
     "planStatusHint": "Un plan publicado no vuelve a borrador; retirado deja de ofrecerse, pero sus empresas lo conservan.",
     "moduleStatusHint": "Un módulo disponible no vuelve a próximamente: se lo quitaría a todas las empresas de golpe.",
     "yes": "Sí",
@@ -1115,7 +1120,7 @@
     "featureRemovalScheduled": "Retiro programado en 30 días."
   },
   "catalogError": {
-    "FORBIDDEN": "Solo la administración de la plataforma puede hacer esto.",
+    "FORBIDDEN": "Solo la administración de Comprobify puede hacer esto.",
     "KEY_TAKEN": "Esa clave ya está en uso.",
     "STATUS_BACKWARD": "Ese cambio de estado no está permitido.",
     "NOT_A_FEATURE": "Solo las funciones de activar o desactivar van en un módulo.",
@@ -1457,7 +1462,14 @@
     "moreTypesInPlan": "Aquí aparecen los comprobantes que tu plan incluye. Las notas de crédito y las guías de remisión se agregan con su módulo, en Plan.",
     "branchesFull": "Tu plan permite {count, plural, one {# establecimiento} other {# establecimientos}} y ya están todos creados.",
     "pointsFull": "Tu plan permite {count, plural, one {# punto de emisión} other {# puntos de emisión}} por establecimiento y ya están todos creados.",
-    "seePlan": "Ver el plan"
+    "seePlan": "Ver el plan",
+    "sequentialsTitle": "Numeración de producción",
+    "sequentialsDescription": "El siguiente número que emite tu empresa en cada punto de emisión. Si vienes de otro proveedor, pon el siguiente al último que emitiste allí. Solo puede avanzar: un número ya usado nunca se repite.",
+    "sequentialsNext": "Siguiente número de {label}",
+    "sequentialsSave": "Guardar numeración",
+    "sequentialsSaved": "Numeración guardada.",
+    "sequentialsTestTitle": "Numeración de pruebas",
+    "sequentialsTestDescription": "El siguiente número que emite la copia de pruebas en cada punto de emisión. Solo puede avanzar. La empresa real tiene su propia numeración: se fija al pasar a producción, o desde Empresa estando en Producción."
   },
   "settingsError": {
     "FORBIDDEN": "Tu rol no permite cambiar los datos de la empresa.",
@@ -1468,7 +1480,8 @@
     "INVALID_INPUT": "Revisa los datos: los códigos son de tres dígitos y las resoluciones siguen el formato del SRI.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
     "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
-    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos.",
+    "SEQUENCE_BACKWARD": "Un secuencial solo puede avanzar: ese número es menor al que ya sigue."
   },
   "documents": {
     "title": "Comprobantes",
@@ -1783,6 +1796,19 @@
       "loaded": "Plantilla cargada.",
       "lines": "{count, plural, one {# línea} other {# líneas}}",
       "clientGone": "El cliente de esta plantilla ya no está activo: elige otro, o queda como consumidor final."
+    },
+    "lineMissingCode": "Falta el código de la línea {line}. Escríbelo o elige un producto.",
+    "lineMissingName": "Falta la descripción de la línea {line}.",
+    "refusedAt": "Línea {line}: {field}.",
+    "fields": {
+      "code": "código",
+      "name": "descripción",
+      "quantity": "cantidad",
+      "unitPrice": "precio unitario",
+      "discount": "descuento",
+      "ivaRateCode": "IVA",
+      "auxiliaryCode": "código auxiliar",
+      "unit": "unidad"
     }
   },
   "documentsError": {
@@ -2857,7 +2883,7 @@
   "adminQueue": {
     "title": "Cola de facturación masiva",
     "description": "Lo que se está procesando, empresa por empresa, frente a los límites que reparten el turno.",
-    "inFlight": "En proceso en toda la plataforma",
+    "inFlight": "En proceso en todas las empresas",
     "waiting": "Esperando turno",
     "perCompany": "Límite por empresa",
     "ofCap": "{count} de {cap}",
@@ -2941,7 +2967,7 @@
     }
   },
   "pricesError": {
-    "FORBIDDEN": "Solo un administrador de la plataforma puede cambiar precios.",
+    "FORBIDDEN": "Solo un administrador de Comprobify puede cambiar precios.",
     "NOT_FOUND": "No se encontró el borrador, el plan o el módulo.",
     "PLAN_NOT_PRICED": "Ese plan o módulo no tiene precio de lista.",
     "PRICE_NOTICE_TOO_SHORT": "Esta subida necesita al menos 30 días de aviso. Deja la fecha vacía para la más cercana.",
@@ -3424,8 +3450,8 @@
     }
   },
   "adminNotifications": {
-    "title": "Avisos de la plataforma",
-    "description": "Lo que la plataforma le avisó: pagos por revisar y cobros con tarjeta. Cada administrador marca los suyos como leídos."
+    "title": "Avisos de administración",
+    "description": "Lo que el sistema le avisó: pagos por revisar y cobros con tarjeta. Cada administrador marca los suyos como leídos."
   },
   "reports": {
     "title": "Reportes",
@@ -3555,7 +3581,7 @@
     "test": "Pruebas"
   },
   "adminActivity": {
-    "title": "Registro de la plataforma",
+    "title": "Registro de administración",
     "description": "Lo que los administradores cambiaron y que llega a todas las empresas: planes, módulos, precios, el IVA, los textos de los correos y los trabajos reintentados. No se modifica.",
     "filter": "Filtrar por tipo",
     "all": "Todo",
@@ -3607,7 +3633,7 @@
   },
   "adminExchanges": {
     "title": "Respuestas del SRI",
-    "description": "Lo que el SRI contestó a cada llamada por un comprobante, para dar soporte. Se busca por la clave de acceso, en cualquier empresa. Cada consulta queda en el registro de la plataforma.",
+    "description": "Lo que el SRI contestó a cada llamada por un comprobante, para dar soporte. Se busca por la clave de acceso, en cualquier empresa. Cada consulta queda en el registro de administración.",
     "search": "Clave de acceso (49 dígitos)",
     "searchButton": "Buscar",
     "invalid": "La clave de acceso tiene 49 dígitos.",

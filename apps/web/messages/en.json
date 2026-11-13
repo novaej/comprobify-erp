@@ -5,7 +5,10 @@
   "common": {
     "retry": "Retry",
     "cancel": "Cancel",
-    "unlimited": "Unlimited"
+    "unlimited": "Unlimited",
+    "fieldRequired": "This field is required.",
+    "fieldInvalid": "Check this value.",
+    "fieldOutOfRange": "The value is out of the allowed range."
   },
   "theme": {
     "toLight": "Switch to light mode",
@@ -149,7 +152,9 @@
     "branchAddress": "Branch address",
     "branchAddressHint": "Leave it empty to use the main address.",
     "submit": "Create my company",
-    "submitting": "Creating your company..."
+    "submitting": "Creating your company...",
+    "firstInvoiceNumber": "Next invoice number",
+    "firstInvoiceNumberHint": "Only if you come from another provider: the one after the last you issued. If you are starting now, leave 1."
   },
   "onboardingError": {
     "INVALID_RUC": "That RUC isn't valid. Check the 13 digits.",
@@ -189,7 +194,7 @@
     "activity": "Activity",
     "legal": "Legal documents",
     "plan": "Plan",
-    "platformAdmin": "Platform administration",
+    "platformAdmin": "Administration",
     "clients": "Clients",
     "products": "Products",
     "company": "Company",
@@ -394,7 +399,7 @@
     "confirmCode": "6-digit code from your app",
     "confirm": "Confirm and turn on",
     "requiredByOrganization": "Your company requires two-step verification. Turn it on to continue.",
-    "requiredByPlatform": "Platform administration requires two-step verification. Turn it on to enter."
+    "requiredByPlatform": "Administration requires two-step verification. Turn it on to enter."
   },
   "securityError": {
     "INVALID_CREDENTIALS": "The password is wrong.",
@@ -894,7 +899,7 @@
     }
   },
   "adminError": {
-    "FORBIDDEN": "Only platform administration can do this.",
+    "FORBIDDEN": "Only Comprobify administration can do this.",
     "NOT_FOUND": "Company not found.",
     "PLAN_NOT_AVAILABLE": "That plan isn't published.",
     "SAME_PLAN": "The company is already on that plan.",
@@ -952,12 +957,12 @@
     "legal": "Legal documents",
     "legalDocument": "Legal document",
     "invite": "Invitation",
-    "admin": "Companies · Platform",
-    "adminCompany": "Company · Platform",
-    "adminPlans": "Plans · Platform",
-    "adminPlan": "Plan · Platform",
-    "adminModules": "Modules · Platform",
-    "adminModule": "Module · Platform",
+    "admin": "Companies · Administration",
+    "adminCompany": "Company · Administration",
+    "adminPlans": "Plans · Administration",
+    "adminPlan": "Plan · Administration",
+    "adminModules": "Modules · Administration",
+    "adminModule": "Module · Administration",
     "clients": "Clients",
     "products": "Products and services",
     "settings": "Company",
@@ -996,17 +1001,17 @@
     "notifications": "Notifications",
     "adminEmails": "Emails",
     "adminEmail": "Email",
-    "adminNotifications": "Platform notices",
+    "adminNotifications": "Admin notices",
     "reports": "Reports",
     "importBulkBatch": "Import invoices from a CSV",
     "adminJobs": "Jobs",
-    "adminActivity": "Platform log",
+    "adminActivity": "Admin log",
     "adminExchanges": "SRI answers"
   },
   "adminNav": {
-    "title": "Platform administration",
-    "navigation": "Platform navigation",
-    "badge": "Platform",
+    "title": "Administration",
+    "navigation": "Admin navigation",
+    "badge": "Admin",
     "groups": {
       "operate": "Operate",
       "catalog": "Catalog"
@@ -1045,7 +1050,7 @@
       "AVAILABLE": "Available",
       "COMING_SOON": "Coming soon"
     },
-    "operatorOnly": "Platform only",
+    "operatorOnly": "Admin only",
     "base": "Base",
     "baseHint": "In every plan",
     "newPlan": "New plan",
@@ -1060,7 +1065,7 @@
     "nameEn": "Name in English",
     "status": "Status",
     "selfService": "Bought from the app",
-    "selfServiceHint": "If not, only the platform assigns it, like Custom.",
+    "selfServiceHint": "If not, only Comprobify assigns it, like Custom.",
     "planStatusHint": "A published plan never goes back to draft; retired stops being offered, but its companies keep it.",
     "moduleStatusHint": "An available module never goes back to coming soon: every company would lose it at once.",
     "yes": "Yes",
@@ -1115,7 +1120,7 @@
     "featureRemovalScheduled": "Removal scheduled in 30 days."
   },
   "catalogError": {
-    "FORBIDDEN": "Only platform administration can do this.",
+    "FORBIDDEN": "Only Comprobify administration can do this.",
     "KEY_TAKEN": "That key is in use.",
     "STATUS_BACKWARD": "That status change isn't allowed.",
     "NOT_A_FEATURE": "Only on/off features go in a module.",
@@ -1457,7 +1462,14 @@
     "moreTypesInPlan": "Only the document types your plan includes are listed. Credit notes and delivery guides come with their module, in Plan.",
     "branchesFull": "Your plan allows {count, plural, one {# branch} other {# branches}}, and all are created.",
     "pointsFull": "Your plan allows {count, plural, one {# issue point} other {# issue points}} per branch, and all are created.",
-    "seePlan": "See the plan"
+    "seePlan": "See the plan",
+    "sequentialsTitle": "Production numbering",
+    "sequentialsDescription": "The next number your company issues at each issue point. If you come from another provider, enter the one after the last you issued there. It only moves forward: a number already used is never repeated.",
+    "sequentialsNext": "Next number of {label}",
+    "sequentialsSave": "Save numbering",
+    "sequentialsSaved": "Numbering saved.",
+    "sequentialsTestTitle": "Test numbering",
+    "sequentialsTestDescription": "The next number the test copy issues at each issue point. It only moves forward. The real company has its own numbering: set it when going live, or from Company while in Production."
   },
   "settingsError": {
     "FORBIDDEN": "Your role can't change the company details.",
@@ -1468,7 +1480,8 @@
     "INVALID_INPUT": "Check the details: codes are three digits and resolutions follow SRI's format.",
     "UNKNOWN": "An unexpected error occurred. Please try again.",
     "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
-    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data.",
+    "SEQUENCE_BACKWARD": "A sequential can only move forward: that number is lower than the one coming next."
   },
   "documents": {
     "title": "Documents",
@@ -1783,6 +1796,19 @@
       "loaded": "Template loaded.",
       "lines": "{count, plural, one {# line} other {# lines}}",
       "clientGone": "This template's client is no longer active: choose another, or it stays consumidor final."
+    },
+    "lineMissingCode": "Line {line} has no code. Type one or choose a product.",
+    "lineMissingName": "Line {line} has no description.",
+    "refusedAt": "Line {line}: {field}.",
+    "fields": {
+      "code": "code",
+      "name": "description",
+      "quantity": "quantity",
+      "unitPrice": "unit price",
+      "discount": "discount",
+      "ivaRateCode": "VAT",
+      "auxiliaryCode": "auxiliary code",
+      "unit": "unit"
     }
   },
   "documentsError": {
@@ -2857,7 +2883,7 @@
   "adminQueue": {
     "title": "Bulk invoicing queue",
     "description": "What is being worked through, company by company, against the limits that share out the turns.",
-    "inFlight": "In progress across the platform",
+    "inFlight": "In progress across all companies",
     "waiting": "Waiting for a turn",
     "perCompany": "Limit per company",
     "ofCap": "{count} of {cap}",
@@ -2941,7 +2967,7 @@
     }
   },
   "pricesError": {
-    "FORBIDDEN": "Only a platform administrator can change prices.",
+    "FORBIDDEN": "Only a Comprobify administrator can change prices.",
     "NOT_FOUND": "The draft, plan or module was not found.",
     "PLAN_NOT_PRICED": "That plan or module has no list price.",
     "PRICE_NOTICE_TOO_SHORT": "This rise needs at least 30 days' notice. Leave the date empty for the earliest.",
@@ -3424,8 +3450,8 @@
     }
   },
   "adminNotifications": {
-    "title": "Platform notices",
-    "description": "What the platform has told you: payments to review and card charges. Each super admin marks their own as read."
+    "title": "Admin notices",
+    "description": "What the system has told you: payments to review and card charges. Each super admin marks their own as read."
   },
   "reports": {
     "title": "Reports",
@@ -3555,7 +3581,7 @@
     "test": "Test"
   },
   "adminActivity": {
-    "title": "Platform log",
+    "title": "Admin log",
     "description": "What the administrators changed that reaches every company: plans, modules, prices, the IVA, the email texts and retried jobs. It is never edited.",
     "filter": "Filter by type",
     "all": "All",
@@ -3607,7 +3633,7 @@
   },
   "adminExchanges": {
     "title": "SRI answers",
-    "description": "What SRI answered to each call for a document, for support. Search by access key, in any company. Every lookup is recorded in the platform log.",
+    "description": "What SRI answered to each call for a document, for support. Search by access key, in any company. Every lookup is recorded in the admin log.",
     "search": "Access key (49 digits)",
     "searchButton": "Search",
     "invalid": "An access key has 49 digits.",

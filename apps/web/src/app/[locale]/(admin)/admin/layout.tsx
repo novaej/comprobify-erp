@@ -21,7 +21,8 @@ export default async function AdminLayout({
   const { db } = await getRuntime();
   // FR-NOT-2: the platform bell, read with the page.
   const summary = await platformNotificationSummary(actor, db);
-  const bell = (
+  // One element per place it is shown (the mobile bar and the top bar), never one instance twice.
+  const bell = () => (
     <NotificationBell
       scope="platform"
       unread={summary.unread}
@@ -39,9 +40,9 @@ export default async function AdminLayout({
       <SkipToContent />
       <ActivityTracker />
       <div className="flex h-screen flex-col overflow-hidden md:flex-row">
-        <AdminNav user={{ name: session.user.name, email: session.user.email }} bell={bell} />
+        <AdminNav user={{ name: session.user.name, email: session.user.email }} bell={bell()} />
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <TopBar bell={bell} />
+          <TopBar bell={bell()} />
           <main
             id="main-content"
             // In the tab order, as in the app: it scrolls, so a keyboard must be able to reach it.

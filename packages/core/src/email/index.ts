@@ -1,3 +1,4 @@
+import type { Logger } from '@comprobify/config/logger';
 import { z } from 'zod';
 import { copyInput, type Copy } from './copy';
 import type { EmailProvider } from './provider';
@@ -64,10 +65,17 @@ export type CopyResolver = (
 
 // A retry may send twice; a duplicate link email is harmless (NFR-JOB-1). The one path every
 // platform email takes, so the provider's overrides (a redirect, the staging banner) apply to all.
-export function sendEmailHandler(provider: EmailProvider, resolve?: CopyResolver) {
+export function sendEmailHandler(
+  provider: EmailProvider,
+  resolve?: CopyResolver,
+  logger?: Pick<Logger, 'info'>,
+) {
   return async (job: { data: SendEmailPayload }): Promise<void> => {
     const { to, locale, template, params, copy } = job.data;
     const text = copy ?? (resolve ? await resolve(template, locale) : undefined);
-    await provider.send(renderEmail(template, locale, to, params, text));
+    const result = await provider.send(renderEmail(template, locale, to, params, text));
+    // What became of it, without the address: 'sent' means the provider took it, so a missing
+    // email is then a delivery matter (spam, a sandbox's authorized recipients), not ours.
+    logger?.info(`Email ${template}: ${result}`, { event: 'email.sent' });
   };
 }

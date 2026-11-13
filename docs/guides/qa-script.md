@@ -31,7 +31,7 @@ Add a screenshot when the problem is how something looks. "Looks wrong" is enoug
 | K | [Notifications](#part-k-notifications) · K1–K3 |
 | L | [Dashboard and reports](#part-l-dashboard-and-reports) · L1–L3 |
 | M | [Going live](#part-m-going-live) · M1–M3 |
-| N | [The platform area](#part-n-the-platform-area) · N1–N7 |
+| N | [The admin area](#part-n-the-admin-area) · N1–N7 |
 | R | [The real SRI (optional)](#part-r-the-real-sri-optional) · R1 |
 
 ## Progress
@@ -50,11 +50,11 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | B2 | The legal documents | ✅ |
 | B3 | Company settings | ✅ |
 | B4 | What the free plan includes | ✅ |
-| C1 | Choose a plan and report the transfer | ⬜ |
-| C2 | The operator verifies the payment | ⬜ |
-| C3 | The operator invoices the payment | ⬜ |
-| C4 | A document pack, closed without an invoice | ⬜ |
-| C5 | Pay by card through Payphone | ⬜ |
+| C1 | Choose a plan and report the transfer | ✅ |
+| C2 | The operator verifies the payment | ✅ |
+| C3 | The operator invoices the payment | ✅ |
+| C4 | A document pack, closed without an invoice | ✅ |
+| C5 | Pay by card through Payphone | ✅ |
 | D1 | Products and services | ⬜ |
 | D2 | Clients | ⬜ |
 | D3 | Providers | ⬜ |
@@ -95,7 +95,7 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | N3 | Plans and modules | ⬜ |
 | N4 | The email editor | ⬜ |
 | N5 | Jobs and notices | ⬜ |
-| N6 | The platform log | ⬜ |
+| N6 | The admin log | ⬜ |
 | N7 | SRI's answers for a document | ⬜ |
 | R1 | The real SRI, test environment | ⬜ |
 
@@ -309,7 +309,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 
 ### A3 · The operator: super admin with two-step verification
 
-**Needs:** A1. **Leaves:** Oscar, a super admin with 2FA, signed in to the platform area.
+**Needs:** A1. **Leaves:** Oscar, a super admin with 2FA, signed in to the admin area.
 
 | # | Do | Expect |
 |---|---|---|
@@ -318,7 +318,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 | 3 | In a terminal: `pnpm super-admin operator@comprobify.test` | "…is now a super admin." |
 | 4 | Visit `/es/admin` again | Sent to **Mi cuenta**, asked to turn on two-step verification first |
 | 5 | Turn it on: scan the QR with the app, enter a code, save the backup codes | Two-step verification on |
-| 6 | Visit `/es/admin` | **Empresas**, the platform area, with its own menu and a **Plataforma** badge |
+| 6 | Visit `/es/admin` | **Empresas**, the admin area, with its own menu and an **Administración** badge |
 | 7 | Sign out and in again | Asked for the authenticator code after the password |
 
 ---
@@ -331,7 +331,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Owner window: fill the company form with RUC `1712345678001`, Comercial Andina S.A., an address, the main branch `001` Matriz, issue point `001` | Fields check as you go: a RUC with a bad structure is refused |
+| 1 | Owner window: fill the company form with RUC `1712345678001`, Comercial Andina S.A., an address, the main branch `001` Matriz, issue point `001` | Fields check as you go: a RUC with a bad structure is refused. Under **Avanzado** there is also "Siguiente número de factura": leave 1 here (to start the real company from another number, see K3 or M1) |
 | 2 | Upload `test-1712345678001.p12`, password `secret` (or your own file and password) | Accepted. Try once with a wrong password first: refused, clearly |
 | 3 | **Crear mi empresa** | The dashboard, "Tu empresa está lista", a yellow "ambiente de pruebas" banner, **SRI Pruebas** in the sidebar |
 | 4 | Look at the sidebar | The organization switcher, Pruebas selected; Producción disabled with "Disponible cuando tu empresa pase a producción" |
@@ -361,6 +361,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 | 3 | In the **Logo** card, choose a PNG (up to 500 KB) and **Subir logo** | "Logo guardado." and "Hay un logo guardado."; on the free plan it says it prints once the plan has Marca. A text file renamed to .png is refused. (It shows on documents after C2, when the plan includes Marca.) |
 | 4 | Look at **Agregar establecimiento** and **Agregar punto** | Both are disabled, each with a note: "Tu plan permite 1 establecimiento…" and "…1 punto de emisión por establecimiento…", and a **Ver el plan** button (this changes after C2) |
 | 5 | Open the issue point 001-001's document types | Only Factura is listed, on, and a note says the other types come with their module in Plan |
+| 6 | You are in Pruebas: in **Numeración de pruebas**, set the next number of 001-001 Factura to `50` and **Guardar numeración**; then try `10` | "Numeración guardada.", the field keeps 50. A number below the current one is stopped by the field, and if forced, refused: a sequential only moves forward. **Actividad** shows the change. This is the test copy's own numbering; the real company's is set at go-live (M1), or from this card while in Producción |
 
 ### B4 · What the free plan includes
 
@@ -386,7 +387,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 | 2 | Choose **Empresa**, monthly, **Continuar al pago** | A payment "Plan Empresa, mensual", **$91,89** (79,90 + 15 % IVA), "Por pagar" |
 | 3 | Look at **Transferencia** | The bank details from 0.1 and how much to transfer |
 | 4 | **Enviar comprobante**: a reference, the PNG | "En revisión"; the file is listed |
-| 5 | Operator window, platform area | A **1** on the bell; "Hay un pago por revisar" with Comercial Andina and $91,89; a `paymentReported` email in the terminal |
+| 5 | Operator window, admin area | A **1** on the bell; "Hay un pago por revisar" with Comercial Andina and $91,89; a `paymentReported` email in the terminal |
 | 6 | Click the notice | **Pagos**, with the payment first |
 
 ### C2 · The operator verifies the payment
@@ -408,11 +409,11 @@ Seen signed out, so use a private window. They need no company; run them any tim
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Operator window: **Mi cuenta** → **Configurar mi empresa**: RUC `1790012345001`, Comprobify Operadora S.A., `test-1790012345001.p12` | The company, in its test copy, beside the platform area |
+| 1 | Operator window: the person icon at the bottom of the admin sidebar (**Mi cuenta**, or `/es/account`) → **Configurar mi empresa**: RUC `1790012345001`, Comprobify Operadora S.A., `test-1790012345001.p12` | The company, in its test copy, beside the admin area |
 | 2 | In it, create a client: Comercial Andina, with the company's RUC (`1712345678001`, or yours) | Created |
-| 3 | **Nueva factura** for that client: one line "Plan Empresa, mensual", 1 × 79,90, IVA 15 %, paid by transfer | Total $91,89; **Emitir factura** → authorized by the mock SRI within seconds |
+| 3 | **Nueva factura** for that client: one line with code `PLAN-EMP`, description "Plan Empresa, mensual", 1 × 79,90, IVA 15 %, paid by transfer. First leave the code empty and press **Emitir factura** | "Falta el código de la línea 1…" on the form, and the cursor goes to the field. With the code: total $91,89; **Emitir factura** → authorized by the mock SRI within seconds |
 | 4 | Copy the invoice's 49-digit access key from its page | |
-| 5 | Platform area → **Por facturar** | Comercial Andina's payment, with **Registrar factura** and **Sin factura** |
+| 5 | Admin area → **Por facturar** | Comercial Andina's payment, with **Registrar factura** and **Sin factura** |
 | 6 | **Registrar factura** with a wrong key (49 ones) | Refused: no invoice has that key |
 | 7 | **Registrar factura** with the real key | The payment leaves the queue; Comercial Andina's **Actividad** shows "registró la factura de un pago" |
 
@@ -441,7 +442,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 | 5 | Reload the return page | "Pago aprobado" again, and no second charge in Payphone's dashboard |
 | 6 | Operator: the bell | "Se aplicó un pago con tarjeta"; a `cardPaymentApplied` email |
 | 7 | Operator: **Por facturar** | The payment, method **Tarjeta**, owed an invoice; record or close it as in C3 and C4 |
-| 8 | Owner: buy another pack, **Tarjeta**, and decline with Payphone's declined test card | "El pago no se completó"; the payment is still "Por pagar" and can be paid by transfer |
+| 8 | Buy another pack, choose **Tarjeta**, then go back to **Transferencia** and cancel the payment | It asks first; the payment is "Cancelado" and nothing is charged. A decline can't be provoked here (Payphone publishes no declined test card and its widget refuses a wrong card before submitting); it is covered by the integration tests against a fake Payphone (`payphone.test.ts`) |
 
 If the widget doesn't load, or the return page shows an error, see "If something goes wrong" in [payphone-test-card.md](payphone-test-card.md).
 
@@ -547,7 +548,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 | 1 | **Comprobantes** → **Nueva factura** | The form, the issue point preselected |
 | 2 | Find María by typing "Mar" and pressing Enter; add CAF-1 × 2 and SRV-1 × 1 using the keyboard only | Totals update as you type: base 41,00, IVA 6,15, total 47,15 |
 | 3 | Payment: transfer, 47,15 | Payments match the total |
-| 4 | **Emitir factura** → confirm | The invoice page; within seconds "Autorizado", the authorization number, a timeline of events |
+| 4 | **Emitir factura** → confirm | The invoice page; within seconds "Autorizado", the authorization number, a timeline of events. The number is `001-001-000000050`, the test numbering set in B3 step 6 |
 | 5 | **Ver PDF** (the RIDE) | The RIDE with the logo from B3, the lines and the access key |
 | 6 | The XML link | The authorized XML |
 | 7 | Terminal | A buyer email to `maria@cliente.test` with the RIDE and XML attached |
@@ -698,7 +699,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 | 2 | **Facturación masiva** → **Nueva facturación masiva** | The confirmed orders, an issue point and a payment method |
 | 3 | Tick both → **Facturar 2 pedidos** → confirm | The batch page: items queued, then made, then authorized, live |
 | 4 | Wait for it to finish (a minute) | "Completado"; the bell: "Terminó un lote de facturas" |
-| 5 | Platform area (operator) → **Cola de facturación** while one runs | The company with its items in flight |
+| 5 | Admin area (operator) → **Cola de facturación** while one runs | The company with its items in flight |
 
 ### I2 · From a CSV
 
@@ -796,11 +797,12 @@ And for each: open a document or an order, so the read side is seen too.
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Owner: the organization switcher → **Nueva empresa** (also on **Mi cuenta**): RUC `1714070046001`, Andina Norte S.A., `test-1714070046001.p12` | Andina Norte's dashboard, in its test copy; the switcher lists both, with their RUCs |
+| 1 | Owner: the organization switcher → **Nueva empresa** (also on **Mi cuenta**): RUC `1714070046001`, Andina Norte S.A., `test-1714070046001.p12`; under **Avanzado**, set "Siguiente número de factura" to `300` | Andina Norte's dashboard, in its test copy; the switcher lists both, with their RUCs |
 | 2 | Its dashboard | The certificate card: "Por vencer", the date 10 days out; a certificate banner |
 | 3 | `pnpm run-job certificates.watch` | The bell in Andina Norte: "Tu firma electrónica vence pronto", 10 days; a `certificateExpiring` email in the terminal |
-| 4 | Run it again | No second notice |
-| 5 | Switch back to Comercial Andina | Its own notices only |
+| 4 | Andina Norte → **Pasar a producción** (don't submit) | The numbering field for Factura on 001-001 shows `300`, the number given when the company was created; its test copy numbering in **Empresa** is still 1 |
+| 5 | Run it again | No second notice |
+| 6 | Switch back to Comercial Andina | Its own notices only |
 
 ---
 
@@ -850,8 +852,8 @@ And for each: open a document or an order, so the read side is seen too.
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Owner: **Pasar a producción** (dashboard) | A page: the next number for each issue point and document, and "Llevar tus datos de pruebas" ticked |
-| 2 | Set Factura on 001-001 to start at **101**; tick "Entiendo que este paso no se puede deshacer"; **Pasar a producción** | "Tu empresa está en producción", **SRI Producción** in the sidebar, no yellow banner |
+| 1 | Owner: **Pasar a producción** (dashboard) | A page: the next number for each issue point and document, showing `1` for Factura on 001-001 (the real company's own numbering, not the test copy's 50), and "Llevar tus datos de pruebas" ticked |
+| 2 | Set Factura on 001-001 to start at **101** (a number below the current one is refused); tick "Entiendo que este paso no se puede deshacer"; **Pasar a producción** | "Tu empresa está en producción", **SRI Producción** in the sidebar, no yellow banner |
 | 3 | **Productos**, **Clientes**, **Proveedores** | The test copy's ones came along; documents and stock did not |
 | 4 | The switcher: **Pruebas** | The test copy, its documents still there; switch back to **Producción** |
 | 5 | **Actividad** | "pasó la empresa a producción" |
@@ -882,7 +884,7 @@ The test copy never uses quota: invoices in Pruebas don't count.
 
 ---
 
-## Part N: The platform area
+## Part N: The admin area
 
 All as Oscar, in the operator window.
 
@@ -943,7 +945,7 @@ All as Oscar, in the operator window.
 | 2 | `pnpm run-job retention.prune`, reload | Its last run updates |
 | 3 | **Avisos** and the bell | The payments reported and the card payments, newest first |
 
-### N6 · The platform log
+### N6 · The admin log
 
 **Needs:** N2–N4. **Leaves:** nothing new.
 

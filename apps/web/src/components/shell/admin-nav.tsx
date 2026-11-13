@@ -3,7 +3,6 @@
 import { cn } from '@comprobify/ui/lib/utils';
 import { ThemeToggle } from '@comprobify/ui/theme';
 import {
-  ArrowLeftRight,
   Banknote,
   Bell,
   Blocks,
@@ -20,6 +19,7 @@ import {
   ScrollText,
   ShieldCheck,
   Tag,
+  UserRound,
   X,
   type LucideIcon,
 } from 'lucide-react';
@@ -175,12 +175,12 @@ export function AdminNav({
             </span>
           </div>
           <Link
-            href="/dashboard"
-            title={t('backToApp')}
-            aria-label={t('backToApp')}
+            href="/account"
+            title={tNav('account')}
+            aria-label={tNav('account')}
             className="rounded-md p-1.5 text-sidebar-muted transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
-            <ArrowLeftRight className="h-4 w-4" aria-hidden />
+            <UserRound className="h-4 w-4" aria-hidden />
           </Link>
           <form action={signOutAction}>
             <input type="hidden" name="locale" value={locale} />

@@ -7,6 +7,7 @@ import {
   setIssuePointDocumentType,
   setIssuePointPaused,
   setNegativeStockRule,
+  setCompanySequentials,
   updateBranch,
   updateCompanyProfile,
 } from '@comprobify/core';
@@ -107,4 +108,18 @@ export async function setLogoAction(_: ActionState, form: FormData): Promise<Act
   if (!(file instanceof File) || file.size === 0) return { error: 'INVALID_LOGO' };
   const bytes = new Uint8Array(await file.arrayBuffer());
   return run(form, () => setCompanyLogo(actor, db, bytes));
+}
+
+// One field per counter, named seq:<branch>-<point>-<type>, as in the go-live form.
+export async function setSequentialsAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const { actor } = await loadShell(localeOf(form));
+  const { db } = await getRuntime();
+  const entries = [...form.entries()].flatMap(([name, value]) => {
+    const match = /^seq:(\d{3})-(\d{3})-(\d{2})$/.exec(name);
+    if (!match || typeof value !== 'string' || value.trim() === '') return [];
+    // Not a whole number: NaN, which core's schema refuses.
+    const next = /^\d+$/.test(value.trim()) ? Number(value.trim()) : Number.NaN;
+    return [{ branchCode: match[1]!, pointCode: match[2]!, documentType: match[3]! as '01', next }];
+  });
+  return run(form, () => setCompanySequentials(actor, db, entries));
 }

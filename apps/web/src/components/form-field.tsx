@@ -2,14 +2,19 @@
 
 import { Label } from '@comprobify/ui/components/label';
 import { cn } from '@comprobify/ui/lib/utils';
-import { useId, type ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
+import { useId, useState, type FormEvent, type ReactNode } from 'react';
 
 export type FieldA11yProps = {
   id: string;
   'aria-invalid'?: boolean;
   'aria-describedby'?: string;
   'aria-required'?: boolean;
+  // The browser's own message is replaced by ours, shown under the field.
+  onInvalid?: (event: FormEvent<HTMLElement>) => void;
 };
+
+type Checkable = HTMLElement & { validity: ValidityState; form: HTMLFormElement | null };
 
 // Label, control, hint and error as one unit, tied together for screen readers.
 export function FormField({
@@ -35,13 +40,19 @@ export function FormField({
   children: (props: FieldA11yProps) => ReactNode;
 }) {
   const uid = useId();
+  const t = useTranslations('common');
+  // What the browser found wrong on submit (a required field left empty), said in the app's
+  // language, in red under the field, like the errors a form is given.
+  const [native, setNative] = useState<string>();
+  const shown = error ?? native;
   const id = `${uid}-field`;
   const hintId = `${uid}-hint`;
   const errorId = `${uid}-error`;
-  const describedBy = [error ? errorId : null, hint ? hintId : null].filter(Boolean).join(' ');
+  const describedBy = [shown ? errorId : null, hint ? hintId : null].filter(Boolean).join(' ');
 
   return (
-    <div className={cn('min-w-0 space-y-1.5', className)}>
+    // `input` bubbles: typing in the control clears what the browser said about it.
+    <div className={cn('min-w-0 space-y-1.5', className)} onInput={() => setNative(undefined)}>
       <div className={cn('flex items-center justify-between', labelClassName)}>
         <Label htmlFor={id}>
           {label}
@@ -56,7 +67,28 @@ export function FormField({
       </div>
       {children({
         id,
-        'aria-invalid': error ? true : undefined,
+        'aria-invalid': shown ? true : undefined,
+        onInvalid: (event) => {
+          // Ours instead of the browser's tooltip, which is in the browser's language.
+          event.preventDefault();
+          const control = event.currentTarget as Checkable;
+          const { validity } = control;
+          setNative(
+            validity.valueMissing
+              ? t('fieldRequired')
+              : validity.rangeUnderflow || validity.rangeOverflow
+                ? t('fieldOutOfRange')
+                : t('fieldInvalid'),
+          );
+          // Without the browser's own pass, the first invalid control must be taken to by hand.
+          const form = control.form;
+          if (form && !form.dataset.invalidFocused) {
+            form.dataset.invalidFocused = '1';
+            control.focus();
+            control.scrollIntoView({ block: 'center' });
+            setTimeout(() => delete form.dataset.invalidFocused, 0);
+          }
+        },
         'aria-describedby': describedBy || undefined,
         'aria-required': required || undefined,
       })}
@@ -65,9 +97,9 @@ export function FormField({
           {hint}
         </p>
       )}
-      {error && (
+      {shown && (
         <p id={errorId} role="alert" className="text-xs text-destructive">
-          {error}
+          {shown}
         </p>
       )}
     </div>

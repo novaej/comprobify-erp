@@ -6,6 +6,8 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Added
 
+- Starting numbers for a business coming from another provider: a "next invoice number" when creating the company, and a numbering card on Empresa for the company in use (the test copy's counters in Pruebas, the real company's in Producción). Forward only and logged (FR-ONB-5, ADR-039).
+- The worker logs the outcome of each email (`sent`, `logged` or `skipped`), without the address, so a missing email can be traced.
 - A logo card on Empresa: upload or replace the logo after onboarding, for the company and its test copy, on any plan; it prints on documents with the Marca module (FR-ONB-2, FR-PLAN-3).
 - The public pages: a landing page, a pricing page built from the live plans and prices, and a support page with the operator's contact details, in Spanish and English, with their own header and footer. Editing a price in the platform area reaches the pricing page within 30 seconds, with an announced change shown as "El precio cambia a…". `SUPPORT_PHONE` (optional) adds a WhatsApp card (FR-UX-5).
 - pnpm workspace with Turborepo, strict TypeScript, ESLint and Prettier.
@@ -133,6 +135,8 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Changed
 
+- A required field left empty (or a value outside its range) is now said under the field, in red and in the app's language, with the cursor taken to the first one, instead of the browser's tooltip in the browser's language. It applies to every field built with the shared form field.
+- The operator area is called Administración (Administration), not Plataforma (Platform), in menus, titles and messages.
 - Empresa turns off **Agregar establecimiento** and **Agregar punto** at the plan's limit and says why, with a link to the plan, as Usuarios does for invitations; core still refuses past the limit (FR-PLAN-3).
 - Accepting the legal texts takes one tick per document still pending, instead of one for all three; each is still recorded as its own acceptance (FR-ONB-8).
 - The IVA on subscriptions moves from `IVA_RATE` to a dated table with its history (migration 0057, ADR-034), seeded with 15 % from 1 April 2024 and edited on the platform's Precios page. On the day a new rate starts, the daily job re-prices unpaid open payments and emails the payer the new total; a reported transfer keeps its rate. `IVA_RATE` is no longer read (FR-BILL-2).
@@ -142,6 +146,12 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Fixed
 
+- A line field that is missing or refused on the invoice form is shown in red with its message under the field, not only in the banner at the bottom.
+- The admin sidebar has one link to the account (Mi cuenta). The "back to the app" arrow is gone: for an operator with no company it only came back to the admin area.
+- The invoice form says which line and field is missing or refused ("Falta el código de la línea 1", or "Línea 1: código" for a refusal from core), moves to the field, and keeps the error on the form after the confirmation box is closed.
+- The admin sidebar has a link to Mi cuenta, so an operator with no company can reach it to set one up.
+- Actividad shows an operator who acted on a company (verifying a payment) as "Comprobify" instead of their name, unless they belong to that company.
+- The go-live form shows the real company's current next numbers instead of 1, so numbers set earlier are kept (ADR-039).
 - Actividad, viewed from the test copy, now includes the changes made to the company itself (accepting the legal texts, tax data, plan), which are recorded on the real company and were missing there (FR-NOT-4).
 - Asking for a new password reset link cancels the ones not used yet, so only the latest email works (FR-ONB-7).
 - Opening a password reset link that was already used or has expired now says so, instead of showing the form (FR-ONB-7).

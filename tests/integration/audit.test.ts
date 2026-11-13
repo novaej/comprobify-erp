@@ -17,6 +17,7 @@ import {
   recordSessionStart,
   resolveActor,
   setNegativeStockRule,
+  setOverride,
   type ActorContext,
   type Auth,
   type CreatedOrganization,
@@ -25,7 +26,7 @@ import {
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { appDatabase, appUrl, grantSeats, testLogger } from './helpers';
+import { appDatabase, appUrl, grantSeats, superAdmin, testLogger } from './helpers';
 
 // FR-NOT-4, FR-ONB-5.
 describe('audit log and go-live', () => {
@@ -135,6 +136,20 @@ describe('audit log and go-live', () => {
     expect(
       (await actions(twinCtx)).filter((action) => action === 'organization.created'),
     ).toHaveLength(1);
+  });
+
+  it('shows an operator who acted on the company as Comprobify, not by name', async () => {
+    const operator = await superAdmin(db);
+    await setOverride(operator, db, {
+      realTenantId: org.realTenantId,
+      featureKey: 'MAX_BRANCHES',
+      effect: 'LIMIT',
+      limitValue: 2,
+      reason: 'test',
+    });
+    const events = await listAuditEvents(ownerCtx, db);
+    expect(events.some((event) => event.actorName === 'Comprobify')).toBe(true);
+    expect(events.some((event) => event.actorName === 'Operator')).toBe(false);
   });
 
   it('records member changes in the company log, with who did it to whom', async () => {

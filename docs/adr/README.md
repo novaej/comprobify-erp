@@ -59,3 +59,4 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [036](036-the-notification-centre.md) | The notification centre | Accepted |
 | [037](037-email-templates-in-the-database.md) | Email templates in the database | Accepted |
 | [038](038-retention-of-technical-duplicates.md) | Retention of technical duplicates | Accepted |
+| [039](039-numbering-set-where-it-is-used.md) | Numbering, set where it is used | Accepted |

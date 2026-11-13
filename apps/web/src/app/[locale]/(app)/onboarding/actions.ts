@@ -50,6 +50,10 @@ export async function onboardAction(_: ActionState, form: FormData): Promise<Act
           address: text(form, 'branchAddress') || null,
         },
         issuePointCode: text(form, 'issuePointCode') || '001',
+        // Not a whole number: NaN, which core's schema refuses.
+        firstInvoiceNumber: /^\d+$/.test(text(form, 'firstInvoiceNumber') || '1')
+          ? Number(text(form, 'firstInvoiceNumber') || '1')
+          : Number.NaN,
         // Not trimmed: a password may start or end with a space.
         certificate: { file: certificate, password: rawText(form, 'certificatePassword') },
         logo: await fileBytes(form, 'logo'),
