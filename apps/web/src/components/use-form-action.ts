@@ -12,6 +12,8 @@ export function useFormAction<State extends ActionState = ActionState>(
   const [state, dispatch, pending] = useActionState<State, FormData>(action, initial);
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // Not for a form this one sits inside (a dialog in a portal bubbles to it).
+    event.stopPropagation();
     const form = new FormData(event.currentTarget);
     startTransition(() => dispatch(form));
   };

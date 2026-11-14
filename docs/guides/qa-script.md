@@ -62,13 +62,13 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | E1 | Opening balances | ✅ |
 | E2 | Adjustments | ✅ |
 | E3 | Valuation and the nightly check | ✅ |
-| F1 | An invoice, from the keyboard | ⬜ |
-| F2 | Consumidor final and its limit | ⬜ |
-| F3 | Templates | ⬜ |
-| F4 | A credit note | ⬜ |
-| F5 | A guía de remisión | ⬜ |
-| F6 | Void an invoice | ⬜ |
-| F7 | Finding documents | ⬜ |
+| F1 | An invoice, from the keyboard | ✅ |
+| F2 | Consumidor final and its limit | ✅ |
+| F3 | Templates | ✅ |
+| F4 | A credit note | ✅ |
+| F5 | A guía de remisión | ✅ |
+| F6 | Void an invoice | ✅ |
+| F7 | Finding documents | ✅ |
 | G1 | A purchase order | ⬜ |
 | G2 | Receive it in parts | ⬜ |
 | G3 | Cancel an order | ⬜ |
@@ -403,6 +403,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 | 4 | **Plan** | Empresa, its modules and limits, the period dates |
 | 5 | Open the pages locked in B4 | All open now |
 | 6 | **Empresa** → **Agregar establecimiento**: `002` Norte, with an issue point `001` | Allowed now; the twin and the real company both get it |
+| 7 | **Empresa** → the issue point `001-001` → **Tipos de comprobante**: tick **Nota de crédito** and **Guía de remisión**, save; the same for Norte's `002-001` | Saved. A plan that gains a module doesn't turn its document types on by itself: F4 and F5 need these |
 
 ### C3 · The operator invoices the payment
 
@@ -554,7 +555,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 | 1 | **Comprobantes** → **Nueva factura** | The form, the issue point preselected |
 | 2 | Find María by typing "Mar" and pressing Enter; add CAF-1 × 2 and SRV-1 × 1 using the keyboard only | Totals update as you type: base 41,00, IVA 6,15, total 47,15 |
 | 3 | Payment: transfer, 47,15 | Payments match the total |
-| 4 | **Emitir factura** → confirm | The invoice page; within seconds "Autorizado", the authorization number, a timeline of events. The number is `001-001-000000050`, the test numbering set in B3 step 6 |
+| 4 | **Emitir factura** → confirm | The invoice page; within seconds "Autorizado", the authorization number, a timeline of events. The number is `001-001-000000050`, the test numbering set in B3 step 6. The page has a **Cobros** section saying "Aún no se registra ningún cobro" and the balance owed: the payment of step 3 is the invoice's *forma de pago*, which goes to SRI; a **cobro** is money actually received, recorded later (H3) |
 | 5 | **Ver PDF** (the RIDE) | The RIDE with the logo from B3, the lines and the access key |
 | 6 | The XML link | The authorized XML |
 | 7 | Terminal | A buyer email to `maria@cliente.test` with the RIDE and XML attached |
@@ -580,7 +581,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 
 ### F4 · A credit note
 
-**Needs:** F1. **Leaves:** a credit note for part of invoice A.
+**Needs:** F1, and C2 step 7 (Nota de crédito enabled on the issue point; without it the page says "No tienes un punto de emisión habilitado para notas de crédito"). **Leaves:** a credit note for part of invoice A.
 
 | # | Do | Expect |
 |---|---|---|
@@ -592,7 +593,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 
 ### F5 · A guía de remisión
 
-**Needs:** F1. **Leaves:** a guía for invoice A.
+**Needs:** F1, and C2 step 7 (Guía de remisión enabled on the issue point). **Leaves:** a guía for invoice A.
 
 | # | Do | Expect |
 |---|---|---|
@@ -602,12 +603,14 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 
 ### F6 · Void an invoice
 
-**Needs:** F2. **Leaves:** the consumidor final invoice voided.
+**Needs:** F2, F3. **Leaves:** one invoice to María voided.
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | The consumidor final invoice → **Marcar como anulada** | It asks for confirmation, and explains that you void it on SRI's site first |
-| 2 | Confirm | The mock SRI says it's voided; the invoice shows "Anulado"; stock returns |
+| 1 | Open the consumidor final invoice of F2 | No **Marcar como anulada** button: a consumidor final invoice can't be voided, and can't take a credit note either |
+| 2 | Issue a new invoice to María Pérez: TE-1 × 1 | Authorized; **Inventario** shows TE-1 Matriz 24 (30, less the 5 of F2 and this 1) |
+| 3 | Open it → **Marcar como anulada** | It asks for confirmation, shows the deadline (the 7th of next month), and explains that you void it on SRI's site first |
+| 4 | Confirm | The mock SRI says it's voided; the invoice shows "Anulado"; **Inventario** TE-1 back to 25 |
 
 ### F7 · Finding documents
 
@@ -617,7 +620,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 |---|---|---|
 | 1 | **Comprobantes** | Every document above, newest first, with status badges |
 | 2 | Filter by status, by issue point, by dates; search by a number and by an access key | Each applies as you type or choose, with no button; **Limpiar** brings it back |
-| 3 | **Todo lo pendiente** | Nothing pending, or only what is waiting for SRI |
+| 3 | On **Comprobantes**, open **Pendientes** | The documents that have no final answer from SRI yet, in two groups: "Necesitan que los corrijas o re-emitas" (returned, not authorized, or not sent) and "Esperando al SRI" (sent, answer awaited). Locally the mock SRI answers at once, so you should see "Nada pendiente — Todos los comprobantes tienen ya una respuesta final del SRI" |
 
 **SRI's refusals are not here:** the mock SRI authorizes everything, so a returned or not-authorized invoice, its correction and resend, and a send that never reached SRI can't be made by hand locally. They are covered by the automated tests, and by R1 with the real SRI.
 

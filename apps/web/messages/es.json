@@ -1861,7 +1861,7 @@
       "title": "Emisión",
       "issuePoint": "Punto de emisión",
       "origin": "Factura que se modifica",
-      "none": "No tienes un punto de emisión habilitado para notas de crédito.",
+      "none": "No tienes un punto de emisión habilitado para notas de crédito. Actívalas en Empresa, en los tipos de comprobante de un punto de emisión (tu plan debe incluirlas).",
       "noneAction": "Revisa la empresa"
     },
     "reason": {
@@ -1924,7 +1924,7 @@
       "title": "Emisión",
       "issuePoint": "Punto de emisión",
       "origin": "Factura",
-      "none": "No tienes un punto de emisión habilitado para guías de remisión.",
+      "none": "No tienes un punto de emisión habilitado para guías de remisión. Actívalas en Empresa, en los tipos de comprobante de un punto de emisión (tu plan debe incluirlas).",
       "noneAction": "Revisa la empresa"
     },
     "transport": {

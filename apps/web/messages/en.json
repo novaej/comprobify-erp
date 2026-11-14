@@ -1861,7 +1861,7 @@
       "title": "Issuing",
       "issuePoint": "Issue point",
       "origin": "Invoice being modified",
-      "none": "You have no issue point enabled for credit notes.",
+      "none": "You have no issue point enabled for credit notes. Turn them on in Company, in an issue point's document types (your plan must include them).",
       "noneAction": "Review the company"
     },
     "reason": {
@@ -1924,7 +1924,7 @@
       "title": "Issuing",
       "issuePoint": "Issue point",
       "origin": "Invoice",
-      "none": "You have no issue point enabled for delivery guides.",
+      "none": "You have no issue point enabled for delivery guides. Turn them on in Company, in an issue point's document types (your plan must include them).",
       "noneAction": "Review the company"
     },
     "transport": {

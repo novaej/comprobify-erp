@@ -60,6 +60,9 @@ export function FormDialog({
           className="flex flex-col gap-4"
           onSubmit={(event) => {
             event.preventDefault();
+            // A dialog is rendered in a portal, but React still bubbles its events to the form
+            // the dialog sits inside: that form must not take this submit as its own.
+            event.stopPropagation();
             const form = new FormData(event.currentTarget);
             for (const [name, value] of Object.entries(extra)) form.set(name, value);
             run.run(form);

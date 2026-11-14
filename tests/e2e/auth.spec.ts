@@ -669,6 +669,8 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await look(page, 'template-save');
     await save.getByRole('button', { name: 'Guardar como plantilla' }).click();
     await expect(page.getByText('Plantilla guardada.')).toBeVisible();
+    // Saving a template is not issuing the invoice: its confirmation must not open.
+    await expect(page.getByRole('dialog', { name: '¿Emitir la factura?' })).toHaveCount(0);
     await page.goto('/es/documents/new');
     await page.getByRole('button', { name: 'Cargar plantilla' }).click();
     const templates = page.getByRole('dialog', { name: 'Cargar una plantilla' });

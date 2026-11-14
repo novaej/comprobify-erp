@@ -416,6 +416,8 @@ export function InvoiceForm({
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
+        // Only this form's own submit: a dialog inside it (the template's) is not an invoice.
+        if (event.target !== event.currentTarget) return;
         setError(undefined);
         setLineError(undefined);
         // A line missing its code or description would be refused by core with no way to tell

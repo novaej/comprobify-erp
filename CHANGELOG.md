@@ -147,6 +147,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Fixed
 
+- Saving an invoice as a template no longer opens the invoice's own confirmation: a dialog's submit, rendered in a portal, bubbled to the form it sat inside. Dialogs and forms built on the shared form handlers now stop their submit there.
 - A product's opening balance can be set in a second warehouse after the first has its own: the warehouse choice stays on the dialog, lists the warehouses that have not moved, and no longer keeps pointing at the one already set.
 - A CSV opened in Excel with the wrong delimiter and saved again, which holds each line as one quoted cell, is read as the lines inside instead of failing with "the file needs the columns…".
 - An import file saved by Excel for Mac as tab-delimited text or "CSV (Macintosh)" is read as Mac Roman, so accents are kept (it was read as Windows-1252, turning ú into œ and é into Ž). The downloaded templates now start with the same byte order mark as the exports, so Excel shows their accents correctly instead of "l√≠nea".
