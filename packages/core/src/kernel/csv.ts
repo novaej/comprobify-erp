@@ -4,7 +4,7 @@
 
 export type Csv = { delimiter: ',' | ';' | '\t'; rows: string[][] };
 
-export function parseCsv(text: string): Csv {
+export function parseCsv(text: string, unwrapped = false): Csv {
   const source = text.replace(/^\uFEFF/, '');
   const firstLine = source.split(/\r?\n/, 1)[0] ?? '';
   const count = (mark: string) => firstLine.split(mark).length - 1;
@@ -43,7 +43,17 @@ export function parseCsv(text: string): Csv {
     rows.push(row);
   }
   // Blank lines, which spreadsheets leave at the end, are not rows.
-  return { delimiter, rows: rows.filter((cells) => cells.some((cell) => cell.trim() !== '')) };
+  const kept = rows.filter((cells) => cells.some((cell) => cell.trim() !== ''));
+  // A file opened with the wrong delimiter and saved again holds each whole line as one quoted
+  // cell, tabs or semicolons inside: every row has a single cell and the header's cell holds the
+  // delimiter. Read the cells' contents as the lines they are.
+  const wrapped =
+    !unwrapped &&
+    kept.length > 0 &&
+    kept.every((cells) => cells.length === 1) &&
+    /[\t;,]/.test(kept[0]![0]!);
+  if (wrapped) return parseCsv(kept.map((cells) => cells[0]!).join('\r\n'), true);
+  return { delimiter, rows: kept };
 }
 
 // A number as typed in that spreadsheet: '2,50' with ';' files, '2.50' with ',' files. A tab file

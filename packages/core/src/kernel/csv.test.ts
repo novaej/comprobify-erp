@@ -19,6 +19,26 @@ describe('a tab-delimited file', () => {
   });
 });
 
+describe('a file saved with every line as one quoted cell', () => {
+  it('is read as the lines inside, as when Excel opened it with the wrong delimiter', () => {
+    // What came back from Excel for Mac after the template was opened as one column.
+    const text = '"codigo\tsucursal\tcantidad\tcosto_unitario"\r\n"TE-1\t001\t30\t1,4"\r\n';
+    expect(parseCsv(text)).toEqual({
+      delimiter: '\t',
+      rows: [
+        ['codigo', 'sucursal', 'cantidad', 'costo_unitario'],
+        ['TE-1', '001', '30', '1,4'],
+      ],
+    });
+    // Semicolons too, and a real one-column file is left alone.
+    expect(parseCsv('"a;b"\n"1;2"\n').rows).toEqual([
+      ['a', 'b'],
+      ['1', '2'],
+    ]);
+    expect(parseCsv('nombre\nAna\n').rows).toEqual([['nombre'], ['Ana']]);
+  });
+});
+
 describe('parseCsv', () => {
   it('reads a comma file with quotes and a trailing blank line', () => {
     expect(parseCsv('code,name\r\nA,"Café, molido"\r\nB,"Dice ""hola"""\r\n\r\n')).toEqual({

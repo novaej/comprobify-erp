@@ -39,7 +39,12 @@ export function StockActions({
     warehouses[0]?.value ??
     '';
   const [warehouseId, setWarehouseId] = useState(initial);
-  const [openingWarehouseId, setOpeningWarehouseId] = useState(fresh[0]?.value ?? '');
+  const [chosenOpening, setOpeningWarehouseId] = useState(fresh[0]?.value ?? '');
+  // The choice can go stale once a warehouse has its balance (it has moved, so it is no longer
+  // offered): fall back to the first one that has not.
+  const openingWarehouseId = fresh.some((warehouse) => warehouse.value === chosenOpening)
+    ? chosenOpening
+    : (fresh[0]?.value ?? '');
   const [direction, setDirection] = useState<'IN' | 'OUT'>('IN');
   const average = warehouses.find((warehouse) => warehouse.value === warehouseId)?.averageCost;
 
@@ -127,7 +132,7 @@ export function StockActions({
         success={t('openingDone')}
         extra={{ productId, warehouseId: openingWarehouseId }}
       >
-        {fresh.length > 1 && (
+        {warehouses.length > 1 && (
           <FormField label={t('warehouse')} required>
             {(a11y) => (
               <ChoiceSelect

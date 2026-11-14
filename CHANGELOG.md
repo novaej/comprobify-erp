@@ -147,6 +147,8 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Fixed
 
+- A product's opening balance can be set in a second warehouse after the first has its own: the warehouse choice stays on the dialog, lists the warehouses that have not moved, and no longer keeps pointing at the one already set.
+- A CSV opened in Excel with the wrong delimiter and saved again, which holds each line as one quoted cell, is read as the lines inside instead of failing with "the file needs the columns…".
 - An import file saved by Excel for Mac as tab-delimited text or "CSV (Macintosh)" is read as Mac Roman, so accents are kept (it was read as Windows-1252, turning ú into œ and é into Ž). The downloaded templates now start with the same byte order mark as the exports, so Excel shows their accents correctly instead of "l√≠nea".
 - A file saved from Excel as tab-delimited text, or as UTF-16 "Unicode Text", imports instead of failing with "missing header": the delimiter is read from the header (`;`, `,` or tab) and the encoding from the file (UTF-8, UTF-16 or Windows-1252). A tab file takes a decimal comma or point.
 - A CSV saved from Spanish Excel as plain "CSV" (Windows-1252) is read correctly on import: accents in names no longer become replacement characters ("Az�car"). A UTF-8 file is read as before.

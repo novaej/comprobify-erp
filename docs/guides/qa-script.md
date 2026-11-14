@@ -59,9 +59,9 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | D2 | Clients | ✅ |
 | D3 | Providers | ✅ |
 | D4 | Products and clients by CSV | ✅ |
-| E1 | Opening balances | ⬜ |
-| E2 | Adjustments | ⬜ |
-| E3 | Valuation and the nightly check | ⬜ |
+| E1 | Opening balances | ✅ |
+| E2 | Adjustments | ✅ |
+| E3 | Valuation and the nightly check | ✅ |
 | F1 | An invoice, from the keyboard | ⬜ |
 | F2 | Consumidor final and its limit | ⬜ |
 | F3 | Templates | ⬜ |
@@ -224,6 +224,7 @@ Use these throughout, so later flows can refer to them. All passwords: `una clav
 | Customer company | Comercial Andina S.A., RUC `1712345678001` (or your own RUC and legal name, if you use your own signature: see 0.3) |
 | Operator company | Comprobify Operadora S.A., RUC `1790012345001` |
 | Second company | Andina Norte S.A., RUC `1714070046001` (signature expires in 10 days) |
+| Warehouses | Each branch has one: **Matriz** (branch `001`, issue point `001-001`) and **Norte** (branch `002`, made in C2 step 6). Use **Matriz** in every flow unless a step says Norte. Invoices take stock from the warehouse of their issue point, so from Matriz |
 | Client, person | María Pérez, cédula `1710034065`, `maria@cliente.test` |
 | Client, company | Distribuidora Sur S.A., RUC `0992339411001`, `compras@sur.test` |
 | Provider | Importadora Andes S.A., RUC `1710104257001`, `ventas@andes.test` |
@@ -508,24 +509,26 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 
 ### E1 · Opening balances
 
-**Needs:** D1. **Leaves:** CAF-1 50 kg at $2,25 and TE-1 30 at $1,40 in Matriz.
+**Needs:** D1, C2 step 6 (the Norte branch). **Leaves:** in Matriz CAF-1 50 kg at $2,25 and TE-1 30 at $1,40; in Norte CAF-1 20 at $2,00.
 
 | # | Do | Expect |
 |---|---|---|
 | 1 | **Inventario** | The stocked products at zero, one row per warehouse (Matriz, Norte) |
 | 2 | CAF-1 → **Registrar saldo inicial**: Matriz, 50, cost 2,25 | On hand 50, average cost 2,25 |
+| 2b | CAF-1 → **Registrar saldo inicial** again | The **Almacén** choice is there and lists only Norte, since Matriz already has its balance. Set Norte to 20 at cost 2,00; CAF-1 shows Matriz 50 and Norte 20. (Norte exists once the branch `002` of C2 step 6 is created; without it there is only Matriz and no choice to make) |
 | 3 | **Importar saldos iniciales** with a file: `TE-1;001;30;1,40` and `CAF-1;001;10;2,00` | Refused, line 3: CAF-1 already has movements in that warehouse |
-| 4 | Remove the CAF-1 line and import | "Se importó 1 saldo inicial."; TE-1 at 30 |
+| 4 | Remove the CAF-1 line (open the file in Excel, delete the row, save as "CSV UTF-8") and import | "Se importó 1 saldo inicial."; TE-1 at 30. A file Excel saved with each line as one quoted cell is read too |
 | 5 | Type "te" in the search box, then choose a warehouse | Each applies at once, with no button, and the cursor stays in the box |
 
 ### E2 · Adjustments
 
-**Needs:** E1. **Leaves:** CAF-1 at 48.
+**Needs:** E1. **Leaves:** CAF-1 at 48 in Matriz and 20 in Norte.
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | CAF-1 → **Ajustar existencias**: out 2, reason "Merma" | 48 on hand; a movement "Salida" with the reason |
-| 2 | Out 1000 | Refused: not enough stock |
+| 1 | CAF-1 → **Ajustar existencias**: warehouse **Matriz**, out 2, reason "Merma" | Matriz 48 on hand (Norte still 20); a movement "Salida" with the reason |
+| 2 | Same, Matriz, out 1000 | Refused: not enough stock |
+| 2b | Warehouse **Norte**, out 25 | Refused: Norte has only 20, even though the product has 68 in all |
 | 3 | **Empresa** → turn on **Permitir existencias negativas**, then off again | Saved each time |
 
 ### E3 · Valuation and the nightly check
@@ -534,9 +537,9 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | **Inventario** → valuation | Each product's quantity, average cost and value; the total |
-| 2 | Its CSV | Opens in Excel with the same figures |
-| 3 | `pnpm run-job inventory.verify` | In the terminal: the check runs and finds no drift |
+| 1 | **Inventario** → valuation | Each product's quantity, average cost and value, by warehouse; the total (CAF-1 in both Matriz and Norte) |
+| 2 | Download its CSV and open it in Excel | The same quantities, costs and values as on the screen, by warehouse, with accents intact |
+| 3 | `pnpm run-job inventory.verify` | The command only queues the job ("Queued inventory.verify …; the worker runs it next"). Look in the terminal where `pnpm dev` runs, the worker's output: within seconds a line "Checked N stock levels, 0 with drift" (N is the products times their warehouses). A line "A stock level differs from its ledger" would be a problem |
 
 ---
 
@@ -555,7 +558,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 | 5 | **Ver PDF** (the RIDE) | The RIDE with the logo from B3, the lines and the access key |
 | 6 | The XML link | The authorized XML |
 | 7 | Terminal | A buyer email to `maria@cliente.test` with the RIDE and XML attached |
-| 8 | **Inventario** → CAF-1 | 46 on hand; a "Venta" movement for the invoice |
+| 8 | **Inventario** → CAF-1 | Matriz 46 on hand (the invoice left from Matriz, the warehouse of issue point 001-001); Norte still 20; a "Venta" movement for the invoice |
 
 ### F2 · Consumidor final and its limit
 
@@ -584,7 +587,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 | 1 | Invoice A → **Nota de crédito** | A form with A's lines and what can still be credited |
 | 2 | Credit CAF-1 × 1, tick **Devolver los productos al inventario**, a reason | **Emitir nota de crédito** → authorized |
 | 3 | Invoice A and the note | Each links to the other |
-| 4 | **Inventario** → CAF-1 | 47: one came back |
+| 4 | **Inventario** → CAF-1 | Matriz 47: one came back there; Norte still 20 |
 | 5 | Try to credit more than is left on A | Refused |
 
 ### F5 · A guía de remisión
@@ -640,7 +643,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | **Recibir mercadería**: CAF-1 × 10 now | "Parcialmente recibida"; CAF-1 up by 10, its average cost recalculated |
+| 1 | **Recibir mercadería**: CAF-1 × 10 now | "Parcialmente recibida"; CAF-1 up by 10 in Matriz (the order's warehouse), its average cost recalculated; Norte unchanged |
 | 2 | Receive the rest | "Recibida"; TE-1 up by 12 |
 | 3 | Try to receive more | Refused or nothing left to receive |
 | 4 | **Inventario** → CAF-1 → movements | The receipts, with the order's cost |
@@ -663,8 +666,8 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | **Pedidos de venta** → **Nuevo pedido**: Distribuidora Sur, CAF-1 × 10 | **Guardar borrador** |
-| 2 | **Confirmar pedido** | Confirmed; **Inventario** shows 10 CAF-1 reserved, available down by 10 |
+| 1 | **Pedidos de venta** → **Nuevo pedido**: Distribuidora Sur, warehouse **Matriz**, CAF-1 × 10 | **Guardar borrador** |
+| 2 | **Confirmar pedido** | Confirmed; **Inventario** shows 10 CAF-1 reserved in Matriz, its available down by 10 (Norte's untouched) |
 | 3 | A second order, TE-1 × 2, confirm it, then **Anular pedido** | The reservation is released |
 
 ### H2 · Invoice the order in parts
