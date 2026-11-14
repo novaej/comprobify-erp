@@ -1,12 +1,11 @@
 'use client';
 
-import { Button } from '@comprobify/ui/components/button';
 import { Input } from '@comprobify/ui/components/input';
-import { Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { ChoiceSelect, type Choice } from '@/components/choice-select';
 import { FormField } from '@/components/form-field';
+import { useLiveFilters } from '@/components/use-live-filters';
 import { Link } from '@/i18n/navigation';
 
 const ALL = 'all';
@@ -22,8 +21,13 @@ export function StockFilters({
   const t = useTranslations('inventory');
   const [warehouse, setWarehouse] = useState(values.warehouseId ?? ALL);
   const filtered = Object.values(values).some(Boolean);
+  const live = useLiveFilters('/inventory', [warehouse]);
   return (
-    <form role="search" className="mb-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_14rem_auto]">
+    <form
+      {...live.formProps}
+      role="search"
+      className="mb-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_14rem_auto]"
+    >
       <FormField label={t('search')} labelClassName="sr-only">
         {(a11y) => (
           <Input
@@ -32,6 +36,7 @@ export function StockFilters({
             type="search"
             defaultValue={values.q ?? ''}
             placeholder={t('search')}
+            onChange={live.onTyping}
           />
         )}
       </FormField>
@@ -51,10 +56,6 @@ export function StockFilters({
       )}
       {warehouse !== ALL && <input type="hidden" name="warehouseId" value={warehouse} />}
       <div className="flex gap-2">
-        <Button type="submit" variant="outline">
-          <Search className="mr-1.5 h-4 w-4" aria-hidden />
-          {t('filters.apply')}
-        </Button>
         {filtered && (
           <Link
             href="/inventory"

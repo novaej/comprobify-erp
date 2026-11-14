@@ -1,6 +1,15 @@
-import { and, asc, eq, ilike, or, schema, sql, type Database, type Tx } from '@comprobify/db';
+import { and, eq, ilike, or, schema, sql, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
-import { DomainError, requireFeature, requirePermission, type ActorContext } from '../kernel';
+import {
+  DomainError,
+  listOrder,
+  requireFeature,
+  requirePermission,
+  stateCondition,
+  type ActorContext,
+  type ListDirection,
+  type StateOptions,
+} from '../kernel';
 import { clientInput } from './input';
 
 // FR-MD-3: who the company buys from, with the client's identity rules: the same types,
@@ -27,10 +36,17 @@ function canManage(ctx: ActorContext) {
 }
 
 // Active first by name; a search matches the name or the identification.
+export const PROVIDER_SORTS = ['name', 'identification'] as const;
+
 export async function listProviders(
   ctx: ActorContext,
   db: Database,
-  options: { query?: string; includeInactive?: boolean } = {},
+  options: StateOptions & {
+    query?: string;
+    idType?: string;
+    sort?: (typeof PROVIDER_SORTS)[number];
+    direction?: ListDirection;
+  } = {},
 ): Promise<Provider[]> {
   canRead(ctx);
   const { providers } = schema;
@@ -42,13 +58,22 @@ export async function listProviders(
       .from(providers)
       .where(
         and(
-          options.includeInactive ? undefined : eq(providers.active, true),
+          stateCondition(providers.active, options),
+          options.idType ? eq(providers.idType, options.idType) : undefined,
           pattern
             ? or(ilike(providers.name, pattern), ilike(providers.identification, pattern))
             : undefined,
         ),
       )
-      .orderBy(sql`${providers.active} DESC`, asc(providers.name))
+      .orderBy(
+        ...listOrder(
+          providers.active,
+          providers.name,
+          { name: providers.name, identification: providers.identification },
+          options.sort,
+          options.direction,
+        ),
+      )
       .limit(200),
   );
 }

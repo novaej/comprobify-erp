@@ -475,6 +475,30 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(page.getByRole('table', { name: 'Clientes' })).toContainText('María López');
     await look(page, 'clients');
 
+    // The list follows the search as it is typed, with no button, and keeps the cursor.
+    const search = page.getByRole('searchbox', { name: 'Buscar por nombre o identificación' });
+    await search.fill('zzz-no-existe');
+    await expect(page).toHaveURL(/q=zzz-no-existe/);
+    await expect(page.getByText('Sin resultados', { exact: false }).first()).toBeVisible();
+    await expect(search).toBeFocused();
+    await page.getByRole('button', { name: 'Borrar la búsqueda' }).click();
+    await expect(page.getByRole('table', { name: 'Clientes' })).toContainText('María López');
+    // A filter and a sorted column header, both in the URL.
+    await page.getByRole('combobox', { name: 'Estado' }).click();
+    await page.getByRole('option', { name: 'Inactivos' }).click();
+    await expect(page).toHaveURL(/status=inactive/);
+    // Nobody is inactive: the empty state says no one matches.
+    await expect(page.getByText('Sin resultados', { exact: false }).first()).toBeVisible();
+    await expect(page.getByRole('table', { name: 'Clientes' })).toHaveCount(0);
+    await page.getByRole('combobox', { name: 'Estado' }).click();
+    await page.getByRole('option', { name: 'Todos los estados' }).click();
+    await page.getByRole('link', { name: 'Ordenar por Nombre' }).click();
+    await expect(page).toHaveURL(/sort=name&dir=asc/);
+    await expect(page.getByRole('columnheader', { name: 'Nombre' })).toHaveAttribute(
+      'aria-sort',
+      'ascending',
+    );
+
     await nav.getByRole('link', { name: 'Productos' }).click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Productos y servicios');
     await page.getByRole('button', { name: 'Nuevo producto' }).click();

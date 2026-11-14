@@ -129,6 +129,6 @@ export {
   or,
   sql,
 } from 'drizzle-orm';
-export type { SQL } from 'drizzle-orm';
+export type { AnyColumn, SQL } from 'drizzle-orm';
 export { UnsafeDatabaseError, findUnprotectedTables } from './boot-guard';
 export type { Queryable } from './boot-guard';

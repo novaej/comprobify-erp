@@ -1,6 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import { csvDecimal, parseCsv, toCsv } from './csv';
 
+describe('a tab-delimited file', () => {
+  it('is read by its header, with a decimal comma or point', () => {
+    const text = 'codigo\tnombre\tprecio\r\nAZU-1\tAzúcar\t1,1\r\n';
+    expect(parseCsv(text)).toEqual({
+      delimiter: '\t',
+      rows: [
+        ['codigo', 'nombre', 'precio'],
+        ['AZU-1', 'Azúcar', '1,1'],
+      ],
+    });
+    expect(csvDecimal('1,1', '\t')).toBe('1.1');
+    expect(csvDecimal('1.1', '\t')).toBe('1.1');
+    // The other two keep their habit.
+    expect(csvDecimal('1,1', ';')).toBe('1.1');
+    expect(csvDecimal('1,1', ',')).toBe('1,1');
+  });
+});
+
 describe('parseCsv', () => {
   it('reads a comma file with quotes and a trailing blank line', () => {
     expect(parseCsv('code,name\r\nA,"Café, molido"\r\nB,"Dice ""hola"""\r\n\r\n')).toEqual({

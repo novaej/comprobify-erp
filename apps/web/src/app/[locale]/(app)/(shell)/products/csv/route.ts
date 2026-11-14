@@ -18,7 +18,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ locale: st
     return new Response(toCsv(rows, spanish ? ';' : ','), {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': 'attachment; filename="products.csv"',
+        'Content-Disposition': `attachment; filename="${spanish ? 'productos.csv' : 'products.csv'}"`,
         'Cache-Control': 'private, no-store',
       },
     });

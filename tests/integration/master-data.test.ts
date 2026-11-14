@@ -117,6 +117,45 @@ describe('clients and products', () => {
     ]);
   });
 
+  it('lists by state, type and order, as the screens ask', async () => {
+    const ana = await createClient(owner, db, { ...client('ZP-1', '06'), name: 'Zeta Ana' });
+    const bruno = await createClient(owner, db, { ...client('ZP-2', '08'), name: 'Zeta Bruno' });
+    await setClientActive(owner, db, { id: bruno.id, active: false });
+    const names = async (options: Parameters<typeof listClients>[2]) =>
+      (await listClients(owner, db, { query: 'zeta', ...options })).map((row) => row.name);
+    expect(await names({ status: 'all' })).toEqual(['Zeta Ana', 'Zeta Bruno']);
+    expect(await names({ status: 'active' })).toEqual(['Zeta Ana']);
+    expect(await names({ status: 'inactive' })).toEqual(['Zeta Bruno']);
+    expect(await names({ status: 'all', idType: '08' })).toEqual(['Zeta Bruno']);
+    // The older switch still means what it did.
+    expect(await names({ includeInactive: true })).toHaveLength(2);
+    expect(await names({})).toEqual(['Zeta Ana']);
+    // A chosen order replaces "active first"; the other direction reverses it.
+    expect(await names({ status: 'all', sort: 'identification', direction: 'desc' })).toEqual([
+      'Zeta Bruno',
+      'Zeta Ana',
+    ]);
+    expect(await names({ status: 'all', sort: 'name', direction: 'desc' })).toEqual([
+      'Zeta Bruno',
+      'Zeta Ana',
+    ]);
+    expect(ana.active).toBe(true);
+
+    const cheap = await createProduct(owner, db, {
+      ...product('ZP-1'),
+      name: 'Zeta barato',
+      kind: 'GOOD',
+      price: '5',
+    });
+    await createProduct(owner, db, { ...product('ZP-2'), name: 'Zeta caro', price: '50' });
+    const codes = async (options: Parameters<typeof listProducts>[2]) =>
+      (await listProducts(owner, db, { query: 'zeta', ...options })).map((row) => row.code);
+    expect(await codes({ kind: 'GOOD' })).toEqual([cheap.code]);
+    expect(await codes({ sort: 'price', direction: 'desc' })).toEqual(['ZP-2', 'ZP-1']);
+    expect(await codes({ sort: 'price', direction: 'asc' })).toEqual(['ZP-1', 'ZP-2']);
+    expect(await codes({ sort: 'code', direction: 'desc' })).toEqual(['ZP-2', 'ZP-1']);
+  });
+
   it('needs the role and the feature, in core', async () => {
     const viewer = { ...owner, permissions: ['clients.read', 'catalog.read'] };
     await expect(listClients(viewer, db)).resolves.toBeInstanceOf(Array);

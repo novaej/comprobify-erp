@@ -1,13 +1,19 @@
 // CSV as spreadsheets save it. Excel in Spanish uses ';' between fields and ',' for decimals;
-// in English ',' and '.'. The delimiter is the one the header line uses.
+// in English ',' and '.'. A file saved as tab-delimited text is read too. The delimiter is the
+// one the header line uses most.
 
-export type Csv = { delimiter: ',' | ';'; rows: string[][] };
+export type Csv = { delimiter: ',' | ';' | '\t'; rows: string[][] };
 
 export function parseCsv(text: string): Csv {
   const source = text.replace(/^\uFEFF/, '');
   const firstLine = source.split(/\r?\n/, 1)[0] ?? '';
-  const delimiter =
-    (firstLine.match(/;/g)?.length ?? 0) > (firstLine.match(/,/g)?.length ?? 0) ? ';' : ',';
+  const count = (mark: string) => firstLine.split(mark).length - 1;
+  const delimiter: Csv['delimiter'] =
+    count('\t') > count(';') && count('\t') > count(',')
+      ? '\t'
+      : count(';') > count(',')
+        ? ';'
+        : ',';
   const rows: string[][] = [];
   let row: string[] = [];
   let field = '';
@@ -40,10 +46,11 @@ export function parseCsv(text: string): Csv {
   return { delimiter, rows: rows.filter((cells) => cells.some((cell) => cell.trim() !== '')) };
 }
 
-// A number as typed in that spreadsheet: '2,50' with ';' files, '2.50' with ',' files.
+// A number as typed in that spreadsheet: '2,50' with ';' files, '2.50' with ',' files. A tab file
+// takes either, as it has no regional habit of its own.
 export function csvDecimal(value: string, delimiter: Csv['delimiter']): string {
   const trimmed = value.trim();
-  return delimiter === ';' ? trimmed.replace(',', '.') : trimmed;
+  return delimiter === ',' ? trimmed : trimmed.replace(',', '.');
 }
 
 // A cell as spreadsheets read it: quoted when it holds the delimiter, a quote or a line break.

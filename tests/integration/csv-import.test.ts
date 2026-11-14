@@ -125,6 +125,27 @@ describe('CSV import and export', () => {
     );
   });
 
+  it('reads a file saved as tab-delimited text, as Excel does for "Texto (delimitado por tabulaciones)"', async () => {
+    const file = [
+      'codigo\tcodigo_auxiliar\tnombre\tdescripcion\ttipo\tunidad\tprecio\tcosto\tiva\tcontrola_stock\tactivo',
+      'TAB-1\t\tAzúcar\t\tbien\tlb\t1,1\t\t4\tsi\tsi',
+      'TAB-2\t\tInstalación\t\tservicio\t\t30\t\t4\tno\tsi',
+    ].join('\r\n');
+    expect(await importProducts(await as(ownerId), db, file)).toEqual({
+      created: 2,
+      updated: 0,
+      problems: [],
+    });
+    expect(
+      (await everyProduct())
+        .filter((p) => p.code.startsWith('TAB-'))
+        .map((p) => [p.code, p.name, p.price]),
+    ).toEqual([
+      ['TAB-1', 'Azúcar', '1.100000'],
+      ['TAB-2', 'Instalación', '30.000000'],
+    ]);
+  });
+
   it('updates by code, and keeps `active` as it is unless the file says', async () => {
     const owner = await as(ownerId);
     await sql(`UPDATE products SET active = false WHERE tenant_id = $1 AND code = 'SRV-1'`, [

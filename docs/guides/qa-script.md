@@ -55,10 +55,10 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | C3 | The operator invoices the payment | ✅ |
 | C4 | A document pack, closed without an invoice | ✅ |
 | C5 | Pay by card through Payphone | ✅ |
-| D1 | Products and services | ⬜ |
-| D2 | Clients | ⬜ |
-| D3 | Providers | ⬜ |
-| D4 | Products and clients by CSV | ⬜ |
+| D1 | Products and services | ✅ |
+| D2 | Clients | ✅ |
+| D3 | Providers | ✅ |
+| D4 | Products and clients by CSV | ✅ |
 | E1 | Opening balances | ⬜ |
 | E2 | Adjustments | ⬜ |
 | E3 | Valuation and the nightly check | ⬜ |
@@ -462,7 +462,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 | 2 | Create `TE-1` Té verde, $3,20, IVA 15 %, controls stock | Created |
 | 3 | Create `SRV-1` Instalación, servicio, $30, IVA 15 % | Created; a service can't track stock (the option is off or refused) |
 | 4 | Create another `CAF-1` | Refused: the code exists |
-| 5 | Search "caf" | Only Café molido |
+| 5 | Type "caf" in the search box, without pressing anything | The list narrows by itself after a short pause to Café molido only, the cursor stays in the box, the address gets `?q=caf`, and a ✕ clears it. Then try the **Estado** filter (Activos / Inactivos / Todos), the **Tipo** filter (Bienes / Servicios) and clicking the **Nombre** and **Precio** headers: each applies at once, the header shows its arrow, and clicking it again reverses the order |
 | 6 | Deactivate SRV-1, then reactivate it | Each asks first; the badge changes |
 
 ### D2 · Clients
@@ -475,6 +475,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 | 2 | María Pérez, cédula `1710034065`, `maria@cliente.test`, 30 days of credit | Created |
 | 3 | Distribuidora Sur S.A., RUC `0992339411001`, `compras@sur.test` | Created |
 | 4 | Edit María's phone | Saved |
+| 5 | Type "mar" in the search box, then choose the identification type **Cédula**, then the state **Inactivos**, then click the **Identificación** header | Each applies at once. "mar" shows María only; Cédula keeps María; Inactivos shows "Sin resultados"; the header sorts by identification and shows its arrow |
 
 ### D3 · Providers
 
@@ -484,6 +485,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 |---|---|---|
 | 1 | **Proveedores** → **Nuevo proveedor**: Importadora Andes S.A., RUC `1710104257001`, `ventas@andes.test` | Created |
 | 2 | Edit and save | Saved |
+| 3 | Type "andes" in the search box; try **Estado** and click the **Nombre** header | The same behavior as in Clientes: applies at once, nothing to press |
 
 ### D4 · Products and clients by CSV
 
@@ -492,10 +494,10 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 | # | Do | Expect |
 |---|---|---|
 | 1 | **Productos** → **Exportar CSV**, open it in Excel | One row per product, Spanish headers, `;` columns and decimal commas, "si"/"no" |
-| 2 | **Importar CSV** → **Descargar plantilla**, open it | A model with two rows |
-| 3 | Make a file with three rows: `AZU-1` Azúcar (bien, 1,10, IVA 4); `BAD-1` with IVA `99`; another `AZU-1` | |
-| 4 | Import it | Nothing imported; "Línea 3: revisa la columna «IVA»", "Línea 4: el código ya aparece antes en el archivo" |
-| 5 | Remove the two bad rows, import again | "Se creó 1 producto." Azúcar listed |
+| 2 | **Importar CSV** → **Descargar plantilla**, open it | The file is named `plantilla-productos.csv` (the export in step 1 is `productos.csv`); a header and two example rows, `EJ-1` and `EJ-2`, named "…(reemplaza esta línea)", so importing it unchanged can't touch the products you made |
+| 3 | Make a file with the header from the template and three rows, so the rows are lines 2, 3 and 4: line 2 `AZU-1` Azúcar (bien, 1,10, IVA 4); line 3 `BAD-1` with IVA `99`; line 4 `AZU-1` again, repeated inside the file | The file is ready: one good row, one with a wrong IVA, one repeating a code from the same file |
+| 4 | Import it | "2 líneas tienen problemas; no se importó nada." An import is all or nothing, so even the good first row (AZU-1) is not saved. Line 3: "revisa la columna «IVA»"; line 4: "el código ya aparece antes en el archivo" (meaning earlier in this same file, not in the catalogue) |
+| 5 | Remove the two bad rows, import again (save the file from Excel as plain "CSV" or as "CSV UTF-8": either works) | "Se creó 1 producto." Azúcar listed with its accent intact |
 | 6 | Import the export from step 1, unchanged | Updated, none created, nothing changed |
 | 7 | **Clientes** → **Importar CSV** with: `05;1700000001;Pedro Ruiz;pedro@cliente.test` (and the header from the template) | "Se creó 1 cliente." |
 | 8 | Change CAF-1's price in a CSV to 6,00 and import | CAF-1 updated to $6,00; set it back to 5,50 the same way |
@@ -514,6 +516,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 | 2 | CAF-1 → **Registrar saldo inicial**: Matriz, 50, cost 2,25 | On hand 50, average cost 2,25 |
 | 3 | **Importar saldos iniciales** with a file: `TE-1;001;30;1,40` and `CAF-1;001;10;2,00` | Refused, line 3: CAF-1 already has movements in that warehouse |
 | 4 | Remove the CAF-1 line and import | "Se importó 1 saldo inicial."; TE-1 at 30 |
+| 5 | Type "te" in the search box, then choose a warehouse | Each applies at once, with no button, and the cursor stays in the box |
 
 ### E2 · Adjustments
 
@@ -610,7 +613,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 | # | Do | Expect |
 |---|---|---|
 | 1 | **Comprobantes** | Every document above, newest first, with status badges |
-| 2 | Filter by status, by issue point, by dates; search by a number and by an access key | Each narrows the list; **Limpiar** brings it back |
+| 2 | Filter by status, by issue point, by dates; search by a number and by an access key | Each applies as you type or choose, with no button; **Limpiar** brings it back |
 | 3 | **Todo lo pendiente** | Nothing pending, or only what is waiting for SRI |
 
 **SRI's refusals are not here:** the mock SRI authorizes everything, so a returned or not-authorized invoice, its correction and resend, and a send that never reached SRI can't be made by hand locally. They are covered by the automated tests, and by R1 with the real SRI.
@@ -629,6 +632,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 | 2 | Edit it: TE-1 × 12 | Saved as a new revision |
 | 3 | **Ver PDF** | The order with the company's header and logo |
 | 4 | **Enviar la orden por correo** to `ventas@andes.test` | Sent; the order is no longer a draft; a `purchasing` email with the PDF in the terminal |
+| 5 | Back in **Órdenes de compra**, type the order number or "andes", then choose a status | The list follows at once, no button |
 
 ### G2 · Receive it in parts
 

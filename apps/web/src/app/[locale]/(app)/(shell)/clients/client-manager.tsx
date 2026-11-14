@@ -11,6 +11,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog';
 import { EmptyState } from '@/components/empty-state';
 import { FormDialog } from '@/components/form-dialog';
 import { FormField } from '@/components/form-field';
+import { SortHead, type ListSorting } from '@/components/sort-head';
 import {
   StackBody,
   StackCell,
@@ -46,14 +47,17 @@ export function ClientManager({
   termUnits,
   canManage,
   searching,
+  sorting,
 }: {
   clients: ClientRow[];
   idTypes: Choice[];
   termUnits: Choice[];
   canManage: boolean;
   searching: boolean;
+  sorting: ListSorting;
 }) {
   const t = useTranslations('clients');
+  const tList = useTranslations('listToolbar');
   const [editing, setEditing] = useState<ClientRow | 'new' | null>(null);
   const [toggling, setToggling] = useState<ClientRow | null>(null);
   const idLabel = new Map(idTypes.map((type) => [type.value, type.label]));
@@ -84,8 +88,19 @@ export function ClientManager({
           <StackTable aria-label={t('title')}>
             <StackHeader>
               <StackRow className="bg-muted/40">
-                <StackHead className="pl-4">{t('table.name')}</StackHead>
-                <StackHead>{t('table.identification')}</StackHead>
+                <SortHead
+                  {...sorting}
+                  column="name"
+                  label={t('table.name')}
+                  actionLabel={tList('sortBy', { column: t('table.name') })}
+                  className="pl-4"
+                />
+                <SortHead
+                  {...sorting}
+                  column="identification"
+                  label={t('table.identification')}
+                  actionLabel={tList('sortBy', { column: t('table.identification') })}
+                />
                 <StackHead>{t('table.email')}</StackHead>
                 <StackHead>{t('table.status')}</StackHead>
                 {canManage && (
@@ -241,7 +256,7 @@ function ClientDialog({
       <FormField label={t('emails')} hint={t('emailsHint')}>
         {(props) => <Input {...props} name="emails" defaultValue={client?.emails.join(', ')} />}
       </FormField>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <FormField label={t('phone')}>
           {(props) => (
             <Input
@@ -253,25 +268,23 @@ function ClientDialog({
             />
           )}
         </FormField>
-        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-2">
-          <FormField label={t('paymentTerm')}>
-            {(props) => (
-              <Input
-                {...props}
-                name="paymentTerm"
-                type="number"
-                min={1}
-                step={1}
-                defaultValue={client?.paymentTerm ?? ''}
-              />
-            )}
-          </FormField>
-          <FormField label={t('paymentTermUnit')}>
-            {(props) => (
-              <ChoiceSelect value={unit} onChange={setUnit} options={termUnits} a11y={props} />
-            )}
-          </FormField>
-        </div>
+        <FormField label={t('paymentTerm')}>
+          {(props) => (
+            <Input
+              {...props}
+              name="paymentTerm"
+              type="number"
+              min={1}
+              step={1}
+              defaultValue={client?.paymentTerm ?? ''}
+            />
+          )}
+        </FormField>
+        <FormField label={t('paymentTermUnit')}>
+          {(props) => (
+            <ChoiceSelect value={unit} onChange={setUnit} options={termUnits} a11y={props} />
+          )}
+        </FormField>
       </div>
       <FormField label={t('address')}>
         {(props) => (

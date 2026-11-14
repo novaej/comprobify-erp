@@ -13,6 +13,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog';
 import { EmptyState } from '@/components/empty-state';
 import { FormDialog } from '@/components/form-dialog';
 import { FormField } from '@/components/form-field';
+import { SortHead, type ListSorting } from '@/components/sort-head';
 import {
   StackBody,
   StackCell,
@@ -53,14 +54,17 @@ export function ProductManager({
   ivaRates,
   canManage,
   searching,
+  sorting,
 }: {
   products: ProductRow[];
   kinds: Choice[];
   ivaRates: Choice[];
   canManage: boolean;
   searching: boolean;
+  sorting: ListSorting;
 }) {
   const t = useTranslations('products');
+  const tList = useTranslations('listToolbar');
   const [editing, setEditing] = useState<ProductRow | 'new' | null>(null);
   const [toggling, setToggling] = useState<ProductRow | null>(null);
   const kindLabel = new Map(kinds.map((kind) => [kind.value, kind.label]));
@@ -91,9 +95,21 @@ export function ProductManager({
           <StackTable aria-label={t('title')}>
             <StackHeader>
               <StackRow className="bg-muted/40">
-                <StackHead className="pl-4">{t('table.name')}</StackHead>
+                <SortHead
+                  {...sorting}
+                  column="name"
+                  label={t('table.name')}
+                  actionLabel={tList('sortBy', { column: t('table.name') })}
+                  className="pl-4"
+                />
                 <StackHead>{t('table.kind')}</StackHead>
-                <StackHead className="text-right">{t('table.price')}</StackHead>
+                <SortHead
+                  {...sorting}
+                  column="price"
+                  label={t('table.price')}
+                  actionLabel={tList('sortBy', { column: t('table.price') })}
+                  className="text-right"
+                />
                 <StackHead>{t('table.iva')}</StackHead>
                 <StackHead>{t('table.status')}</StackHead>
                 {canManage && (

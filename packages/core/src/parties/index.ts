@@ -1,6 +1,5 @@
 import {
   and,
-  asc,
   CLIENT_ID_TYPES,
   eq,
   ilike,
@@ -12,7 +11,16 @@ import {
   type Tx,
 } from '@comprobify/db';
 import { z } from 'zod';
-import { DomainError, requireFeature, requirePermission, type ActorContext } from '../kernel';
+import {
+  DomainError,
+  listOrder,
+  requireFeature,
+  requirePermission,
+  stateCondition,
+  type ActorContext,
+  type ListDirection,
+  type StateOptions,
+} from '../kernel';
 import { clientInput, line } from './input';
 
 export { isValidCedula, isValidIdentification } from './identification';
@@ -24,6 +32,7 @@ export {
   createProvider,
   getProvider,
   listProviders,
+  PROVIDER_SORTS,
   providerForOrder,
   providerInput,
   setProviderActive,
@@ -53,10 +62,18 @@ function canManage(ctx: ActorContext) {
 }
 
 // Active first by name; a search matches the name or the identification.
+export const CLIENT_SORTS = ['name', 'identification'] as const;
+
 export async function listClients(
   ctx: ActorContext,
   db: Database,
-  options: { query?: string; includeInactive?: boolean } = {},
+  options: StateOptions & {
+    query?: string;
+    // By identification type (SRI's codes).
+    idType?: string;
+    sort?: (typeof CLIENT_SORTS)[number];
+    direction?: ListDirection;
+  } = {},
 ): Promise<Client[]> {
   canRead(ctx);
   const { clients } = schema;
@@ -68,13 +85,22 @@ export async function listClients(
       .from(clients)
       .where(
         and(
-          options.includeInactive ? undefined : eq(clients.active, true),
+          stateCondition(clients.active, options),
+          options.idType ? eq(clients.idType, options.idType) : undefined,
           pattern
             ? or(ilike(clients.name, pattern), ilike(clients.identification, pattern))
             : undefined,
         ),
       )
-      .orderBy(sql`${clients.active} DESC`, asc(clients.name))
+      .orderBy(
+        ...listOrder(
+          clients.active,
+          clients.name,
+          { name: clients.name, identification: clients.identification },
+          options.sort,
+          options.direction,
+        ),
+      )
       .limit(200),
   );
 }

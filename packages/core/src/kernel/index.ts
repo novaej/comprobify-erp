@@ -2,6 +2,14 @@ export { fixedClock, systemClock, type Clock } from './clock';
 export type { AccountStanding, ActorContext, PlatformActor, TenantMode } from './context';
 export { DomainError, isDomainError, type DomainErrorDetails } from './errors';
 export {
+  LIST_STATUSES,
+  listOrder,
+  stateCondition,
+  type ListDirection,
+  type ListStatus,
+  type StateOptions,
+} from './list-options';
+export {
   addDays,
   addMonths,
   daysBetween,

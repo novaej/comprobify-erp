@@ -1,5 +1,6 @@
 'use client';
 
+import { readCsvFile } from '@/lib/read-csv';
 import { Button } from '@comprobify/ui/components/button';
 import { Input } from '@comprobify/ui/components/input';
 import { AlertCircle, Download, Layers } from 'lucide-react';
@@ -50,7 +51,7 @@ export function CsvBatchForm({
     startTransition(async () => {
       // Success redirects to the batch; only a refusal or the rows to fix come back.
       const state = await startCsvBatchAction(locale, {
-        content: await file.text(),
+        content: await readCsvFile(file),
         issuePointId,
         method,
         term,
@@ -127,7 +128,8 @@ export function CsvBatchForm({
       <SectionCard title={tCsv('fileTitle')} description={tCsv('fileDescription')}>
         <div className="flex flex-col gap-4">
           <a
-            href={`data:text/csv;charset=utf-8,${encodeURIComponent(template)}`}
+            // With the byte order mark, as the exports have: Excel shows the accents correctly.
+            href={`data:text/csv;charset=utf-8,${encodeURIComponent(`\uFEFF${template}`)}`}
             download={tCsv('templateFile')}
             className="inline-flex items-center gap-1.5 self-start text-sm text-primary underline-offset-4 hover:underline"
           >

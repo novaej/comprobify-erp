@@ -135,6 +135,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Changed
 
+- Lists follow what is typed or chosen, with no button: the search of clients, products, providers, documents, inventory, purchase orders and sale orders applies after a short pause and keeps the cursor, and filters apply when chosen. Clients, products and providers also filter by state (Activos / Inactivos / Todos) and by type or identification, and sort by clicking a column header; the filters and order are in the URL (FR-MD-1, FR-MD-2, FR-MD-3, FR-UX-2).
 - A required field left empty (or a value outside its range) is now said under the field, in red and in the app's language, with the cursor taken to the first one, instead of the browser's tooltip in the browser's language. It applies to every field built with the shared form field.
 - The operator area is called Administración (Administration), not Plataforma (Platform), in menus, titles and messages.
 - Empresa turns off **Agregar establecimiento** and **Agregar punto** at the plan's limit and says why, with a link to the plan, as Usuarios does for invitations; core still refuses past the limit (FR-PLAN-3).
@@ -146,6 +147,9 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Fixed
 
+- An import file saved by Excel for Mac as tab-delimited text or "CSV (Macintosh)" is read as Mac Roman, so accents are kept (it was read as Windows-1252, turning ú into œ and é into Ž). The downloaded templates now start with the same byte order mark as the exports, so Excel shows their accents correctly instead of "l√≠nea".
+- A file saved from Excel as tab-delimited text, or as UTF-16 "Unicode Text", imports instead of failing with "missing header": the delimiter is read from the header (`;`, `,` or tab) and the encoding from the file (UTF-8, UTF-16 or Windows-1252). A tab file takes a decimal comma or point.
+- A CSV saved from Spanish Excel as plain "CSV" (Windows-1252) is read correctly on import: accents in names no longer become replacement characters ("Az�car"). A UTF-8 file is read as before.
 - A line field that is missing or refused on the invoice form is shown in red with its message under the field, not only in the banner at the bottom.
 - The admin sidebar has one link to the account (Mi cuenta). The "back to the app" arrow is gone: for an operator with no company it only came back to the admin area.
 - The invoice form says which line and field is missing or refused ("Falta el código de la línea 1", or "Línea 1: código" for a refusal from core), moves to the field, and keeps the error on the form after the confirmation box is closed.

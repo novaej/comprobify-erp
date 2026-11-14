@@ -1,5 +1,6 @@
 'use client';
 
+import { readCsvFile } from '@/lib/read-csv';
 import { Button } from '@comprobify/ui/components/button';
 import {
   Dialog,
@@ -62,7 +63,7 @@ export function CsvImportDialog({
   const send = () => {
     if (!file) return;
     startTransition(async () => {
-      const state = await action(locale, await file.text());
+      const state = await action(locale, await readCsvFile(file));
       const made = (state.imported ?? 0) + (state.created ?? 0) + (state.updated ?? 0);
       if (made > 0) {
         toast.success(
@@ -99,7 +100,9 @@ export function CsvImportDialog({
             }}
           >
             <a
-              href={`data:text/csv;charset=utf-8,${encodeURIComponent(template)}`}
+              // The byte order mark, as in the exports: Excel reads a UTF-8 file without it as another
+              // encoding and shows "línea" as "l√≠nea".
+              href={`data:text/csv;charset=utf-8,${encodeURIComponent(`\uFEFF${template}`)}`}
               download={t('templateFile')}
               className="inline-flex items-center gap-1.5 self-start text-sm text-primary underline-offset-4 hover:underline"
             >

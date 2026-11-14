@@ -14,10 +14,14 @@ import {
 import { z } from 'zod';
 import {
   DomainError,
+  listOrder,
   preciseInput,
   requireFeature,
   requirePermission,
+  stateCondition,
   type ActorContext,
+  type ListDirection,
+  type StateOptions,
 } from '../kernel';
 import { SELECTABLE_IVA_RATES } from '../sri';
 
@@ -83,11 +87,18 @@ function canManage(ctx: ActorContext) {
   requirePermission(ctx, 'catalog.manage');
 }
 
-// Active first by name; a search matches the name or either code.
+export const PRODUCT_SORTS = ['name', 'code', 'price'] as const;
+
+// Active first by name unless a sort is given; a search matches the name or either code.
 export async function listProducts(
   ctx: ActorContext,
   db: Database,
-  options: { query?: string; includeInactive?: boolean } = {},
+  options: StateOptions & {
+    query?: string;
+    kind?: (typeof PRODUCT_KINDS)[number];
+    sort?: (typeof PRODUCT_SORTS)[number];
+    direction?: ListDirection;
+  } = {},
 ): Promise<Product[]> {
   canRead(ctx);
   const { products } = schema;
@@ -99,7 +110,8 @@ export async function listProducts(
       .from(products)
       .where(
         and(
-          options.includeInactive ? undefined : eq(products.active, true),
+          stateCondition(products.active, options),
+          options.kind ? eq(products.kind, options.kind) : undefined,
           pattern
             ? or(
                 ilike(products.name, pattern),
@@ -109,7 +121,15 @@ export async function listProducts(
             : undefined,
         ),
       )
-      .orderBy(sql`${products.active} DESC`, asc(products.name))
+      .orderBy(
+        ...listOrder(
+          products.active,
+          products.name,
+          { name: products.name, code: products.code, price: products.price },
+          options.sort,
+          options.direction,
+        ),
+      )
       .limit(200),
   );
 }

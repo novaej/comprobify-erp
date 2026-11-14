@@ -1,11 +1,18 @@
-import { hasFeature, listProducts, PRODUCT_KINDS, SELECTABLE_IVA_RATES } from '@comprobify/core';
-import { Button, buttonVariants } from '@comprobify/ui/components/button';
-import { Input } from '@comprobify/ui/components/input';
-import { Download, Search } from 'lucide-react';
+import {
+  hasFeature,
+  listProducts,
+  PRODUCT_KINDS,
+  PRODUCT_SORTS,
+  SELECTABLE_IVA_RATES,
+} from '@comprobify/core';
+import { buttonVariants } from '@comprobify/ui/components/button';
+import { Download } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { FeatureLocked } from '@/components/feature-locked';
+import { ListToolbar } from '@/components/list-toolbar';
 import { NoAccess } from '@/components/no-access';
 import { PageHeader } from '@/components/page-header';
+import { listParams } from '@/server/list-params';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
@@ -20,16 +27,26 @@ export default async function ProductsPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [{ locale }, { q }] = await Promise.all([params, searchParams]);
+  const [{ locale }, raw] = await Promise.all([params, searchParams]);
+  const list = listParams(raw, PRODUCT_SORTS);
+  const kindParam = list.raw('kind');
+  const kind = PRODUCT_KINDS.find((value) => value === kindParam);
   setRequestLocale(locale);
   const { actor } = await loadShell(locale);
   if (!hasFeature(actor, 'CATALOG')) return <FeatureLocked actor={actor} />;
   if (!actor.permissions.includes('catalog.read')) return <NoAccess />;
 
   const { db } = await getRuntime();
-  const products = await listProducts(actor, db, { query: q, includeInactive: true });
+  const products = await listProducts(actor, db, {
+    query: list.query,
+    status: list.status ?? 'all',
+    kind,
+    sort: list.sort,
+    direction: list.direction,
+  });
+  const tList = await getTranslations('listToolbar');
   const t = await getTranslations('products');
   const tSri = await getTranslations('sri');
   const price = new Intl.NumberFormat(locale === 'en' ? 'en' : 'es-EC', {
@@ -59,19 +76,33 @@ export default async function ProductsPage({
           </>
         }
       />
-      <form className="mb-4 flex max-w-md gap-2" role="search">
-        <Input
-          name="q"
-          type="search"
-          defaultValue={q ?? ''}
-          aria-label={t('search')}
-          placeholder={t('search')}
-        />
-        <Button type="submit" variant="outline">
-          <Search className="mr-1.5 h-4 w-4" aria-hidden />
-          {t('searchButton')}
-        </Button>
-      </form>
+      <ListToolbar
+        searchLabel={t('search')}
+        query={list.query ?? ''}
+        filters={[
+          {
+            param: 'status',
+            label: tList('status'),
+            all: 'all',
+            value: list.status ?? 'all',
+            options: [
+              { value: 'all', label: tList('allStatuses') },
+              { value: 'active', label: tList('active') },
+              { value: 'inactive', label: tList('inactive') },
+            ],
+          },
+          {
+            param: 'kind',
+            label: tList('kind'),
+            all: 'all',
+            value: kind ?? 'all',
+            options: [
+              { value: 'all', label: tList('allKinds') },
+              ...PRODUCT_KINDS.map((value) => ({ value, label: t(`kinds.${value}`) })),
+            ],
+          },
+        ]}
+      />
       <ProductManager
         products={products.map((product) => ({
           id: product.id,
@@ -95,7 +126,13 @@ export default async function ProductsPage({
         kinds={PRODUCT_KINDS.map((kind) => ({ value: kind, label: t(`kinds.${kind}`) }))}
         ivaRates={SELECTABLE_IVA_RATES.map((code) => ({ value: code, label: ivaLabel(code) }))}
         canManage={actor.permissions.includes('catalog.manage')}
-        searching={Boolean(q)}
+        searching={Boolean(list.query || list.status || kind)}
+        sorting={{
+          path: '/products',
+          query: { q: list.query, status: list.status, kind },
+          sort: list.sort,
+          direction: list.direction,
+        }}
       />
     </div>
   );

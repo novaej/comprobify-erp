@@ -1,12 +1,11 @@
 'use client';
 
-import { Button } from '@comprobify/ui/components/button';
 import { Input } from '@comprobify/ui/components/input';
-import { Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { ChoiceSelect, type Choice } from '@/components/choice-select';
 import { FormField } from '@/components/form-field';
+import { useLiveFilters } from '@/components/use-live-filters';
 import { Link } from '@/i18n/navigation';
 
 const ALL = 'all';
@@ -22,9 +21,14 @@ export function OrderFilters({
   const t = useTranslations('saleOrders');
   const [status, setStatus] = useState(values.status ?? ALL);
   const filtered = Object.values(values).some(Boolean);
+  const live = useLiveFilters('/sale-orders', [status]);
 
   return (
-    <form role="search" className="mb-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_13rem_auto]">
+    <form
+      {...live.formProps}
+      role="search"
+      className="mb-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_13rem_auto]"
+    >
       <FormField label={t('searchButton')} labelClassName="sr-only">
         {(a11y) => (
           <Input
@@ -33,6 +37,7 @@ export function OrderFilters({
             type="search"
             defaultValue={values.q ?? ''}
             placeholder={t('search')}
+            onChange={live.onTyping}
           />
         )}
       </FormField>
@@ -48,10 +53,6 @@ export function OrderFilters({
       </FormField>
       {status !== ALL && <input type="hidden" name="status" value={status} />}
       <div className="flex gap-2">
-        <Button type="submit" variant="outline">
-          <Search className="mr-1.5 h-4 w-4" aria-hidden />
-          {t('filters.apply')}
-        </Button>
         {filtered && (
           <Link
             href="/sale-orders"
