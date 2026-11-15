@@ -72,9 +72,9 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | G1 | A purchase order | ✅ |
 | G2 | Receive it in parts | ✅ |
 | G3 | Cancel an order | ✅ |
-| H1 | A sale order holds stock | ⬜ |
-| H2 | Invoice the order in parts | ⬜ |
-| H3 | Collect and the aging report | ⬜ |
+| H1 | A sale order holds stock | ✅ |
+| H2 | Invoice the order in parts | ✅ |
+| H3 | Collect and the aging report | ✅ step 12 (Actividad) waits for the audit work |
 | I1 | From sale orders | ⬜ |
 | I2 | From a CSV | ⬜ |
 | J1 | Invite the team | ⬜ |
@@ -686,15 +686,26 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 
 ### H3 · Collect and the aging report
 
-**Needs:** H2, F1. **Leaves:** one invoice partly paid.
+**Needs:** H2, F1. **Leaves:** Distribuidora Sur's first invoice (25,30) partly collected, its second (37,95) untouched.
+
+The two invoices of H2 are 4 × CAF-1 = 22,00 + IVA 3,30 = **25,30**, and 6 × CAF-1 = 33,00 + IVA 4,95 = **37,95**, both on 30 days of credit. A *cobro* is money you actually received for an invoice, recorded by hand; the **Cobros** card on an invoice's page holds it.
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | **Cuentas por cobrar** | The open invoices by age, Distribuidora Sur's two |
-| 2 | One of them → **Registrar un cobro**, part of it | The balance goes down; "Pagada parcialmente" |
-| 3 | **Registrar cobro** for the rest | "Pagada"; it leaves the report |
-| 4 | **Anular cobro** on the second payment, with a reason | The balance is back |
-| 5 | **Descargar CSV** on the report | Opens in Excel |
+| 1 | **Cuentas por cobrar** (sidebar) | The title and "al <today>"; a summary by age: **Por vencer**, **1 a 30 días**, **31 a 60 días**, **61 a 90 días**, **Más de 90 días**, each with its count and total; today everything is in **Por vencer** (30 days of credit). Under it the list: Factura, Cliente, Vence, Atraso, Total, Saldo, with Distribuidora Sur's two (25,30 and 37,95, balance equal to total), María's invoice from F1, and the others still owed; **Total por cobrar** adds the balances |
+| 2 | Open Distribuidora Sur's 25,30 invoice | A **Cobros** card: "Sin cobrar", "Vence el <date, 30 days out>"; rows Total de la factura 25,30, Cobrado 0,00, **Saldo 25,30**; "Aún no se registra ningún cobro."; a **Registrar cobro** button |
+| 3 | **Registrar cobro**: value `15,00`, date today, method any (for example Transferencia), reference `TR-001` | "Cobro registrado." The card now says "**Cobro parcial**"; Cobrado 15,00, **Saldo 10,30**; the payment is listed with its date, method, reference and 15,00 |
+| 4 | **Cuentas por cobrar** again | The invoice is still listed, with Saldo 10,30 (Total 25,30); **Total por cobrar** went down by 15,00 |
+| 5 | Back on the invoice: **Registrar cobro** with `20,00` | Refused: "El cobro supera lo que se debe…" (the dialog suggests 10,30, the balance) |
+| 6 | **Registrar cobro** with a date in the future, then with `0` | The date picker does not allow a day after today (it is disabled), which is right. A value of `0`: the dialog says "Revisa los datos: el valor debe ser mayor que cero, con hasta 2 decimales." Close the dialog with **Cancelar** and open it again: that message is gone and the value is back to 10,30 |
+| 7 | **Registrar cobro** for the rest: `10,30`, today, **Efectivo**, no reference | The card says "**Cobrada**"; Saldo 0,00; the **Registrar cobro** button is gone; two payments listed |
+| 8 | **Cuentas por cobrar** | The invoice has left the list; **Total por cobrar** is lower by 10,30 |
+| 9 | On the invoice, the 🚫 button of the **second** payment (10,30) → reason `Se registró dos veces` → **Anular cobro** | It asks first. "Cobro anulado."; that payment stays in the list with an **Anulado** badge, its reason and its value struck through; Cobrado 15,00, **Saldo 10,30** again; status "Cobro parcial"; **Registrar cobro** is back |
+| 10 | **Cuentas por cobrar** | The invoice is back in the list with Saldo 10,30 |
+| 11 | **Descargar CSV** on the report, open it in Excel | One row per open invoice with the same figures as the screen (including 25,30 / 10,30), accents intact |
+| 12 | **Actividad** | Nothing about cobros yet: collections are not in the activity log (a gap listed in NEXT_STEPS) |
+
+Overdue buckets (1 a 30 días and beyond) can't be reached locally without moving dates, so they are covered by the automated tests (`receivables.test.ts`).
 
 ---
 

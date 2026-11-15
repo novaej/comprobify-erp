@@ -149,6 +149,8 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Fixed
 
+- Closing a dialog with its Cancel button forgets the last error, as closing it with Esc already did, so a refusal is no longer still there when the dialog is opened again.
+- The Cobros card of an invoice shows its total, collected and balance as rows, with the balance in bold, and each payment's value on the right of its row beside the void button, instead of tiles that left the balance alone and pushed the value onto a second line (FR-SAL-10).
 - Saving an invoice as a template no longer opens the invoice's own confirmation: a dialog's submit, rendered in a portal, bubbled to the form it sat inside. Dialogs and forms built on the shared form handlers now stop their submit there.
 - A product's opening balance can be set in a second warehouse after the first has its own: the warehouse choice stays on the dialog, lists the warehouses that have not moved, and no longer keeps pointing at the one already set.
 - A CSV opened in Excel with the wrong delimiter and saved again, which holds each line as one quoted cell, is read as the lines inside instead of failing with "the file needs the columns…".

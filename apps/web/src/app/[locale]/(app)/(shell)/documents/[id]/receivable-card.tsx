@@ -7,7 +7,6 @@ import { Ban, HandCoins } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { ChoiceSelect, type Choice } from '@/components/choice-select';
-import { DetailTile } from '@/components/detail-tile';
 import { FormDialog } from '@/components/form-dialog';
 import { FormField } from '@/components/form-field';
 import { SectionCard } from '@/components/section-card';
@@ -87,13 +86,26 @@ export function ReceivableCard({
         )}
         <span className="text-muted-foreground">{t('due', { date: date(data.dueDate) })}</span>
       </p>
-      <dl className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-        <DetailTile label={t('total')} value={money(data.total)} />
+      {/* Rows, not tiles: the card is narrow, and the balance is what the person came for. */}
+      <dl className="divide-y divide-border rounded-md bg-muted/40 text-sm">
+        <div className="flex items-baseline justify-between gap-3 px-3 py-2">
+          <dt className="text-muted-foreground">{t('total')}</dt>
+          <dd className="tabular-nums">{money(data.total)}</dd>
+        </div>
         {Number(data.credited) > 0 && (
-          <DetailTile label={t('credited')} value={`−${money(data.credited)}`} />
+          <div className="flex items-baseline justify-between gap-3 px-3 py-2">
+            <dt className="text-muted-foreground">{t('credited')}</dt>
+            <dd className="tabular-nums">−{money(data.credited)}</dd>
+          </div>
         )}
-        <DetailTile label={t('paid')} value={money(data.paid)} />
-        <DetailTile label={t('balance')} value={money(data.balance)} />
+        <div className="flex items-baseline justify-between gap-3 px-3 py-2">
+          <dt className="text-muted-foreground">{t('paid')}</dt>
+          <dd className="tabular-nums">{money(data.paid)}</dd>
+        </div>
+        <div className="flex items-baseline justify-between gap-3 px-3 py-2 font-semibold">
+          <dt>{t('balance')}</dt>
+          <dd className="tabular-nums">{money(data.balance)}</dd>
+        </div>
       </dl>
 
       {data.payments.length > 0 ? (
@@ -101,19 +113,32 @@ export function ReceivableCard({
           {data.payments.map((payment) => (
             <li
               key={payment.id}
-              className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-muted/40 px-3 py-2"
+              className="flex items-start justify-between gap-3 rounded-md bg-muted/40 px-3 py-2"
             >
-              <span className="tabular-nums">{date(payment.paidOn)}</span>
-              <span>{payment.methodLabel}</span>
-              {payment.reference && (
-                <span className="break-all text-muted-foreground">{payment.reference}</span>
-              )}
-              {payment.voidedReason ? (
-                <span className="text-muted-foreground">
-                  <ToneBadge tone="neutral">{t('voided')}</ToneBadge> {payment.voidedReason}
+              <div className="min-w-0 flex-1">
+                <p className="flex flex-wrap items-center gap-x-2">
+                  <span className="tabular-nums">{date(payment.paidOn)}</span>
+                  {payment.voidedReason && <ToneBadge tone="neutral">{t('voided')}</ToneBadge>}
+                </p>
+                <p>{payment.methodLabel}</p>
+                {payment.reference && (
+                  <p className="break-all text-muted-foreground">{payment.reference}</p>
+                )}
+                {payment.voidedReason && (
+                  <p className="text-muted-foreground">{payment.voidedReason}</p>
+                )}
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                <span
+                  className={
+                    payment.voidedReason
+                      ? 'tabular-nums text-muted-foreground line-through'
+                      : 'font-medium tabular-nums'
+                  }
+                >
+                  {money(payment.amount)}
                 </span>
-              ) : (
-                canManage && (
+                {!payment.voidedReason && canManage && (
                   <Button
                     type="button"
                     size="sm"
@@ -123,17 +148,8 @@ export function ReceivableCard({
                   >
                     <Ban className="h-4 w-4" aria-hidden />
                   </Button>
-                )
-              )}
-              <span
-                className={
-                  payment.voidedReason
-                    ? 'ml-auto tabular-nums text-muted-foreground line-through'
-                    : 'ml-auto font-medium tabular-nums'
-                }
-              >
-                {money(payment.amount)}
-              </span>
+                )}
+              </div>
             </li>
           ))}
         </ul>

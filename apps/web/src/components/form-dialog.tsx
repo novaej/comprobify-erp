@@ -43,14 +43,14 @@ export function FormDialog({
 }) {
   const t = useTranslations('common');
   const run = useServerAction(action, { errors, success, onDone: () => onOpenChange(false) });
+  // Every way of closing it (Esc, the overlay, Cancel) forgets the last error, so it is not
+  // there again when the dialog is reopened.
+  const change = (next: boolean) => {
+    onOpenChange(next);
+    if (!next) run.clearError();
+  };
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        onOpenChange(next);
-        if (!next) run.clearError();
-      }}
-    >
+    <Dialog open={open} onOpenChange={change}>
       <ScrollDialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -75,7 +75,7 @@ export function FormDialog({
             </p>
           )}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => change(false)}>
               {t('cancel')}
             </Button>
             <Button
