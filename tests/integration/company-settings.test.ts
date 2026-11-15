@@ -108,6 +108,33 @@ describe('company settings', () => {
     });
   });
 
+  it('keeps the contact email in the company and its twin, lower-cased, and clears it', async () => {
+    const org = await company();
+    const owner = await actor(org.twinTenantId);
+    const profile = {
+      tradeName: null,
+      mainAddress: 'Quito',
+      requiredAccounting: false,
+      specialTaxpayerResolution: null,
+      withholdingAgentResolution: null,
+      taxRegime: 'GENERAL' as const,
+    };
+    expect((await companySettings(owner, db)).profile.contactEmail).toBeNull();
+    await updateCompanyProfile(owner, db, { ...profile, contactEmail: ' Ventas@Omicron.EC ' });
+    for (const tenantId of [org.realTenantId, org.twinTenantId])
+      expect((await companySettings(await actor(tenantId), db)).profile.contactEmail).toBe(
+        'ventas@omicron.ec',
+      );
+    // Left out, it is unchanged; null clears it; a bad address is refused.
+    await updateCompanyProfile(owner, db, profile);
+    expect((await companySettings(owner, db)).profile.contactEmail).toBe('ventas@omicron.ec');
+    await expect(
+      updateCompanyProfile(owner, db, { ...profile, contactEmail: 'no es un correo' }),
+    ).rejects.toMatchObject({ name: 'ZodError' });
+    await updateCompanyProfile(owner, db, { ...profile, contactEmail: null });
+    expect((await companySettings(owner, db)).profile.contactEmail).toBeNull();
+  });
+
   it('sets a logo on the company and its twin, from any plan, and refuses a non-image', async () => {
     const org = await company();
     const owner = await actor(org.twinTenantId);

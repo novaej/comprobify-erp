@@ -10,7 +10,14 @@ export type OrderPdfData = {
   notes: string | null;
   // The company's test copy: stamped so it can't pass for a real order.
   test: boolean;
-  company: { legalName: string; tradeName: string | null; ruc: string; mainAddress: string };
+  company: {
+    legalName: string;
+    tradeName: string | null;
+    ruc: string;
+    mainAddress: string;
+    // For the email's Reply-To and footer (ADR-040); the PDF does not print it.
+    contactEmail?: string | null;
+  };
   logo: Buffer | null;
   provider: { name: string; identification: string; emails: string[] };
   delivery: { warehouse: string; address: string };

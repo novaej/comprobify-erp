@@ -362,13 +362,13 @@ export function OrderForm({
                       <div
                         role="group"
                         aria-label={t('lines.line', { number: index + 1 })}
-                        className="grid grid-cols-2 gap-3 rounded-lg border border-border p-3 @xl:grid-cols-4 @3xl:grid-cols-[minmax(0,1fr)_6rem_8rem_5.5rem_6.5rem_2.25rem] @3xl:items-start @3xl:border-0 @3xl:p-0 @3xl:px-3"
+                        className="relative grid grid-cols-2 gap-3 rounded-lg border border-border p-3 @xl:grid-cols-4 @3xl:grid-cols-[minmax(0,1fr)_6rem_8rem_5.5rem_6.5rem_2.25rem] @3xl:items-start @3xl:border-0 @3xl:p-0 @3xl:px-3"
                       >
                         <FormField
                           label={t('lines.product')}
                           required
                           labelClassName={hidden}
-                          className="col-span-2 @xl:col-span-4 @3xl:col-span-1"
+                          className="col-span-2 pr-10 @xl:col-span-4 @3xl:col-span-1 @3xl:pr-0"
                         >
                           {(a11y) => (
                             <Combobox
@@ -427,7 +427,7 @@ export function OrderForm({
                             {amounts.incomplete ? '—' : show(amounts.subtotal)}
                           </output>
                         </div>
-                        <div className="col-span-2 flex items-center justify-end @xl:col-span-1 @3xl:col-span-1">
+                        <div className="absolute top-3 right-3 flex items-center justify-end @3xl:static @3xl:col-span-1">
                           <Button
                             type="button"
                             variant="ghost"

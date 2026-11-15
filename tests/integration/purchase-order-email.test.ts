@@ -15,6 +15,7 @@ import {
   purchaseOrderPdf,
   resolveActor,
   sendPurchaseOrderEmail,
+  updateCompanyProfile,
   type ActorContext,
   type CreatedOrganization,
   type EmailMessage,
@@ -123,6 +124,7 @@ describe('emailing a purchase order to the provider', () => {
       tenantId: org.realTenantId,
       orderId: order.id,
       to: ['compras@andina.ec', 'gerencia@andina.ec'],
+      replyTo: expect.stringMatching(/^poe\..+@example\.com$/) as unknown,
     });
 
     sent.length = 0;
@@ -132,6 +134,9 @@ describe('emailing a purchase order to the provider', () => {
     // The twin isn't involved: the real company's order says nothing about tests.
     expect(message!.subject).toBe(`Orden de compra OC-000001 — Sigma S.A.`);
     expect(message!.fromName).toBe('Sigma S.A. via Comprobify');
+    // The provider's answer goes to the person who sent the order, and the text asks for it.
+    expect(message!.replyTo).toMatch(/^poe\..+@example\.com$/);
+    expect(message!.text).toContain('responda a este correo para confirmar que recibió la orden');
     expect(message!.text).toContain('Entrega prevista:  20/11/2026');
     expect(message!.text).toContain('Total:  $17.25');
     expect(message!.attachments).toEqual([
@@ -148,6 +153,30 @@ describe('emailing a purchase order to the provider', () => {
     // Sent again: still SENT, another job.
     await emailPurchaseOrder(owner, db, { id: order.id, to: ['compras@andina.ec'] }, { jobs });
     expect(await jobsFor(order.id)).toHaveLength(2);
+  });
+
+  it("is answered at the company's contact email when it has one, and says so in the footer", async () => {
+    await updateCompanyProfile(owner, db, {
+      tradeName: null,
+      mainAddress: 'Av. Amazonas, Quito',
+      requiredAccounting: false,
+      specialTaxpayerResolution: null,
+      withholdingAgentResolution: null,
+      taxRegime: 'GENERAL',
+      contactEmail: 'compras@sigma.ec',
+    });
+    const order = await draft();
+    await emailPurchaseOrder(owner, db, { id: order.id, to: ['ventas@andes.ec'] }, { jobs });
+    const [job] = await jobsFor(order.id);
+    sent.length = 0;
+    await sendPurchaseOrderEmail({ db, provider, clock, logger: testLogger() }, job!);
+    const [message] = sent;
+    // The company's address wins over the person who sent it.
+    expect(message!.replyTo).toBe('compras@sigma.ec');
+    expect(message!.text).toContain('responda a este correo');
+    expect(message!.text).toContain('No escriba a la dirección remitente: no recibe mensajes.');
+    expect(message!.text).toContain('Para consultas, escriba a compras@sigma.ec.');
+    expect(message!.html).toContain('compras@sigma.ec');
   });
 
   it('refuses a cancelled order, and a job for one cancelled since sends nothing', async () => {

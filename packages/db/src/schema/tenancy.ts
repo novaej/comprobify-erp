@@ -78,6 +78,8 @@ export const tenants = pgTable(
     specialTaxpayerResolution: text('special_taxpayer_resolution'),
     withholdingAgentResolution: text('withholding_agent_resolution'),
     taxRegime: text('tax_regime', { enum: TAX_REGIMES }).default('GENERAL').notNull(),
+    // Where replies to emails sent for the company go (ADR-040); the sender is the platform's.
+    contactEmail: text('contact_email'),
     negativeStock: text('negative_stock', { enum: NEGATIVE_STOCK_RULES })
       .default('BLOCK')
       .notNull(),

@@ -4,12 +4,14 @@ import { StandaloneShell } from '@/components/standalone-shell';
 import { Link } from '@/i18n/navigation';
 import { OnboardingForm } from './onboarding-form';
 import { pageTitle } from '@/server/page-title';
+import { requireSession } from '@/server/session';
 
 export const generateMetadata = pageTitle('onboarding');
 
 export default async function OnboardingPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const session = await requireSession(locale);
   const t = await getTranslations('onboarding');
   const tNav = await getTranslations('nav');
   const tSettings = await getTranslations('settings');
@@ -30,7 +32,7 @@ export default async function OnboardingPage({ params }: { params: Promise<{ loc
         </Link>
       }
     >
-      <OnboardingForm regimes={regimes} />
+      <OnboardingForm regimes={regimes} accountEmail={session.user.email} />
     </StandaloneShell>
   );
 }

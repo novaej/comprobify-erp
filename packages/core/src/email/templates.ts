@@ -105,6 +105,8 @@ export type DocumentEmailParams = {
   attachments: { ride: string; xml: string };
   // SRI test environment: the buyer is told it has no tax validity.
   test: boolean;
+  // Where the buyer's replies go: the company's contact address, when it has one.
+  contactEmail?: string | null;
 };
 
 // What the company's papers say to the other party: a greeting, the facts, the files, the
@@ -120,10 +122,16 @@ type BusinessEmail = {
   closing: string;
   organization: string;
   ruc: string;
+  contactEmail: string | null;
 };
 
-const DISCLAIMER =
-  'No responda a este correo: es un mensaje automático enviado por Comprobify en nombre del emisor.';
+// The sender's address is the platform's and has no inbox; replies go to the company's contact
+// address (Reply-To), which the footer also names so it shows even where Reply-To doesn't.
+function disclaimer(contactEmail: string | null): string {
+  return contactEmail
+    ? `Este mensaje fue enviado por Comprobify en nombre del emisor. No escriba a la dirección remitente: no recibe mensajes. Para consultas, escriba a ${contactEmail}.`
+    : 'Este mensaje fue enviado por Comprobify en nombre del emisor. No escriba a la dirección remitente: no recibe mensajes. Para consultas, comuníquese con la empresa.';
+}
 
 function businessEmail(to: string, email: BusinessEmail): EmailMessage {
   const fileLine = ([file, what]: [string, string | null]) => (what ? `${file}: ${what}` : file);
@@ -143,7 +151,7 @@ function businessEmail(to: string, email: BusinessEmail): EmailMessage {
     email.organization,
     `RUC: ${email.ruc}`,
     '',
-    DISCLAIMER,
+    disclaimer(email.contactEmail),
   ].join('\n');
 
   const cell = 'padding:6px 12px;border-bottom:1px solid #eee';
@@ -162,7 +170,7 @@ ${email.attachments.map(([file, what]) => `<li><strong>${escapeHtml(file)}</stro
 <p>${escapeHtml(email.closing)}</p>
 <hr style="border:none;border-top:1px solid #ddd;margin:20px 0">
 <p style="font-size:12px;color:#666"><strong>${escapeHtml(email.organization)}</strong><br>RUC: ${escapeHtml(email.ruc)}</p>
-<p style="font-size:11px;color:#999">${escapeHtml(DISCLAIMER)}</p>
+<p style="font-size:11px;color:#999">${escapeHtml(disclaimer(email.contactEmail))}</p>
 </body></html>`;
   return {
     to,
@@ -171,6 +179,7 @@ ${email.attachments.map(([file, what]) => `<li><strong>${escapeHtml(file)}</stro
     html,
     fromName: `${email.organization} via Comprobify`,
     sender: 'documents',
+    ...(email.contactEmail ? { replyTo: email.contactEmail } : {}),
     locale: 'es',
   };
 }
@@ -199,6 +208,7 @@ export function renderDocumentEmail(to: string, params: DocumentEmailParams): Em
     closing: 'Gracias por su preferencia.',
     organization: params.organization,
     ruc: params.ruc,
+    contactEmail: params.contactEmail ?? null,
   });
 }
 
@@ -213,6 +223,10 @@ export type PurchaseOrderEmailParams = {
   attachment: string;
   // The company's test copy: the provider is told it isn't a real order.
   test: boolean;
+  // The email has a Reply-To: the provider is asked to answer it.
+  canReply: boolean;
+  // The company's contact address, named in the footer.
+  contactEmail?: string | null;
 };
 
 // FR-PUR-3: the order to the provider, its PDF attached.
@@ -237,8 +251,12 @@ export function renderPurchaseOrderEmail(
     ],
     attachmentsIntro: 'Adjunto encontrará la orden en PDF:',
     attachments: [[params.attachment, null]],
-    closing: 'Por favor, confirme la recepción del pedido y la fecha de entrega con la empresa.',
+    // Receiving the order, not the goods: the provider says it got it and when it can deliver.
+    closing: params.canReply
+      ? 'Por favor, responda a este correo para confirmar que recibió la orden y la fecha en que podrá entregarla.'
+      : 'Por favor, confirme con la empresa que recibió la orden y la fecha en que podrá entregarla.',
     organization: params.organization,
     ruc: params.ruc,
+    contactEmail: params.contactEmail ?? null,
   });
 }

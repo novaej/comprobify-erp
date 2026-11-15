@@ -152,6 +152,9 @@ describe('the RIDE and the buyer’s copy', () => {
     });
     expect(message!.text).toContain('no tiene validez tributaria');
     expect(message!.text).toContain('Estimado/a María López,');
+    // The sender has no inbox: the footer says so, and with no contact email set it sends the buyer to the company.
+    expect(message!.text).toContain('No escriba a la dirección remitente: no recibe mensajes.');
+    expect(message!.replyTo).toBeUndefined();
     expect(message!.text).toContain(`Número de autorización:  ${document.accessKey}`);
     const [pdf, xml] = message!.attachments!;
     expect(pdf!.filename).toBe(`RIDE ${document.number}.pdf`);

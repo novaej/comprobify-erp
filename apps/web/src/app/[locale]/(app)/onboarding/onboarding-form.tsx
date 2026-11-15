@@ -12,7 +12,14 @@ import { SectionCard } from '@/components/section-card';
 import { useFormAction } from '@/components/use-form-action';
 import { onboardAction } from './actions';
 
-export function OnboardingForm({ regimes }: { regimes: Choice[] }) {
+export function OnboardingForm({
+  regimes,
+  accountEmail,
+}: {
+  regimes: Choice[];
+  // The signed-in account's address, offered as the company's contact until changed.
+  accountEmail: string;
+}) {
   const t = useTranslations('onboarding');
   const tError = useTranslations('onboardingError');
   const locale = useLocale();
@@ -48,6 +55,17 @@ export function OnboardingForm({ regimes }: { regimes: Choice[] }) {
             </FormField>
             <FormField required label={t('mainAddress')}>
               {(props) => <Input {...props} name="mainAddress" required />}
+            </FormField>
+            <FormField label={t('contactEmail')} hint={t('contactEmailHint')}>
+              {(props) => (
+                <Input
+                  {...props}
+                  name="contactEmail"
+                  type="email"
+                  defaultValue={accountEmail}
+                  maxLength={254}
+                />
+              )}
             </FormField>
             <FormField required label={t('taxRegime')} hint={t('taxRegimeHint')}>
               {(props) => (

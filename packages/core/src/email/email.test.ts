@@ -70,6 +70,28 @@ describe('Mailgun provider', () => {
     expect((init.body as URLSearchParams).get('to')).toBe('a@example.com');
   });
 
+  it('sends a Reply-To only when the message has one', async () => {
+    const fetch = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
+    const provider = createMailgunProvider({
+      apiKey: 'k',
+      domain: 'd',
+      region: 'us',
+      from: 'C <no-reply@example.com>',
+      fetch,
+    });
+    await provider.send({ to: 'a@example.com', subject: 's', text: 't', html: 'h' });
+    await provider.send({
+      to: 'a@example.com',
+      subject: 's',
+      text: 't',
+      html: 'h',
+      replyTo: 'ventas@empresa.ec',
+    });
+    const bodies = fetch.mock.calls.map((call) => (call[1] as RequestInit).body as URLSearchParams);
+    expect(bodies[0]!.get('h:Reply-To')).toBeNull();
+    expect(bodies[1]!.get('h:Reply-To')).toBe('ventas@empresa.ec');
+  });
+
   it('fails with the status only, so a retry follows', async () => {
     const fetch = vi.fn().mockResolvedValue(new Response('secret echo', { status: 500 }));
     const provider = createMailgunProvider({

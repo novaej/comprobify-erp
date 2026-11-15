@@ -154,7 +154,9 @@
     "submit": "Create my company",
     "submitting": "Creating your company...",
     "firstInvoiceNumber": "Next invoice number",
-    "firstInvoiceNumberHint": "Only if you come from another provider: the one after the last you issued. If you are starting now, leave 1."
+    "firstInvoiceNumberHint": "Only if you come from another provider: the one after the last you issued. If you are starting now, leave 1.",
+    "contactEmail": "Company contact email",
+    "contactEmailHint": "Your buyers' and providers' replies come here. You can change it later in Company."
   },
   "onboardingError": {
     "INVALID_RUC": "That RUC isn't valid. Check the 13 digits.",
@@ -1469,7 +1471,9 @@
     "sequentialsSave": "Save numbering",
     "sequentialsSaved": "Numbering saved.",
     "sequentialsTestTitle": "Test numbering",
-    "sequentialsTestDescription": "The next number the test copy issues at each issue point. It only moves forward. The real company has its own numbering: set it when going live, or from Company while in Production."
+    "sequentialsTestDescription": "The next number the test copy issues at each issue point. It only moves forward. The real company has its own numbering: set it when going live, or from Company while in Production.",
+    "contactEmail": "Contact email",
+    "contactEmailHint": "Where your buyers' and providers' replies go, for the emails Comprobify sends on your company's behalf. If empty, a purchase order email is answered by the person who sent it."
   },
   "settingsError": {
     "FORBIDDEN": "Your role can't change the company details.",

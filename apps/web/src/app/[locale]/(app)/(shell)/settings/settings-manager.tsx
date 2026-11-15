@@ -36,6 +36,7 @@ export type SettingsView = {
     requiredAccounting: boolean;
     specialTaxpayerResolution: string | null;
     withholdingAgentResolution: string | null;
+    contactEmail: string | null;
     taxRegime: string;
   };
   negativeStock: 'BLOCK' | 'ALLOW';
@@ -121,6 +122,7 @@ export function SettingsManager({ settings }: { settings: SettingsView }) {
             label={t('specialTaxpayer')}
             value={profile.specialTaxpayerResolution ?? '—'}
           />
+          <DetailTile label={t('contactEmail')} value={profile.contactEmail ?? '—'} />
           <DetailTile
             label={t('withholdingAgent')}
             value={profile.withholdingAgentResolution ?? '—'}
@@ -513,6 +515,17 @@ function ProfileDialog({ settings, onClose }: { settings: SettingsView; onClose:
             defaultValue={profile.mainAddress}
             required
             maxLength={300}
+          />
+        )}
+      </FormField>
+      <FormField label={t('contactEmail')} hint={t('contactEmailHint')}>
+        {(props) => (
+          <Input
+            {...props}
+            name="contactEmail"
+            type="email"
+            defaultValue={profile.contactEmail ?? ''}
+            maxLength={254}
           />
         )}
       </FormField>

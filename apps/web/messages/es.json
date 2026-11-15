@@ -154,7 +154,9 @@
     "submit": "Crear mi empresa",
     "submitting": "Creando tu empresa...",
     "firstInvoiceNumber": "Siguiente número de factura",
-    "firstInvoiceNumberHint": "Solo si vienes de otro proveedor: el siguiente al último que emitiste. Si empiezas ahora, deja 1."
+    "firstInvoiceNumberHint": "Solo si vienes de otro proveedor: el siguiente al último que emitiste. Si empiezas ahora, deja 1.",
+    "contactEmail": "Correo de contacto de la empresa",
+    "contactEmailHint": "Las respuestas de tus compradores y proveedores llegan aquí. Puedes cambiarlo después en Empresa."
   },
   "onboardingError": {
     "INVALID_RUC": "Ese RUC no es válido. Revisa los 13 dígitos.",
@@ -1469,7 +1471,9 @@
     "sequentialsSave": "Guardar numeración",
     "sequentialsSaved": "Numeración guardada.",
     "sequentialsTestTitle": "Numeración de pruebas",
-    "sequentialsTestDescription": "El siguiente número que emite la copia de pruebas en cada punto de emisión. Solo puede avanzar. La empresa real tiene su propia numeración: se fija al pasar a producción, o desde Empresa estando en Producción."
+    "sequentialsTestDescription": "El siguiente número que emite la copia de pruebas en cada punto de emisión. Solo puede avanzar. La empresa real tiene su propia numeración: se fija al pasar a producción, o desde Empresa estando en Producción.",
+    "contactEmail": "Correo de contacto",
+    "contactEmailHint": "Donde llegan las respuestas de tus compradores y proveedores a los correos que Comprobify envía en nombre de tu empresa. Si lo dejas vacío, un correo de orden de compra responde a quien lo envió."
   },
   "settingsError": {
     "FORBIDDEN": "Tu rol no permite cambiar los datos de la empresa.",

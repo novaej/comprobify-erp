@@ -76,6 +76,8 @@ export const queues = {
       tenantId: z.uuid(),
       orderId: z.uuid(),
       to: z.array(z.email()).min(1).max(10),
+      // The person who sent it: the provider's answer goes to them (FR-PUR-3).
+      replyTo: z.email().optional(),
     }),
     options: { retryLimit: 5, retryDelay: 60, retryBackoff: true, expireInSeconds: 120 },
     concurrency: 2,

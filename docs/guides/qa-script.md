@@ -69,9 +69,9 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | F5 | A guía de remisión | ✅ |
 | F6 | Void an invoice | ✅ |
 | F7 | Finding documents | ✅ |
-| G1 | A purchase order | ⬜ |
-| G2 | Receive it in parts | ⬜ |
-| G3 | Cancel an order | ⬜ |
+| G1 | A purchase order | ✅ |
+| G2 | Receive it in parts | ✅ |
+| G3 | Cancel an order | ✅ |
 | H1 | A sale order holds stock | ⬜ |
 | H2 | Invoice the order in parts | ⬜ |
 | H3 | Collect and the aging report | ⬜ |
@@ -332,7 +332,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Owner window: fill the company form with RUC `1712345678001`, Comercial Andina S.A., an address, the main branch `001` Matriz, issue point `001` | Fields check as you go: a RUC with a bad structure is refused. Under **Avanzado** there is also "Siguiente número de factura": leave 1 here (to start the real company from another number, see K3 or M1) |
+| 1 | Owner window: fill the company form with RUC `1712345678001`, Comercial Andina S.A., an address, the main branch `001` Matriz, issue point `001` | Fields check as you go: a RUC with a bad structure is refused. The **Correo de contacto de la empresa** is prefilled with Ana's address: keep it. Under **Avanzado** there is also "Siguiente número de factura": leave 1 here (to start the real company from another number, see K3 or M1) |
 | 2 | Upload `test-1712345678001.p12`, password `secret` (or your own file and password) | Accepted. Try once with a wrong password first: refused, clearly |
 | 3 | **Crear mi empresa** | The dashboard, "Tu empresa está lista", a yellow "ambiente de pruebas" banner, **SRI Pruebas** in the sidebar |
 | 4 | Look at the sidebar | The organization switcher, Pruebas selected; Producción disabled with "Disponible cuando tu empresa pase a producción" |
@@ -361,6 +361,7 @@ Seen signed out, so use a private window. They need no company; run them any tim
 | 2 | **Editar los datos tributarios**: set **RIMPE Emprendedor**, save; then set it back | Saved each time; the change appears in **Actividad** |
 | 3 | In the **Logo** card, choose a PNG (up to 500 KB) and **Subir logo** | "Logo guardado." and "Hay un logo guardado."; on the free plan it says it prints once the plan has Marca. A text file renamed to .png is refused. (It shows on documents after C2, when the plan includes Marca.) |
 | 4 | Look at **Agregar establecimiento** and **Agregar punto** | Both are disabled, each with a note: "Tu plan permite 1 establecimiento…" and "…1 punto de emisión por establecimiento…", and a **Ver el plan** button (this changes after C2) |
+| 4b | **Editar los datos tributarios**: the **Correo de contacto** shows Ana's address; change it to `ventas@andina.test` and save | Saved; the page shows it. It is where replies to the emails Comprobify sends for the company arrive (G1 and F1) |
 | 5 | Open the issue point 001-001's document types | Only Factura is listed, on, and a note says the other types come with their module in Plan |
 | 6 | You are in Pruebas: in **Numeración de pruebas**, set the next number of 001-001 Factura to `50` and **Guardar numeración**; then try `10` | "Numeración guardada.", the field keeps 50. A number below the current one is stopped by the field, and if forced, refused: a sequential only moves forward. **Actividad** shows the change. This is the test copy's own numbering; the real company's is set at go-live (M1), or from this card while in Producción |
 
@@ -558,7 +559,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 | 4 | **Emitir factura** → confirm | The invoice page; within seconds "Autorizado", the authorization number, a timeline of events. The number is `001-001-000000050`, the test numbering set in B3 step 6. The page has a **Cobros** section saying "Aún no se registra ningún cobro" and the balance owed: the payment of step 3 is the invoice's *forma de pago*, which goes to SRI; a **cobro** is money actually received, recorded later (H3) |
 | 5 | **Ver PDF** (the RIDE) | The RIDE with the logo from B3, the lines and the access key |
 | 6 | The XML link | The authorized XML |
-| 7 | Terminal | A buyer email to `maria@cliente.test` with the RIDE and XML attached |
+| 7 | Terminal | A buyer email to `maria@cliente.test` with the RIDE and XML attached, Reply-To `ventas@andina.test`, and a footer saying the sender address receives no messages and to write to that address |
 | 8 | **Inventario** → CAF-1 | Matriz 46 on hand (the invoice left from Matriz, the warehouse of issue point 001-001); Norte still 20; a "Venta" movement for the invoice |
 
 ### F2 · Consumidor final and its limit
@@ -637,7 +638,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 | 1 | **Órdenes de compra** → **Nueva orden**: Importadora Andes, warehouse Matriz, CAF-1 × 20 at 2,00, TE-1 × 10 at 1,50 | **Guardar borrador**: totals with IVA |
 | 2 | Edit it: TE-1 × 12 | Saved as a new revision |
 | 3 | **Ver PDF** | The order with the company's header and logo |
-| 4 | **Enviar la orden por correo** to `ventas@andes.test` | Sent; the order is no longer a draft; a `purchasing` email with the PDF in the terminal |
+| 4 | **Enviar la orden por correo** to `ventas@andes.test` | Sent; the order is no longer a draft; an email "Orden de compra OC-… — Comercial Andina S.A." with the PDF, from "Comercial Andina S.A. via Comprobify" with **Reply-To** `ventas@andina.test`, the contact email set in B3 step 4b (check in the email's headers; without a contact email it would be the sender's own address). Its last line asks the provider to reply to confirm that it received the order and when it can deliver, and the footer says the sender address receives no messages and to write to `ventas@andina.test` |
 | 5 | Back in **Órdenes de compra**, type the order number or "andes", then choose a status | The list follows at once, no button |
 
 ### G2 · Receive it in parts

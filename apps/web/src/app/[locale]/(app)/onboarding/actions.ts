@@ -41,6 +41,7 @@ export async function onboardAction(_: ActionState, form: FormData): Promise<Act
         legalName: text(form, 'legalName'),
         tradeName: text(form, 'tradeName') || null,
         mainAddress: text(form, 'mainAddress'),
+        contactEmail: text(form, 'contactEmail') || null,
         requiredAccounting: form.get('requiredAccounting') === 'on',
         // Checked by core's schema.
         taxRegime: (text(form, 'taxRegime') || 'GENERAL') as 'GENERAL',

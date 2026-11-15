@@ -28,6 +28,8 @@ export const createOrganizationInput = z.object({
   requiredAccounting: z.boolean().default(false),
   // Asked at onboarding so a RIMPE company's first invoice carries its legend.
   taxRegime: z.enum(TAX_REGIMES).default('GENERAL'),
+  // Where replies to the emails sent for the company go (ADR-040).
+  contactEmail: z.string().trim().toLowerCase().pipe(z.email().max(254)).nullable().default(null),
 });
 
 // Prepared by onboardOrganization: already parsed, matched and encrypted.
@@ -76,6 +78,7 @@ export async function createOrganization(
         mainAddress: input.mainAddress,
         requiredAccounting: input.requiredAccounting,
         taxRegime: input.taxRegime,
+        contactEmail: input.contactEmail,
       };
       const [real] = await tx
         .insert(tenants)

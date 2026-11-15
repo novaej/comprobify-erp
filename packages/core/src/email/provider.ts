@@ -9,6 +9,8 @@ export type EmailMessage = {
   html: string;
   // Shown before the platform address, as in "Alfa S.A. via Comprobify" (FR-DOC-11).
   fromName?: string;
+  // Where a reply goes, when a person is expected to answer (a purchase order's sender).
+  replyTo?: string;
   attachments?: EmailAttachment[];
   // Mailgun custom variables, echoed by its webhooks so an event finds its document.
   variables?: Record<string, string>;
@@ -56,6 +58,7 @@ export function createMailgunProvider(options: MailgunOptions): EmailProvider {
         subject: message.subject,
         text: message.text,
         html: message.html,
+        ...(message.replyTo ? { 'h:Reply-To': message.replyTo } : {}),
       };
       for (const [name, value] of Object.entries(message.variables ?? {}))
         fields[`v:${name}`] = value;

@@ -39,6 +39,8 @@ export async function updateProfileAction(_: ActionState, form: FormData): Promi
       tradeName: optional(form, 'tradeName'),
       mainAddress: text(form, 'mainAddress'),
       requiredAccounting: form.get('requiredAccounting') === 'on',
+      // Empty clears it; core checks it is an address.
+      contactEmail: optional(form, 'contactEmail'),
       specialTaxpayerResolution: optional(form, 'specialTaxpayerResolution'),
       withholdingAgentResolution: optional(form, 'withholdingAgentResolution'),
       taxRegime: text(form, 'taxRegime') as 'GENERAL',

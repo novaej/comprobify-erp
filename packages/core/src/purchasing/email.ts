@@ -128,6 +128,14 @@ export async function emailPurchaseOrder(
 ): Promise<void> {
   canManage(ctx);
   const input = emailOrderInput.parse(raw);
+  // The provider answers the person who sent the order, not an address nobody reads.
+  const [sender] = ctx.userId
+    ? await db.identity
+        .select({ email: schema.users.email })
+        .from(schema.users)
+        .where(eq(schema.users.id, ctx.userId))
+    : [];
+  const replyTo = sender?.email;
   await db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
     const order = await lockOrder(tx, input.id);
     if (order.status === 'DRAFT') {
@@ -144,6 +152,7 @@ export async function emailPurchaseOrder(
       tenantId: ctx.tenantId,
       orderId: order.id,
       to: input.to,
+      ...(replyTo ? { replyTo } : {}),
     });
   });
 }
@@ -170,6 +179,8 @@ export async function sendPurchaseOrderEmail(
   if (prepared.status === 'CANCELLED' || prepared.status === 'DRAFT') return;
   const { data, filename } = prepared;
   const content = await renderPurchaseOrderPdf(data);
+  // Answers go to the company's contact address; the person who sent it is the fallback.
+  const replyTo = data.company.contactEmail ?? job.replyTo;
   const results = [];
   for (const to of job.to) {
     const message = renderPurchaseOrderEmail(to, {
@@ -182,10 +193,13 @@ export async function sendPurchaseOrderEmail(
       total: data.totals.total,
       attachment: filename,
       test: data.test,
+      canReply: Boolean(replyTo),
+      contactEmail: data.company.contactEmail,
     });
     results.push(
       await provider.send({
         ...message,
+        ...(replyTo ? { replyTo } : {}),
         attachments: [{ filename, content, contentType: 'application/pdf' }],
         variables: { 'purchase-order-id': job.orderId, 'tenant-id': job.tenantId },
       }),

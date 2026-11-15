@@ -11,7 +11,7 @@ import {
   type Clock,
 } from '../kernel';
 import { authorizedXmlFile, documentTypeInfo, renderRide, rideData } from '../sri';
-import { companyLogo, documentLogo } from '../tenancy';
+import { companyHeader, companyLogo, documentLogo } from '../tenancy';
 import type { Jobs, QueuePayload } from '../jobs';
 import type { Logger } from '@comprobify/config/logger';
 import type { Row } from './sending';
@@ -96,10 +96,14 @@ export async function emailDocument(
         .limit(1);
       if (emailed) return null;
     }
-    return { row, logo: await documentLogo(tx, job.tenantId, entitlements.features) };
+    return {
+      row,
+      logo: await documentLogo(tx, job.tenantId, entitlements.features),
+      contactEmail: (await companyHeader(tx, job.tenantId)).contactEmail,
+    };
   });
   if (!prepared) return;
-  const { row, logo } = prepared;
+  const { row, logo, contactEmail } = prepared;
 
   const { data, pdf, xml, name } = await files(row, logo);
   const rideFile = `RIDE ${name}.pdf`;
@@ -115,6 +119,7 @@ export async function emailDocument(
     authorizationNumber: row.authorizationNumber!,
     attachments: { ride: rideFile, xml: xmlFile },
     test: row.ambiente !== '2',
+    contactEmail,
   });
   const result = await provider.send({
     ...message,

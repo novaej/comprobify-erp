@@ -56,6 +56,8 @@ export const companyProfileInput = z.object({
     .regex(/^[0-9]{1,8}$/)
     .nullable(),
   taxRegime: z.enum(TAX_REGIMES),
+  // Where the replies to emails sent for the company go. Left out: unchanged; null: none.
+  contactEmail: z.string().trim().toLowerCase().pipe(z.email().max(254)).nullable().optional(),
 });
 
 export const branchInput = z.object({ code, name: line(120), address: line(300) });
@@ -70,6 +72,7 @@ export type CompanySettings = {
     specialTaxpayerResolution: string | null;
     withholdingAgentResolution: string | null;
     taxRegime: (typeof TAX_REGIMES)[number];
+    contactEmail: string | null;
   };
   negativeStock: (typeof NEGATIVE_STOCK_RULES)[number];
   // Whether a logo is stored, whatever the plan; it prints only with the Marca module.
@@ -116,6 +119,7 @@ export async function companySettings(ctx: ActorContext, db: Database): Promise<
         specialTaxpayerResolution: tenant!.specialTaxpayerResolution,
         withholdingAgentResolution: tenant!.withholdingAgentResolution,
         taxRegime: tenant!.taxRegime,
+        contactEmail: tenant!.contactEmail,
       },
       negativeStock: tenant!.negativeStock,
       hasLogo:

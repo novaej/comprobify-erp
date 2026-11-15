@@ -94,6 +94,8 @@ export type CompanyHeader = {
   tradeName: string | null;
   mainAddress: string;
   mode: string;
+  // Where replies to the emails sent for the company go (ADR-040).
+  contactEmail: string | null;
 };
 
 // Who the company is, for the papers it sends that aren't SRI documents (FR-PUR-3).
@@ -106,6 +108,7 @@ export async function companyHeader(tx: Tx, tenantId: string): Promise<CompanyHe
       tradeName: tenants.tradeName,
       mainAddress: tenants.mainAddress,
       mode: tenants.mode,
+      contactEmail: tenants.contactEmail,
     })
     .from(tenants)
     .where(eq(tenants.id, tenantId));
