@@ -10,6 +10,7 @@ import {
   type CsvColumns,
   type CsvProblem,
 } from '../kernel';
+import { recordAudit, recordDataExport } from '../audit';
 import { isStockHeld, productInput, productsByCode } from './index';
 
 // FR-MD-1: products and services as a spreadsheet, in and out. An import is checked whole before
@@ -214,6 +215,12 @@ export async function importProducts(
       }
       // One wrong line undoes the file: it is imported once, whole.
       if (failed.length > 0) throw new Abort(failed);
+      await recordAudit(tx.db, {
+        tenantId: ctx.tenantId,
+        actorUserId: ctx.userId ?? null,
+        action: 'product.imported',
+        details: { created, updated },
+      });
       return { created, updated, problems: [] };
     });
   } catch (error) {
@@ -235,6 +242,7 @@ export async function exportProducts(
   const rows = await db.withTenant({ tenantId: ctx.tenantId }, ({ db: tx }) =>
     tx.select().from(schema.products).orderBy(asc(schema.products.name), asc(schema.products.code)),
   );
+  await recordDataExport(ctx, db, 'products');
   const spanish = options.locale === 'es';
   const number = (value: string | null) => {
     if (value === null) return '';

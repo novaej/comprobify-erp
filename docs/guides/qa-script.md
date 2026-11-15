@@ -29,7 +29,7 @@ Add a screenshot when the problem is how something looks. "Looks wrong" is enoug
 | I | [Bulk invoicing](#part-i-bulk-invoicing) · I1–I2 |
 | J | [Users and roles](#part-j-users-and-roles) · J1–J4 |
 | K | [Notifications](#part-k-notifications) · K1–K3 |
-| L | [Dashboard and reports](#part-l-dashboard-and-reports) · L1–L3 |
+| L | [Dashboard and reports](#part-l-dashboard-and-reports) · L1–L4 |
 | M | [Going live](#part-m-going-live) · M1–M3 |
 | N | [The admin area](#part-n-the-admin-area) · N1–N7 |
 | R | [The real SRI (optional)](#part-r-the-real-sri-optional) · R1 |
@@ -74,7 +74,7 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | G3 | Cancel an order | ✅ |
 | H1 | A sale order holds stock | ✅ |
 | H2 | Invoice the order in parts | ✅ |
-| H3 | Collect and the aging report | ✅ step 12 (Actividad) waits for the audit work |
+| H3 | Collect and the aging report | ✅ |
 | I1 | From sale orders | ⬜ |
 | I2 | From a CSV | ⬜ |
 | J1 | Invite the team | ⬜ |
@@ -87,6 +87,7 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | L1 | The dashboard | ⬜ |
 | L2 | Reports | ⬜ |
 | L3 | The accountant's export | ⬜ |
+| L4 | The activity log: account and operations | ⬜ |
 | M1 | Take the company to production | ⬜ |
 | M2 | The first production invoice | ⬜ |
 | M3 | The quota fills up | ⬜ |
@@ -703,7 +704,7 @@ The two invoices of H2 are 4 × CAF-1 = 22,00 + IVA 3,30 = **25,30**, and 6 × C
 | 9 | On the invoice, the 🚫 button of the **second** payment (10,30) → reason `Se registró dos veces` → **Anular cobro** | It asks first. "Cobro anulado."; that payment stays in the list with an **Anulado** badge, its reason and its value struck through; Cobrado 15,00, **Saldo 10,30** again; status "Cobro parcial"; **Registrar cobro** is back |
 | 10 | **Cuentas por cobrar** | The invoice is back in the list with Saldo 10,30 |
 | 11 | **Descargar CSV** on the report, open it in Excel | One row per open invoice with the same figures as the screen (including 25,30 / 10,30), accents intact |
-| 12 | **Actividad** | Nothing about cobros yet: collections are not in the activity log (a gap listed in NEXT_STEPS) |
+| 12 | **Actividad** → **Operaciones** | One line per cobro: "Ana Pérez registró un cobro de la factura 001-001-…: $15,00 · Transferencia", "…registró un cobro…: $10,30 · Efectivo" and "…anuló un cobro de la factura…: $10,30 · Se registró dos veces", each with its time |
 
 Overdue buckets (1 a 30 días and beyond) can't be reached locally without moving dates, so they are covered by the automated tests (`receivables.test.ts`).
 
@@ -863,6 +864,28 @@ And for each: open a document or an order, so the read side is seen too.
 | 1 | Carla (Contador): **Reportes** → **Exportación para el contador**, this month, **Descargar ZIP** | A `comprobantes-AAAA-MM.zip` |
 | 2 | Open it | `autorizados/` with one XML per authorized document, `anulados/` with the voided invoice |
 | 3 | A month with nothing, e.g. 2020-01 | "No hay comprobantes autorizados en 2020-01." |
+
+### L4 · The activity log: account and operations
+
+**Needs:** B3, D1–D4, E1–E3, F6, G3, H3, J1. **Leaves:** nothing new. Work in the test copy (Pruebas), where the earlier flows were done: what the business does is recorded in the company in use, so the real company's log stays empty until you work there.
+
+The log has two categories (ADR-041): **Cuenta y configuración** (who signed in, people and roles, settings, certificate, plan and payments) and **Operaciones** (what the business did).
+
+| # | Do | Expect |
+|---|---|---|
+| 1 | Ana (Propietario): **Actividad** | Three tabs: **Todo**, **Cuenta y configuración**, **Operaciones**. "Todo" mixes both, newest first |
+| 2 | **Cuenta y configuración** | Sign-ins, the company's creation, the legal texts accepted, settings and role changes, plan and payments; no products, stock or invoices |
+| 3 | **Operaciones** | The business's own acts, each "Ana Pérez … <what>: <detail>" with its time. Look for the ones below |
+| 4 | Look for the products you made and changed | "creó el producto: CAF-1 · Café molido"; "cambió el producto: CAF-1 · Café molido · precio de 5.500000 a 6.000000" (D4 step 8, and back to 5.50); "cambió el estado del producto: SRV-1 …: desactivado" then "activado" (D1 step 6); "importó productos: 1 creado" (D4) |
+| 5 | Look for clients and providers | "creó el cliente: 1710034065 · María Pérez"; "cambió el cliente: … cambió teléfono" (D2 step 4: the field's name, never the number); "creó el proveedor …" |
+| 6 | Look for stock | "registró un saldo inicial de: CAF-1 · Matriz · 50 × $2.25"; "importó saldos iniciales: 1 saldo"; "ajustó las existencias de: CAF-1 · Matriz · salida 2 · Merma" (E2) |
+| 7 | Look for orders and the invoice that was voided | "anuló la orden de compra: OC-… · Ya no se necesita" (G3); "anuló el pedido de venta: PV-…" (H1 step 3); "facturó el pedido de venta: PV-000001 · factura 001-001-…" (H2); "marcó como anulada la factura: 001-001-…" (F6) |
+| 8 | Look for collections | "registró un cobro de la factura …: $15,00 · …" and "anuló un cobro de la factura …" (H3) |
+| 9 | Look for data taken out | "descargó datos: clientes", "…: productos", "…: valoración de inventario" (E3), "…: reporte …" if you downloaded one (L2) and "…: comprobantes del mes (ZIP del contador)" after L3 |
+| 10 | Switch to **Producción** (the switcher) and open **Actividad** → **Operaciones** | Empty ("Todavía no hay operaciones registradas."): the test copy's acts are not the real company's. Go back to **Pruebas** |
+| 11 | Carla (Contador): **Actividad** | No tabs: she sees only **Operaciones** (what the business did), not who signed in or changed roles. Opening `/es/audit?category=ACCOUNT` shows the same operations, not the account's events |
+| 12 | Bruno (Compras y bodega) and Lucía (Solo lectura) | No **Actividad** in their menu |
+| 13 | As Ana, try to change an entry | There is no way to: the log has no edit or delete, and the page says so |
 
 ---
 

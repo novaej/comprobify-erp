@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { and, asc, eq, inArray, schema, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
+import { recordAudit } from '../audit';
 import { returnHoldToOrder, transferOrderHold } from '../inventory';
 import {
   amountInput,
@@ -20,6 +21,7 @@ import {
   linkInvoice,
   orderForInvoicing,
   orderOfDocument,
+  saleOrderNumber,
   syncSaleOrder,
   type LineCoverage,
 } from '../sales';
@@ -182,6 +184,14 @@ async function invoiceOrderIn(
       linkInvoice(tx, { order, documentId: document.id, revision: 1, lines: built.links }),
   );
   await syncSaleOrder(tx, order.id);
+  // A retry that found its invoice made nothing new, so it says nothing.
+  if (issued.created)
+    await recordAudit(tx.db, {
+      tenantId: ctx.tenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'sale_order.invoiced',
+      details: { label: saleOrderNumber(order.number), invoice: issued.number },
+    });
   return issued;
 }
 

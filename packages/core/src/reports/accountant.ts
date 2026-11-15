@@ -1,4 +1,5 @@
 import type { Database } from '@comprobify/db';
+import { recordDataExport } from '../audit';
 import { z } from 'zod';
 import { authorizedXmls, documentNumber } from '../documents';
 import {
@@ -49,6 +50,7 @@ export async function accountantExport(
     })),
     ctx.clock.now(),
   );
+  await recordDataExport(ctx, db, 'accountant_zip');
   return {
     filename: `comprobantes-${month}.zip`,
     zip,

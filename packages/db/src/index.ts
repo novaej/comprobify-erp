@@ -10,7 +10,11 @@ export {
   SRI_OPERATIONS,
   SRI_SOURCES,
   VERSION_REASONS,
+  ACCOUNT_AUDIT_ACTIONS,
   AUDIT_ACTIONS,
+  AUDIT_CATEGORIES,
+  auditCategoryOf,
+  OPERATIONS_AUDIT_ACTIONS,
   BATCH_ITEM_STATUSES,
   BATCH_ITEM_TRANSITIONS,
   BATCH_SOURCES,
@@ -84,6 +88,7 @@ export {
   SUSPENSION_REASONS,
 } from './schema';
 export type {
+  AuditCategory,
   BatchItemStatus,
   BatchSource,
   BatchStatus,

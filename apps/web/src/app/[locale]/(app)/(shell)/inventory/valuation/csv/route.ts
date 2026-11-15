@@ -1,4 +1,4 @@
-import { isDomainError, stockValuation } from '@comprobify/core';
+import { isDomainError, recordDataExport, stockValuation } from '@comprobify/core';
 import { getTranslations } from 'next-intl/server';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
@@ -14,6 +14,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ locale: st
   const { db } = await getRuntime();
   try {
     const valuation = await stockValuation(actor, db);
+    // The screen reads the same figures; this download is data taken out.
+    await recordDataExport(actor, db, 'stock_valuation');
     const t = await getTranslations({ locale, namespace: 'inventory.valuation.csv' });
     // Spanish Excel: ';' between fields and ',' for decimals.
     const spanish = locale !== 'en';

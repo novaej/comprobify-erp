@@ -13,6 +13,7 @@ import {
   fixedClock,
   getReceivable,
   onboardOrganization,
+  listAuditEvents,
   recordPayment,
   resolveActor,
   sendDocument,
@@ -225,6 +226,14 @@ describe('receivables', () => {
     ).toBe('PAYMENT_EXCEEDS_BALANCE');
     await recordPayment(actor, db, { documentId: document.id, amount: '7.50', method: '01' });
     expect(await view(document)).toMatchObject({ status: 'PAID', paid: '11.50', balance: '0.00' });
+    // Each collection is in the activity log, with the invoice and the amount.
+    const recorded = (await listAuditEvents(actor, db, { category: 'OPERATIONS' })).filter(
+      (event) => event.action === 'receivable.payment_recorded',
+    );
+    expect(recorded.map((event) => event.details.amount)).toEqual(
+      expect.arrayContaining(['4.00', '7.50']),
+    );
+    expect(recorded[0]!.details.label).toBe(document.number);
     expect(
       await failure(
         recordPayment(actor, db, { documentId: document.id, amount: '0.01', method: '01' }),

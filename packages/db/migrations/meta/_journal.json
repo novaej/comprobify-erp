@@ -484,6 +484,13 @@
       "when": 1794745558298,
       "tag": "0068_tenant_contact_email",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1794758764168,
+      "tag": "0069_audit_operations_actions",
+      "breakpoints": true
     }
   ]
 }

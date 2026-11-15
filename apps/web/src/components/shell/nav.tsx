@@ -57,7 +57,8 @@ type NavItem = {
     | 'legal';
   group: 'operate' | 'manage';
   // Core still enforces both; these only hide the link (FR-ROLE-3, FR-PLAN-4).
-  permission: string | null;
+  // Any one of them is enough.
+  permission: string | string[] | null;
   feature?: string;
 };
 
@@ -168,7 +169,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: ScrollText,
     labelKey: 'activity',
     group: 'manage',
-    permission: 'audit.read',
+    permission: ['audit.read', 'audit.operations.read'],
   },
   {
     href: '/plan',
@@ -250,7 +251,8 @@ export function Nav({
   const expanded = !collapsed || hovered;
   const items = NAV_ITEMS.filter(
     (item) =>
-      (!item.permission || permissions.includes(item.permission)) &&
+      (!item.permission ||
+        [item.permission].flat().some((permission) => permissions.includes(permission))) &&
       (!item.feature || features.includes(item.feature)),
   );
   const themeLabels = { toLight: tTheme('toLight'), toDark: tTheme('toDark') };

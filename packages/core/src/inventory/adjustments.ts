@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import { and, eq, inArray, schema, type Database } from '@comprobify/db';
+import { and, eq, inArray, schema, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
-import { productsByCode } from '../catalog';
+import { recordAudit } from '../audit';
+import { productsByCode, productSummary } from '../catalog';
 import {
   csvDecimal,
   Dec,
@@ -38,6 +39,13 @@ export type AdjustmentInput = z.input<typeof adjustmentInput>;
 
 type Applied = { movement: StockMovement; level: StockLevel };
 
+// What the activity log says a stock change was about: the product and the warehouse.
+async function stockLabel(tx: Tx, productId: string, warehouseId: string): Promise<string> {
+  const product = await productSummary(tx, productId);
+  const warehouse = (await warehousesOf(tx)).find((row) => row.id === warehouseId);
+  return `${product?.code ?? '?'} · ${warehouse?.name ?? '?'}`;
+}
+
 export async function adjustStock(
   ctx: ActorContext,
   db: Database,
@@ -51,15 +59,28 @@ export async function adjustStock(
     quantity: input.quantity,
     reason: input.reason,
   };
-  return db.withTenant({ tenantId: ctx.tenantId }, (tx) =>
-    applyMovement(
+  return db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
+    const applied = await applyMovement(
       ctx,
       tx,
       input.direction === 'IN'
         ? { type: 'ADJUSTMENT_IN', unitCost: input.unitCost, ...common }
         : { type: 'ADJUSTMENT_OUT', ...common },
-    ),
-  );
+    );
+    // The reason is the person's own text; the rest are ids, amounts and names of things.
+    await recordAudit(tx.db, {
+      tenantId: ctx.tenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'stock.adjusted',
+      details: {
+        label: await stockLabel(tx, input.productId, input.warehouseId),
+        direction: input.direction,
+        quantity: input.quantity,
+        reason: input.reason,
+      },
+    });
+    return applied;
+  });
 }
 
 export const openingBalanceInput = z.object({
@@ -78,9 +99,25 @@ export async function setOpeningBalance(
 ): Promise<Applied> {
   canAdjust(ctx);
   const input = openingBalanceInput.parse(raw);
-  return db.withTenant({ tenantId: ctx.tenantId }, (tx) =>
-    applyMovement(ctx, tx, { type: 'OPENING_BALANCE', ...input }, { onlyFirst: true }),
-  );
+  return db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
+    const applied = await applyMovement(
+      ctx,
+      tx,
+      { type: 'OPENING_BALANCE', ...input },
+      { onlyFirst: true },
+    );
+    await recordAudit(tx.db, {
+      tenantId: ctx.tenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'stock.opening_set',
+      details: {
+        label: await stockLabel(tx, input.productId, input.warehouseId),
+        quantity: input.quantity,
+        unitCost: input.unitCost,
+      },
+    });
+    return applied;
+  });
 }
 
 export const OPENING_IMPORT_MAX_ROWS = 5000;
@@ -209,6 +246,12 @@ export async function importOpeningBalances(
         },
         { onlyFirst: true },
       );
+    await recordAudit(tx.db, {
+      tenantId: ctx.tenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'stock.opening_imported',
+      details: { count: planned.length },
+    });
     return { imported: planned.length, problems: [] };
   });
 }

@@ -13,6 +13,7 @@ import {
   type Tx,
 } from '@comprobify/db';
 import { z } from 'zod';
+import { recordAudit } from '../audit';
 import { productsForOrder } from '../catalog';
 import { releaseDocumentStock, reserveDocumentStock } from '../inventory';
 import {
@@ -29,7 +30,7 @@ import { documentTotals, lineAmounts } from '../sri';
 import { nextNumber, warehousesOf, type Warehouse } from '../tenancy';
 import { coverageOf } from './invoicing';
 import { canManage, canRead, lockOrder, optionalText, positive, type SaleOrder } from './shared';
-import { assertSaleOrderTransition, SALE_ORDER_STATUSES } from './status';
+import { assertSaleOrderTransition, SALE_ORDER_STATUSES, saleOrderNumber } from './status';
 
 // FR-SAL-1, FR-SAL-2 (ADR-021): what a client asks for, at a price, from one warehouse. A draft
 // holds nothing; confirming holds the goods that track stock, and cancelling lets them go.
@@ -297,6 +298,12 @@ export async function cancelSaleOrder(
       .where(eq(schema.saleOrders.id, input.id))
       .returning();
     await release(ctx, tx, order);
+    await recordAudit(tx.db, {
+      tenantId: ctx.tenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'sale_order.cancelled',
+      details: { label: saleOrderNumber(updated!.number), reason: input.reason },
+    });
     return updated!;
   });
 }

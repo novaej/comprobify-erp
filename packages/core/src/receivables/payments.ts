@@ -11,7 +11,8 @@ import {
   type Tx,
 } from '@comprobify/db';
 import { z } from 'zod';
-import { receivableInvoice, type ReceivableInvoice } from '../documents';
+import { recordAudit } from '../audit';
+import { documentNumber, receivableInvoice, type ReceivableInvoice } from '../documents';
 import {
   amountInput,
   Dec,
@@ -115,6 +116,12 @@ export async function recordPayment(
         createdBy: ctx.userId ?? null,
       })
       .returning();
+    await recordAudit(tx.db, {
+      tenantId: ctx.tenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'receivable.payment_recorded',
+      details: { label: invoice.number, amount: input.amount, method: input.method },
+    });
     return payment!;
   });
 }
@@ -152,6 +159,20 @@ export async function voidPayment(
       .where(and(eq(payments.id, input.id), isNull(payments.voidedAt)))
       .returning();
     if (!updated) throw new DomainError('PAYMENT_VOIDED', 'This payment was already voided');
+    const [voided] = await tx.db
+      .select({ series: schema.documents.series, sequential: schema.documents.sequential })
+      .from(schema.documents)
+      .where(eq(schema.documents.id, found.documentId));
+    await recordAudit(tx.db, {
+      tenantId: ctx.tenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'receivable.payment_voided',
+      details: {
+        label: voided ? documentNumber(voided.series, voided.sequential) : '',
+        amount: updated.amount,
+        reason: input.reason,
+      },
+    });
     return updated;
   });
 }

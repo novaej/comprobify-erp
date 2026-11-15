@@ -21,6 +21,7 @@ import {
   resolveActor,
   sendDocument,
   validateXml,
+  listAuditEvents,
   voidDocument,
   type ActorContext,
   type CorrectionInput,
@@ -342,6 +343,11 @@ describe('correcting, re-issuing by hand and voiding', () => {
       toStatus: 'VOIDED',
       details: { sriStatus: 'VOIDED' },
     });
+    // The act is in the company's activity log too, with the number and who confirmed it.
+    const voided = (await listAuditEvents(actor, db, { category: 'OPERATIONS' })).find(
+      (event) => event.action === 'document.voided',
+    );
+    expect(voided!.details).toMatchObject({ label: document.number, attested: false });
 
     const consumer = await authorized(null);
     await expect(voidDocument(actor, db, consumer.id, {}, { sri })).rejects.toMatchObject({

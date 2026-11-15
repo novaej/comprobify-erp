@@ -525,6 +525,22 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await expect(products.getByRole('row', { name: /Asesoría contable/ })).toContainText(
       'Inactivo',
     );
+
+    // What was just done is in Actividad, under Operaciones: the account's events are a tab apart.
+    await page.goto('/es/audit');
+    const tabs = page.getByRole('navigation', { name: 'Qué ver' });
+    await expect(tabs.getByRole('link', { name: 'Todo' })).toBeVisible();
+    await expect(tabs.getByRole('link', { name: 'Cuenta y configuración' })).toBeVisible();
+    await tabs.getByRole('link', { name: 'Operaciones' }).click();
+    await expect(page).toHaveURL(/category=OPERATIONS/);
+    const log = page.getByRole('table', { name: 'Actividad' });
+    await expect(log).toContainText('creó el cliente');
+    await expect(log).toContainText('creó el producto');
+    await expect(log).toContainText('cambió el estado del producto');
+    await expect(log).toContainText('desactivado');
+    // Not the sign-in or the company's creation, which belong to the other tab.
+    await expect(log).not.toContainText('inició sesión');
+    await look(page, 'activity-operations');
   });
 
   test('sets the tax details and where the company issues from (FR-ONB-3, FR-PLAN-3)', async ({

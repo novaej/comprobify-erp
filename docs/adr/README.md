@@ -61,3 +61,4 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [038](038-retention-of-technical-duplicates.md) | Retention of technical duplicates | Accepted |
 | [039](039-numbering-set-where-it-is-used.md) | Numbering, set where it is used | Accepted |
 | [040](040-replies-to-the-company.md) | Replies to emails sent for a company | Accepted |
+| [041](041-activity-log-categories.md) | One activity log, two categories | Accepted |

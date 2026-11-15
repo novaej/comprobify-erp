@@ -174,8 +174,14 @@ describe('audit log and go-live', () => {
   });
 
   it('lets only audit.read see the log', async () => {
+    // The accountant reads what the business did, not who signed in or changed a role (ADR-041).
     const accountant = await join('ACCOUNTANT');
-    await expect(listAuditEvents(accountant.ctx, db)).resolves.not.toHaveLength(0);
+    await expect(
+      listAuditEvents(accountant.ctx, db, { category: 'ACCOUNT' }),
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    await expect(
+      listAuditEvents(accountant.ctx, db, { category: 'OPERATIONS' }),
+    ).resolves.toBeInstanceOf(Array);
     const viewer = await join('VIEWER');
     await expect(listAuditEvents(viewer.ctx, db)).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });

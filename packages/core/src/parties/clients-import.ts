@@ -1,4 +1,5 @@
 import { and, asc, eq, inArray, schema, sql, type Database } from '@comprobify/db';
+import { recordAudit, recordDataExport } from '../audit';
 import {
   csvBoolean,
   normalHeader,
@@ -163,6 +164,12 @@ export async function importClients(
         created++;
       }
     }
+    await recordAudit(tx, {
+      tenantId: ctx.tenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'client.imported',
+      details: { created, updated },
+    });
     return { created, updated, problems: [] };
   });
 }
@@ -181,6 +188,7 @@ export async function exportClients(
       .from(schema.clients)
       .orderBy(asc(schema.clients.name), asc(schema.clients.identification)),
   );
+  await recordDataExport(ctx, db, 'clients');
   const spanish = options.locale === 'es';
   return [
     KEYS.map((key) => HEADERS[key][options.locale]),

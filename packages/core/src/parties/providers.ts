@@ -10,6 +10,7 @@ import {
   type ListDirection,
   type StateOptions,
 } from '../kernel';
+import { auditFieldsChanged, recordAudit } from '../audit';
 import { clientInput } from './input';
 
 // FR-MD-3: who the company buys from, with the client's identity rules: the same types,
@@ -103,6 +104,17 @@ export async function providerForOrder(
   return row;
 }
 
+const PROVIDER_AUDITED_FIELDS = [
+  'idType',
+  'identification',
+  'name',
+  'emails',
+  'phone',
+  'address',
+  'paymentTerm',
+  'paymentTermUnit',
+] as const;
+
 export async function createProvider(
   ctx: ActorContext,
   db: Database,
@@ -111,12 +123,19 @@ export async function createProvider(
   canManage(ctx);
   const input = providerInput.parse(raw);
   try {
-    const [row] = await db.withTenant({ tenantId: ctx.tenantId }, ({ db: tx }) =>
-      tx
+    const [row] = await db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+      const created = await tx
         .insert(schema.providers)
         .values({ tenantId: ctx.tenantId, ...input })
-        .returning(),
-    );
+        .returning();
+      await recordAudit(tx, {
+        tenantId: ctx.tenantId,
+        actorUserId: ctx.userId ?? null,
+        action: 'provider.created',
+        details: { label: `${input.identification} · ${input.name}` },
+      });
+      return created;
+    });
     return row!;
   } catch (error) {
     if (isUniqueViolation(error))
@@ -135,13 +154,27 @@ export async function updateProvider(
   const providerId = z.uuid().parse(id);
   const input = providerInput.parse(raw);
   try {
-    const [row] = await db.withTenant({ tenantId: ctx.tenantId }, ({ db: tx }) =>
-      tx
+    const row = await db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+      const [before] = await tx
+        .select()
+        .from(schema.providers)
+        .where(eq(schema.providers.id, providerId));
+      const [updated] = await tx
         .update(schema.providers)
         .set({ ...input, updatedAt: sql`now()` })
         .where(eq(schema.providers.id, providerId))
-        .returning(),
-    );
+        .returning();
+      if (!before || !updated) return null;
+      const fields = auditFieldsChanged(before, updated, PROVIDER_AUDITED_FIELDS);
+      if (fields.length > 0)
+        await recordAudit(tx, {
+          tenantId: ctx.tenantId,
+          actorUserId: ctx.userId ?? null,
+          action: 'provider.updated',
+          details: { label: `${updated.identification} · ${updated.name}`, fields },
+        });
+      return updated;
+    });
     if (!row) throw new DomainError('NOT_FOUND', 'Provider not found');
     return row;
   } catch (error) {
@@ -159,12 +192,24 @@ export async function setProviderActive(
 ): Promise<void> {
   canManage(ctx);
   const providerId = z.uuid().parse(input.id);
-  const updated = await db.withTenant({ tenantId: ctx.tenantId }, ({ db: tx }) =>
-    tx
+  const updated = await db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+    const rows = await tx
       .update(schema.providers)
       .set({ active: input.active, updatedAt: sql`now()` })
       .where(eq(schema.providers.id, providerId))
-      .returning({ id: schema.providers.id }),
-  );
+      .returning({
+        id: schema.providers.id,
+        identification: schema.providers.identification,
+        name: schema.providers.name,
+      });
+    if (rows[0])
+      await recordAudit(tx, {
+        tenantId: ctx.tenantId,
+        actorUserId: ctx.userId ?? null,
+        action: 'provider.active_changed',
+        details: { label: `${rows[0].identification} · ${rows[0].name}`, active: input.active },
+      });
+    return rows;
+  });
   if (updated.length === 0) throw new DomainError('NOT_FOUND', 'Provider not found');
 }

@@ -12,6 +12,7 @@ import {
   type Tx,
 } from '@comprobify/db';
 import { z } from 'zod';
+import { recordAudit } from '../audit';
 import { productsForOrder } from '../catalog';
 import {
   Dec,
@@ -35,7 +36,11 @@ import {
   positive,
   type PurchaseOrder,
 } from './shared';
-import { assertPurchaseOrderTransition, PURCHASE_ORDER_STATUSES } from './status';
+import {
+  assertPurchaseOrderTransition,
+  PURCHASE_ORDER_STATUSES,
+  purchaseOrderNumber,
+} from './status';
 
 // FR-PUR-1 (ADR-019): what the company asks a provider for, at a cost without IVA, to arrive
 // at one warehouse. Editable while a draft; after that only its status moves.
@@ -220,6 +225,15 @@ async function moveOrder(
       .set({ status: to, ...set })
       .where(eq(schema.purchaseOrders.id, orderId))
       .returning();
+    // Only the cancellation is an act worth a line in the log; sending and closing have their
+    // own dates on the order.
+    if (to === 'CANCELLED')
+      await recordAudit(tx.db, {
+        tenantId: ctx.tenantId,
+        actorUserId: ctx.userId ?? null,
+        action: 'purchase_order.cancelled',
+        details: { label: purchaseOrderNumber(updated!.number), reason: set.cancelReason ?? null },
+      });
     return updated!;
   });
 }

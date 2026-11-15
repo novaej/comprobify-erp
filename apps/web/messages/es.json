@@ -491,6 +491,48 @@
         "invoice_waived": "cerró un pago sin factura",
         "card_resolved": "resolvió un cobro con tarjeta",
         "repriced": "recalculó un pago pendiente con el nuevo IVA"
+      },
+      "document": {
+        "voided": "marcó como anulada la factura"
+      },
+      "stock": {
+        "adjusted": "ajustó las existencias de",
+        "opening_set": "registró un saldo inicial de",
+        "opening_imported": "importó saldos iniciales"
+      },
+      "product": {
+        "created": "creó el producto",
+        "updated": "cambió el producto",
+        "active_changed": "cambió el estado del producto",
+        "imported": "importó productos"
+      },
+      "client": {
+        "created": "creó el cliente",
+        "updated": "cambió el cliente",
+        "active_changed": "cambió el estado del cliente",
+        "imported": "importó clientes"
+      },
+      "provider": {
+        "created": "creó el proveedor",
+        "updated": "cambió el proveedor",
+        "active_changed": "cambió el estado del proveedor"
+      },
+      "purchase_order": {
+        "cancelled": "anuló la orden de compra"
+      },
+      "sale_order": {
+        "cancelled": "anuló el pedido de venta",
+        "invoiced": "facturó el pedido de venta"
+      },
+      "receivable": {
+        "payment_recorded": "registró un cobro de la factura",
+        "payment_voided": "anuló un cobro de la factura"
+      },
+      "bulk": {
+        "batch_started": "inició una facturación masiva"
+      },
+      "data": {
+        "exported": "descargó datos"
       }
     },
     "complimentary": "cortesía",
@@ -499,7 +541,56 @@
       "what": "Qué pasó",
       "when": "Cuándo"
     },
-    "emptyHint": "Aquí verás quién cambió qué en la empresa, como invitaciones, roles y cambios de plan."
+    "emptyHint": "Aquí verás quién cambió qué en la empresa, como invitaciones, roles y cambios de plan.",
+    "categories": {
+      "ALL": "Todo",
+      "ACCOUNT": "Cuenta y configuración",
+      "OPERATIONS": "Operaciones"
+    },
+    "categoriesLabel": "Qué ver",
+    "descriptionOperations": "Lo que hizo el negocio: anulaciones, existencias, clientes, productos, cobros, pedidos y descargas de datos. Los registros no se pueden editar ni borrar.",
+    "descriptionAccount": "Quién cambió la cuenta y la configuración: accesos, personas, datos de la empresa, firma, plan y pagos. Los registros no se pueden editar ni borrar.",
+    "emptyOperations": "Todavía no hay operaciones registradas.",
+    "detail": {
+      "in": "entrada",
+      "out": "salida",
+      "activated": "activado",
+      "deactivated": "desactivado",
+      "counts": "{created, plural, =0 {} one {# creado} other {# creados}}{updated, plural, =0 {} one {, # actualizado} other {, # actualizados}}",
+      "balances": "{count, plural, one {# saldo} other {# saldos}}",
+      "invoices": "{count, plural, one {# factura} other {# facturas}}",
+      "fromOrders": "desde pedidos",
+      "fromCsv": "desde un CSV",
+      "invoice": "factura {number}",
+      "changed": "cambió {fields}",
+      "by": "de {from} a {to}",
+      "none": "—"
+    },
+    "exports": {
+      "clients": "clientes",
+      "products": "productos",
+      "stock_valuation": "valoración de inventario",
+      "accountant_zip": "comprobantes del mes (ZIP del contador)",
+      "report": "reporte"
+    },
+    "fieldNames": {
+      "code": "código",
+      "auxiliaryCode": "código auxiliar",
+      "name": "nombre",
+      "kind": "tipo",
+      "unit": "unidad",
+      "price": "precio",
+      "cost": "costo",
+      "ivaRateCode": "IVA",
+      "tracksStock": "controla stock",
+      "idType": "tipo de identificación",
+      "identification": "identificación",
+      "emails": "correos",
+      "phone": "teléfono",
+      "address": "dirección",
+      "paymentTerm": "plazo",
+      "paymentTermUnit": "unidad del plazo"
+    }
   },
   "goLive": {
     "title": "Pasar {organization} a producción",

@@ -11,6 +11,7 @@ import {
   type Tx,
 } from '@comprobify/db';
 import { z } from 'zod';
+import { recordAudit } from '../audit';
 import { documentNumber } from '../documents';
 import { DomainError, requireFeature, requirePermission, type ActorContext } from '../kernel';
 import type { Jobs } from '../jobs';
@@ -93,6 +94,12 @@ export async function startOrderBatch(
       );
     // With the batch, so a batch that commits is a batch the feeder is told about.
     await deps.jobs.enqueue(tx, 'bulk.feed', {});
+    await recordAudit(tx.db, {
+      tenantId: ctx.tenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'bulk.batch_started',
+      details: { source: 'SALE_ORDERS', count: orderIds.length },
+    });
     return { id: batch!.id, totalItems: orderIds.length };
   });
 }

@@ -491,6 +491,48 @@
         "invoice_waived": "closed a payment without an invoice",
         "card_resolved": "settled a card charge",
         "repriced": "recalculated an open payment at the new VAT"
+      },
+      "document": {
+        "voided": "marked the invoice as voided"
+      },
+      "stock": {
+        "adjusted": "adjusted the stock of",
+        "opening_set": "set an opening balance for",
+        "opening_imported": "imported opening balances"
+      },
+      "product": {
+        "created": "created the product",
+        "updated": "changed the product",
+        "active_changed": "changed the status of the product",
+        "imported": "imported products"
+      },
+      "client": {
+        "created": "created the client",
+        "updated": "changed the client",
+        "active_changed": "changed the status of the client",
+        "imported": "imported clients"
+      },
+      "provider": {
+        "created": "created the provider",
+        "updated": "changed the provider",
+        "active_changed": "changed the status of the provider"
+      },
+      "purchase_order": {
+        "cancelled": "cancelled the purchase order"
+      },
+      "sale_order": {
+        "cancelled": "cancelled the sale order",
+        "invoiced": "invoiced the sale order"
+      },
+      "receivable": {
+        "payment_recorded": "recorded a collection on invoice",
+        "payment_voided": "voided a collection on invoice"
+      },
+      "bulk": {
+        "batch_started": "started a bulk invoicing"
+      },
+      "data": {
+        "exported": "downloaded data"
       }
     },
     "complimentary": "complimentary",
@@ -499,7 +541,56 @@
       "what": "What happened",
       "when": "When"
     },
-    "emptyHint": "You'll see who changed what in the company here, such as invitations, roles and plan changes."
+    "emptyHint": "You'll see who changed what in the company here, such as invitations, roles and plan changes.",
+    "categories": {
+      "ALL": "Everything",
+      "ACCOUNT": "Account and setup",
+      "OPERATIONS": "Operations"
+    },
+    "categoriesLabel": "What to see",
+    "descriptionOperations": "What the business did: voids, stock, clients, products, collections, orders and data downloads. Records can not be edited or deleted.",
+    "descriptionAccount": "Who changed the account and its setup: access, people, company data, signing certificate, plan and payments. Records can not be edited or deleted.",
+    "emptyOperations": "No operations have been recorded yet.",
+    "detail": {
+      "in": "in",
+      "out": "out",
+      "activated": "activated",
+      "deactivated": "deactivated",
+      "counts": "{created, plural, =0 {} one {# created} other {# created}}{updated, plural, =0 {} one {, # updated} other {, # updated}}",
+      "balances": "{count, plural, one {# balance} other {# balances}}",
+      "invoices": "{count, plural, one {# invoice} other {# invoices}}",
+      "fromOrders": "from sale orders",
+      "fromCsv": "from a CSV",
+      "invoice": "invoice {number}",
+      "changed": "changed {fields}",
+      "by": "from {from} to {to}",
+      "none": "—"
+    },
+    "exports": {
+      "clients": "clients",
+      "products": "products",
+      "stock_valuation": "stock valuation",
+      "accountant_zip": "the month's documents (accountant's ZIP)",
+      "report": "report"
+    },
+    "fieldNames": {
+      "code": "code",
+      "auxiliaryCode": "auxiliary code",
+      "name": "name",
+      "kind": "type",
+      "unit": "unit",
+      "price": "price",
+      "cost": "cost",
+      "ivaRateCode": "VAT",
+      "tracksStock": "tracks stock",
+      "idType": "identification type",
+      "identification": "identification",
+      "emails": "emails",
+      "phone": "phone",
+      "address": "address",
+      "paymentTerm": "term",
+      "paymentTermUnit": "term unit"
+    }
   },
   "goLive": {
     "title": "Take {organization} live",

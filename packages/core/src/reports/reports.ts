@@ -1,5 +1,6 @@
 import type { Database } from '@comprobify/db';
 import { z } from 'zod';
+import { recordDataExport } from '../audit';
 import { documentNumber, documentsIssued, salesBy, salesByProduct, taxSummary } from '../documents';
 import {
   addDays,
@@ -259,6 +260,8 @@ export async function runReport(
       )
     : null;
   const limit = options.limit;
+  // Who took the data out is recorded; reading it on the screen is not.
+  if (options.export) await recordDataExport(ctx, db, `report:${input.report}`);
   return {
     report: input.report,
     from,

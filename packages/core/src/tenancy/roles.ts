@@ -31,6 +31,8 @@ export const PERMISSIONS = [
   'reports.read',
   'reports.export',
   'audit.read',
+  // The second category of the activity log: what the business did (ADR-041).
+  'audit.operations.read',
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -72,9 +74,11 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'documents.issue',
     'reports.read',
   ],
-  ACCOUNTANT: [...READS, 'reports.export'],
+  // The accountant reads what the business did, not who signed in or changed a role.
+  ACCOUNTANT: [...READS.filter((permission) => permission !== 'audit.read'), 'reports.export'],
   VIEWER: READS.filter(
-    (permission) => !['users.read', 'billing.read', 'audit.read'].includes(permission),
+    (permission) =>
+      !['users.read', 'billing.read', 'audit.read', 'audit.operations.read'].includes(permission),
   ),
 };
 

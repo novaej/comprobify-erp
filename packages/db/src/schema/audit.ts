@@ -13,8 +13,12 @@ import { oneOf } from './checks';
 import { users } from './identity';
 import { tenants } from './tenancy';
 
-// FR-NOT-4: the single source for event names; the CHECK and core both use it.
-export const AUDIT_ACTIONS = [
+// FR-NOT-4: the single source for event names; the CHECK and core both use it. Two categories
+// share the one table (ADR-041): ACCOUNT is who the company is and who can do what (sign-ins,
+// people, settings, certificates, plan and payments); OPERATIONS is what the business did with
+// money, stock and its records. The category is derived from the list an action sits in, so it
+// can't drift from it.
+export const ACCOUNT_AUDIT_ACTIONS = [
   'organization.created',
   'organization.went_live',
   'organization.two_factor_requirement_changed',
@@ -76,6 +80,40 @@ export const AUDIT_ACTIONS = [
   'subscription.moved_to_custom',
   'subscription.module_complimentary',
 ] as const;
+
+// What the business did: voids, stock, master data, collections, orders, batches, data taken out.
+export const OPERATIONS_AUDIT_ACTIONS = [
+  'document.voided',
+  'stock.adjusted',
+  'stock.opening_set',
+  'stock.opening_imported',
+  'product.created',
+  'product.updated',
+  'product.active_changed',
+  'product.imported',
+  'client.created',
+  'client.updated',
+  'client.active_changed',
+  'client.imported',
+  'provider.created',
+  'provider.updated',
+  'provider.active_changed',
+  'purchase_order.cancelled',
+  'sale_order.cancelled',
+  'sale_order.invoiced',
+  'receivable.payment_recorded',
+  'receivable.payment_voided',
+  'bulk.batch_started',
+  'data.exported',
+] as const;
+
+export const AUDIT_ACTIONS = [...ACCOUNT_AUDIT_ACTIONS, ...OPERATIONS_AUDIT_ACTIONS] as const;
+
+export const AUDIT_CATEGORIES = ['ACCOUNT', 'OPERATIONS'] as const;
+export type AuditCategory = (typeof AUDIT_CATEGORIES)[number];
+
+export const auditCategoryOf = (action: (typeof AUDIT_ACTIONS)[number]): AuditCategory =>
+  (OPERATIONS_AUDIT_ACTIONS as readonly string[]).includes(action) ? 'OPERATIONS' : 'ACCOUNT';
 
 // Append-only: the app role may insert and read, never update or delete.
 export const auditEvents = pgTable(

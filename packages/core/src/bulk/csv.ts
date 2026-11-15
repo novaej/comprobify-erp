@@ -1,5 +1,6 @@
 import { schema, type Database } from '@comprobify/db';
 import { z } from 'zod';
+import { recordAudit } from '../audit';
 import { productsToSell } from '../catalog';
 import { csvInvoicePayment, csvInvoiceRow } from '../documents';
 import type { Jobs } from '../jobs';
@@ -231,6 +232,12 @@ export async function startCsvBatch(
       );
     // With the batch, so a batch that commits is a batch the feeder is told about.
     await deps.jobs.enqueue(tx, 'bulk.feed', {});
+    await recordAudit(tx.db, {
+      tenantId: ctx.tenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'bulk.batch_started',
+      details: { source: 'CSV', count: rows.length },
+    });
     return { batch: { id: batch!.id, totalItems: rows.length }, problems: [] };
   });
 }

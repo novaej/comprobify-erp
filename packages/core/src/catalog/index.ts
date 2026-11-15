@@ -12,6 +12,7 @@ import {
   type Tx,
 } from '@comprobify/db';
 import { z } from 'zod';
+import { auditChanges, recordAudit } from '../audit';
 import {
   DomainError,
   listOrder,
@@ -144,6 +145,18 @@ export async function getProduct(ctx: ActorContext, db: Database, id: string): P
   return row;
 }
 
+const PRODUCT_AUDITED_FIELDS = [
+  'code',
+  'auxiliaryCode',
+  'name',
+  'kind',
+  'unit',
+  'price',
+  'cost',
+  'ivaRateCode',
+  'tracksStock',
+] as const;
+
 export async function createProduct(
   ctx: ActorContext,
   db: Database,
@@ -153,12 +166,19 @@ export async function createProduct(
   const input = productInput.parse(raw);
   checkKind(input);
   try {
-    const [row] = await db.withTenant({ tenantId: ctx.tenantId }, ({ db: tx }) =>
-      tx
+    const [row] = await db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+      const created = await tx
         .insert(schema.products)
         .values({ tenantId: ctx.tenantId, ...input })
-        .returning(),
-    );
+        .returning();
+      await recordAudit(tx, {
+        tenantId: ctx.tenantId,
+        actorUserId: ctx.userId ?? null,
+        action: 'product.created',
+        details: { label: `${input.code} · ${input.name}` },
+      });
+      return created;
+    });
     return row!;
   } catch (error) {
     if (isUniqueViolation(error))
@@ -178,13 +198,29 @@ export async function updateProduct(
   const input = productInput.parse(raw);
   checkKind(input);
   try {
-    const [row] = await db.withTenant({ tenantId: ctx.tenantId }, ({ db: tx }) =>
-      tx
+    const row = await db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+      const [before] = await tx
+        .select()
+        .from(schema.products)
+        .where(eq(schema.products.id, productId));
+      const [updated] = await tx
         .update(schema.products)
         .set({ ...input, updatedAt: sql`now()` })
         .where(eq(schema.products.id, productId))
-        .returning(),
-    );
+        .returning();
+      if (!before || !updated) return null;
+      // What a price or a tax rate was is what an audit asks for; the log names the fields that
+      // changed, and their values (a product has nothing personal).
+      const changes = auditChanges(before, updated, PRODUCT_AUDITED_FIELDS);
+      if (changes)
+        await recordAudit(tx, {
+          tenantId: ctx.tenantId,
+          actorUserId: ctx.userId ?? null,
+          action: 'product.updated',
+          details: { label: `${updated.code} · ${updated.name}`, changes },
+        });
+      return updated;
+    });
     if (!row) throw new DomainError('NOT_FOUND', 'Product not found');
     return row;
   } catch (error) {
@@ -204,13 +240,25 @@ export async function setProductActive(
 ): Promise<void> {
   canManage(ctx);
   const productId = z.uuid().parse(input.id);
-  const updated = await db.withTenant({ tenantId: ctx.tenantId }, ({ db: tx }) =>
-    tx
+  const updated = await db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+    const rows = await tx
       .update(schema.products)
       .set({ active: input.active, updatedAt: sql`now()` })
       .where(eq(schema.products.id, productId))
-      .returning({ id: schema.products.id }),
-  );
+      .returning({
+        id: schema.products.id,
+        code: schema.products.code,
+        name: schema.products.name,
+      });
+    if (rows[0])
+      await recordAudit(tx, {
+        tenantId: ctx.tenantId,
+        actorUserId: ctx.userId ?? null,
+        action: 'product.active_changed',
+        details: { label: `${rows[0].code} · ${rows[0].name}`, active: input.active },
+      });
+    return rows;
+  });
   if (updated.length === 0) throw new DomainError('NOT_FOUND', 'Product not found');
 }
 

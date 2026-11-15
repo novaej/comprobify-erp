@@ -1,5 +1,6 @@
 import { eq, schema, type Database } from '@comprobify/db';
 import { z } from 'zod';
+import { recordAudit } from '../audit';
 import { DomainError, requireFeature, requirePermission, type ActorContext } from '../kernel';
 import {
   CONSUMER_FINAL_ID,
@@ -9,6 +10,7 @@ import {
   type ValidityResult,
 } from '../sri';
 import { recordExchange } from './exchanges';
+import { documentNumber } from './number';
 import { locked, transition } from './sending';
 import { stockOnVoided } from './stock';
 
@@ -110,6 +112,13 @@ export async function voidDocument(
       },
     );
     await stockOnVoided(tx, voided, ctx.userId ?? null);
+    await recordAudit(tx.db, {
+      tenantId: ctx.tenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'document.voided',
+      // The number says which document; whether SRI confirmed it or the person attested to it.
+      details: { label: documentNumber(voided), attested: validity === null },
+    });
   });
   return { status: 'VOIDED', attested: validity === null };
 }

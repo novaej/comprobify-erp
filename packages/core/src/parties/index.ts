@@ -21,6 +21,7 @@ import {
   type ListDirection,
   type StateOptions,
 } from '../kernel';
+import { recordAudit, auditFieldsChanged } from '../audit';
 import { clientInput, line } from './input';
 
 export { isValidCedula, isValidIdentification } from './identification';
@@ -158,6 +159,17 @@ export async function getClient(ctx: ActorContext, db: Database, id: string): Pr
   return row;
 }
 
+const CLIENT_AUDITED_FIELDS = [
+  'idType',
+  'identification',
+  'name',
+  'emails',
+  'phone',
+  'address',
+  'paymentTerm',
+  'paymentTermUnit',
+] as const;
+
 export async function createClient(
   ctx: ActorContext,
   db: Database,
@@ -166,12 +178,19 @@ export async function createClient(
   canManage(ctx);
   const input = clientInput.parse(raw);
   try {
-    const [row] = await db.withTenant({ tenantId: ctx.tenantId }, ({ db: tx }) =>
-      tx
+    const [row] = await db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+      const created = await tx
         .insert(schema.clients)
         .values({ tenantId: ctx.tenantId, ...input })
-        .returning(),
-    );
+        .returning();
+      await recordAudit(tx, {
+        tenantId: ctx.tenantId,
+        actorUserId: ctx.userId ?? null,
+        action: 'client.created',
+        details: { label: `${input.identification} · ${input.name}` },
+      });
+      return created;
+    });
     return row!;
   } catch (error) {
     if (isUniqueViolation(error))
@@ -190,13 +209,28 @@ export async function updateClient(
   const clientId = z.uuid().parse(id);
   const input = clientInput.parse(raw);
   try {
-    const [row] = await db.withTenant({ tenantId: ctx.tenantId }, ({ db: tx }) =>
-      tx
+    const row = await db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+      const [before] = await tx
+        .select()
+        .from(schema.clients)
+        .where(eq(schema.clients.id, clientId));
+      const [updated] = await tx
         .update(schema.clients)
         .set({ ...input, updatedAt: sql`now()` })
         .where(eq(schema.clients.id, clientId))
-        .returning(),
-    );
+        .returning();
+      if (!before || !updated) return null;
+      // Whose data it is, so the log names which fields changed and not what they became.
+      const fields = auditFieldsChanged(before, updated, CLIENT_AUDITED_FIELDS);
+      if (fields.length > 0)
+        await recordAudit(tx, {
+          tenantId: ctx.tenantId,
+          actorUserId: ctx.userId ?? null,
+          action: 'client.updated',
+          details: { label: `${updated.identification} · ${updated.name}`, fields },
+        });
+      return updated;
+    });
     if (!row) throw new DomainError('NOT_FOUND', 'Client not found');
     return row;
   } catch (error) {
@@ -214,13 +248,25 @@ export async function setClientActive(
 ): Promise<void> {
   canManage(ctx);
   const clientId = z.uuid().parse(input.id);
-  const updated = await db.withTenant({ tenantId: ctx.tenantId }, ({ db: tx }) =>
-    tx
+  const updated = await db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+    const rows = await tx
       .update(schema.clients)
       .set({ active: input.active, updatedAt: sql`now()` })
       .where(eq(schema.clients.id, clientId))
-      .returning({ id: schema.clients.id }),
-  );
+      .returning({
+        id: schema.clients.id,
+        identification: schema.clients.identification,
+        name: schema.clients.name,
+      });
+    if (rows[0])
+      await recordAudit(tx, {
+        tenantId: ctx.tenantId,
+        actorUserId: ctx.userId ?? null,
+        action: 'client.active_changed',
+        details: { label: `${rows[0].identification} · ${rows[0].name}`, active: input.active },
+      });
+    return rows;
+  });
   if (updated.length === 0) throw new DomainError('NOT_FOUND', 'Client not found');
 }
 
