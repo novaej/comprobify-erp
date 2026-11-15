@@ -1946,7 +1946,8 @@
     "TRANSPORT_END_BEFORE_START": "The transport cannot end before it starts.",
     "INSUFFICIENT_STOCK": "A product doesn’t have enough stock available in this branch’s warehouse. Check the inventory or change the quantity.",
     "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
-    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data.",
+    "ISSUE_POINT_WAREHOUSE_MISMATCH": "The issue point does not match the order's warehouse: an invoice is issued from an issue point of the branch where the goods are."
   },
   "creditNoteForm": {
     "title": "Credit note for {number}",
@@ -2680,7 +2681,8 @@
         "issuePoint": "Issue point",
         "order": "Order",
         "none": "No issue point is enabled for invoices yet.",
-        "noneAction": "Go to Company"
+        "noneAction": "Go to Company",
+        "noneInWarehouse": "None of your issue points belongs to the branch of the warehouse {warehouse}, where this order is held. An invoice is issued from an issue point of the branch the goods leave from."
       },
       "lines": {
         "title": "Order lines",
@@ -2742,7 +2744,8 @@
     "INVOICE_FROM_ORDER": "This invoice is corrected from its order.",
     "NOT_ORDER_INVOICE": "This invoice wasn't made from an order.",
     "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
-    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data.",
+    "ISSUE_POINT_WAREHOUSE_MISMATCH": "The issue point does not match the order's warehouse: an invoice is issued from an issue point of the branch where the goods are."
   },
   "receivables": {
     "title": "Receivables",
@@ -2889,7 +2892,8 @@
       "method": "Payment method",
       "term": "Term",
       "termUnit": "Term unit",
-      "termInvalid": "Use numbers only."
+      "termInvalid": "Use numbers only.",
+      "issuePointHint": "Only the orders held in this issue point's warehouse are listed."
     },
     "issuing": {
       "none": "You have no issue point available to invoice from.",
@@ -2973,7 +2977,8 @@
     "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data.",
     "IMPORT_EMPTY": "The file has no lines.",
     "IMPORT_COLUMNS": "The file lacks required columns: reference, product and quantity. Download the template.",
-    "IMPORT_TOO_LARGE": "The file is too large: up to 10,000 invoices and 2 MB per file."
+    "IMPORT_TOO_LARGE": "The file is too large: up to 10,000 invoices and 2 MB per file.",
+    "ISSUE_POINT_WAREHOUSE_MISMATCH": "The issue point does not match the order's warehouse: an invoice is issued from an issue point of the branch where the goods are."
   },
   "adminQueue": {
     "title": "Bulk invoicing queue",

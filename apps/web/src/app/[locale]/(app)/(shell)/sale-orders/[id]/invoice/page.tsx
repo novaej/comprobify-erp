@@ -64,6 +64,7 @@ export default async function InvoiceSaleOrderPage({
       left: line.left,
       current: '0',
     })),
+    order.warehouse.branchCode,
   );
 
   return (
@@ -78,6 +79,7 @@ export default async function InvoiceSaleOrderPage({
         <EmptyState
           icon={Store}
           title={t('invoice.issuing.none')}
+          description={t('invoice.issuing.noneInWarehouse', { warehouse: order.warehouse.name })}
           action={
             actor.permissions.includes('organization.manage') ? (
               <Link href="/settings" className={buttonVariants({ variant: 'outline', size: 'sm' })}>

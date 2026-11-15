@@ -1946,7 +1946,8 @@
     "TRANSPORT_END_BEFORE_START": "El transporte no puede terminar antes de empezar.",
     "INSUFFICIENT_STOCK": "Un producto no tiene suficientes existencias disponibles en la bodega de esta sucursal. Revisa el inventario o cambia la cantidad.",
     "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
-    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos.",
+    "ISSUE_POINT_WAREHOUSE_MISMATCH": "El punto de emisión no corresponde a la bodega del pedido: una factura se emite desde un punto de emisión de la sucursal donde está la mercadería."
   },
   "creditNoteForm": {
     "title": "Nota de crédito de {number}",
@@ -2680,7 +2681,8 @@
         "issuePoint": "Punto de emisión",
         "order": "Pedido",
         "none": "Aún no hay un punto de emisión habilitado para facturas.",
-        "noneAction": "Ir a Empresa"
+        "noneAction": "Ir a Empresa",
+        "noneInWarehouse": "Ninguno de tus puntos de emisión es de la sucursal de la bodega {warehouse}, donde está este pedido. Una factura se emite desde el punto de emisión de la bodega de donde sale la mercadería."
       },
       "lines": {
         "title": "Líneas del pedido",
@@ -2742,7 +2744,8 @@
     "INVOICE_FROM_ORDER": "Esta factura se corrige desde su pedido.",
     "NOT_ORDER_INVOICE": "Esta factura no se hizo desde un pedido.",
     "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
-    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos.",
+    "ISSUE_POINT_WAREHOUSE_MISMATCH": "El punto de emisión no corresponde a la bodega del pedido: una factura se emite desde un punto de emisión de la sucursal donde está la mercadería."
   },
   "receivables": {
     "title": "Cuentas por cobrar",
@@ -2889,7 +2892,8 @@
       "method": "Forma de pago",
       "term": "Plazo",
       "termUnit": "Unidad del plazo",
-      "termInvalid": "Usa solo números."
+      "termInvalid": "Usa solo números.",
+      "issuePointHint": "Solo se listan los pedidos de la bodega de este punto de emisión."
     },
     "issuing": {
       "none": "No tienes un punto de emisión disponible para facturar.",
@@ -2973,7 +2977,8 @@
     "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos.",
     "IMPORT_EMPTY": "El archivo no tiene líneas.",
     "IMPORT_COLUMNS": "Al archivo le faltan columnas obligatorias: referencia, producto y cantidad. Descarga la plantilla.",
-    "IMPORT_TOO_LARGE": "El archivo es demasiado grande: hasta 10.000 facturas y 2 MB por archivo."
+    "IMPORT_TOO_LARGE": "El archivo es demasiado grande: hasta 10.000 facturas y 2 MB por archivo.",
+    "ISSUE_POINT_WAREHOUSE_MISMATCH": "El punto de emisión no corresponde a la bodega del pedido: una factura se emite desde un punto de emisión de la sucursal donde está la mercadería."
   },
   "adminQueue": {
     "title": "Cola de facturación masiva",

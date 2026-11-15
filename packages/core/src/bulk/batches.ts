@@ -63,13 +63,22 @@ export async function startOrderBatch(
   const input = startOrderBatchInput.parse(raw);
   const orderIds = [...new Set(input.orderIds)];
   return db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
+    let warehouseId: string;
     try {
-      await issuePointWarehouse(tx, input.issuePointId);
+      warehouseId = await issuePointWarehouse(tx, input.issuePointId);
     } catch {
       throw new DomainError('NOT_FOUND', 'Issue point not found');
     }
     if ((await countSaleOrders(tx, orderIds)) !== orderIds.length)
       throw new DomainError('NOT_FOUND', 'Some of the sale orders do not exist');
+    // One batch, one issue point, so one warehouse: every order is held where it issues (ADR-042).
+    const inWarehouse = await countSaleOrders(tx, orderIds, warehouseId);
+    if (inWarehouse !== orderIds.length)
+      throw new DomainError(
+        'ISSUE_POINT_WAREHOUSE_MISMATCH',
+        "Some orders are held in another warehouse than the issue point's",
+        { outside: orderIds.length - inWarehouse },
+      );
     const [batch] = await tx.db
       .insert(schema.bulkBatches)
       .values({

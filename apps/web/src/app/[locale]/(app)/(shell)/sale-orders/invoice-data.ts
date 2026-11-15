@@ -25,14 +25,18 @@ export async function orderInvoiceFormData(
     left: string;
     current: string;
   }[],
+  // The branch of the order's warehouse: its invoice is issued from one of its issue points.
+  branchCode?: string,
 ) {
   const { db } = await getRuntime();
   const [options, tSri] = await Promise.all([issuingOptions(actor, db), getTranslations('sri')]);
   return {
-    issuePoints: options.issuePoints.map((point) => ({
-      value: point.id,
-      label: `${point.code} ${point.branchName}`,
-    })),
+    issuePoints: options.issuePoints
+      .filter((point) => !branchCode || point.code.startsWith(`${branchCode}-`))
+      .map((point) => ({
+        value: point.id,
+        label: `${point.code} ${point.branchName}`,
+      })),
     lines: lines.map((line): OrderLineOption => ({
       ...line,
       ivaLabel: tSri(`ivaRates.${line.ivaRateCode as '4'}`),

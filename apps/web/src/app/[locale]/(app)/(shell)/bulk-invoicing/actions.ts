@@ -35,7 +35,7 @@ export async function startBatchAction(_: ActionState, form: FormData): Promise<
         ? await invoiceableOrderIds(
             actor,
             db,
-            { query: text(form, 'q') || undefined },
+            { query: text(form, 'q') || undefined, issuePointId: text(form, 'issuePointId') },
             MAX_BATCH_ITEMS,
           )
         : (JSON.parse(text(form, 'orderIds')) as string[]);

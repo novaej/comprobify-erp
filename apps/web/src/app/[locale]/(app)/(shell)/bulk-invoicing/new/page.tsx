@@ -29,7 +29,7 @@ export default async function NewBatchPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ q?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; issuePoint?: string }>;
 }) {
   const [{ locale }, search] = await Promise.all([params, searchParams]);
   setRequestLocale(locale);
@@ -41,9 +41,13 @@ export default async function NewBatchPage({
 
   const { db } = await getRuntime();
   const page = Math.max(1, Number.parseInt(search.page ?? '1', 10) || 1);
-  const [list, options, t, tSri] = await Promise.all([
-    listInvoiceableOrders(actor, db, { query: search.q || undefined, page }),
-    issuingOptions(actor, db),
+  const options = await issuingOptions(actor, db);
+  // One batch, one issue point, so one warehouse (ADR-042): the list is the orders held there.
+  const issuePointId =
+    options.issuePoints.find((point) => point.id === search.issuePoint)?.id ??
+    options.issuePoints[0]?.id;
+  const [list, t, tSri] = await Promise.all([
+    listInvoiceableOrders(actor, db, { query: search.q || undefined, page, issuePointId }),
     getTranslations('bulkInvoicing'),
     getTranslations('sri'),
   ]);
@@ -55,7 +59,11 @@ export default async function NewBatchPage({
   const pages = Math.max(1, Math.ceil(list.total / list.pageSize));
   const pageHref = (target: number) => ({
     pathname: '/bulk-invoicing/new' as const,
-    query: { ...(search.q ? { q: search.q } : {}), page: String(target) },
+    query: {
+      ...(search.q ? { q: search.q } : {}),
+      ...(issuePointId ? { issuePoint: issuePointId } : {}),
+      page: String(target),
+    },
   });
 
   return (
@@ -95,7 +103,7 @@ export default async function NewBatchPage({
           </form>
           <BatchForm
             // A new search or page starts a new selection.
-            key={`${search.q ?? ''}:${page}`}
+            key={`${search.q ?? ''}:${page}:${issuePointId ?? ''}`}
             orders={list.rows.map((row) => ({
               id: row.id,
               number: saleOrderNumber(row.number),
@@ -105,6 +113,7 @@ export default async function NewBatchPage({
             }))}
             matching={list.total}
             query={search.q ?? ''}
+            issuePointId={issuePointId ?? ''}
             issuePoints={options.issuePoints.map((point) => ({
               value: point.id,
               label: `${point.code} ${point.branchName}`,

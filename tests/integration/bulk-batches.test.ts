@@ -5,7 +5,9 @@ import {
   companySettings,
   completeBatches,
   confirmSaleOrder,
+  createBranch,
   createClient,
+  createIssuePoint,
   createJobs,
   createKeyCipher,
   createMockSri,
@@ -463,5 +465,65 @@ describe('bulk invoicing', () => {
     await run(twin, batch.id);
     const [item] = (await view(twin, batch.id)).items;
     expect(item!.documentNumber).toMatch(/^001-001-\d{9}$/);
+  });
+  it("takes only the orders held in the issue point's own warehouse (ADR-042)", async () => {
+    const admin = await superAdmin(db);
+    await setOverride(admin, db, {
+      realTenantId: org.realTenantId,
+      featureKey: 'MAX_BRANCHES',
+      effect: 'LIMIT',
+      limitValue: 3,
+      reason: 'test',
+    });
+    const ctx = await actor(twin);
+    await createBranch(ctx, db, { code: '002', name: 'Norte', address: 'Quito' });
+    const north = (await companySettings(ctx, db)).branches.find(
+      (branch) => branch.code === '002',
+    )!;
+    await createIssuePoint(ctx, db, { branchId: north.id, code: '001' });
+    const northPoint = (await companySettings(ctx, db)).branches
+      .find((branch) => branch.code === '002')!
+      .issuePoints.find((point) => point.code === '001')!.id;
+
+    // Orders held in Matriz, the first branch's warehouse.
+    const product = await stocked(twin);
+    const ids = await orders(twin, product, 2);
+
+    // The list for the Norte issue point holds none of them; Matriz's holds them.
+    expect((await listInvoiceableOrders(ctx, db, { issuePointId: northPoint })).total).toBe(0);
+    expect(await invoiceableOrderIds(ctx, db, { issuePointId: northPoint }, 100)).toEqual([]);
+    const own = await invoiceableOrderIds(ctx, db, { issuePointId: twin.pointId }, 100);
+    expect(own).toEqual(expect.arrayContaining(ids));
+
+    // A batch under Norte is refused whole, and so is one order's invoice from it.
+    expect(
+      await failure(
+        startOrderBatch(
+          ctx,
+          db,
+          { issuePointId: northPoint, orderIds: ids, payment: PAYMENT },
+          { jobs },
+        ),
+      ),
+    ).toBe('ISSUE_POINT_WAREHOUSE_MISMATCH');
+    expect(
+      await failure(
+        db.withTenant({ tenantId: twin.tenantId }, (tx) =>
+          invoiceOrderRemainder(
+            ctx,
+            tx,
+            {
+              orderId: ids[0]!,
+              issuePointId: northPoint,
+              payment: { ...PAYMENT, amount: null, term: null, termUnit: null },
+              idempotencyKey: randomUUID(),
+            },
+            issueDeps,
+          ),
+        ),
+      ),
+    ).toBe('ISSUE_POINT_WAREHOUSE_MISMATCH');
+    // Under its own issue point the same orders go through.
+    await expect(start(twin, ids)).resolves.toMatchObject({ totalItems: 2 });
   });
 });

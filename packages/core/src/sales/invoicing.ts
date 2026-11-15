@@ -180,10 +180,20 @@ export async function documentIdsOfOrder(tx: Tx, orderId: string): Promise<strin
 
 // How many of these ids are orders of this company (the tenant's own, by RLS): a batch checks
 // its list is whole before queuing anything (ADR-026).
-export async function countSaleOrders(tx: Tx, orderIds: string[]): Promise<number> {
+export async function countSaleOrders(
+  tx: Tx,
+  orderIds: string[],
+  // Only those held in this warehouse: a batch's issue point must be the orders' own (ADR-042).
+  warehouseId?: string,
+): Promise<number> {
   const [row] = await tx.db
     .select({ count: sql<number>`count(*)::int` })
     .from(schema.saleOrders)
-    .where(inArray(schema.saleOrders.id, orderIds));
+    .where(
+      and(
+        inArray(schema.saleOrders.id, orderIds),
+        warehouseId ? eq(schema.saleOrders.warehouseId, warehouseId) : undefined,
+      ),
+    );
   return row!.count;
 }

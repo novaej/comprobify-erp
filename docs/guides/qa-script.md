@@ -75,8 +75,8 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | H1 | A sale order holds stock | ✅ |
 | H2 | Invoice the order in parts | ✅ |
 | H3 | Collect and the aging report | ✅ |
-| I1 | From sale orders | ⬜ |
-| I2 | From a CSV | ⬜ |
+| I1 | From sale orders | ✅ |
+| I2 | From a CSV | ✅ |
 | J1 | Invite the team | ⬜ |
 | J2 | What each role sees and may do | ⬜ |
 | J3 | Limit, change and remove | ⬜ |
@@ -681,7 +681,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | PV-000001 → invoice it: 4 now, payment on credit (30 days) | An authorized invoice; the order "Parcialmente facturado" |
+| 1 | PV-000001 → invoice it: 4 now, payment on credit (30 days). Look at the **Punto de emisión** choice | Only the issue points of the order's warehouse branch (`001-001` for Matriz): Norte's isn't offered. An authorized invoice; the order "Parcialmente facturado" |
 | 2 | Invoice the remaining 6 | "Facturado"; the reservation is gone, stock went down by 10 in all |
 | 3 | Each invoice | Links back to the order |
 
@@ -719,22 +719,35 @@ Overdue buckets (1 a 30 días and beyond) can't be reached locally without movin
 | # | Do | Expect |
 |---|---|---|
 | 1 | Create and confirm two sale orders: María CAF-1 × 1, Distribuidora Sur TE-1 × 1 | Confirmed |
-| 2 | **Facturación masiva** → **Nueva facturación masiva** | The confirmed orders, an issue point and a payment method |
+| 2 | **Facturación masiva** → **Nueva facturación masiva** | The orders held in the chosen issue point's warehouse (the hint under **Punto de emisión** says so), an issue point and a payment method. Choose `002-001` Norte: the list changes to the orders held in Norte (none, if all were made in Matriz) or says there are none, and the issue point stays selectable. Choose `001-001` again: both orders are back. A batch can't mix warehouses, so orders of Matriz and of Norte go in two batches |
 | 3 | Tick both → **Facturar 2 pedidos** → confirm | The batch page: items queued, then made, then authorized, live |
 | 4 | Wait for it to finish (a minute) | "Completado"; the bell: "Terminó un lote de facturas" |
 | 5 | Admin area (operator) → **Cola de facturación** while one runs | The company with its items in flight |
 
 ### I2 · From a CSV
 
-**Needs:** D1, D2. **Leaves:** a CSV batch.
+**Needs:** D1, D2, I1. **Leaves:** a CSV batch with two invoices.
+
+A CSV batch makes invoices from a spreadsheet instead of from sale orders. Each row is one **line**; rows that share the same **referencia** become **one invoice** with several lines. The columns are:
+
+| Column | What it is |
+|---|---|
+| `referencia` | Any label you choose, such as `X-1`. Rows with the same one are the lines of one invoice |
+| `cliente` | The client's identification (cédula or RUC) of a client you already have. Empty means consumidor final |
+| `producto` | The product's code, as in **Productos** |
+| `cantidad` | How many |
+| `precio` | The unit price before IVA. Empty takes the product's price |
+| `descuento` | A discount, or empty for none |
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | **Facturación masiva** → **Importar CSV** → **Descargar plantilla** | A model where two rows share a reference: one invoice with two products |
-| 2 | A file: `X-1;1710034065;CAF-1;2;;` / `X-1;1710034065;TE-1;1;;` / `X-2;;CAF-1;1;5,00;` / `X-3;;NO-EXISTE;1;;` | |
-| 3 | **Revisar y facturar** | Nothing starts; "Línea 5: no existe un producto con ese código" |
-| 4 | Remove X-3, send again | The batch page with two invoices, X-1 and X-2, made by the worker |
-| 5 | X-1's invoice | Two lines |
+| 1 | **Facturación masiva** → **Importar CSV** → **Descargar plantilla**, open it | `plantilla-facturas.csv` with the header `referencia;cliente;producto;cantidad;precio;descuento` and example rows where two rows share a reference |
+| 2 | Make your own file with that header and these four rows (save it as "CSV UTF-8", or type them in a text editor and save as `.csv`):<br>`referencia;cliente;producto;cantidad;precio;descuento`<br>`X-1;1710034065;CAF-1;2;;`<br>`X-1;1710034065;TE-1;1;;`<br>`X-2;;CAF-1;1;5,00;`<br>`X-3;;NO-EXISTE;1;;`<br>It means: invoice **X-1** to María Pérez with 2 × CAF-1 and 1 × TE-1 at their usual prices; invoice **X-2** to consumidor final with 1 × CAF-1 at 5,00; and **X-3** with a product that does not exist, on purpose | The file is ready: three invoices' worth of rows, one of them wrong |
+| 3 | On the import page, choose the issue point `001-001` and a payment method, attach the file and press **Revisar y facturar** | Nothing starts. It lists the problem: "Línea 5: no existe un producto con ese código" (line 5 is the X-3 row, the header being line 1) |
+| 4 | Remove the X-3 row from the file, attach it again and **Revisar y facturar** | The batch page opens with two invoices, X-1 and X-2, queued and then made by the worker, as in I1; "Completado" within a minute |
+| 5 | Open X-1's invoice | Two lines (CAF-1 × 2 and TE-1 × 1), to María Pérez, total $16,33 (14,20 + IVA 15 %) |
+| 6 | Open X-2's invoice | One line, CAF-1 × 1 at 5,00, to consumidor final, total $5,75 |
+| 7 | **Inventario** | CAF-1 in Matriz down by 3 and TE-1 down by 1, since the batch's issue point is Matriz's |
 
 ---
 

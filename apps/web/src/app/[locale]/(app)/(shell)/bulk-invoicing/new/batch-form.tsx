@@ -5,6 +5,7 @@ import { Input } from '@comprobify/ui/components/input';
 import { AlertCircle, Layers, ShoppingCart } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useId, useState, useTransition } from 'react';
+import { useRouter } from '@/i18n/navigation';
 import { Banner } from '@/components/banner';
 import { ChoiceSelect, type Choice } from '@/components/choice-select';
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -36,6 +37,7 @@ export function BatchForm({
   orders,
   matching,
   query,
+  issuePointId,
   issuePoints,
   paymentMethods,
   termUnits,
@@ -44,6 +46,8 @@ export function BatchForm({
   // Every invoiceable order matching the search, over all pages.
   matching: number;
   query: string;
+  // The one chosen: the orders listed are those held in its warehouse.
+  issuePointId: string;
   issuePoints: Choice[];
   paymentMethods: Choice[];
   termUnits: Choice[];
@@ -52,10 +56,10 @@ export function BatchForm({
   const tError = useTranslations('bulkInvoicingError');
   const tDocError = useTranslations('documentsError');
   const locale = useLocale();
+  const router = useRouter();
   const uid = useId();
   const [pending, startTransition] = useTransition();
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [issuePointId, setIssuePointId] = useState(issuePoints[0]?.value ?? '');
   const [method, setMethod] = useState(paymentMethods[0]?.value ?? '01');
   const [term, setTerm] = useState('');
   const [termUnit, setTermUnit] = useState(termUnits[0]?.value ?? 'dias');
@@ -100,15 +104,37 @@ export function BatchForm({
     });
   };
 
+  // Another issue point is another warehouse, so another list of orders.
+  const chooseIssuePoint = (next: string) =>
+    router.replace(
+      `/bulk-invoicing/new?issuePoint=${encodeURIComponent(next)}${query ? `&q=${encodeURIComponent(query)}` : ''}`,
+    );
+
   if (orders.length === 0)
     return (
-      <TableCard>
-        <EmptyState
-          icon={ShoppingCart}
-          title={query ? t('noMatchesTitle') : t('noOrdersTitle')}
-          description={query ? t('noMatches') : t('noOrders')}
-        />
-      </TableCard>
+      <div className="space-y-4">
+        {issuePoints.length > 1 && (
+          <div className="max-w-sm">
+            <FormField label={t('form.issuePoint')} hint={t('form.issuePointHint')}>
+              {(a11y) => (
+                <ChoiceSelect
+                  a11y={a11y}
+                  value={issuePointId}
+                  onChange={chooseIssuePoint}
+                  options={issuePoints}
+                />
+              )}
+            </FormField>
+          </div>
+        )}
+        <TableCard>
+          <EmptyState
+            icon={ShoppingCart}
+            title={query ? t('noMatchesTitle') : t('noOrdersTitle')}
+            description={query ? t('noMatches') : t('noOrders')}
+          />
+        </TableCard>
+      </div>
     );
 
   return (
@@ -123,12 +149,12 @@ export function BatchForm({
     >
       <SectionCard title={t('form.title')} description={t('form.description')}>
         <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_6rem_8rem]">
-          <FormField label={t('form.issuePoint')} required>
+          <FormField label={t('form.issuePoint')} hint={t('form.issuePointHint')} required>
             {(a11y) => (
               <ChoiceSelect
                 a11y={a11y}
                 value={issuePointId}
-                onChange={setIssuePointId}
+                onChange={chooseIssuePoint}
                 options={issuePoints}
               />
             )}

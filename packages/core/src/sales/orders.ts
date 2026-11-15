@@ -27,7 +27,7 @@ import {
 } from '../kernel';
 import { buyerForDocument } from '../parties';
 import { documentTotals, lineAmounts } from '../sri';
-import { nextNumber, warehousesOf, type Warehouse } from '../tenancy';
+import { issuePointWarehouse, nextNumber, warehousesOf, type Warehouse } from '../tenancy';
 import { coverageOf } from './invoicing';
 import { canManage, canRead, lockOrder, optionalText, positive, type SaleOrder } from './shared';
 import { assertSaleOrderTransition, SALE_ORDER_STATUSES, saleOrderNumber } from './status';
@@ -331,13 +331,18 @@ const PAGE_SIZE = 50;
 // checked when its turn comes, so an order fully covered by now fails alone.
 const INVOICEABLE: SaleOrderStatus[] = ['CONFIRMED', 'PARTIALLY_INVOICED'];
 
-function orderWhere(filters: z.output<typeof saleOrderFilters>, statuses?: SaleOrderStatus[]) {
+function orderWhere(
+  filters: z.output<typeof saleOrderFilters>,
+  statuses?: SaleOrderStatus[],
+  warehouseId?: string,
+) {
   const { saleOrders, clients } = schema;
   const query = filters.query?.replace(/^pv-?/i, '');
   const pattern = query ? `%${query.replaceAll(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
   const number = query && /^\d{1,9}$/.test(query) ? Number(query) : null;
   return and(
     statuses ? inArray(saleOrders.status, statuses) : undefined,
+    warehouseId ? eq(saleOrders.warehouseId, warehouseId) : undefined,
     filters.status ? eq(saleOrders.status, filters.status) : undefined,
     pattern
       ? or(
@@ -353,13 +358,20 @@ async function listOrders(
   ctx: ActorContext,
   db: Database,
   raw: SaleOrderFilters,
-  scope: { statuses?: SaleOrderStatus[]; oldestFirst?: boolean } = {},
+  scope: { statuses?: SaleOrderStatus[]; oldestFirst?: boolean; issuePointId?: string } = {},
 ): Promise<{ rows: SaleOrderRow[]; total: number; page: number; pageSize: number }> {
   canRead(ctx);
   const filters = saleOrderFilters.parse(raw);
   const { saleOrders, clients } = schema;
-  const where = orderWhere(filters, scope.statuses);
-  return db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+  return db.withTenant({ tenantId: ctx.tenantId }, async (handle) => {
+    const tx = handle.db;
+    // Only the orders held where this issue point issues (ADR-042).
+    const warehouseId = scope.issuePointId
+      ? await issuePointWarehouse(handle, scope.issuePointId).catch(() => {
+          throw new DomainError('NOT_FOUND', 'Issue point not found');
+        })
+      : undefined;
+    const where = orderWhere(filters, scope.statuses, warehouseId);
     const join = and(
       eq(clients.tenantId, saleOrders.tenantId),
       eq(clients.id, saleOrders.clientId),
@@ -396,20 +408,31 @@ export const listSaleOrders = (ctx: ActorContext, db: Database, raw: SaleOrderFi
 export const listInvoiceableOrders = (
   ctx: ActorContext,
   db: Database,
-  raw: Pick<SaleOrderFilters, 'query' | 'page'> = {},
-) => listOrders(ctx, db, raw, { statuses: INVOICEABLE, oldestFirst: true });
+  raw: Pick<SaleOrderFilters, 'query' | 'page'> & { issuePointId?: string } = {},
+) =>
+  listOrders(ctx, db, raw, {
+    statuses: INVOICEABLE,
+    oldestFirst: true,
+    issuePointId: raw.issuePointId,
+  });
 
 // All of them matching a search, for a batch of "everything shown" (at most `max`).
 export async function invoiceableOrderIds(
   ctx: ActorContext,
   db: Database,
-  raw: Pick<SaleOrderFilters, 'query'>,
+  raw: Pick<SaleOrderFilters, 'query'> & { issuePointId?: string },
   max: number,
 ): Promise<string[]> {
   canRead(ctx);
   const filters = saleOrderFilters.parse({ query: raw.query });
   const { saleOrders, clients } = schema;
-  return db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
+  return db.withTenant({ tenantId: ctx.tenantId }, async (handle) => {
+    const tx = handle.db;
+    const warehouseId = raw.issuePointId
+      ? await issuePointWarehouse(handle, raw.issuePointId).catch(() => {
+          throw new DomainError('NOT_FOUND', 'Issue point not found');
+        })
+      : undefined;
     const rows = await tx
       .select({ id: saleOrders.id })
       .from(saleOrders)
@@ -417,7 +440,7 @@ export async function invoiceableOrderIds(
         clients,
         and(eq(clients.tenantId, saleOrders.tenantId), eq(clients.id, saleOrders.clientId)),
       )
-      .where(orderWhere(filters, INVOICEABLE))
+      .where(orderWhere(filters, INVOICEABLE, warehouseId))
       .orderBy(asc(saleOrders.number))
       .limit(max);
     return rows.map((row) => row.id);

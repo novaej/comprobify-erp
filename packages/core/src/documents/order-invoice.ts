@@ -14,6 +14,7 @@ import {
   toSriAmount,
   type ActorContext,
 } from '../kernel';
+import { issuePointWarehouse } from '../tenancy';
 import { documentTotals, rideData, SRI_PAYMENT_METHODS, SRI_TERM_UNITS } from '../sri';
 import {
   documentIdsOfOrder,
@@ -152,6 +153,21 @@ export async function invoiceSaleOrder(
 
 type ParsedOrderInvoice = z.output<typeof orderInvoiceInput>;
 
+// An order's invoice is issued where its goods are (ADR-042): the issue point must belong to the
+// branch of the order's warehouse. Goods that leave one establishment under another's invoice
+// would need a transfer, which nothing here records.
+async function assertIssuePointOfWarehouse(
+  tx: Tx,
+  issuePointId: string,
+  warehouseId: string,
+): Promise<void> {
+  if ((await issuePointWarehouse(tx, issuePointId)) !== warehouseId)
+    throw new DomainError(
+      'ISSUE_POINT_WAREHOUSE_MISMATCH',
+      "The issue point is not the one of the order's warehouse",
+    );
+}
+
 async function invoiceOrderIn(
   ctx: ActorContext,
   tx: Tx,
@@ -164,6 +180,7 @@ async function invoiceOrderIn(
   if (existing) return existing;
 
   const { order, lines: coverage } = await orderForInvoicing(tx, input.orderId);
+  await assertIssuePointOfWarehouse(tx, input.issuePointId, order.warehouseId);
   const built = invoiceLines(coverage, input.lines);
   const content = invoiceInput.parse({
     issuePointId: input.issuePointId,
