@@ -24,6 +24,7 @@ import {
 } from '@/components/stack-table';
 import { ToneBadge } from '@/components/tone-badge';
 import { Link } from '@/i18n/navigation';
+import { listAddress, withBack } from '@/lib/back';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
@@ -66,6 +67,7 @@ export default async function SaleOrdersPage({
   const pages = Math.max(1, Math.ceil(list.total / list.pageSize));
   const searching = Boolean(filters.query || filters.status);
   const canManage = actor.permissions.includes('sales.manage');
+  const here = listAddress('/sale-orders', search);
   const pageHref = (page: number) => ({
     pathname: '/sale-orders' as const,
     query: { ...search, page: String(page) },
@@ -140,7 +142,7 @@ export default async function SaleOrdersPage({
                   <StackRow key={row.id}>
                     <StackCell heading className="pl-4">
                       <Link
-                        href={`/sale-orders/${row.id}`}
+                        href={withBack(`/sale-orders/${row.id}`, here)}
                         className="font-medium tabular-nums hover:underline"
                       >
                         {number}
@@ -162,7 +164,7 @@ export default async function SaleOrdersPage({
                     </StackCell>
                     <StackCell className="pr-4 text-right">
                       <Link
-                        href={`/sale-orders/${row.id}`}
+                        href={withBack(`/sale-orders/${row.id}`, here)}
                         aria-label={t('table.open', { number })}
                         className="inline-flex rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       >

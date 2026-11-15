@@ -24,6 +24,7 @@ import {
 } from '@/components/stack-table';
 import { ToneBadge, type Tone } from '@/components/tone-badge';
 import { Link } from '@/i18n/navigation';
+import { listAddress, withBack } from '@/lib/back';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
@@ -171,7 +172,7 @@ export default async function ReceivablesPage({
                 <StackRow key={row.id}>
                   <StackCell heading className="pl-4">
                     <Link
-                      href={`/documents/${row.id}`}
+                      href={withBack(`/documents/${row.id}`, listAddress('/receivables', search))}
                       className="font-medium tabular-nums hover:underline"
                     >
                       {row.number}

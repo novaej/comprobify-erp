@@ -19,6 +19,7 @@ import { FeatureLocked } from '@/components/feature-locked';
 import { NoAccess } from '@/components/no-access';
 import { PageHeader } from '@/components/page-header';
 import { Link, redirect } from '@/i18n/navigation';
+import { safeBack, withBack } from '@/lib/back';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
@@ -32,10 +33,11 @@ export default async function NewGuidePage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ from?: string }>;
+  searchParams: Promise<{ from?: string; back?: string }>;
 }) {
   const { locale } = await params;
-  const { from } = await searchParams;
+  const { from, back: backParam } = await searchParams;
+  const detail = (id: string) => withBack(`/documents/${id}`, safeBack(backParam)?.href);
   setRequestLocale(locale);
   const { actor } = await loadShell(locale);
   if (!actor.permissions.includes('documents.issue')) return <NoAccess />;
@@ -53,7 +55,7 @@ export default async function NewGuidePage({
         isDomainError(error, 'ORIGIN_NOT_INVOICE') ||
         isDomainError(error, 'ORIGIN_NOT_AUTHORIZED')
       )
-        return redirect({ href: `/documents/${from}`, locale });
+        return redirect({ href: detail(from), locale });
       if (
         isDomainError(error, 'NOT_FOUND') ||
         (error instanceof Error && error.name === 'ZodError')
@@ -77,7 +79,7 @@ export default async function NewGuidePage({
       <PageHeader
         title={origin ? t('titleFrom', { number: origin.number }) : t('title')}
         description={t('description')}
-        backHref={origin ? `/documents/${origin.originId}` : '/documents'}
+        backHref={origin ? detail(origin.originId) : (safeBack(backParam)?.href ?? '/documents')}
         backLabel={origin ? t('backInvoice') : t('back')}
       />
       {options.issuePoints.length === 0 ? (

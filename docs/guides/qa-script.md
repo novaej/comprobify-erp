@@ -723,6 +723,7 @@ Overdue buckets (1 a 30 días and beyond) can't be reached locally without movin
 | 3 | Tick both → **Facturar 2 pedidos** → confirm | The batch page: items queued, then made, then authorized, live |
 | 4 | Wait for it to finish (a minute) | "Completado"; the bell: "Terminó un lote de facturas" |
 | 5 | Admin area (operator) → **Cola de facturación** while one runs | The company with its items in flight |
+| 6 | On the finished batch, open an invoice, then press **Volver** (top left); then open an order from the batch and press it again | Each returns to **Lote de facturación**, not to Comprobantes or Pedidos de venta. The same holds from the Pendientes list and Cuentas por cobrar (back to that list, with its filters) and from an invoice's sale order (back to the invoice) |
 
 ### I2 · From a CSV
 

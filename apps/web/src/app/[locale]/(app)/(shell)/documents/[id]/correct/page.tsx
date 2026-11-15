@@ -16,6 +16,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { NoAccess } from '@/components/no-access';
 import { PageHeader } from '@/components/page-header';
 import { redirect } from '@/i18n/navigation';
+import { safeBack, withBack } from '@/lib/back';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
@@ -32,10 +33,14 @@ export const generateMetadata = pageTitle('correctInvoice');
 // FR-DOC-7: the invoice form, filled with the document as last signed.
 export default async function CorrectInvoicePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ back?: string }>;
 }) {
-  const { locale, id } = await params;
+  const [{ locale, id }, search] = await Promise.all([params, searchParams]);
+  // Back to the document, which keeps where it was opened from.
+  const detail = withBack(`/documents/${id}`, safeBack(search.back)?.href);
   setRequestLocale(locale);
   const { actor } = await loadShell(locale);
   if (!actor.permissions.includes('documents.issue')) return <NoAccess />;
@@ -52,18 +57,17 @@ export default async function CorrectInvoicePage({
       notFound();
     throw error;
   }
-  if (kind === '04') return <CorrectCreditNote locale={locale} id={id} />;
-  if (kind === '06') return <CorrectGuide locale={locale} id={id} />;
+  if (kind === '04') return <CorrectCreditNote locale={locale} id={id} detail={detail} />;
+  if (kind === '06') return <CorrectGuide locale={locale} id={id} detail={detail} />;
   // An invoice made from a sale order is corrected through the order (ADR-022).
-  if (fromOrder) return <CorrectOrderInvoice locale={locale} id={id} />;
+  if (fromOrder) return <CorrectOrderInvoice locale={locale} id={id} detail={detail} />;
 
   let draft: CorrectionDraft;
   try {
     draft = await correctionDraft(actor, db, id);
   } catch (error) {
     // No longer correctable, say SRI answered meanwhile: back to the document.
-    if (isDomainError(error, 'NOT_CORRECTABLE'))
-      return redirect({ href: `/documents/${id}`, locale });
+    if (isDomainError(error, 'NOT_CORRECTABLE')) return redirect({ href: detail, locale });
     if (isDomainError(error, 'NOT_FOUND') || (error instanceof Error && error.name === 'ZodError'))
       notFound();
     throw error;
@@ -77,7 +81,7 @@ export default async function CorrectInvoicePage({
       <PageHeader
         title={t('correct.title', { number: draft.number })}
         description={t('correct.description')}
-        backHref={`/documents/${draft.id}`}
+        backHref={detail}
         backLabel={t('correct.back')}
       />
       <InvoiceForm
@@ -98,7 +102,15 @@ export default async function CorrectInvoicePage({
 }
 
 // FR-DOC-7: the credit note form, filled with the note as last signed.
-async function CorrectCreditNote({ locale, id }: { locale: string; id: string }) {
+async function CorrectCreditNote({
+  locale,
+  id,
+  detail,
+}: {
+  locale: string;
+  id: string;
+  detail: string;
+}) {
   const { actor } = await loadShell(locale);
   const { db } = await getRuntime();
   let draft: Awaited<ReturnType<typeof creditNoteDraft>>;
@@ -107,8 +119,7 @@ async function CorrectCreditNote({ locale, id }: { locale: string; id: string })
     draft = await creditNoteDraft(actor, db, id);
     data = await creditFormData(actor, draft.originId);
   } catch (error) {
-    if (isDomainError(error, 'NOT_CORRECTABLE'))
-      return redirect({ href: `/documents/${id}`, locale });
+    if (isDomainError(error, 'NOT_CORRECTABLE')) return redirect({ href: detail, locale });
     if (isDomainError(error, 'NOT_FOUND') || (error instanceof Error && error.name === 'ZodError'))
       notFound();
     throw error;
@@ -119,7 +130,7 @@ async function CorrectCreditNote({ locale, id }: { locale: string; id: string })
       <PageHeader
         title={t('correct.title', { number: draft.number })}
         description={t('correct.description')}
-        backHref={`/documents/${draft.id}`}
+        backHref={detail}
         backLabel={t('correct.back')}
       />
       <CreditNoteForm
@@ -140,15 +151,22 @@ async function CorrectCreditNote({ locale, id }: { locale: string; id: string })
 }
 
 // FR-DOC-7: the guía form, filled with the guía as last signed. A later day needs new dates.
-async function CorrectGuide({ locale, id }: { locale: string; id: string }) {
+async function CorrectGuide({
+  locale,
+  id,
+  detail,
+}: {
+  locale: string;
+  id: string;
+  detail: string;
+}) {
   const { actor } = await loadShell(locale);
   const { db } = await getRuntime();
   let draft: Awaited<ReturnType<typeof guideDraft>>;
   try {
     draft = await guideDraft(actor, db, id);
   } catch (error) {
-    if (isDomainError(error, 'NOT_CORRECTABLE'))
-      return redirect({ href: `/documents/${id}`, locale });
+    if (isDomainError(error, 'NOT_CORRECTABLE')) return redirect({ href: detail, locale });
     if (isDomainError(error, 'NOT_FOUND') || (error instanceof Error && error.name === 'ZodError'))
       notFound();
     throw error;
@@ -161,7 +179,7 @@ async function CorrectGuide({ locale, id }: { locale: string; id: string }) {
       <PageHeader
         title={t('correct.title', { number: draft.number })}
         description={t('correct.description')}
-        backHref={`/documents/${draft.id}`}
+        backHref={detail}
         backLabel={t('correct.back')}
       />
       <GuideForm
@@ -187,15 +205,22 @@ async function CorrectGuide({ locale, id }: { locale: string; id: string }) {
 }
 
 // FR-DOC-7, FR-SAL-4: the order's lines, with this invoice's own quantities as they were.
-async function CorrectOrderInvoice({ locale, id }: { locale: string; id: string }) {
+async function CorrectOrderInvoice({
+  locale,
+  id,
+  detail,
+}: {
+  locale: string;
+  id: string;
+  detail: string;
+}) {
   const { actor } = await loadShell(locale);
   const { db } = await getRuntime();
   let draft: Awaited<ReturnType<typeof orderInvoiceDraft>>;
   try {
     draft = await orderInvoiceDraft(actor, db, id);
   } catch (error) {
-    if (isDomainError(error, 'NOT_CORRECTABLE'))
-      return redirect({ href: `/documents/${id}`, locale });
+    if (isDomainError(error, 'NOT_CORRECTABLE')) return redirect({ href: detail, locale });
     if (isDomainError(error, 'NOT_FOUND') || (error instanceof Error && error.name === 'ZodError'))
       notFound();
     throw error;
@@ -210,7 +235,7 @@ async function CorrectOrderInvoice({ locale, id }: { locale: string; id: string 
       <PageHeader
         title={t('correct.title', { number: draft.number })}
         description={t('correct.description')}
-        backHref={`/documents/${draft.id}`}
+        backHref={detail}
         backLabel={t('correct.back', { number: draft.number })}
       />
       <OrderInvoiceForm

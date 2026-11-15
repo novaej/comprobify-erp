@@ -4053,5 +4053,20 @@
     "allStatuses": "All statuses",
     "allKinds": "All types",
     "allIdTypes": "All identifications"
+  },
+  "back": {
+    "documents": "Documents",
+    "pending": "Pending",
+    "document": "Document",
+    "bulk": "Bulk invoicing",
+    "batch": "Invoicing batch",
+    "saleOrders": "Sale orders",
+    "saleOrder": "Sale order",
+    "purchaseOrders": "Purchase orders",
+    "purchaseOrder": "Purchase order",
+    "receivables": "Receivables",
+    "inventory": "Inventory",
+    "valuation": "Valuation",
+    "product": "Product"
   }
 }

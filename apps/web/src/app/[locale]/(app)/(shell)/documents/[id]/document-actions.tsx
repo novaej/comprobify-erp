@@ -8,6 +8,7 @@ import { useState, useTransition } from 'react';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { useServerAction } from '@/components/use-server-action';
 import { Link } from '@/i18n/navigation';
+import { withBack } from '@/lib/back';
 import { reissueAction, resendAction, voidAction } from './actions';
 
 type Allowed = {
@@ -27,6 +28,7 @@ export function DocumentActions({
   todayShown,
   voidDeadline,
   buyerEmail,
+  back,
 }: {
   id: string;
   allowed: Allowed;
@@ -35,6 +37,8 @@ export function DocumentActions({
   todayShown: string;
   voidDeadline: string;
   buyerEmail: string | null;
+  // Where the document was opened from: the pages it leads to keep it for their own back link.
+  back?: string;
 }) {
   const t = useTranslations('documents.actions');
   const tError = useTranslations('documentsError');
@@ -80,20 +84,29 @@ export function DocumentActions({
   return (
     <div className="flex flex-wrap gap-2">
       {allowed.correct && (
-        <Link href={`/documents/${id}/correct`} className={buttonVariants({ size: 'sm' })}>
+        <Link
+          href={withBack(`/documents/${id}/correct`, back)}
+          className={buttonVariants({ size: 'sm' })}
+        >
           <PencilLine className="mr-1.5 h-4 w-4" aria-hidden />
           {t('correct')}
         </Link>
       )}
       {allowed.credit && (
-        <Link href={`/documents/${id}/credit-note`} className={buttonVariants({ size: 'sm' })}>
+        <Link
+          href={withBack(`/documents/${id}/credit-note`, back)}
+          className={buttonVariants({ size: 'sm' })}
+        >
           <FilePlus2 className="mr-1.5 h-4 w-4" aria-hidden />
           {t('credit')}
         </Link>
       )}
       {allowed.guide && (
         <Link
-          href={{ pathname: '/documents/guide/new', query: { from: id } }}
+          href={{
+            pathname: '/documents/guide/new',
+            query: { from: id, ...(back ? { back } : {}) },
+          }}
           className={buttonVariants({ variant: 'outline', size: 'sm' })}
         >
           <Truck className="mr-1.5 h-4 w-4" aria-hidden />

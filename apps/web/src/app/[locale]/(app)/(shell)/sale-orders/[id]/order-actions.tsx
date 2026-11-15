@@ -10,6 +10,7 @@ import { FormDialog } from '@/components/form-dialog';
 import { FormField } from '@/components/form-field';
 import { useServerAction } from '@/components/use-server-action';
 import { Link } from '@/i18n/navigation';
+import { withBack } from '@/lib/back';
 import { saleOrderStatusAction } from '../actions';
 
 export type OrderAllowed = {
@@ -24,10 +25,13 @@ export function OrderActions({
   id,
   number,
   allowed,
+  back,
 }: {
   id: string;
   number: string;
   allowed: OrderAllowed;
+  // Where the order was opened from, kept by the pages it leads to.
+  back?: string;
 }) {
   const t = useTranslations('saleOrders.actions');
   const [open, setOpen] = useState<'confirm' | 'cancel' | null>(null);
@@ -48,14 +52,17 @@ export function OrderActions({
         </Button>
       )}
       {allowed.invoice && (
-        <Link href={`/sale-orders/${id}/invoice`} className={buttonVariants({ size: 'sm' })}>
+        <Link
+          href={withBack(`/sale-orders/${id}/invoice`, back)}
+          className={buttonVariants({ size: 'sm' })}
+        >
           <FileText className="mr-1.5 h-4 w-4" aria-hidden />
           {t('invoice')}
         </Link>
       )}
       {allowed.edit && (
         <Link
-          href={`/sale-orders/${id}/edit`}
+          href={withBack(`/sale-orders/${id}/edit`, back)}
           className={buttonVariants({
             size: 'sm',
             variant: allowed.confirm ? 'outline' : 'default',

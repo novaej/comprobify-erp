@@ -4053,5 +4053,20 @@
     "allStatuses": "Todos los estados",
     "allKinds": "Todos los tipos",
     "allIdTypes": "Todas las identificaciones"
+  },
+  "back": {
+    "documents": "Comprobantes",
+    "pending": "Pendientes",
+    "document": "Comprobante",
+    "bulk": "Facturación masiva",
+    "batch": "Lote de facturación",
+    "saleOrders": "Pedidos de venta",
+    "saleOrder": "Pedido de venta",
+    "purchaseOrders": "Órdenes de compra",
+    "purchaseOrder": "Orden de compra",
+    "receivables": "Cuentas por cobrar",
+    "inventory": "Inventario",
+    "valuation": "Valoración",
+    "product": "Producto"
   }
 }

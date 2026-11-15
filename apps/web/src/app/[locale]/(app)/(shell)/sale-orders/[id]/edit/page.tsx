@@ -5,6 +5,7 @@ import { FeatureLocked } from '@/components/feature-locked';
 import { NoAccess } from '@/components/no-access';
 import { PageHeader } from '@/components/page-header';
 import { redirect } from '@/i18n/navigation';
+import { safeBack, withBack } from '@/lib/back';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
@@ -16,10 +17,13 @@ export const generateMetadata = pageTitle('editSaleOrder');
 // FR-SAL-1, FR-SAL-5: a draft or a confirmed order is edited; anything else goes back.
 export default async function EditSaleOrderPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ back?: string }>;
 }) {
-  const { locale, id } = await params;
+  const [{ locale, id }, search] = await Promise.all([params, searchParams]);
+  const detail = withBack(`/sale-orders/${id}`, safeBack(search.back)?.href);
   setRequestLocale(locale);
   const { actor } = await loadShell(locale);
   if (!hasFeature(actor, 'SALE_ORDERS')) return <FeatureLocked actor={actor} />;
@@ -35,7 +39,7 @@ export default async function EditSaleOrderPage({
     throw error;
   }
   if (order.status !== 'DRAFT' && order.status !== 'CONFIRMED')
-    return redirect({ href: `/sale-orders/${order.id}`, locale });
+    return redirect({ href: detail, locale });
   const t = await getTranslations('saleOrders');
   const data = await orderFormData(actor, db);
   const number = saleOrderNumber(order.number);
@@ -60,7 +64,7 @@ export default async function EditSaleOrderPage({
         description={
           order.status === 'CONFIRMED' ? t('form.editConfirmed') : t('form.editDescription')
         }
-        backHref={`/sale-orders/${order.id}`}
+        backHref={detail}
         backLabel={t('form.backOrder', { number })}
       />
       <OrderForm

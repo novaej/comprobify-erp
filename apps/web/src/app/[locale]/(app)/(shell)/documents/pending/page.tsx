@@ -15,6 +15,7 @@ import {
 } from '@/components/stack-table';
 import { ToneBadge } from '@/components/tone-badge';
 import { Link } from '@/i18n/navigation';
+import { withBack } from '@/lib/back';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
@@ -91,7 +92,7 @@ export default async function PendingDocumentsPage({
                       <StackRow key={row.id}>
                         <StackCell heading className="pl-4">
                           <Link
-                            href={`/documents/${row.id}`}
+                            href={withBack(`/documents/${row.id}`, '/documents/pending')}
                             className="font-medium tabular-nums hover:underline"
                           >
                             {t(`types.${row.documentType as '01'}`)} {row.number}
@@ -116,7 +117,7 @@ export default async function PendingDocumentsPage({
                         </StackCell>
                         <StackCell className="pr-4 text-right">
                           <Link
-                            href={`/documents/${row.id}`}
+                            href={withBack(`/documents/${row.id}`, '/documents/pending')}
                             aria-label={t('table.open', { number: row.number })}
                             className="inline-flex rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                           >

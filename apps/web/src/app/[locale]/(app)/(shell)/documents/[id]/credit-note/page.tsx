@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/empty-state';
 import { NoAccess } from '@/components/no-access';
 import { PageHeader } from '@/components/page-header';
 import { Link, redirect } from '@/i18n/navigation';
+import { safeBack, withBack } from '@/lib/back';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
@@ -18,10 +19,13 @@ export const generateMetadata = pageTitle('newCreditNote');
 // FR-DOC-9: a nota de crédito from an authorized invoice, for part or all of it.
 export default async function NewCreditNotePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ back?: string }>;
 }) {
-  const { locale, id } = await params;
+  const [{ locale, id }, search] = await Promise.all([params, searchParams]);
+  const detail = withBack(`/documents/${id}`, safeBack(search.back)?.href);
   setRequestLocale(locale);
   const { actor } = await loadShell(locale);
   if (!actor.permissions.includes('documents.issue')) return <NoAccess />;
@@ -39,7 +43,7 @@ export default async function NewCreditNotePage({
       isDomainError(error, 'ORIGIN_NOT_AUTHORIZED') ||
       isDomainError(error, 'CREDIT_NOTE_NEEDS_BUYER')
     )
-      return redirect({ href: `/documents/${id}`, locale });
+      return redirect({ href: detail, locale });
     if (isDomainError(error, 'NOT_FOUND') || (error instanceof Error && error.name === 'ZodError'))
       notFound();
     throw error;
@@ -51,7 +55,7 @@ export default async function NewCreditNotePage({
       <PageHeader
         title={t('title', { number: origin.number })}
         description={t('description')}
-        backHref={`/documents/${id}`}
+        backHref={detail}
         backLabel={t('back')}
       />
       {data.issuePoints.length === 0 ? (

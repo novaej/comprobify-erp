@@ -19,6 +19,7 @@ import {
 } from '@/components/stack-table';
 import { ToneBadge } from '@/components/tone-badge';
 import { Link } from '@/i18n/navigation';
+import { withBack } from '@/lib/back';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
@@ -137,7 +138,10 @@ export default async function BatchPage({
                   {item.reference ? (
                     <span className="break-all">{item.reference}</span>
                   ) : item.saleOrderId && item.saleOrderNumber ? (
-                    <Link href={`/sale-orders/${item.saleOrderId}`} className="hover:underline">
+                    <Link
+                      href={withBack(`/sale-orders/${item.saleOrderId}`, `/bulk-invoicing/${id}`)}
+                      className="hover:underline"
+                    >
                       {`PV-${String(item.saleOrderNumber).padStart(6, '0')}`}
                     </Link>
                   ) : (
@@ -147,7 +151,7 @@ export default async function BatchPage({
                 <StackCell label={t('detail.invoice')} className="tabular-nums">
                   {item.documentId ? (
                     <Link
-                      href={`/documents/${item.documentId}`}
+                      href={withBack(`/documents/${item.documentId}`, `/bulk-invoicing/${id}`)}
                       className="inline-flex items-center gap-1.5 hover:underline"
                     >
                       <FileText className="h-3.5 w-3.5" aria-hidden />

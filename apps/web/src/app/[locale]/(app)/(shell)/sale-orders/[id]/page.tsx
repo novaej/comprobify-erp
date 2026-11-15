@@ -26,6 +26,7 @@ import {
 } from '@/components/stack-table';
 import { ToneBadge } from '@/components/tone-badge';
 import { Link } from '@/i18n/navigation';
+import { safeBack, withBack } from '@/lib/back';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
@@ -38,10 +39,14 @@ export const generateMetadata = pageTitle('saleOrder');
 // FR-SAL-1: one order, what it asks for and what it holds.
 export default async function SaleOrderPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ back?: string }>;
 }) {
-  const { locale, id } = await params;
+  const [{ locale, id }, search] = await Promise.all([params, searchParams]);
+  // Back goes to where the person came from: the list, a batch, an invoice (rule 19).
+  const back = safeBack(search.back);
   setRequestLocale(locale);
   const { actor } = await loadShell(locale);
   if (!hasFeature(actor, 'SALE_ORDERS')) return <FeatureLocked actor={actor} />;
@@ -57,6 +62,7 @@ export default async function SaleOrderPage({
     throw error;
   }
   const t = await getTranslations('saleOrders');
+  const tBack = await getTranslations('back');
   const tSri = await getTranslations('sri');
   const tDocuments = await getTranslations('documents');
   const format = await getFormatter();
@@ -104,10 +110,10 @@ export default async function SaleOrderPage({
           </span>
         }
         description={t(`statusHelp.${order.status}`)}
-        backHref="/sale-orders"
-        backLabel={t('detail.back')}
+        backHref={back?.href ?? '/sale-orders'}
+        backLabel={back ? tBack(back.key) : t('detail.back')}
       />
-      <OrderActions id={order.id} number={number} allowed={allowed} />
+      <OrderActions id={order.id} number={number} allowed={allowed} back={back?.href} />
 
       <SectionCard title={t('detail.summary')}>
         <dl className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
@@ -251,7 +257,7 @@ export default async function SaleOrderPage({
             {invoices.map((invoice) => (
               <li key={invoice.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <Link
-                  href={`/documents/${invoice.id}`}
+                  href={withBack(`/documents/${invoice.id}`, `/sale-orders/${order.id}`)}
                   className="font-medium tabular-nums underline-offset-4 hover:underline"
                 >
                   {t('detail.invoices.invoice', { number: invoice.number })}
@@ -283,7 +289,7 @@ export default async function SaleOrderPage({
             {guides.map((guide) => (
               <li key={guide.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <Link
-                  href={`/documents/${guide.id}`}
+                  href={withBack(`/documents/${guide.id}`, `/sale-orders/${order.id}`)}
                   className="font-medium tabular-nums underline-offset-4 hover:underline"
                 >
                   {t('detail.guides.guide', { number: guide.number })}

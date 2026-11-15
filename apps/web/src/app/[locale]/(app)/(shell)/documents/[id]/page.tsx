@@ -31,6 +31,7 @@ import {
 import { ToneBadge } from '@/components/tone-badge';
 import { Link } from '@/i18n/navigation';
 import { TransportCard } from './transport-card';
+import { safeBack, withBack } from '@/lib/back';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
@@ -56,10 +57,14 @@ function latestMessages(document: DocumentDetail): SriMessage[] {
 // FR-DOC-12: one document, what SRI answered, and its files.
 export default async function DocumentPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ back?: string }>;
 }) {
-  const { locale, id } = await params;
+  const [{ locale, id }, search] = await Promise.all([params, searchParams]);
+  // Back goes to where the person came from: the list, a batch, an order (rule 19).
+  const back = safeBack(search.back);
   setRequestLocale(locale);
   const { actor } = await loadShell(locale);
   if (!actor.permissions.includes('documents.read')) return <NoAccess />;
@@ -74,6 +79,7 @@ export default async function DocumentPage({
     throw error;
   }
   const t = await getTranslations('documents');
+  const tBack = await getTranslations('back');
   const tSri = await getTranslations('sri');
   // FR-SAL-10: an authorized invoice is owed until it is paid.
   const receivable =
@@ -120,8 +126,8 @@ export default async function DocumentPage({
           </span>
         }
         description={authorizedByMock ? t('detail.mockHelp') : t(`statusHelp.${document.status}`)}
-        backHref="/documents"
-        backLabel={t('detail.back')}
+        backHref={back?.href ?? '/documents'}
+        backLabel={back ? tBack(back.key) : t('detail.back')}
         action={
           <>
             {authorized && (
@@ -159,6 +165,7 @@ export default async function DocumentPage({
         todayShown={date(today)}
         voidDeadline={date(voidDeadline(document.issueDate))}
         buyerEmail={document.buyer.email}
+        back={back?.href}
       />
 
       {authorizedByMock && (
@@ -358,7 +365,10 @@ export default async function DocumentPage({
                   <li className="flex flex-wrap items-center gap-x-3 gap-y-1">
                     <span className="text-muted-foreground">{t('detail.related.saleOrder')}</span>
                     <Link
-                      href={`/sale-orders/${document.saleOrder.id}`}
+                      href={withBack(
+                        `/sale-orders/${document.saleOrder.id}`,
+                        `/documents/${document.id}`,
+                      )}
                       className="font-medium tabular-nums underline-offset-4 hover:underline"
                     >
                       {saleOrderNumber(document.saleOrder.number)}
@@ -377,7 +387,7 @@ export default async function DocumentPage({
                   <li key={link.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
                     <span className="text-muted-foreground">{label}</span>
                     <Link
-                      href={`/documents/${link.id}`}
+                      href={withBack(`/documents/${link.id}`, `/documents/${document.id}`)}
                       className="font-medium tabular-nums underline-offset-4 hover:underline"
                     >
                       {t(`types.${link.documentType as '01'}`)} {link.number}

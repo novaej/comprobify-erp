@@ -14,6 +14,7 @@ import { FeatureLocked } from '@/components/feature-locked';
 import { NoAccess } from '@/components/no-access';
 import { PageHeader } from '@/components/page-header';
 import { Link, redirect } from '@/i18n/navigation';
+import { safeBack, withBack } from '@/lib/back';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
@@ -25,10 +26,13 @@ export const generateMetadata = pageTitle('invoiceSaleOrder');
 // FR-SAL-3: an invoice for some or all of what a confirmed order has left.
 export default async function InvoiceSaleOrderPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ back?: string }>;
 }) {
-  const { locale, id } = await params;
+  const [{ locale, id }, search] = await Promise.all([params, searchParams]);
+  const detail = withBack(`/sale-orders/${id}`, safeBack(search.back)?.href);
   setRequestLocale(locale);
   const { actor } = await loadShell(locale);
   if (!hasFeature(actor, 'SALE_ORDERS')) return <FeatureLocked actor={actor} />;
@@ -47,7 +51,7 @@ export default async function InvoiceSaleOrderPage({
   // Only a confirmed order with something left is invoiced; anything else goes back to it.
   const left = order.lines.some((line) => Number(line.left) > 0);
   if (!['CONFIRMED', 'PARTIALLY_INVOICED'].includes(order.status) || !left)
-    return redirect({ href: `/sale-orders/${order.id}`, locale });
+    return redirect({ href: detail, locale });
   const t = await getTranslations('saleOrders');
   const number = saleOrderNumber(order.number);
   const data = await orderInvoiceFormData(
@@ -72,7 +76,7 @@ export default async function InvoiceSaleOrderPage({
       <PageHeader
         title={t('invoice.title', { number })}
         description={t('invoice.description')}
-        backHref={`/sale-orders/${order.id}`}
+        backHref={detail}
         backLabel={t('form.backOrder', { number })}
       />
       {data.issuePoints.length === 0 ? (
