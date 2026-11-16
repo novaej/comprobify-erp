@@ -51,7 +51,13 @@ export type MemberView = {
   role: string;
   issuePoints: string[];
 };
-export type InvitationView = { id: string; email: string; role: string; expires: string };
+export type InvitationView = {
+  id: string;
+  email: string;
+  role: string;
+  issuePoints: string[];
+  expires: string;
+};
 
 const iconButton =
   'rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-40';
@@ -213,7 +219,9 @@ export function UserManager({
                     </p>
                   </StackCell>
                   <StackCell label={t('table.issuePoints')}>
-                    <span className="text-xs text-muted-foreground">—</span>
+                    <IssuePoints
+                      member={{ role: invitation.role, issuePoints: invitation.issuePoints }}
+                    />
                   </StackCell>
                   <StackCell label={t('table.role')} className="whitespace-nowrap">
                     <ToneBadge tone="neutral">{tRoles(invitation.role as 'VIEWER')}</ToneBadge>
@@ -245,7 +253,12 @@ export function UserManager({
 
       {canManageOrganization && <TwoFactorRequirement required={requireTwoFactor} />}
 
-      <InviteDialog open={inviting} onOpenChange={setInviting} roleOptions={roleOptions} />
+      <InviteDialog
+        open={inviting}
+        onOpenChange={setInviting}
+        roleOptions={roleOptions}
+        points={points}
+      />
       {editing && (
         <EditDialog
           member={editing}
@@ -292,7 +305,7 @@ export function UserManager({
   );
 }
 
-function IssuePoints({ member }: { member: MemberView }) {
+function IssuePoints({ member }: { member: Pick<MemberView, 'role' | 'issuePoints'> }) {
   const t = useTranslations('users');
   if (UNRESTRICTED.has(member.role) || member.issuePoints.length === 0)
     return <ToneBadge tone="info">{t('allPoints')}</ToneBadge>;
@@ -307,14 +320,57 @@ function IssuePoints({ member }: { member: MemberView }) {
   );
 }
 
+// Unticked means every issue point (FR-ROLE-2); ticking some limits the member to them.
+function IssuePointPicker({
+  points,
+  selected,
+}: {
+  points: { code: string; label: string }[];
+  selected: string[];
+}) {
+  const t = useTranslations('users');
+  const uid = useId();
+  return (
+    <div className="space-y-1.5">
+      <span id={`${uid}-points`} className="text-sm leading-none font-medium">
+        {t('issuePoints')}
+      </span>
+      <p className="text-xs text-muted-foreground">{t('issuePointsHint')}</p>
+      <div
+        role="group"
+        aria-labelledby={`${uid}-points`}
+        className="max-h-44 space-y-0.5 overflow-y-auto rounded-md border border-input p-1.5"
+      >
+        {points.map((point) => (
+          <label
+            key={point.code}
+            className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-2 text-sm hover:bg-muted/60"
+          >
+            <input
+              type="checkbox"
+              name="points"
+              value={point.code}
+              defaultChecked={selected.includes(point.code)}
+              className="h-4 w-4 shrink-0 accent-primary"
+            />
+            {point.label}
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function InviteDialog({
   open,
   onOpenChange,
   roleOptions,
+  points,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   roleOptions: { value: string; label: string }[];
+  points: { code: string; label: string }[];
 }) {
   const t = useTranslations('users');
   const [role, setRole] = useState('SALES');
@@ -355,6 +411,7 @@ function InviteDialog({
               <ChoiceSelect value={role} onChange={setRole} options={roleOptions} a11y={props} />
             )}
           </FormField>
+          {!UNRESTRICTED.has(role) && <IssuePointPicker points={points} selected={[]} />}
           {invite.error && (
             <p role="alert" className="text-sm text-destructive">
               {invite.error}
@@ -386,7 +443,6 @@ function EditDialog({
   onClose: () => void;
 }) {
   const t = useTranslations('users');
-  const uid = useId();
   const [role, setRole] = useState(member.role);
   const update = useServerAction(updateMemberAction, {
     errors: 'usersError',
@@ -417,33 +473,7 @@ function EditDialog({
             )}
           </FormField>
           {!UNRESTRICTED.has(role) && (
-            <div className="space-y-1.5">
-              <span id={`${uid}-points`} className="text-sm leading-none font-medium">
-                {t('issuePoints')}
-              </span>
-              <p className="text-xs text-muted-foreground">{t('issuePointsHint')}</p>
-              <div
-                role="group"
-                aria-labelledby={`${uid}-points`}
-                className="max-h-44 space-y-0.5 overflow-y-auto rounded-md border border-input p-1.5"
-              >
-                {points.map((point) => (
-                  <label
-                    key={point.code}
-                    className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-2 text-sm hover:bg-muted/60"
-                  >
-                    <input
-                      type="checkbox"
-                      name="points"
-                      value={point.code}
-                      defaultChecked={member.issuePoints.includes(point.code)}
-                      className="h-4 w-4 shrink-0 accent-primary"
-                    />
-                    {point.label}
-                  </label>
-                ))}
-              </div>
-            </div>
+            <IssuePointPicker points={points} selected={member.issuePoints} />
           )}
           {update.error && (
             <p role="alert" className="text-sm text-destructive">

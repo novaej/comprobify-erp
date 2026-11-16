@@ -1,0 +1,1 @@
+ALTER TABLE "invitations" ADD COLUMN "issue_points" text[] DEFAULT '{}'::text[] NOT NULL;

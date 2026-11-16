@@ -26,16 +26,18 @@ export async function AppShell({ locale, children }: { locale: string; children:
   const tRoles = await getTranslations('roles');
   // FR-NOT-1: the bell, read with the page.
   const summary = actor.userId ? await notificationSummary(actor, db) : null;
-  const bell = summary ? (
-    <NotificationBell
-      unread={summary.unread}
-      items={summary.items.map((item) => ({
-        ...item,
-        createdAt: item.createdAt.toISOString(),
-        readAt: item.readAt?.toISOString() ?? null,
-      }))}
-    />
-  ) : null;
+  // Built per place: one element used twice in the tree makes React warn about keys.
+  const bell = () =>
+    summary ? (
+      <NotificationBell
+        unread={summary.unread}
+        items={summary.items.map((item) => ({
+          ...item,
+          createdAt: item.createdAt.toISOString(),
+          readAt: item.readAt?.toISOString() ?? null,
+        }))}
+      />
+    ) : null;
 
   return (
     <>
@@ -54,7 +56,7 @@ export async function AppShell({ locale, children }: { locale: string; children:
           permissions={actor.permissions}
           features={actor.entitlements.features}
           isSuperAdmin={session.user.isSuperAdmin}
-          bell={bell}
+          bell={bell()}
           user={{
             name: session.user.name,
             email: session.user.email,
@@ -62,7 +64,7 @@ export async function AppShell({ locale, children }: { locale: string; children:
           }}
         />
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <TopBar bell={bell} />
+          <TopBar bell={bell()} />
           <main
             id="main-content"
             // In the tab order: it scrolls, and a read-only screen may have nothing else to reach.

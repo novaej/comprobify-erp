@@ -326,6 +326,11 @@ export const invitations = pgTable(
       .references(() => tenants.id),
     email: text('email').notNull(),
     role: text('role', { enum: MEMBERSHIP_ROLES }).notNull(),
+    // Issue points as branch-point codes ('001-002') applied on accepting; empty means all.
+    issuePoints: text('issue_points')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     tokenHash: text('token_hash').notNull().unique(),
     invitedBy: uuid('invited_by')
       .notNull()

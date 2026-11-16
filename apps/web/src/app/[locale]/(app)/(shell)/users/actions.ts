@@ -45,7 +45,12 @@ export async function inviteAction(_: ActionState, form: FormData): Promise<Acti
     inviteMember(
       actor,
       db,
-      { email: text(form, 'email'), role: text(form, 'role') as 'VIEWER', locale: localeOf(form) },
+      {
+        email: text(form, 'email'),
+        role: text(form, 'role') as 'VIEWER',
+        locale: localeOf(form),
+        points: pointsOf(form),
+      },
       {
         jobs,
         appUrl: env.APP_URL,

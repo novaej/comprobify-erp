@@ -37,6 +37,7 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
           id: invitation.id,
           email: invitation.email,
           role: invitation.role,
+          issuePoints: invitation.issuePoints,
           expires: dateFormat.format(invitation.expiresAt),
         }))}
         points={points.map((point) => ({

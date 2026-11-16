@@ -77,8 +77,8 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | H3 | Collect and the aging report | ✅ |
 | I1 | From sale orders | ✅ |
 | I2 | From a CSV | ✅ |
-| J1 | Invite the team | ⬜ |
-| J2 | What each role sees and may do | ⬜ |
+| J1 | Invite the team | ✅ |
+| J2 | What each role sees and may do | ✅ |
 | J3 | Limit, change and remove | ⬜ |
 | J4 | Two-step verification for everyone | ⬜ |
 | K1 | The bell and preferences | ⬜ |
@@ -764,6 +764,8 @@ A CSV batch makes invoices from a spreadsheet instead of from sale orders. Each 
 | 2 | Invite the other four: Ventas, Compras y bodega, Contador, Solo lectura | Five pending |
 | 3 | A private window per person: open each invitation link | "Te invitaron a Comercial Andina S.A." with a form |
 | 4 | Each: a name, the password, **Crear mi cuenta y aceptar** | Signed in to Comercial Andina, in its test copy |
+| 5 | **Invitar** another address as Ventas and tick only `001-001`, send it. Before accepting, look at the list | The pending row shows `001-001` under **Puntos de emisión**. Administrador has no list in the dialog (it always sees every point); the others start with none ticked, which means all of them |
+| 6 | Accept that invitation in a private window and open the invoice form | Only `001-001` is offered, in the test copy too. **Actividad** → the invitation line is there; the limit can be changed later from **Editar** (J3) |
 
 ### J2 · What each role sees and may do
 
@@ -787,7 +789,7 @@ And for each: open a document or an order, so the read side is seen too.
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Owner: limit Víctor (Ventas) to issue point **001-001** | Víctor's invoice form offers only that one |
+| 1 | Owner: for a member invited without a limit, **Editar** and tick issue point **001-001** (Víctor, Ventas, if you made one) | Víctor's invoice form offers only that one. Unticking all of them lifts the limit |
 | 2 | Change Bruno from Compras y bodega to Ventas, then back | His menu changes after a reload |
 | 3 | Remove Lucía (**Quitar**) | It asks first; she is signed out of the company and can't open it again |
 | 4 | **Actividad** | Each of these, with who did it |

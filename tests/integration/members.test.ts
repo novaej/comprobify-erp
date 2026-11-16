@@ -295,6 +295,42 @@ describe('members', () => {
       await setIssuePointAccess(ownerCtx, db, { userId: member.id, points: [] });
       expect((await actor(member.id)).issuePointIds).toBeNull();
     });
+    it('limits an invited member to the chosen issue points from the start, in the twin too', async () => {
+      const user = await newUser();
+      await inviteMember(
+        ownerCtx,
+        db,
+        {
+          email: user.email,
+          role: 'SALES',
+          locale: 'es',
+          points: [{ branchCode: '001', pointCode: '001' }],
+        },
+        deps(),
+      );
+      expect(
+        (await listMembers(ownerCtx, db)).invitations.find((row) => row.email === user.email)
+          ?.issuePoints,
+      ).toEqual(['001-001']);
+      const token = await invitationToken(user.email);
+      await acceptInvitation(db, { token, userId: user.id, userEmail: user.email }, clock);
+      expect((await actor(user.id)).issuePointIds).toHaveLength(1);
+      expect((await actor(user.id, org.twinTenantId)).issuePointIds).toHaveLength(1);
+
+      await expect(
+        inviteMember(
+          ownerCtx,
+          db,
+          {
+            email: `x.${randomUUID()}@example.com`,
+            role: 'SALES',
+            locale: 'es',
+            points: [{ branchCode: '009', pointCode: '001' }],
+          },
+          deps(),
+        ),
+      ).rejects.toMatchObject({ code: 'UNKNOWN_ISSUE_POINT' });
+    });
   });
 
   describe('createVerifiedUser', () => {

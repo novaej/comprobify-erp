@@ -110,7 +110,13 @@ export type MemberRow = {
   // The member's allowed points as branch-point codes; empty means all of them.
   issuePoints: string[];
 };
-export type InvitationRow = { id: string; email: string; role: Role; expiresAt: Date };
+export type InvitationRow = {
+  id: string;
+  email: string;
+  role: Role;
+  issuePoints: string[];
+  expiresAt: Date;
+};
 
 // The real organization of the actor's tenant, which the actor also belongs to
 // through the mirrored membership; members and invitations live there.
@@ -160,6 +166,7 @@ export async function listMembers(
         id: invitations.id,
         email: invitations.email,
         role: invitations.role,
+        issuePoints: invitations.issuePoints,
         expiresAt: invitations.expiresAt,
       })
       .from(invitations)
@@ -201,7 +208,18 @@ export async function companyUsage(ctx: ActorContext, db: Database): Promise<Com
   });
 }
 
-export const inviteInput = z.object({ email, role: assignableRole, locale: z.enum(['es', 'en']) });
+const pointCode = z.object({
+  branchCode: z.string().regex(/^[0-9]{3}$/),
+  pointCode: z.string().regex(/^[0-9]{3}$/),
+});
+
+// `points` limits the new member from the start (FR-ROLE-2); empty means all of them.
+export const inviteInput = z.object({
+  email,
+  role: assignableRole,
+  locale: z.enum(['es', 'en']),
+  points: z.array(pointCode).max(500).default([]),
+});
 
 export type InviteDeps = { jobs: Jobs; appUrl: string; rateLimiter: RateLimiter };
 
@@ -243,10 +261,22 @@ export async function inviteMember(
       );
     // After revoking this email's old invitation, so re-sending doesn't take a seat.
     requireWithinLimit(ctx.entitlements, 'USERS', await seatsUsed(tx.db, pair.realTenantId, now));
+    const wanted = [
+      ...new Set(input.points.map((point) => `${point.branchCode}-${point.pointCode}`)),
+    ];
+    // Real company's points, since the twin is mirrored by code on accepting.
+    const known = await tx.db
+      .select({ code: sql<string>`${schema.branches.code} || '-' || ${schema.issuePoints.code}` })
+      .from(schema.issuePoints)
+      .innerJoin(schema.branches, eq(schema.branches.id, schema.issuePoints.branchId))
+      .where(eq(schema.issuePoints.tenantId, pair.realTenantId));
+    if (wanted.some((code) => !known.some((point) => point.code === code)))
+      throw new DomainError('UNKNOWN_ISSUE_POINT', 'An issue point does not exist');
     await tx.db.insert(invitations).values({
       tenantId: pair.realTenantId,
       email: input.email,
       role: input.role,
+      issuePoints: wanted.sort(),
       tokenHash: hashToken(token),
       invitedBy: ctx.userId!,
       expiresAt: new Date(now.getTime() + INVITATION_DAYS * 86_400_000),
@@ -264,7 +294,7 @@ export async function inviteMember(
       tenantId: pair.realTenantId,
       actorUserId: ctx.userId ?? null,
       action: 'member.invited',
-      details: { email: input.email, role: input.role },
+      details: { email: input.email, role: input.role, points: wanted },
     });
   });
 }
@@ -355,10 +385,52 @@ export async function listIssuePoints(
   );
 }
 
-const pointCode = z.object({
-  branchCode: z.string().regex(/^[0-9]{3}$/),
-  pointCode: z.string().regex(/^[0-9]{3}$/),
-});
+// Sets who may use which issue points in the real company and its twin, by code since the twin's
+// points have their own ids. Empty removes the restriction.
+async function applyIssuePoints(
+  tx: Tx['db'],
+  pair: Pair,
+  userId: string,
+  codes: string[],
+): Promise<string[]> {
+  const { issuePointAccess, issuePoints, branches } = schema;
+  const wanted = new Set(codes);
+  for (const tenantId of [pair.realTenantId, pair.twinTenantId]) {
+    if (!tenantId) continue;
+    const available = await tx
+      .select({
+        id: issuePoints.id,
+        code: sql<string>`${branches.code} || '-' || ${issuePoints.code}`,
+      })
+      .from(issuePoints)
+      .innerJoin(branches, eq(branches.id, issuePoints.branchId))
+      .where(eq(issuePoints.tenantId, tenantId));
+    if (
+      tenantId === pair.realTenantId &&
+      [...wanted].some((code) => !available.some((point) => point.code === code))
+    ) {
+      throw new DomainError('UNKNOWN_ISSUE_POINT', 'An issue point does not exist');
+    }
+    await tx
+      .update(issuePointAccess)
+      .set({ active: false })
+      .where(and(eq(issuePointAccess.tenantId, tenantId), eq(issuePointAccess.userId, userId)));
+    for (const point of available.filter((candidate) => wanted.has(candidate.code))) {
+      await tx
+        .insert(issuePointAccess)
+        .values({ tenantId, userId, issuePointId: point.id, active: true })
+        .onConflictDoUpdate({
+          target: [
+            issuePointAccess.tenantId,
+            issuePointAccess.userId,
+            issuePointAccess.issuePointId,
+          ],
+          set: { active: true },
+        });
+    }
+  }
+  return [...wanted].sort();
+}
 
 // FR-ROLE-2. An empty list removes the restriction. Mirrored in the twin by codes,
 // since its issue points have their own ids.
@@ -374,51 +446,18 @@ export async function setIssuePointAccess(
     async ({ db: tx }) => {
       const pair = await pairOf(tx, ctx.tenantId);
       guardTarget(ctx, await targetMembership(tx, pair.realTenantId, raw.userId), raw.userId);
-      const { issuePointAccess, issuePoints, branches } = schema;
-      const wanted = new Set(points.map((point) => `${point.branchCode}-${point.pointCode}`));
-
-      for (const tenantId of [pair.realTenantId, pair.twinTenantId]) {
-        if (!tenantId) continue;
-        const available = await tx
-          .select({
-            id: issuePoints.id,
-            code: sql<string>`${branches.code} || '-' || ${issuePoints.code}`,
-          })
-          .from(issuePoints)
-          .innerJoin(branches, eq(branches.id, issuePoints.branchId))
-          .where(eq(issuePoints.tenantId, tenantId));
-        if (
-          tenantId === pair.realTenantId &&
-          [...wanted].some((code) => !available.some((point) => point.code === code))
-        ) {
-          throw new DomainError('UNKNOWN_ISSUE_POINT', 'An issue point does not exist');
-        }
-        await tx
-          .update(issuePointAccess)
-          .set({ active: false })
-          .where(
-            and(eq(issuePointAccess.tenantId, tenantId), eq(issuePointAccess.userId, raw.userId)),
-          );
-        for (const point of available.filter((candidate) => wanted.has(candidate.code))) {
-          await tx
-            .insert(issuePointAccess)
-            .values({ tenantId, userId: raw.userId, issuePointId: point.id, active: true })
-            .onConflictDoUpdate({
-              target: [
-                issuePointAccess.tenantId,
-                issuePointAccess.userId,
-                issuePointAccess.issuePointId,
-              ],
-              set: { active: true },
-            });
-        }
-      }
+      const wanted = await applyIssuePoints(
+        tx,
+        pair,
+        raw.userId,
+        points.map((point) => `${point.branchCode}-${point.pointCode}`),
+      );
       await recordAudit(tx, {
         tenantId: pair.realTenantId,
         actorUserId: ctx.userId ?? null,
         action: 'member.issue_points_changed',
         subjectUserId: raw.userId,
-        details: { points: [...wanted].sort() },
+        details: { points: wanted },
       });
     },
   );
@@ -498,6 +537,7 @@ export async function acceptInvitation(
       await seatsUsed(tx, pair.realTenantId, null),
     );
     await writeMembership(tx, pair, input.userId, { role: row.role, active: true });
+    await applyIssuePoints(tx, pair, input.userId, row.issuePoints);
     await tx.update(invitations).set({ acceptedAt: now }).where(eq(invitations.id, row.id));
     await recordAudit(tx, {
       tenantId: pair.realTenantId,
