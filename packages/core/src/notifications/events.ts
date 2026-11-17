@@ -74,6 +74,8 @@ async function notifyGrouped(
     .update(notifications)
     .set({
       params: sql`jsonb_set(${notifications.params}, '{count}', to_jsonb(((${notifications.params}->>'count')::int + 1)::text))`,
+      // Several documents: the list, not whichever came first.
+      link: '/documents',
     })
     .where(
       and(

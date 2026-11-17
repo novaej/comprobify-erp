@@ -193,6 +193,7 @@
     "closeMenu": "Cerrar menú",
     "skipToContent": "Saltar al contenido",
     "users": "Usuarios",
+    "notifications": "Notificaciones",
     "activity": "Actividad",
     "legal": "Documentos legales",
     "plan": "Plan",
@@ -1564,7 +1565,17 @@
     "sequentialsTestTitle": "Numeración de pruebas",
     "sequentialsTestDescription": "El siguiente número que emite la copia de pruebas en cada punto de emisión. Solo puede avanzar. La empresa real tiene su propia numeración: se fija al pasar a producción, o desde Empresa estando en Producción.",
     "contactEmail": "Correo de contacto",
-    "contactEmailHint": "Donde llegan las respuestas de tus compradores y proveedores a los correos que Comprobify envía en nombre de tu empresa. Si lo dejas vacío, un correo de orden de compra responde a quien lo envió."
+    "contactEmailHint": "Donde llegan las respuestas de tus compradores y proveedores a los correos que Comprobify envía en nombre de tu empresa. Si lo dejas vacío, un correo de orden de compra responde a quien lo envió.",
+    "certificateTitle": "Firma electrónica",
+    "certificateDescription": "El archivo .p12 con que se firman tus comprobantes. Al subir la renovada reemplaza a la anterior, también en la copia de pruebas; debe ser del mismo RUC y estar vigente.",
+    "certificateMissing": "Tu empresa no tiene una firma electrónica.",
+    "certificateOk": "Vigente hasta el {date}.",
+    "certificateExpiring": "Vence el {date}: {days, plural, =0 {menos de un día} one {queda # día} other {quedan # días}}. Sube la renovada.",
+    "certificateExpired": "Venció el {date}. Sube la renovada para volver a emitir.",
+    "certificateFile": "Archivo de la firma (.p12)",
+    "certificatePassword": "Contraseña de la firma",
+    "certificateRenew": "Reemplazar firma",
+    "certificateSaved": "Firma reemplazada."
   },
   "settingsError": {
     "FORBIDDEN": "Tu rol no permite cambiar los datos de la empresa.",
@@ -1576,7 +1587,13 @@
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
     "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
     "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos.",
-    "SEQUENCE_BACKWARD": "Un secuencial solo puede avanzar: ese número es menor al que ya sigue."
+    "SEQUENCE_BACKWARD": "Un secuencial solo puede avanzar: ese número es menor al que ya sigue.",
+    "CERTIFICATE_REQUIRED": "Sube tu archivo de firma (.p12).",
+    "CERTIFICATE_INVALID": "Ese archivo no es una firma .p12 válida.",
+    "CERTIFICATE_PASSWORD_INVALID": "La contraseña de la firma no es correcta.",
+    "CERTIFICATE_KEY_NOT_FOUND": "La firma no contiene una clave que corresponda a su certificado.",
+    "CERTIFICATE_EXPIRED": "La firma está vencida o todavía no es válida. Renuévala con tu entidad certificadora.",
+    "CERTIFICATE_RUC_MISMATCH": "La firma no pertenece al RUC de esta empresa."
   },
   "documents": {
     "title": "Comprobantes",

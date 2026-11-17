@@ -15,7 +15,8 @@ export type MasterDataCounts = {
   templates: number;
 };
 
-// The box is the confirmation: it can't be undone, so it is read before the button.
+// The box is the confirmation: it can't be undone, so it is read before the button. Not `required`:
+// the browser's tooltip is not how forms here say it; the action answers CONFIRM_REQUIRED instead.
 export function GoLiveForm({
   points,
   masterData,
@@ -78,12 +79,7 @@ export function GoLiveForm({
           <FormActionBar
             summary={
               <label className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  name="confirm"
-                  required
-                  className="mt-0.5 h-4 w-4 accent-primary"
-                />
+                <input type="checkbox" name="confirm" className="mt-0.5 h-4 w-4 accent-primary" />
                 {t('confirm')}
               </label>
             }

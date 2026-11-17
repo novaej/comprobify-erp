@@ -20,6 +20,7 @@ import {
   createIssuePointAction,
   saveBranchAction,
   setDocumentTypesAction,
+  renewCertificateAction,
   setLogoAction,
   setNegativeStockAction,
   setSequentialsAction,
@@ -43,6 +44,12 @@ export type SettingsView = {
   // The Inventario module, which the negative-stock rule belongs to.
   inventory: boolean;
   hasLogo: boolean;
+  // The signing certificate in force: its state and when it ends.
+  certificate: {
+    state: 'ok' | 'expiring' | 'expired' | 'missing';
+    date: string | null;
+    days: number | null;
+  };
   // The real company's next numbers, by issue point and document type.
   sequentials: { branchCode: string; pointCode: string; documentType: string; next: number }[];
   // In the test copy, where the numbers are the test copy's.
@@ -220,6 +227,8 @@ export function SettingsManager({ settings }: { settings: SettingsView }) {
         testMode={settings.testMode}
       />
 
+      <CertificateCard certificate={settings.certificate} />
+
       <LogoCard hasLogo={settings.hasLogo} prints={settings.logoPrints} />
 
       {settings.inventory && <StockRuleCard allowed={settings.negativeStock === 'ALLOW'} />}
@@ -333,6 +342,59 @@ function SequentialsCard({
             </div>
             <Button type="submit" variant="outline" disabled={pending || sequentials.length === 0}>
               {t('sequentialsSave')}
+            </Button>
+          </div>
+        )}
+      </ActionForm>
+    </SectionCard>
+  );
+}
+
+// FR-ONB-3: renewing the signature; the new file replaces the old in the company and its test copy.
+function CertificateCard({ certificate }: { certificate: SettingsView['certificate'] }) {
+  const t = useTranslations('settings');
+  const status =
+    certificate.state === 'missing'
+      ? t('certificateMissing')
+      : certificate.state === 'expired'
+        ? t('certificateExpired', { date: certificate.date ?? '' })
+        : certificate.state === 'expiring'
+          ? t('certificateExpiring', { date: certificate.date ?? '', days: certificate.days ?? 0 })
+          : t('certificateOk', { date: certificate.date ?? '' });
+  return (
+    <SectionCard title={t('certificateTitle')} description={t('certificateDescription')}>
+      <p
+        className={
+          certificate.state === 'ok' ? 'mb-3 text-sm' : 'mb-3 text-sm font-medium text-destructive'
+        }
+      >
+        {status}
+      </p>
+      <ActionForm
+        action={renewCertificateAction}
+        errors="settingsError"
+        success={t('certificateSaved')}
+      >
+        {(pending) => (
+          <div className="flex flex-wrap items-end gap-3">
+            <FormField label={t('certificateFile')}>
+              {(props) => (
+                <Input {...props} name="certificate" type="file" accept=".p12,.pfx" required />
+              )}
+            </FormField>
+            <FormField label={t('certificatePassword')}>
+              {(props) => (
+                <Input
+                  {...props}
+                  name="certificatePassword"
+                  type="password"
+                  autoComplete="off"
+                  required
+                />
+              )}
+            </FormField>
+            <Button type="submit" variant="outline" disabled={pending}>
+              {t('certificateRenew')}
             </Button>
           </div>
         )}

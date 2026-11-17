@@ -1,4 +1,5 @@
 import {
+  certificateStatus,
   companySettings,
   hasFeature,
   limitOf,
@@ -27,6 +28,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
   const { db } = await getRuntime();
   const settings = await companySettings(actor, db);
   const sequentials = await companySequentials(actor, db);
+  const certificate = await certificateStatus(db, actor);
   const t = await getTranslations('settings');
   const tSri = await getTranslations('sri');
 
@@ -45,6 +47,17 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
           })),
           inventory: hasFeature(actor, 'INVENTORY'),
           logoPrints: hasFeature(actor, 'RIDE_LOGO'),
+          certificate: {
+            state: certificate.state,
+            date:
+              'notAfter' in certificate
+                ? new Intl.DateTimeFormat(locale === 'en' ? 'en' : 'es-EC', {
+                    dateStyle: 'long',
+                    timeZone: 'America/Guayaquil',
+                  }).format(certificate.notAfter)
+                : null,
+            days: 'daysLeft' in certificate ? certificate.daysLeft : null,
+          },
           // Null is unlimited. The buttons are disabled at the limit, as in Usuarios.
           maxBranches: limitOf(actor.entitlements, 'MAX_BRANCHES'),
           maxPoints: limitOf(actor.entitlements, 'MAX_ISSUE_POINTS_PER_BRANCH'),

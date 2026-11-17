@@ -52,7 +52,7 @@ Better Auth handles credentials, database sessions and tokens (ADR-009); its tab
 
 ## Tenancy and RLS
 
-Onboarding checks the RUC's structure, reads the P12 whatever the CA, and requires the certificate to carry the RUC, or for a person their cédula. The private key is encrypted with AES-256-GCM before it reaches the database, and the certificate is stored on the organization and on its twin.
+Onboarding checks the RUC's structure, reads the P12 whatever the CA, and requires the certificate to carry the RUC, or for a person their cédula. The private key is encrypted with AES-256-GCM before it reaches the database, and the certificate is stored on the organization and on its twin. Renewal (`replaceCertificate`, from the Firma electrónica card on Empresa) applies the same checks and replaces the pair in one transaction, switching the old row off.
 
 
 Organizations live in `tenants`. Registration creates two rows: the real organization (`PRODUCTION`) and its test twin (`TEST`, `twin_of` set), each with the same branch, issue point and warehouse, and the owner's membership mirrored in both (ADR-010). Child tables carry `tenant_id` and reference their parent through `(tenant_id, id)`, so a row can't point into another tenant.

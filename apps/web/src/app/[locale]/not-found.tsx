@@ -17,7 +17,7 @@ export default async function LocaleNotFound() {
       <h2 className="mb-2 text-xl font-semibold">{t('title')}</h2>
       <p className="mb-6 max-w-sm text-sm text-muted-foreground">{t('description')}</p>
       {/* A full navigation: soft navigation away from notFound() can no-op (Next.js #49736). */}
-      <a href={`/${locale}`} className={buttonVariants()}>
+      <a href={`/${locale}/dashboard`} className={buttonVariants()}>
         {t('backToDashboard')}
       </a>
     </div>

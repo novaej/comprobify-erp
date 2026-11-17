@@ -20,6 +20,7 @@ export {
   switchOrganization,
 } from './organizations';
 export type { CreatedOrganization, OrganizationEntry, StoredCertificate } from './organizations';
+export { replaceCertificate } from './certificate-renewal';
 export { companyLogo, documentLogo, LOGO_MAX_BYTES, setCompanyLogo, sniffLogo } from './logo';
 export type { Logo } from './logo';
 export {

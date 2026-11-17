@@ -18,6 +18,7 @@ import {
   Menu,
   Package,
   Receipt,
+  Bell,
   ScrollText,
   ShieldCheck,
   ShoppingCart,
@@ -52,6 +53,7 @@ type NavItem = {
     | 'bulkInvoicing'
     | 'company'
     | 'users'
+    | 'notifications'
     | 'activity'
     | 'plan'
     | 'legal';
@@ -163,6 +165,13 @@ const NAV_ITEMS: NavItem[] = [
     labelKey: 'users',
     group: 'manage',
     permission: 'users.read',
+  },
+  {
+    href: '/notifications',
+    icon: Bell,
+    labelKey: 'notifications',
+    group: 'manage',
+    permission: null,
   },
   {
     href: '/audit',

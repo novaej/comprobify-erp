@@ -13,7 +13,7 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 - **Not scheduled:** a CSV batch could also import the file as sale orders to invoice from the batch screen, on plans with Sales (`SALE_ORDERS`); today a CSV makes invoices directly. A CSV batch pays every invoice with one method; per-invoice payment columns are not offered.
 - **Not scheduled:** a guía that leaves before its invoice (dispatch first): lines and quantities of the order, a shipped-so-far balance, and a way to tie the later invoice to it (ADR-023).
 - **Milestone 4:** only the first guía recipient is searchable by client; the others take their invoice through the invoice search (ADR-017). The guía is not offered by plate catalogue or carrier directory.
-- **Milestone 3:** certificate renewal (FR-ONB-3); twin reset.
+- **Milestone 3:** twin reset.
 - **Owner, with live email:** the Mailgun webhook for the buyer's copy (delivered, failed, complained), matched by the `document-id` variable each message carries (FR-DOC-11). Needs the Mailgun signing key and a public URL.
 - **Milestone 10:** the 10,000-item bulk batch of NFR-PERF-3, and the caps (`BULK_LIMITS`: 50 per company, 150 overall) and the feeder's 5-second period tuned against what SRI accepts. At the defaults a lone company's batch moves at about 1 invoice a second (ADR-026, gate result), so 10,000 take about 2.5 hours; `pnpm test:bulk-gate` with `BULK_GATE_ITEMS=10000` is the run.
 - **Not scheduled:** prune in-app notifications older than 180 days, the other periodic duplicate in `docs/legal/retention.md`: it needs its own narrow exception on the pattern of ADR-038 and a `RETENTION` line.

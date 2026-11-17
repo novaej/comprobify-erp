@@ -6,6 +6,8 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Added
 
+- Renewing the electronic signature: a **Firma electrónica** card on Empresa shows the one in force and its end date, and takes the renewed .p12 and its password. It must open, be valid today and carry the company's RUC; it replaces the old one in the company and its test copy together, the old row switched off, and the change is in the activity log. The expiry notice ("Tu firma electrónica vence pronto") leads there, and the reminders start again for the new signature (FR-ONB-3).
+- A **Notificaciones** entry in the sidebar for every member, beside the bell's "Ver todas" (FR-NOT-1).
 - Inviting a member can limit them to chosen issue points from the start: the invite dialog lists them, the pending invitation shows them, and accepting applies them in the company and its test copy. With none ticked the member uses all, as before (FR-ROLE-2, FR-USR-1).
 - The back link on an invoice, a sale order and the pages under them (credit note, correction, guide, edit, invoice an order) returns to where the person came from: a batch, the pending list, receivables, the filtered list, or the invoice, instead of always the main list. It travels as `?back=` and only the app's own list and detail paths are accepted (FR-UX-2).
 - The company's Actividad log has a second category, **Operaciones**, beside **Cuenta y configuración**: voids, stock adjustments, opening balances and their import, create, change, state and import of products, clients and providers, cancelled purchase and sale orders, invoiced sale orders, collections recorded and voided, bulk batches, and data downloads (the clients, products, stock valuation and report CSVs and the accountant's ZIP). A product keeps the before and after of each changed field; a client or provider only the names of the fields. Two permissions: `audit.read` (account) and `audit.operations.read`; the accountant reads operations only. Tabs on the page for those who can read both (FR-NOT-4, ADR-041).
@@ -153,6 +155,8 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Fixed
 
+- Switching company, or between Pruebas and Producción, while on a record's page (an invoice, an order, a batch, a product's stock) goes to that list instead of "Página no encontrada", and the 404 page's **Volver al panel** opens the dashboard, not the public landing page (FR-USR-5).
+- The grouped "Se autorizaron N documentos" notice opens the Comprobantes list once it counts more than one document, instead of the first invoice (FR-NOT-2).
 - Closing a dialog with its Cancel button forgets the last error, as closing it with Esc already did, so a refusal is no longer still there when the dialog is opened again.
 - The Cobros card of an invoice shows its total, collected and balance as rows, with the balance in bold, and each payment's value on the right of its row beside the void button, instead of tiles that left the balance alone and pushed the value onto a second line (FR-SAL-10).
 - Saving an invoice as a template no longer opens the invoice's own confirmation: a dialog's submit, rendered in a portal, bubbled to the form it sat inside. Dialogs and forms built on the shared form handlers now stop their submit there.

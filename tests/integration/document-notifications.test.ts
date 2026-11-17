@@ -260,6 +260,7 @@ describe('document notifications', () => {
     const rows = await authorized();
     expect(rows).toHaveLength(before + 1);
     expect(rows.at(-1)!.params).toEqual({ count: '2' });
+    expect(rows.at(-1)!.link).toBe('/documents');
     expect(await receipts(rows.at(-1)!.id)).toHaveLength(1);
 
     // After the minute, the next one opens a new notice.

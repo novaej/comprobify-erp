@@ -5,7 +5,7 @@ import { Building2, Check, ChevronDown, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { switchOrganizationAction } from '@/app/[locale]/(app)/(shell)/actions';
-import { Link, useRouter } from '@/i18n/navigation';
+import { Link, usePathname, useRouter } from '@/i18n/navigation';
 
 export type SwitcherOrganization = {
   realTenantId: string;
@@ -28,6 +28,7 @@ export function OrgSwitcher({
 }) {
   const t = useTranslations('nav');
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
@@ -48,6 +49,10 @@ export function OrgSwitcher({
     setOpen(false);
     startTransition(async () => {
       await switchOrganizationAction(tenantId);
+      // A record belongs to one company (and to its test copy or the real one), so the other
+      // one would answer "not found": go to the list it sits in.
+      const record = /^(\/[a-z-]+)\/[0-9a-f]{8}-[0-9a-f-]{27}(\/|$)/i.exec(pathname);
+      if (record) router.replace(record[1] as '/documents');
       router.refresh();
     });
   };

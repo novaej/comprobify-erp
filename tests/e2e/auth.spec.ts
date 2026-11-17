@@ -1991,6 +1991,9 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     // The test copy's clients, products, providers and templates come along, unless unchecked.
     await expect(page.getByRole('checkbox', { name: /Llevar tus datos de pruebas/ })).toBeChecked();
     await look(page, 'go-live');
+    // Unticked: our message in red, not the browser's tooltip.
+    await page.getByRole('button', { name: 'Pasar a producción' }).click();
+    await expect(page.getByText('Marca la casilla para confirmar.')).toBeVisible();
     await page.getByLabel('Entiendo que este paso no se puede deshacer.').check();
     await page.getByRole('button', { name: 'Pasar a producción' }).click();
 

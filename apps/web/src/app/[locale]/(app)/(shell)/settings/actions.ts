@@ -3,6 +3,7 @@
 import {
   createBranch,
   createIssuePoint,
+  replaceCertificate,
   setCompanyLogo,
   setIssuePointDocumentType,
   setIssuePointPaused,
@@ -100,6 +101,24 @@ export async function setNegativeStockAction(_: ActionState, form: FormData): Pr
   const { db } = await getRuntime();
   return run(form, () =>
     setNegativeStockRule(actor, db, text(form, 'allow') === 'true' ? 'ALLOW' : 'BLOCK'),
+  );
+}
+
+export async function renewCertificateAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const { actor } = await loadShell(localeOf(form));
+  const { db, keyCipher } = await getRuntime();
+  const file = form.get('certificate');
+  if (!(file instanceof File) || file.size === 0) return { error: 'CERTIFICATE_REQUIRED' };
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  // Not trimmed: a password may start or end with a space.
+  const password = form.get('certificatePassword');
+  return run(form, () =>
+    replaceCertificate(
+      actor,
+      db,
+      { file: bytes, password: typeof password === 'string' ? password : '' },
+      { keyCipher },
+    ),
   );
 }
 

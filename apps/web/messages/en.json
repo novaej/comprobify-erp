@@ -193,6 +193,7 @@
     "closeMenu": "Close menu",
     "skipToContent": "Skip to content",
     "users": "Users",
+    "notifications": "Notifications",
     "activity": "Activity",
     "legal": "Legal documents",
     "plan": "Plan",
@@ -1564,7 +1565,17 @@
     "sequentialsTestTitle": "Test numbering",
     "sequentialsTestDescription": "The next number the test copy issues at each issue point. It only moves forward. The real company has its own numbering: set it when going live, or from Company while in Production.",
     "contactEmail": "Contact email",
-    "contactEmailHint": "Where your buyers' and providers' replies go, for the emails Comprobify sends on your company's behalf. If empty, a purchase order email is answered by the person who sent it."
+    "contactEmailHint": "Where your buyers' and providers' replies go, for the emails Comprobify sends on your company's behalf. If empty, a purchase order email is answered by the person who sent it.",
+    "certificateTitle": "Electronic signature",
+    "certificateDescription": "The .p12 file your documents are signed with. Uploading the renewed one replaces the old one, in the test copy too; it must be for the same RUC and still valid.",
+    "certificateMissing": "Your company has no electronic signature.",
+    "certificateOk": "Valid until {date}.",
+    "certificateExpiring": "Expires on {date}: {days, plural, =0 {less than a day} one {# day left} other {# days left}}. Upload the renewed one.",
+    "certificateExpired": "Expired on {date}. Upload the renewed one to issue again.",
+    "certificateFile": "Signature file (.p12)",
+    "certificatePassword": "Signature password",
+    "certificateRenew": "Replace signature",
+    "certificateSaved": "Signature replaced."
   },
   "settingsError": {
     "FORBIDDEN": "Your role can't change the company details.",
@@ -1576,7 +1587,13 @@
     "UNKNOWN": "An unexpected error occurred. Please try again.",
     "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
     "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data.",
-    "SEQUENCE_BACKWARD": "A sequential can only move forward: that number is lower than the one coming next."
+    "SEQUENCE_BACKWARD": "A sequential can only move forward: that number is lower than the one coming next.",
+    "CERTIFICATE_REQUIRED": "Upload your signature file (.p12).",
+    "CERTIFICATE_INVALID": "That file is not a valid .p12 signature.",
+    "CERTIFICATE_PASSWORD_INVALID": "The signature password is wrong.",
+    "CERTIFICATE_KEY_NOT_FOUND": "The signature has no key that matches its certificate.",
+    "CERTIFICATE_EXPIRED": "The signature is expired or not valid yet. Renew it with your certification authority.",
+    "CERTIFICATE_RUC_MISMATCH": "The signature does not belong to this company's RUC."
   },
   "documents": {
     "title": "Documents",

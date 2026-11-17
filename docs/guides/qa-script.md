@@ -79,11 +79,11 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | I2 | From a CSV | ✅ |
 | J1 | Invite the team | ✅ |
 | J2 | What each role sees and may do | ✅ |
-| J3 | Limit, change and remove | ⬜ |
-| J4 | Two-step verification for everyone | ⬜ |
+| J3 | Limit, change and remove | ✅ |
+| J4 | Two-step verification for everyone | ✅ |
 | K1 | The bell and preferences | ⬜ |
 | K2 | Authorizations, grouped | ⬜ |
-| K3 | The certificate about to expire | ⬜ |
+| K3 | The certificate about to expire | ✅ |
 | L1 | The dashboard | ⬜ |
 | L2 | Reports | ⬜ |
 | L3 | The accountant's export | ⬜ |
@@ -791,7 +791,7 @@ And for each: open a document or an order, so the read side is seen too.
 |---|---|---|
 | 1 | Owner: for a member invited without a limit, **Editar** and tick issue point **001-001** (Víctor, Ventas, if you made one) | Víctor's invoice form offers only that one. Unticking all of them lifts the limit |
 | 2 | Change Bruno from Compras y bodega to Ventas, then back | His menu changes after a reload |
-| 3 | Remove Lucía (**Quitar**) | It asks first; she is signed out of the company and can't open it again |
+| 3 | Remove Lucía (**Quitar**) | It asks first. In her open window, reloading takes her to the page to create a company of her own (her account is still hers and has no company now), not to Comercial Andina; she can't open it again, in Pruebas or Producción, and the owner's **Usuarios** no longer lists her |
 | 4 | **Actividad** | Each of these, with who did it |
 
 ### J4 · Two-step verification for everyone
@@ -816,7 +816,7 @@ And for each: open a document or an order, so the read side is seen too.
 |---|---|---|
 | 1 | Owner: the bell | The notices so far: payment confirmed, batch finished, newest first, unread marked |
 | 2 | Click one | Goes where it's about, and it's marked read |
-| 3 | **Notificaciones** → **Sin leer**, **Marcar todas como leídas** | The list empties |
+| 3 | Sidebar → **Notificaciones** (under Administrar, for every role; **Ver todas** in the bell goes to the same page) → **Sin leer**, **Marcar todas como leídas** | The list empties |
 | 4 | The preferences | One row per type the owner receives, in-app and email; "Cambio de precio" locked on (mandatory) |
 | 5 | Víctor (Ventas): **Notificaciones** | Document types only; no billing types |
 
@@ -827,7 +827,7 @@ And for each: open a document or an order, so the read side is seen too.
 | # | Do | Expect |
 |---|---|---|
 | 1 | Owner: turn on **Documentos autorizados** (in the app) | Saved; it's off by default |
-| 2 | Issue two invoices within a minute | One notice: "Se autorizaron 2 documentos" |
+| 2 | Issue two invoices within a minute | One notice: "Se autorizaron 2 documentos"; opening it goes to the **Comprobantes** list (a notice for one document opens that document) |
 | 3 | Wait a minute, issue another | A new notice with 1 |
 
 ### K3 · The certificate about to expire
@@ -839,9 +839,11 @@ And for each: open a document or an order, so the read side is seen too.
 | 1 | Owner: the organization switcher → **Nueva empresa** (also on **Mi cuenta**): RUC `1714070046001`, Andina Norte S.A., `test-1714070046001.p12`; under **Avanzado**, set "Siguiente número de factura" to `300` | Andina Norte's dashboard, in its test copy; the switcher lists both, with their RUCs |
 | 2 | Its dashboard | The certificate card: "Por vencer", the date 10 days out; a certificate banner |
 | 3 | `pnpm run-job certificates.watch` | The bell in Andina Norte: "Tu firma electrónica vence pronto", 10 days; a `certificateExpiring` email in the terminal |
-| 4 | Andina Norte → **Pasar a producción** (don't submit) | The numbering field for Factura on 001-001 shows `300`, the number given when the company was created; its test copy numbering in **Empresa** is still 1 |
-| 5 | Run it again | No second notice |
+| 4 | Andina Norte → **Pasar a producción** (don't submit) | The numbering field for Factura on 001-001 shows `300`, the number given when the company was created; its test copy numbering in **Empresa** is still 1 | Without ticking "Entiendo que este paso no se puede deshacer", **Pasar a producción** answers in red "Marca la casilla para confirmar." (and with the legal texts on, "Primero acepta los documentos legales…" until the owner accepts them in **Documentos legales**)
+| 5 | Run `pnpm run-job certificates.watch` a second time | No second notice in the bell and no second `certificateExpiring` email: each reminder is told once per signature and step |
+| 5b | Notice link → **Empresa** → **Firma electrónica** | "Vence el …: quedan 10 días". Upload `test-1714070046001.p12` with a wrong password: "La contraseña de la firma no es correcta."; a file of another RUC: "La firma no pertenece al RUC de esta empresa.". With `pnpm test-certificate 1714070046001 365`, upload that: "Firma reemplazada.", the card says "Vigente hasta …", the certificate banner is gone (also in the test copy). **Actividad** shows the upload. Run `pnpm run-job certificates.watch`: no new notice |
 | 6 | Switch back to Comercial Andina | Its own notices only |
+| 7 | Open an invoice of Comercial Andina, then switch to Andina Norte (and again with the Pruebas / Producción toggle) | You land on the **Comprobantes** list of the company you switched to, not on "Página no encontrada". The same goes for an order, a batch or a product's stock. On a real 404, **Volver al panel** opens the dashboard |
 
 ---
 

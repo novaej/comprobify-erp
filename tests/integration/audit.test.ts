@@ -6,6 +6,7 @@ import {
   createAuth,
   createJobs,
   createKeyCipher,
+  certificateStatus,
   createRateLimiter,
   createVerifiedUser,
   fixedClock,
@@ -15,6 +16,7 @@ import {
   listOrganizations,
   onboardOrganization,
   recordSessionStart,
+  replaceCertificate,
   resolveActor,
   setNegativeStockRule,
   setOverride,
@@ -37,6 +39,7 @@ describe('audit log and go-live', () => {
   let org: CreatedOrganization;
   let owner: string;
   let ownerCtx: ActorContext;
+  let ruc: string;
 
   const user = async () => {
     const email = `a.${randomUUID()}@example.com`;
@@ -92,7 +95,7 @@ describe('audit log and go-live', () => {
       emails: { verification: () => Promise.resolve(), passwordReset: () => Promise.resolve() },
     });
     owner = (await user()).id;
-    const ruc = testRuc();
+    ruc = testRuc();
     org = await onboardOrganization(
       db,
       {
@@ -115,6 +118,41 @@ describe('audit log and go-live', () => {
   afterAll(async () => {
     await jobs.stop();
     await db.close();
+  });
+
+  it('renews the signature in the company and its twin, and refuses a wrong one', async () => {
+    const keyCipher = createKeyCipher('d'.repeat(64));
+    const twinCtx = await resolveActor(db, { userId: owner, tenantId: org.twinTenantId, clock });
+    const notAfter = new Date(Date.now() + 400 * 86_400_000);
+    await expect(
+      replaceCertificate(
+        ownerCtx,
+        db,
+        { file: createTestP12({ ruc: testRuc() }), password: 'secret' },
+        { keyCipher },
+      ),
+    ).rejects.toMatchObject({ code: 'CERTIFICATE_RUC_MISMATCH' });
+    await expect(
+      replaceCertificate(
+        ownerCtx,
+        db,
+        { file: createTestP12({ ruc }), password: 'wrong' },
+        { keyCipher },
+      ),
+    ).rejects.toMatchObject({ code: 'CERTIFICATE_PASSWORD_INVALID' });
+
+    await replaceCertificate(
+      ownerCtx,
+      db,
+      { file: createTestP12({ ruc, notAfter }), password: 'secret' },
+      { keyCipher },
+    );
+    for (const ctx of [ownerCtx, twinCtx]) {
+      const status = await certificateStatus(db, ctx);
+      expect(status.state).toBe('ok');
+      expect(status).toHaveProperty('notAfter');
+    }
+    expect((await actions()).filter((action) => action === 'certificate.uploaded')).toHaveLength(2);
   });
 
   it('records the organization and its certificate in both the company and its twin', async () => {
