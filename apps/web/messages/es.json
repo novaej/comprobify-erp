@@ -591,7 +591,11 @@
       "address": "dirección",
       "paymentTerm": "plazo",
       "paymentTermUnit": "unidad del plazo"
-    }
+    },
+    "descriptionOwn": "Lo que has hecho tú en esta empresa. Los registros no se pueden editar ni borrar.",
+    "whoseLabel": "De quién",
+    "whoseAll": "Todos los usuarios",
+    "whoseMine": "Solo mi actividad"
   },
   "goLive": {
     "title": "Pasar {organization} a producción",
@@ -3652,11 +3656,12 @@
     },
     "accountant": {
       "title": "Exportación para el contador",
-      "description": "Todos los XML autorizados por el SRI de un mes, en un solo archivo ZIP. Los comprobantes que se anularon después van en una carpeta aparte.",
+      "description": "Todos los comprobantes autorizados por el SRI de un mes en un solo archivo ZIP: el XML de cada uno y, si lo dejas marcado, su PDF (RIDE). Los que se anularon después van en una carpeta aparte.",
       "month": "Mes",
       "download": "Descargar ZIP",
       "EXPORT_EMPTY": "No hay comprobantes autorizados en {month}.",
-      "EXPORT_TOO_LARGE": "Hay demasiados comprobantes en {month} para un solo archivo."
+      "EXPORT_TOO_LARGE": "Hay demasiados comprobantes en {month} para un solo archivo. Prueba sin los PDF.",
+      "withPdf": "Incluir el PDF (RIDE) de cada comprobante"
     }
   },
   "reportsError": {

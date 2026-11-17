@@ -167,19 +167,24 @@ function readableCategories(ctx: ActorContext): AuditCategory[] {
   ];
 }
 
-// The company's log, newest first, of one category or of every one the person may read. Changes to
+// The company's log, newest first, of one category or of every one the person may read. Someone
+// who may read neither category (sales, purchasing, read-only) sees only what they did
+// themselves, in both; those who may read can also narrow it to their own with `mine`. Changes to
 // the company itself (settings, agreements, plan: ACCOUNT) are recorded on the real company, so
 // the test copy shows its own and the company's; what the business did (OPERATIONS) is the
 // company in use only, so testing never mixes with the real books.
 export async function listAuditEvents(
   ctx: ActorContext,
   db: Database,
-  options: { limit?: number; category?: AuditCategory } = {},
+  options: { limit?: number; category?: AuditCategory; mine?: boolean } = {},
 ): Promise<AuditEntry[]> {
-  const allowed = readableCategories(ctx);
+  const readable = readableCategories(ctx);
+  const ownOnly = readable.length === 0;
+  const allowed: AuditCategory[] = ownOnly ? ['ACCOUNT', 'OPERATIONS'] : readable;
   const wanted = options.category ? [options.category] : allowed;
-  if (allowed.length === 0 || wanted.some((category) => !allowed.includes(category)))
+  if (wanted.some((category) => !allowed.includes(category)) || (ownOnly && !ctx.userId))
     throw new DomainError('FORBIDDEN', 'Not allowed to read this part of the activity log');
+  const mine = ownOnly || options.mine === true;
   const limit = Math.min(Math.max(options.limit ?? 100, 1), 500);
   // System context, only to find the real company of a test copy: the ids it reads are the
   // actor's own company and its twin, never another's.
@@ -220,7 +225,7 @@ export async function listAuditEvents(
         })
         .from(auditEvents)
         .leftJoin(users, eq(users.id, auditEvents.actorUserId))
-        .where(or(...scope))
+        .where(mine ? and(or(...scope), eq(auditEvents.actorUserId, ctx.userId!)) : or(...scope))
         .orderBy(desc(auditEvents.occurredAt))
         // Twice as many, as the pairs below collapse.
         .limit(limit * 2);

@@ -1,4 +1,5 @@
 import {
+  DOCUMENT_SORTS,
   DOCUMENT_STATUSES,
   documentFilters,
   hasFeature,
@@ -13,6 +14,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { EmptyState } from '@/components/empty-state';
 import { NoAccess } from '@/components/no-access';
 import { PageHeader } from '@/components/page-header';
+import { SortHead } from '@/components/sort-head';
 import {
   StackBody,
   StackCell,
@@ -25,6 +27,7 @@ import {
 import { ToneBadge } from '@/components/tone-badge';
 import { Link } from '@/i18n/navigation';
 import { listAddress, withBack } from '@/lib/back';
+import { listParams } from '@/server/list-params';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
@@ -40,6 +43,8 @@ type Search = {
   to?: string;
   q?: string;
   page?: string;
+  sort?: string;
+  dir?: string;
 };
 
 // FR-DOC-12: every document, newest first, with what SRI answered.
@@ -57,6 +62,7 @@ export default async function DocumentsPage({
   if (!actor.permissions.includes('documents.read')) return <NoAccess />;
 
   const { db } = await getRuntime();
+  const ordering = listParams(search, DOCUMENT_SORTS);
   // A hand-edited URL with a bad filter shows everything rather than an error.
   const parsed = documentFilters.safeParse({
     status: search.status,
@@ -65,6 +71,8 @@ export default async function DocumentsPage({
     to: search.to || undefined,
     query: search.q || undefined,
     page: search.page,
+    sort: ordering.sort,
+    direction: ordering.direction,
   });
   const filters: Filters = parsed.success ? parsed.data : {};
   const canIssue = actor.permissions.includes('documents.issue');
@@ -86,6 +94,15 @@ export default async function DocumentsPage({
   const pages = Math.max(1, Math.ceil(list.total / list.pageSize));
   const searching = Object.values(filters).some((value) => value !== undefined && value !== 1);
   const here = listAddress('/documents', search);
+  const tList = await getTranslations('listToolbar');
+  // What is in the URL besides the order, so choosing a column keeps the filters.
+  const sortQuery = {
+    status: search.status,
+    issuePointId: search.issuePointId,
+    from: search.from,
+    to: search.to,
+    q: search.q,
+  };
   const pageHref = (page: number) => ({
     pathname: '/documents' as const,
     query: { ...search, page: String(page) },
@@ -138,6 +155,8 @@ export default async function DocumentsPage({
           from: search.from,
           to: search.to,
           q: search.q,
+          sort: ordering.sort,
+          dir: ordering.direction,
         }}
       />
       <TableCard>
@@ -159,11 +178,27 @@ export default async function DocumentsPage({
           <StackTable aria-label={t('title')}>
             <StackHeader>
               <StackRow className="bg-muted/40">
-                <StackHead className="pl-4">{t('table.number')}</StackHead>
-                <StackHead>{t('table.date')}</StackHead>
-                <StackHead>{t('table.buyer')}</StackHead>
-                <StackHead className="text-right">{t('table.total')}</StackHead>
-                <StackHead>{t('table.status')}</StackHead>
+                {(
+                  [
+                    ['number', 'pl-4'],
+                    ['date', undefined],
+                    ['buyer', undefined],
+                    ['total', 'text-right'],
+                    ['status', undefined],
+                  ] as const
+                ).map(([column, className]) => (
+                  <SortHead
+                    key={column}
+                    path="/documents"
+                    query={sortQuery}
+                    column={column}
+                    sort={ordering.sort}
+                    direction={ordering.direction}
+                    label={t(`table.${column}`)}
+                    actionLabel={tList('sortBy', { column: t(`table.${column}`) })}
+                    className={className}
+                  />
+                ))}
                 <StackHead className="pr-4">
                   <span className="sr-only">{t('table.open', { number: '' })}</span>
                 </StackHead>

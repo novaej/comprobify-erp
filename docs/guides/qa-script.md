@@ -84,10 +84,10 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | K1 | The bell and preferences | ⬜ |
 | K2 | Authorizations, grouped | ⬜ |
 | K3 | The certificate about to expire | ✅ |
-| L1 | The dashboard | ⬜ |
-| L2 | Reports | ⬜ |
-| L3 | The accountant's export | ⬜ |
-| L4 | The activity log: account and operations | ⬜ |
+| L1 | The dashboard | ✅ |
+| L2 | Reports | ✅ |
+| L3 | The accountant's export | ✅ |
+| L4 | The activity log: account and operations | ✅ |
 | M1 | Take the company to production | ⬜ |
 | M2 | The first production invoice | ⬜ |
 | M3 | The quota fills up | ⬜ |
@@ -856,7 +856,7 @@ And for each: open a document or an order, so the read side is seen too.
 | # | Do | Expect |
 |---|---|---|
 | 1 | Owner: **Panel** | Sales today and this month, which you can check against the invoices you issued; in progress and with problems; documents by status; top sellers; out of stock; documents this period; the signature |
-| 2 | Click a status | The document list filtered by it |
+| 2 | Click a status | The document list filtered by it. On **Comprobantes**, click the headers **Número**, **Fecha**, **Comprador**, **Total** and **Estado**: the list reorders, a second click reverses it, the arrow shows which, and the filters and search stay |
 | 3 | Víctor (Ventas) | No quota card (not his to see) |
 
 ### L2 · Reports
@@ -871,7 +871,7 @@ And for each: open a document or an order, so the read side is seen too.
 | 4 | **Documentos emitidos** | Every document of the month, with its status |
 | 5 | **Movimientos de inventario**, **Compras por proveedor** | The receipts, sales and adjustments; the order to Importadora Andes, not the cancelled one |
 | 6 | A date range ending before it starts | "La fecha final es anterior a la inicial." |
-| 7 | **Descargar CSV** on each | Opens in Excel, the same rows |
+| 7 | **Descargar CSV** on each | Opens in Excel, the same rows. The file is named in the language of the screen: `reporte-ventas-2026-11-01_2026-11-30.csv` in Spanish, `report-sales-…` in English (switch the language and download again) |
 
 ### L3 · The accountant's export
 
@@ -879,8 +879,8 @@ And for each: open a document or an order, so the read side is seen too.
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Carla (Contador): **Reportes** → **Exportación para el contador**, this month, **Descargar ZIP** | A `comprobantes-AAAA-MM.zip` |
-| 2 | Open it | `autorizados/` with one XML per authorized document, `anulados/` with the voided invoice |
+| 1 | Carla (Contador): **Reportes** → **Exportación para el contador**, this month, with "Incluir el PDF (RIDE)" ticked, **Descargar ZIP** | A `comprobantes-AAAA-MM.zip` |
+| 2 | Open it | `autorizados/` with one XML and one PDF (the RIDE) per authorized document, `anulados/` with the voided invoice's. Open a PDF: it is the same RIDE as on the invoice's page. Download again with the box unticked: XML only |
 | 3 | A month with nothing, e.g. 2020-01 | "No hay comprobantes autorizados en 2020-01." |
 
 ### L4 · The activity log: account and operations
@@ -891,7 +891,7 @@ The log has two categories (ADR-041): **Cuenta y configuración** (who signed in
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Ana (Propietario): **Actividad** | Three tabs: **Todo**, **Cuenta y configuración**, **Operaciones**. "Todo" mixes both, newest first |
+| 1 | Ana (Propietario): **Actividad** | Three tabs: **Todo**, **Cuenta y configuración**, **Operaciones**; above them **Todos los usuarios** / **Solo mi actividad**. "Todo" mixes both, newest first. **Solo mi actividad** keeps only Ana's own lines, in the tab you are on |
 | 2 | **Cuenta y configuración** | Sign-ins, the company's creation, the legal texts accepted, settings and role changes, plan and payments; no products, stock or invoices |
 | 3 | **Operaciones** | The business's own acts, each "Ana Pérez … <what>: <detail>" with its time. Look for the ones below |
 | 4 | Look for the products you made and changed | "creó el producto: CAF-1 · Café molido"; "cambió el producto: CAF-1 · Café molido · precio de 5.500000 a 6.000000" (D4 step 8, and back to 5.50); "cambió el estado del producto: SRV-1 …: desactivado" then "activado" (D1 step 6); "importó productos: 1 creado" (D4) |
@@ -900,6 +900,7 @@ The log has two categories (ADR-041): **Cuenta y configuración** (who signed in
 | 7 | Look for orders and the invoice that was voided | "anuló la orden de compra: OC-… · Ya no se necesita" (G3); "anuló el pedido de venta: PV-…" (H1 step 3); "facturó el pedido de venta: PV-000001 · factura 001-001-…" (H2); "marcó como anulada la factura: 001-001-…" (F6) |
 | 8 | Look for collections | "registró un cobro de la factura …: $15,00 · …" and "anuló un cobro de la factura …" (H3) |
 | 9 | Look for data taken out | "descargó datos: clientes", "…: productos", "…: valoración de inventario" (E3), "…: reporte …" if you downloaded one (L2) and "…: comprobantes del mes (ZIP del contador)" after L3 |
+| 10 | Víctor (Ventas) and a Solo lectura member: **Actividad** (it is in everyone's sidebar) | "Lo que has hecho tú en esta empresa": only their own lines (signing in, what they issued or changed), no tabs and no other person's. Carla (Contador) sees every operation and can switch to **Solo mi actividad** |
 | 10 | Switch to **Producción** (the switcher) and open **Actividad** → **Operaciones** | Empty ("Todavía no hay operaciones registradas."): the test copy's acts are not the real company's. Go back to **Pruebas** |
 | 11 | Carla (Contador): **Actividad** | No tabs: she sees only **Operaciones** (what the business did), not who signed in or changed roles. Opening `/es/audit?category=ACCOUNT` shows the same operations, not the account's events |
 | 12 | Bruno (Compras y bodega) and Lucía (Solo lectura) | No **Actividad** in their menu |

@@ -1820,7 +1820,7 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await page.getByRole('link', { name: 'Descargar CSV' }).click();
     const file = await download;
     expect(file.suggestedFilename()).toMatch(
-      /^report-sales-\d{4}-\d{2}-\d{2}_\d{4}-\d{2}-\d{2}\.csv$/,
+      /^reporte-ventas-\d{4}-\d{2}-\d{2}_\d{4}-\d{2}-\d{2}\.csv$/,
     );
     const csv = await readFile(await file.path(), 'utf8');
     expect(csv.startsWith('\uFEFFFecha;Facturas;Base;IVA;Total')).toBe(true);

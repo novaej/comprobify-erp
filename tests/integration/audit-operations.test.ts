@@ -235,9 +235,15 @@ describe('the operations log', () => {
     expect(await bothOf(accountOnly)).toEqual(new Set(['ACCOUNT']));
     expect(await bothOf(operationsOnly)).toEqual(new Set(['OPERATIONS']));
     expect(await bothOf(owner)).toEqual(new Set(['ACCOUNT', 'OPERATIONS']));
-    await expect(
-      listAuditEvents({ ...owner, permissions: [] } satisfies ActorContext, db),
-    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    // With neither, a person reads only what they did themselves.
+    const nobody = { ...owner, permissions: [] } satisfies ActorContext;
+    const own = await listAuditEvents(nobody, db, { limit: 500 });
+    expect(own.length).toBeGreaterThan(0);
+    expect(await listAuditEvents(owner, db, { limit: 500, mine: true })).toHaveLength(own.length);
+    // ... and cannot ask for more than that.
+    await expect(listAuditEvents({ ...nobody, userId: null }, db)).rejects.toMatchObject({
+      code: 'FORBIDDEN',
+    });
   });
 
   it('records a test copy’s operations in the test copy only', async () => {

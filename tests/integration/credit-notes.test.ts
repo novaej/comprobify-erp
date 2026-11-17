@@ -12,6 +12,7 @@ import {
   createSriClient,
   creditBalance,
   creditNoteDraft,
+  accountantExport,
   documentRide,
   fixedClock,
   getDocument,
@@ -464,6 +465,15 @@ describe('credit notes', () => {
     await checkAuthorization(deps, ref(other));
     const ride = await documentRide(await owner(), db, other.id);
     expect(ride.content.subarray(0, 5).toString()).toBe('%PDF-');
+
+    // The accountant's export carries the same RIDEs beside the XMLs, when asked.
+    const month = new Date(clock.now().getTime() - 5 * 3_600_000).toISOString().slice(0, 7);
+    const withPdf = await accountantExport(await owner(), db, month, { pdf: true });
+    const text = withPdf.zip.toString('latin1');
+    expect(text).toMatch(/autorizados\/01-001-001-\d+\.pdf/);
+    expect(withPdf.zip.length).toBeGreaterThan(
+      (await accountantExport(await owner(), db, month)).zip.length,
+    );
   });
 
   it('returns the same credit note for the same key and refuses another payload', async () => {

@@ -178,7 +178,8 @@ const NAV_ITEMS: NavItem[] = [
     icon: ScrollText,
     labelKey: 'activity',
     group: 'manage',
-    permission: ['audit.read', 'audit.operations.read'],
+    // Everyone: without either audit permission the page shows only their own acts.
+    permission: null,
   },
   {
     href: '/plan',

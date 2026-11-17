@@ -1,7 +1,7 @@
 import type { Database } from '@comprobify/db';
 import { recordDataExport } from '../audit';
 import { z } from 'zod';
-import { authorizedXmls, documentNumber } from '../documents';
+import { authorizedXmls, documentNumber, ridesOfAuthorized } from '../documents';
 import {
   createZip,
   DomainError,
@@ -23,10 +23,15 @@ export type AccountantExport = {
   voided: number;
 };
 
+// Drawing each RIDE takes time and memory, so a month with more than this many documents is
+// exported without them.
+export const ACCOUNTANT_PDF_MAX = 1_000;
+
 export async function accountantExport(
   ctx: ActorContext,
   db: Database,
   rawMonth: string,
+  options: { pdf?: boolean } = {},
 ): Promise<AccountantExport> {
   requirePermission(ctx, 'reports.export');
   requirePermission(ctx, 'documents.read');
@@ -39,15 +44,18 @@ export async function accountantExport(
   );
   if (xmls.length === 0)
     throw new DomainError('EXPORT_EMPTY', 'There are no authorized documents in that month');
-  if (xmls.length > ZIP_MAX_ENTRIES)
-    throw new DomainError('EXPORT_TOO_LARGE', 'Too many documents for one file', {
-      limit: ZIP_MAX_ENTRIES,
-    });
+  const pdf = options.pdf === true;
+  const limit = pdf ? Math.min(ACCOUNTANT_PDF_MAX, ZIP_MAX_ENTRIES / 2) : ZIP_MAX_ENTRIES;
+  if (xmls.length > limit)
+    throw new DomainError('EXPORT_TOO_LARGE', 'Too many documents for one file', { limit });
+  const rides = pdf ? await ridesOfAuthorized(ctx, db, xmls) : [];
+  const entry = (row: (typeof xmls)[number]) =>
+    `${row.status === 'VOIDED' ? 'anulados' : 'autorizados'}/${row.documentType}-${documentNumber(row.series, row.sequential)}`;
   const zip = createZip(
-    xmls.map((row) => ({
-      name: `${row.status === 'VOIDED' ? 'anulados' : 'autorizados'}/${row.documentType}-${documentNumber(row.series, row.sequential)}.xml`,
-      data: row.xml,
-    })),
+    xmls.flatMap((row, index) => [
+      { name: `${entry(row)}.xml`, data: row.xml },
+      ...(pdf ? [{ name: `${entry(row)}.pdf`, data: rides[index]! }] : []),
+    ]),
     ctx.clock.now(),
   );
   await recordDataExport(ctx, db, 'accountant_zip');

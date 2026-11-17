@@ -99,6 +99,9 @@ export async function issuingOptions(
   });
 }
 
+// The columns the list can be ordered by; with none chosen, newest first.
+export const DOCUMENT_SORTS = ['number', 'date', 'buyer', 'total', 'status'] as const;
+
 export const documentFilters = z.object({
   status: z.enum(DOCUMENT_STATUSES).optional(),
   issuePointId: z.uuid().optional(),
@@ -107,6 +110,8 @@ export const documentFilters = z.object({
   // Number, buyer name or identification.
   query: z.string().trim().max(100).optional(),
   page: z.coerce.number().int().min(1).max(10_000).default(1),
+  sort: z.enum(DOCUMENT_SORTS).optional(),
+  direction: z.enum(['asc', 'desc']).optional(),
 });
 export type DocumentFilters = z.input<typeof documentFilters>;
 
@@ -153,6 +158,23 @@ export async function listDocuments(
         )
       : undefined,
   );
+  const columns: Record<(typeof DOCUMENT_SORTS)[number], SQL[]> = {
+    number: [sql`${documents.series}`, sql`${documents.sequential}`],
+    date: [sql`${documents.issueDate}`],
+    buyer: [sql`lower(${documents.buyerName})`],
+    total: [sql`${documents.total}`],
+    status: [sql`${documents.status}`],
+  };
+  // A chosen column, then newest first so equal values stay in a steady order.
+  const order = filters.sort
+    ? [
+        ...columns[filters.sort].map((column) =>
+          filters.direction === 'desc' ? sql`${column} DESC` : sql`${column} ASC`,
+        ),
+        desc(documents.issueDate),
+        desc(documents.sequential),
+      ]
+    : [desc(documents.issueDate), desc(documents.sequential)];
   return db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
     const [count] = await tx
       .select({ total: sql<number>`count(*)::int` })
@@ -172,7 +194,7 @@ export async function listDocuments(
       })
       .from(documents)
       .where(where)
-      .orderBy(desc(documents.issueDate), desc(documents.sequential))
+      .orderBy(...order)
       .limit(DOCUMENTS_PAGE_SIZE)
       .offset((filters.page - 1) * DOCUMENTS_PAGE_SIZE);
     return {

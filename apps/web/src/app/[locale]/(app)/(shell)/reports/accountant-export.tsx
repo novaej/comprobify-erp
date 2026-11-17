@@ -21,6 +21,16 @@ export function AccountantExport({ month }: { month: string }) {
         <FormField label={t('month')}>
           {(a11y) => <Input {...a11y} type="month" name="month" defaultValue={month} required />}
         </FormField>
+        <label className="flex items-center gap-2 pb-2 text-sm">
+          <input
+            type="checkbox"
+            name="pdf"
+            value="1"
+            defaultChecked
+            className="h-4 w-4 accent-primary"
+          />
+          {t('withPdf')}
+        </label>
         <Button type="submit" variant="outline">
           <Download className="mr-1.5 h-4 w-4" aria-hidden />
           {t('download')}

@@ -6,6 +6,9 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Added
 
+- Comprobantes can be ordered by number, date, buyer, total or status from the column headers, with the filters kept (FR-DOC-12).
+- The accountant's export can include each document's PDF (RIDE) beside its XML, ticked by default; a month over 1,000 documents asks to go without them (FR-REP-3).
+- **Actividad** is in every member's sidebar: someone without audit permissions sees only what they did themselves, and those who read the log can narrow it to their own acts with **Solo mi actividad** (FR-NOT-4, ADR-041).
 - Renewing the electronic signature: a **Firma electrónica** card on Empresa shows the one in force and its end date, and takes the renewed .p12 and its password. It must open, be valid today and carry the company's RUC; it replaces the old one in the company and its test copy together, the old row switched off, and the change is in the activity log. The expiry notice ("Tu firma electrónica vence pronto") leads there, and the reminders start again for the new signature (FR-ONB-3).
 - A **Notificaciones** entry in the sidebar for every member, beside the bell's "Ver todas" (FR-NOT-1).
 - Inviting a member can limit them to chosen issue points from the start: the invite dialog lists them, the pending invitation shows them, and accepting applies them in the company and its test copy. With none ticked the member uses all, as before (FR-ROLE-2, FR-USR-1).
@@ -155,6 +158,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Fixed
 
+- The report CSV files are named in the language of the screen (`reporte-ventas-…` / `report-sales-…`), like the clients and products downloads (FR-REP-2).
 - Switching company, or between Pruebas and Producción, while on a record's page (an invoice, an order, a batch, a product's stock) goes to that list instead of "Página no encontrada", and the 404 page's **Volver al panel** opens the dashboard, not the public landing page (FR-USR-5).
 - The grouped "Se autorizaron N documentos" notice opens the Comprobantes list once it counts more than one document, instead of the first invoice (FR-NOT-2).
 - Closing a dialog with its Cancel button forgets the last error, as closing it with Esc already did, so a refusal is no longer still there when the dialog is opened again.

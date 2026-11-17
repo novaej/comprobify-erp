@@ -287,6 +287,9 @@ export type AuthorizedXml = {
   sequential: number;
   status: DocumentStatus;
   xml: string;
+  // What SRI answered, for the RIDE drawn from it.
+  authorizationNumber: string | null;
+  authorizedAt: Date | null;
 };
 
 // FR-REP-3: the SRI's authorization of each document made in a range, kept as it was answered.
@@ -305,6 +308,8 @@ export async function authorizedXmls(
       sequential: documents.sequential,
       status: documents.status,
       xml: documents.authorizationXml,
+      authorizationNumber: documents.authorizationNumber,
+      authorizedAt: documents.authorizedAt,
     })
     .from(documents)
     .where(

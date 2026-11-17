@@ -4,7 +4,6 @@ import { ScrollText } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { EmptyState } from '@/components/empty-state';
 import { Link } from '@/i18n/navigation';
-import { NoAccess } from '@/components/no-access';
 import { PageHeader } from '@/components/page-header';
 import {
   StackBody,
@@ -28,21 +27,26 @@ export default async function AuditPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; mine?: string }>;
 }) {
-  const [{ locale }, { category: requested }] = await Promise.all([params, searchParams]);
+  const [{ locale }, { category: requested, mine: mineRequested }] = await Promise.all([
+    params,
+    searchParams,
+  ]);
   setRequestLocale(locale);
   const { actor } = await loadShell(locale);
   const allowed: AuditCategory[] = [
     ...(actor.permissions.includes('audit.read') ? (['ACCOUNT'] as const) : []),
     ...(actor.permissions.includes('audit.operations.read') ? (['OPERATIONS'] as const) : []),
   ];
-  if (allowed.length === 0) return <NoAccess />;
+  // Without either permission: only what the person did themselves (ADR-041).
+  const ownOnly = allowed.length === 0;
+  const mine = ownOnly || mineRequested === '1';
   // One category at a time when only one is allowed; "everything" is the default for both.
   const category = allowed.find((value) => value === requested);
 
   const { db } = await getRuntime();
-  const events = await listAuditEvents(actor, db, { limit: 200, category });
+  const events = await listAuditEvents(actor, db, { limit: 200, category, mine });
   const t = await getTranslations('audit');
   const tRoles = await getTranslations('roles');
   const tSri = await getTranslations('sri');
@@ -156,8 +160,9 @@ export default async function AuditPage({
     ...allowed.map((value) => ({ value, label: t(`categories.${value}`) })),
   ];
   const shown = category ?? (allowed.length === 1 ? allowed[0] : undefined);
-  const description =
-    shown === 'OPERATIONS'
+  const description = ownOnly
+    ? t('descriptionOwn')
+    : shown === 'OPERATIONS'
       ? t('descriptionOperations')
       : shown === 'ACCOUNT'
         ? t('descriptionAccount')
@@ -166,6 +171,28 @@ export default async function AuditPage({
   return (
     <div className="max-w-5xl">
       <PageHeader title={t('title')} description={description} />
+      {!ownOnly && (
+        <nav aria-label={t('whoseLabel')} className="mb-2 flex flex-wrap gap-1">
+          {[false, true].map((own) => (
+            <Link
+              key={String(own)}
+              href={{
+                pathname: '/audit',
+                query: { ...(category ? { category } : {}), ...(own ? { mine: '1' } : {}) },
+              }}
+              aria-current={own === mine ? 'page' : undefined}
+              className={cn(
+                'rounded-md px-3 py-1.5 text-sm transition-colors',
+                own === mine
+                  ? 'bg-primary font-medium text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+              )}
+            >
+              {own ? t('whoseMine') : t('whoseAll')}
+            </Link>
+          ))}
+        </nav>
+      )}
       {tabs.length > 1 && (
         <nav aria-label={t('categoriesLabel')} className="mb-4 flex flex-wrap gap-1">
           {tabs.map((tab) => {
@@ -173,7 +200,13 @@ export default async function AuditPage({
             return (
               <Link
                 key={tab.value ?? 'all'}
-                href={tab.value ? { pathname: '/audit', query: { category: tab.value } } : '/audit'}
+                href={{
+                  pathname: '/audit',
+                  query: {
+                    ...(tab.value ? { category: tab.value } : {}),
+                    ...(mine ? { mine: '1' } : {}),
+                  },
+                }}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
                   'rounded-md px-3 py-1.5 text-sm transition-colors',

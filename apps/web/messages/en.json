@@ -591,7 +591,11 @@
       "address": "address",
       "paymentTerm": "term",
       "paymentTermUnit": "term unit"
-    }
+    },
+    "descriptionOwn": "What you have done in this company. Records can't be edited or deleted.",
+    "whoseLabel": "Whose",
+    "whoseAll": "All users",
+    "whoseMine": "Only my activity"
   },
   "goLive": {
     "title": "Take {organization} live",
@@ -3652,11 +3656,12 @@
     },
     "accountant": {
       "title": "Accountant export",
-      "description": "Every XML the SRI authorized in a month, in one ZIP file. Documents voided afterwards go in a folder of their own.",
+      "description": "Every document SRI authorized in a month in one ZIP file: each one's XML and, if left ticked, its PDF (RIDE). Those voided afterwards go in a folder of their own.",
       "month": "Month",
       "download": "Download ZIP",
       "EXPORT_EMPTY": "There are no authorized documents in {month}.",
-      "EXPORT_TOO_LARGE": "There are too many documents in {month} for one file."
+      "EXPORT_TOO_LARGE": "There are too many documents in {month} for one file. Try without the PDFs.",
+      "withPdf": "Include each document's PDF (RIDE)"
     }
   },
   "reportsError": {

@@ -18,12 +18,23 @@ export function DocumentFilters({
 }: {
   statuses: Choice[];
   issuePoints: Choice[];
-  values: { status?: string; issuePointId?: string; from?: string; to?: string; q?: string };
+  values: {
+    status?: string;
+    issuePointId?: string;
+    from?: string;
+    to?: string;
+    q?: string;
+    // The order, kept when a filter changes.
+    sort?: string;
+    dir?: string;
+  };
 }) {
   const t = useTranslations('documents');
   const [status, setStatus] = useState(values.status ?? ALL);
   const [issuePoint, setIssuePoint] = useState(values.issuePointId ?? ALL);
-  const filtered = Object.values(values).some(Boolean);
+  const filtered = [values.status, values.issuePointId, values.from, values.to, values.q].some(
+    Boolean,
+  );
   const live = useLiveFilters('/documents', [status, issuePoint]);
 
   return (
@@ -58,6 +69,8 @@ export function DocumentFilters({
           />
         )}
       </FormField>
+      {values.sort && <input type="hidden" name="sort" value={values.sort} />}
+      {values.dir && <input type="hidden" name="dir" value={values.dir} />}
       {status !== ALL && <input type="hidden" name="status" value={status} />}
       <FormField label={t('filters.issuePoint')} labelClassName="sr-only">
         {(a11y) => (

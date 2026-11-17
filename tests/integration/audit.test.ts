@@ -220,8 +220,19 @@ describe('audit log and go-live', () => {
     await expect(
       listAuditEvents(accountant.ctx, db, { category: 'OPERATIONS' }),
     ).resolves.toBeInstanceOf(Array);
+  });
+
+  it('shows someone without audit permissions only what they did themselves', async () => {
     const viewer = await join('VIEWER');
-    await expect(listAuditEvents(viewer.ctx, db)).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    const own = await listAuditEvents(viewer.ctx, db);
+    expect(own.length).toBeGreaterThan(0);
+    expect(own.every((event) => event.actorName === `User ${viewer.email.slice(2, 8)}`)).toBe(true);
+    // The owner can narrow the whole log to their own acts.
+    const all = await listAuditEvents(ownerCtx, db);
+    const mine = await listAuditEvents(ownerCtx, db, { mine: true });
+    expect(mine.length).toBeGreaterThan(0);
+    expect(mine.length).toBeLessThan(all.length);
+    expect(new Set(mine.map((event) => event.actorName)).size).toBe(1);
   });
 
   it('cannot be edited or deleted by the app role', async () => {

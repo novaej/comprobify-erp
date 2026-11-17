@@ -16,6 +16,7 @@ import type { Jobs, QueuePayload } from '../jobs';
 import type { Logger } from '@comprobify/config/logger';
 import type { Row } from './sending';
 import { documentNumber } from './number';
+import type { AuthorizedXml } from './figures';
 
 // FR-DOC-10 and FR-DOC-11. Both files come from the XML SRI authorized, never from live
 // data; only the logo is current.
@@ -40,6 +41,30 @@ async function files(row: Row, logo: Buffer | null) {
     ambiente: row.ambiente,
   });
   return { data, pdf, xml, name: `${number(row)}` };
+}
+
+// The RIDEs of authorized documents, drawn from their XML (the accountant's export). One at a
+// time, so a month's worth never holds more than one drawing in progress.
+export async function ridesOfAuthorized(
+  ctx: ActorContext,
+  db: Database,
+  rows: AuthorizedXml[],
+): Promise<Buffer[]> {
+  requirePermission(ctx, 'documents.read');
+  const logo = (await companyLogo(ctx, db))?.content ?? null;
+  const pdfs: Buffer[] = [];
+  for (const row of rows) {
+    if (!row.authorizationNumber || !row.authorizedAt)
+      throw new Error('An authorized document without its authorization');
+    pdfs.push(
+      await renderRide(rideData(row.xml), {
+        authorizationNumber: row.authorizationNumber,
+        authorizedAt: row.authorizedAt,
+        logo,
+      }),
+    );
+  }
+  return pdfs;
 }
 
 // The RIDE for viewing or download.

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
 
-// FR-REP-3: a month's authorized XMLs as one ZIP. Core checks the export permission. A month with
+// FR-REP-3: a month's authorized XMLs, and their PDFs when asked, as one ZIP. Core checks the export permission. A month with
 // nothing to export goes back to the reports page, which says so, instead of a blank download.
 export async function GET(request: Request, { params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -13,7 +13,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
   if (!/^\d{4}-\d{2}$/.test(month)) return new Response(null, { status: 404 });
   let made: Awaited<ReturnType<typeof accountantExport>>;
   try {
-    made = await accountantExport(actor, db, month);
+    made = await accountantExport(actor, db, month, {
+      pdf: new URL(request.url).searchParams.get('pdf') === '1',
+    });
   } catch (error) {
     if (isDomainError(error, 'EXPORT_EMPTY') || isDomainError(error, 'EXPORT_TOO_LARGE'))
       return redirect(

@@ -74,11 +74,12 @@ export { receivableInvoice, receivableInvoices } from './receivables';
 export type { ReceivableInvoice } from './receivables';
 export { documentByAccessKey, findByAccessKey } from './lookup';
 export type { InvoiceByKey } from './lookup';
-export { documentRide, emailDocument, resendDocumentEmail } from './ride';
+export { documentRide, emailDocument, resendDocumentEmail, ridesOfAuthorized } from './ride';
 export type { DocumentEmailDeps } from './ride';
 export {
   correctionDraft,
   documentActions,
+  DOCUMENT_SORTS,
   documentFilters,
   documentNumber,
   DOCUMENTS_PAGE_SIZE,

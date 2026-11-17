@@ -3,6 +3,26 @@ import { reportTable } from '@/server/report-table';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
 
+// The file is named in the language of the screen, as the clients and products downloads are.
+const FILE_NAMES = {
+  es: {
+    sales: 'reporte-ventas',
+    documents: 'reporte-comprobantes',
+    taxes: 'reporte-impuestos',
+    aging: 'reporte-cuentas-por-cobrar',
+    movements: 'reporte-movimientos-inventario',
+    purchases: 'reporte-compras',
+  },
+  en: {
+    sales: 'report-sales',
+    documents: 'report-documents',
+    taxes: 'report-taxes',
+    aging: 'report-receivables',
+    movements: 'report-inventory-movements',
+    purchases: 'report-purchases',
+  },
+} as const;
+
 const date = (value: string | null) =>
   /^\d{4}-\d{2}-\d{2}$/.test(value ?? '') ? value! : undefined;
 
@@ -43,10 +63,11 @@ export async function GET(
       locale === 'en' ? ',' : ';',
     );
     const name = report === 'aging' ? result.to : `${result.from}_${result.to}`;
+    const title = (FILE_NAMES[locale === 'en' ? 'en' : 'es'] as Record<string, string>)[report];
     return new Response(body, {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="report-${report}-${name}.csv"`,
+        'Content-Disposition': `attachment; filename="${title}-${name}.csv"`,
         'Cache-Control': 'private, no-store',
       },
     });
