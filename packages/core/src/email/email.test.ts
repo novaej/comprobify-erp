@@ -224,12 +224,19 @@ describe('test recipient, banner and off switch (ADR-015)', () => {
     expect(sent[0]!.html).toContain('maria@example.com');
   });
 
-  it('marks staging emails, and sends nothing when off', async () => {
+  it('marks emails of a system that is not production, and sends nothing when off', async () => {
     const { sent, provider } = capture();
     await withTestBanner(provider).send(
       renderEmail('verifyEmail', 'en', 'a@example.com', { url: 'https://x.test' }),
     );
-    expect(sent[0]!.text).toMatch(/^TEST ENVIRONMENT/);
+    expect(sent[0]!.text).toMatch(/^STAGING ENVIRONMENT/);
+    expect(sent[0]!.subject).toMatch(/^\[STAGING\] /);
+    const local = capture();
+    await withTestBanner(local.provider, 'local').send(
+      renderEmail('verifyEmail', 'es', 'a@example.com', { url: 'https://x.test' }),
+    );
+    expect(local.sent[0]!.subject).toMatch(/^\[LOCAL\] /);
+    expect(local.sent[0]!.text).toMatch(/^ENTORNO LOCAL/);
     await expect(createNoEmailProvider().send(sent[0]!)).resolves.toBe('skipped');
   });
 });

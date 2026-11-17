@@ -51,7 +51,7 @@ if (env.EMAIL_REDIRECT_TO) {
   emailProvider = withRedirect(emailProvider, env.EMAIL_REDIRECT_TO);
   logger.warn('Every email goes to the test recipient', { event: 'email.redirected' });
 }
-if (env.APP_ENV === 'staging') emailProvider = withTestBanner(emailProvider);
+if (env.APP_ENV !== 'production') emailProvider = withTestBanner(emailProvider, env.APP_ENV);
 
 // ADR-014: the mock answers like SRI; the env refuses it in production.
 const sri = env.SRI_MOCK_MODE

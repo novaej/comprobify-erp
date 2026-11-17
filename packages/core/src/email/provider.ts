@@ -137,18 +137,23 @@ export function withRedirect(provider: EmailProvider, to: string): EmailProvider
   };
 }
 
-// APP_ENV=staging: nobody mistakes a staging email for a real one.
-export function withTestBanner(provider: EmailProvider): EmailProvider {
+// Outside production (local, staging): nobody mistakes the email for a real one, even a live
+// company's. The subject carries the environment, apart from the [PRUEBAS] of a test copy.
+export function withTestBanner(
+  provider: EmailProvider,
+  environment: 'local' | 'staging' = 'staging',
+): EmailProvider {
+  const tag = environment.toUpperCase();
   return {
-    send: (message) =>
-      provider.send(
-        withNotice(
-          message,
-          message.locale === 'en'
-            ? 'TEST ENVIRONMENT: this message comes from a test system and is not a real transaction.'
-            : 'ENTORNO DE PRUEBAS: este mensaje viene de un sistema de pruebas y no es una transacción real.',
-          '#fff3cd',
-        ),
-      ),
+    send: (message) => {
+      const noticed = withNotice(
+        message,
+        message.locale === 'en'
+          ? `${tag} ENVIRONMENT: this message comes from a ${environment} system, not production, and is not a real transaction.`
+          : `ENTORNO ${tag}: este mensaje viene de un sistema ${environment === 'local' ? 'local' : 'de staging'}, no de producción, y no es una transacción real.`,
+        '#fff3cd',
+      );
+      return provider.send({ ...noticed, subject: `[${tag}] ${noticed.subject}` });
+    },
   };
 }

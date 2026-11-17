@@ -76,9 +76,11 @@ export function FormField({
           setNative(
             validity.valueMissing
               ? t('fieldRequired')
-              : validity.rangeUnderflow || validity.rangeOverflow
-                ? t('fieldOutOfRange')
-                : t('fieldInvalid'),
+              : validity.tooShort
+                ? t('fieldTooShort', { min: (control as unknown as HTMLInputElement).minLength })
+                : validity.rangeUnderflow || validity.rangeOverflow
+                  ? t('fieldOutOfRange')
+                  : t('fieldInvalid'),
           );
           // Without the browser's own pass, the first invalid control must be taken to by hand.
           const form = control.form;

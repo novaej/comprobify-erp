@@ -8,7 +8,8 @@
     "unlimited": "Unlimited",
     "fieldRequired": "This field is required.",
     "fieldInvalid": "Check this value.",
-    "fieldOutOfRange": "The value is out of the allowed range."
+    "fieldOutOfRange": "The value is out of the allowed range.",
+    "fieldTooShort": "Enter at least {min} characters."
   },
   "theme": {
     "toLight": "Switch to light mode",
@@ -225,7 +226,10 @@
     "pastDueBody": "You can only view your data and pay. Pay the renewal to keep working.",
     "pastDueAction": "Go to the payment",
     "suspendedTitle": "Company suspended",
-    "suspendedBody": "You can only view its data. Write to support to find out more."
+    "suspendedBody": "You can only view its data. Write to support to find out more.",
+    "environmentLocalTitle": "Local system: not production",
+    "environmentStagingTitle": "Staging system: not production",
+    "environmentBody": "The company is in production, but this system is not: documents go to SRI's test environment, have no tax validity, and emails carry a mark of the environment."
   },
   "roles": {
     "OWNER": "Owner",
@@ -862,7 +866,8 @@
       "duplicateBody": "We received a second charge for the same payment. It wasn't applied twice and we'll refund it.",
       "errorTitle": "We couldn't confirm the payment",
       "mismatchBody": "The amount charged doesn't match the payment's. We'll look into it and write to you."
-    }
+    },
+    "usedOfWithPacks": "{used} of {limit} + {extra} from your packs"
   },
   "admin": {
     "companiesTitle": "Companies",

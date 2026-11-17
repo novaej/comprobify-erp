@@ -241,7 +241,9 @@ describe('the operations log', () => {
     expect(own.length).toBeGreaterThan(0);
     expect(await listAuditEvents(owner, db, { limit: 500, mine: true })).toHaveLength(own.length);
     // ... and cannot ask for more than that.
-    await expect(listAuditEvents({ ...nobody, userId: null }, db)).rejects.toMatchObject({
+    await expect(
+      listAuditEvents({ ...nobody, userId: undefined } as unknown as ActorContext, db),
+    ).rejects.toMatchObject({
       code: 'FORBIDDEN',
     });
   });

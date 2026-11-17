@@ -8,7 +8,8 @@
     "unlimited": "Ilimitado",
     "fieldRequired": "Este campo es obligatorio.",
     "fieldInvalid": "Revisa este valor.",
-    "fieldOutOfRange": "El valor está fuera del rango permitido."
+    "fieldOutOfRange": "El valor está fuera del rango permitido.",
+    "fieldTooShort": "Escribe al menos {min} caracteres."
   },
   "theme": {
     "toLight": "Cambiar a modo claro",
@@ -225,7 +226,10 @@
     "pastDueBody": "Solo puedes consultar tus datos y pagar. Paga la renovación para seguir trabajando.",
     "pastDueAction": "Ir al pago",
     "suspendedTitle": "Empresa suspendida",
-    "suspendedBody": "Solo puedes consultar sus datos. Escríbenos a soporte para saber más."
+    "suspendedBody": "Solo puedes consultar sus datos. Escríbenos a soporte para saber más.",
+    "environmentLocalTitle": "Sistema local: no es producción",
+    "environmentStagingTitle": "Sistema de staging: no es producción",
+    "environmentBody": "Aunque la empresa está en producción, este sistema no lo es: los comprobantes van al ambiente de pruebas del SRI, no tienen validez tributaria y los correos llevan una marca del ambiente."
   },
   "roles": {
     "OWNER": "Propietario",
@@ -862,7 +866,8 @@
       "duplicateBody": "Recibimos un segundo cobro por el mismo pago. No se aplicó dos veces y te lo devolveremos.",
       "errorTitle": "No pudimos confirmar el pago",
       "mismatchBody": "El valor cobrado no coincide con el del pago. Lo revisaremos y te escribiremos."
-    }
+    },
+    "usedOfWithPacks": "{used} de {limit} + {extra} de tus paquetes"
   },
   "admin": {
     "companiesTitle": "Empresas",

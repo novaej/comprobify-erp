@@ -88,9 +88,9 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | L2 | Reports | ✅ |
 | L3 | The accountant's export | ✅ |
 | L4 | The activity log: account and operations | ✅ |
-| M1 | Take the company to production | ⬜ |
-| M2 | The first production invoice | ⬜ |
-| M3 | The quota fills up | ⬜ |
+| M1 | Take the company to production | ✅ |
+| M2 | The first production invoice | ✅ |
+| M3 | The quota fills up | ✅ |
 | N1 | A company's plan, exceptions and suspension | ⬜ |
 | N2 | Prices and the IVA | ⬜ |
 | N3 | Plans and modules | ⬜ |
@@ -816,6 +816,7 @@ And for each: open a document or an order, so the read side is seen too.
 |---|---|---|
 | 1 | Owner: the bell | The notices so far: payment confirmed, batch finished, newest first, unread marked |
 | 2 | Click one | Goes where it's about, and it's marked read |
+| 2b | Switch between **Producción** and **Pruebas** (after M1) | In Producción the bell and **Notificaciones** show only production's notices; Pruebas shows those and the test ones, each marked "Pruebas" |
 | 3 | Sidebar → **Notificaciones** (under Administrar, for every role; **Ver todas** in the bell goes to the same page) → **Sin leer**, **Marcar todas como leídas** | The list empties |
 | 4 | The preferences | One row per type the owner receives, in-app and email; "Cambio de precio" locked on (mandatory) |
 | 5 | Víctor (Ventas): **Notificaciones** | Document types only; no billing types |
@@ -917,7 +918,7 @@ The log has two categories (ADR-041): **Cuenta y configuración** (who signed in
 | # | Do | Expect |
 |---|---|---|
 | 1 | Owner: **Pasar a producción** (dashboard) | A page: the next number for each issue point and document, showing `1` for Factura on 001-001 (the real company's own numbering, not the test copy's 50), and "Llevar tus datos de pruebas" ticked |
-| 2 | Set Factura on 001-001 to start at **101** (a number below the current one is refused); tick "Entiendo que este paso no se puede deshacer"; **Pasar a producción** | "Tu empresa está en producción", **SRI Producción** in the sidebar, no yellow banner |
+| 2 | Set Factura on 001-001 to start at **101** (a number below the current one is refused); tick "Entiendo que este paso no se puede deshacer"; **Pasar a producción** | "Tu empresa está en producción", **SRI Producción** in the sidebar, no "Estás en el ambiente de pruebas" banner. Locally (and on staging) a yellow "Sistema local: no es producción" banner stays, since only the real production system sends to SRI's production side |
 | 3 | **Productos**, **Clientes**, **Proveedores** | The test copy's ones came along; documents and stock did not |
 | 4 | The switcher: **Pruebas** | The test copy, its documents still there; switch back to **Producción** |
 | 5 | **Actividad** | "pasó la empresa a producción" |
@@ -929,7 +930,7 @@ The log has two categories (ADR-041): **Cuenta y configuración** (who signed in
 | # | Do | Expect |
 |---|---|---|
 | 1 | **Nueva factura** to María, SRV-1 × 1 | Number **001-001-000000101**, authorized (still the mock SRI, locally) |
-| 2 | Its RIDE | No "pruebas" mark; the buyer's email in the terminal has no "[PRUEBAS]" |
+| 2 | Its RIDE and the buyer's email in the terminal | Locally both say PRUEBAS, because only the production system uses SRI's production environment (FR-ONB-6); the email's subject also starts with **[LOCAL]** and says so in its first line, so it can't be taken for a test copy's. On the real production system: no PRUEBAS mark, no environment mark |
 
 ### M3 · The quota fills up
 
@@ -937,12 +938,13 @@ The log has two categories (ADR-041): **Cuenta y configuración** (who signed in
 
 | # | Do | Expect |
 |---|---|---|
-| 1 | Operator: **Empresas** → Comercial Andina → add an exception: **DOCUMENT_QUOTA** = 5, reason "QA" | Saved |
+| 1 | Operator: **Empresas** → Comercial Andina → add an exception: **DOCUMENT_QUOTA** = 5, reason "Prueba QA" | Saved. A reason of fewer than 3 characters says "Escribe al menos 3 caracteres." under the field |
 | 2 | Owner: issue invoices until 4 production documents exist this period | |
 | 3 | `pnpm run-job quota.watch` | The bell: "Se acerca el límite de documentos", 80 % of 5; an email |
 | 4 | Issue the 5th, run it again | "Llegaste al límite de documentos" |
-| 5 | Issue a 6th | It goes through, spending one document from the pack bought in C4; **Plan** shows one less |
-| 6 | Operator: remove the exception | The plan's 2000 again |
+| 5 | Issue a 6th | It goes through, spending one document from the pack bought in C4; **Plan** shows the pack one less, and Límites reads "5 de 5 + 1 de tus paquetes", never "6 de 5" |
+| 6 | Operator: remove the exception | The plan's 2000 again: **Plan** shows the quota as "2.000" and the count "6 de 2.000". The pack keeps the one document the 6th invoice already spent (a spent document is not given back) |
+| 7 | Issue another invoice | The pack does not go down this time: the 7th counts against the plan's 2000 ("7 de 2.000") |
 
 The test copy never uses quota: invoices in Pruebas don't count.
 

@@ -129,6 +129,12 @@ export default async function PlanPage({ params }: { params: Promise<{ locale: s
             const limit = limitOf(key);
             const value = limit === null ? t('unlimited') : number.format(limit);
             const count = used[key];
+            // Past the plan's quota each document came from a pack: the plan's own is full, and
+            // the rest is said apart, so it never reads "6 de 5".
+            const extra =
+              key === 'DOCUMENT_QUOTA' && quota.limit !== null && quota.used > quota.limit
+                ? quota.used - quota.limit
+                : 0;
             return (
               <div
                 key={key}
@@ -138,7 +144,13 @@ export default async function PlanPage({ params }: { params: Promise<{ locale: s
                 <dd className="text-xs font-medium tabular-nums">
                   {count === undefined
                     ? value
-                    : t('usedOf', { used: number.format(count), limit: value })}
+                    : extra > 0
+                      ? t('usedOfWithPacks', {
+                          used: value,
+                          limit: value,
+                          extra: number.format(extra),
+                        })
+                      : t('usedOf', { used: number.format(count), limit: value })}
                 </dd>
               </div>
             );

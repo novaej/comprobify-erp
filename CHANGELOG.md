@@ -6,6 +6,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Added
 
+- A yellow banner "Sistema local / de staging: no es producción" for a company in production on a system that isn't, and every email from such a system now starts with **[LOCAL]** or **[STAGING]** and says so in its first line, apart from the [PRUEBAS] of a test copy (FR-ONB-6).
 - Comprobantes can be ordered by number, date, buyer, total or status from the column headers, with the filters kept (FR-DOC-12).
 - The accountant's export can include each document's PDF (RIDE) beside its XML, ticked by default; a month over 1,000 documents asks to go without them (FR-REP-3).
 - **Actividad** is in every member's sidebar: someone without audit permissions sees only what they did themselves, and those who read the log can narrow it to their own acts with **Solo mi actividad** (FR-NOT-4, ADR-041).
@@ -158,6 +159,11 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Fixed
 
+- The bell and **Notificaciones** in the production company show only production's notices; the test copy still shows all, marked as such. "Marcar todas" touches only what is shown (FR-NOT-1).
+- A "Se autorizaron N documentos" notice always opens the Comprobantes list, including ones made before, instead of the first invoice (FR-NOT-2).
+- Toasts now appear at the top centre with a close button, so they no longer cover a form's buttons at the bottom right (FR-UX-2).
+- **Plan → Límites** reads "5 de 5 + 1 de tus paquetes" instead of "6 de 5" when documents came from a pack (FR-BILL-7).
+- A field that is too short says "Escribe al menos N caracteres." instead of "Revisa este valor." (FR-UX-2).
 - The report CSV files are named in the language of the screen (`reporte-ventas-…` / `report-sales-…`), like the clients and products downloads (FR-REP-2).
 - Switching company, or between Pruebas and Producción, while on a record's page (an invoice, an order, a batch, a product's stock) goes to that list instead of "Página no encontrada", and the 404 page's **Volver al panel** opens the dashboard, not the public landing page (FR-USR-5).
 - The grouped "Se autorizaron N documentos" notice opens the Comprobantes list once it counts more than one document, instead of the first invoice (FR-NOT-2).

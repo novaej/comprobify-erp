@@ -30,7 +30,8 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <NextIntlClientProvider>
       {children}
-      <Toaster />
+      {/* Top centre: bottom right is where a form's buttons are. Closable, so one never has to wait. */}
+      <Toaster position="top-center" closeButton />
     </NextIntlClientProvider>
   );
 }

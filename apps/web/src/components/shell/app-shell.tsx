@@ -17,7 +17,7 @@ import { loadShell } from '@/server/shell';
 export async function AppShell({ locale, children }: { locale: string; children: ReactNode }) {
   const { session, organizations, active, actor, certificate } = await loadShell(locale);
   const t = await getTranslations('shell');
-  const { db, agreementParties } = await getRuntime();
+  const { db, agreementParties, env } = await getRuntime();
   // FR-ONB-8: only the owner can accept, so only the owner is reminded.
   const agreementsPending =
     agreementParties !== null &&
@@ -74,6 +74,19 @@ export async function AppShell({ locale, children }: { locale: string; children:
             {active.mode === 'TEST' && (
               <Banner tone="warning" icon={FlaskConical} role="note" title={t('sandboxTitle')}>
                 {t('sandboxBody')}
+              </Banner>
+            )}
+            {/* A company in production on a system that is not: documents still go to SRI's test side. */}
+            {active.mode === 'PRODUCTION' && env.APP_ENV !== 'production' && (
+              <Banner
+                tone="warning"
+                icon={FlaskConical}
+                role="note"
+                title={t(
+                  env.APP_ENV === 'local' ? 'environmentLocalTitle' : 'environmentStagingTitle',
+                )}
+              >
+                {t('environmentBody')}
               </Banner>
             )}
             {/* FR-BILL-5, FR-BILL-9: core refuses the writes; this says why first. */}

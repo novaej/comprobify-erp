@@ -30,6 +30,19 @@ async function own(ctx: ActorContext, db: Database) {
   return { userId: ctx.userId, tenantId: await realTenantOf(ctx, db) };
 }
 
+// In the production company only production's notices; in the test copy, all of them (the
+// company's own ones, such as billing, belong to the real company and are told there too).
+const visibleIn = (ctx: ActorContext) =>
+  ctx.tenantMode === 'PRODUCTION' ? eq(schema.notifications.environment, 'PRODUCTION') : undefined;
+
+// Several authorizations in a notice: the list, whichever link it was first made with.
+const withLink = <T extends { type: string; params: Record<string, string>; link: string }>(
+  row: T,
+): T =>
+  row.type === 'DOCUMENTS_AUTHORIZED' && Number(row.params.count) > 1
+    ? { ...row, link: '/documents' }
+    : row;
+
 export type NotificationView = {
   // The member's receipt: what is marked read.
   id: string;
@@ -72,12 +85,16 @@ export async function listNotifications(
         ),
       )
       .where(
-        and(eq(receipts.userId, userId), options.unreadOnly ? isNull(receipts.readAt) : undefined),
+        and(
+          eq(receipts.userId, userId),
+          options.unreadOnly ? isNull(receipts.readAt) : undefined,
+          visibleIn(ctx),
+        ),
       )
       .orderBy(desc(notifications.createdAt), desc(receipts.id))
       .limit(size + 1)
       .offset((page - 1) * size);
-    return { items: rows.slice(0, size), hasMore: rows.length > size };
+    return { items: rows.slice(0, size).map(withLink), hasMore: rows.length > size };
   });
 }
 
@@ -93,7 +110,14 @@ export async function notificationSummary(
     const [unread] = await tx
       .select({ n: count() })
       .from(receipts)
-      .where(and(eq(receipts.userId, userId), isNull(receipts.readAt)));
+      .innerJoin(
+        notifications,
+        and(
+          eq(notifications.tenantId, receipts.tenantId),
+          eq(notifications.id, receipts.notificationId),
+        ),
+      )
+      .where(and(eq(receipts.userId, userId), isNull(receipts.readAt), visibleIn(ctx)));
     const items = await tx
       .select({
         id: receipts.id,
@@ -112,10 +136,10 @@ export async function notificationSummary(
           eq(notifications.id, receipts.notificationId),
         ),
       )
-      .where(eq(receipts.userId, userId))
+      .where(and(eq(receipts.userId, userId), visibleIn(ctx)))
       .orderBy(desc(notifications.createdAt), desc(receipts.id))
       .limit(latest);
-    return { unread: unread!.n, items };
+    return { unread: unread!.n, items: items.map(withLink) };
   });
 }
 
@@ -125,10 +149,18 @@ export async function unreadCount(ctx: ActorContext, db: Database): Promise<numb
     const [row] = await tx
       .select({ n: count() })
       .from(schema.notificationReceipts)
+      .innerJoin(
+        schema.notifications,
+        and(
+          eq(schema.notifications.tenantId, schema.notificationReceipts.tenantId),
+          eq(schema.notifications.id, schema.notificationReceipts.notificationId),
+        ),
+      )
       .where(
         and(
           eq(schema.notificationReceipts.userId, userId),
           isNull(schema.notificationReceipts.readAt),
+          visibleIn(ctx),
         ),
       );
     return row!.n;
@@ -164,6 +196,16 @@ export async function markAllRead(ctx: ActorContext, db: Database): Promise<void
         and(
           eq(schema.notificationReceipts.userId, userId),
           isNull(schema.notificationReceipts.readAt),
+          // Only what this copy shows is marked read.
+          ctx.tenantMode === 'PRODUCTION'
+            ? inArray(
+                schema.notificationReceipts.notificationId,
+                tx
+                  .select({ id: schema.notifications.id })
+                  .from(schema.notifications)
+                  .where(eq(schema.notifications.environment, 'PRODUCTION')),
+              )
+            : undefined,
         ),
       ),
   );

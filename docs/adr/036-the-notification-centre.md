@@ -45,7 +45,7 @@ The daily billing job, the price re-pricing notices and the operator's decision 
 
 **What a member can do** (core functions, actor first; each touches only the member's own rows): list with paging and an unread filter, a summary for the bell, mark read and mark all read, read their preferences, set one. Setting one refuses a type their role doesn't receive, a mandatory type, and a channel the type lacks, with stable codes.
 
-**The screens.** A bell in the top bar and in the mobile bar shows the unread count and the latest few; `/notifications` has the full list and the preferences. There is no background polling: the count is read with each page and after each change, since polling must not count as activity for the session timeout (CLAUDE.md mistake 16).
+**The screens.** A bell in the top bar and in the mobile bar shows the unread count and the latest few; `/notifications` has the full list and the preferences. In the production company the bell and the list show only production's notices (a test copy's `environment` is TEST); the test copy shows all of them, each marked. A grouped authorization notice that counts more than one document leads to the document list, whichever link it was first made with. There is no background polling: the count is read with each page and after each change, since polling must not count as activity for the session timeout (CLAUDE.md mistake 16).
 
 **First producers.** The renewal cycle and re-pricing notices, and two new types: `PAYMENT_VERIFIED` and `PAYMENT_REJECTED`, sent when the operator reviews a transfer and when a card payment applies. The rest of FR-NOT-2 follows in later steps.
 

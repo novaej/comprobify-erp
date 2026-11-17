@@ -187,14 +187,19 @@ describe('the notification centre', () => {
       readAt: null,
     });
     expect(await unreadCount(owner, db)).toBe(2);
+    // The real company in production shows only production's: the test copy's stay out of it.
+    const production = await listNotifications(await as('owner'), db);
+    expect(production.items.map((item) => item.environment)).toEqual(['PRODUCTION']);
+    expect(await unreadCount(await as('owner'), db)).toBe(1);
 
     // Read state is the member's own.
     await markRead(owner, db, [list.items[0]!.id]);
     expect(await unreadCount(owner, db)).toBe(1);
-    expect(await unreadCount(await as('admin'), db)).toBe(2);
+    const adminInTest = await as('admin', org.twinTenantId);
+    expect(await unreadCount(adminInTest, db)).toBe(2);
     // Marking someone else's receipt read does nothing.
-    await markRead(await as('admin'), db, [list.items[1]!.id]);
-    expect(await unreadCount(await as('admin'), db)).toBe(2);
+    await markRead(adminInTest, db, [list.items[1]!.id]);
+    expect(await unreadCount(adminInTest, db)).toBe(2);
     expect(await unreadCount(owner, db)).toBe(1);
     await expect(listNotifications(owner, db, { unreadOnly: true })).resolves.toMatchObject({
       items: [{ type: 'PAYMENT_VERIFIED' }],
@@ -202,11 +207,11 @@ describe('the notification centre', () => {
     await markAllRead(owner, db);
     expect(await unreadCount(owner, db)).toBe(0);
     // Nobody else's receipts were touched.
-    expect(await unreadCount(await as('admin'), db)).toBe(2);
+    expect(await unreadCount(await as('admin', org.twinTenantId), db)).toBe(2);
   });
 
   it('pages the list', async () => {
-    const owner = await as('owner');
+    const owner = await as('owner', org.twinTenantId);
     const first = await listNotifications(owner, db, { pageSize: 1 });
     expect(first.items).toHaveLength(1);
     expect(first.hasMore).toBe(true);
