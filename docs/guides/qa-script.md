@@ -81,8 +81,8 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | J2 | What each role sees and may do | ✅ |
 | J3 | Limit, change and remove | ✅ |
 | J4 | Two-step verification for everyone | ✅ |
-| K1 | The bell and preferences | ⬜ |
-| K2 | Authorizations, grouped | ⬜ |
+| K1 | The bell and preferences | ✅ |
+| K2 | Authorizations, grouped | ✅ |
 | K3 | The certificate about to expire | ✅ |
 | L1 | The dashboard | ✅ |
 | L2 | Reports | ✅ |

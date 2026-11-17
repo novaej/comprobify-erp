@@ -9,3 +9,11 @@ allowBuilds:
   '@parcel/watcher': false
   '@swc/core': false
   esbuild: false
+
+# GHSA-fc5q-39xc-vjpf: picomatch ReDoS through extglob patterns, no patched release yet. Every path
+# to it is build or file-watching tooling (Sentry's bundler plugin, next-intl's watcher, eslint,
+# shadcn) matching patterns we wrote, never input from a request. Remove this when a fixed
+# picomatch ships (see NEXT_STEPS.md).
+auditConfig:
+  ignoreGhsas:
+    - GHSA-fc5q-39xc-vjpf
