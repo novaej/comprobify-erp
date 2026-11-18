@@ -1,0 +1,73 @@
+# Staging and production on one droplet (ADR-048): Caddy, then web and worker on one image, after
+# the migrate step. The deploy workflow copies this directory to /opt/comprobify-erp, writes .env
+# beside it and sets IMAGE (the image built for the commit). Postgres is the environment's managed
+# cluster.
+name: comprobify-erp
+
+x-app: &app
+  image: ${IMAGE:?IMAGE is set by the deploy}
+  env_file: .env
+  restart: unless-stopped
+  environment:
+    # The image has no pino-pretty (CLAUDE.md mistake 24).
+    LOG_FORMAT: json
+
+services:
+  # Run by the deploy before the others start (`docker compose run --rm migrate`), as the owner
+  # role; never started by `up`.
+  migrate:
+    <<: *app
+    working_dir: /app/apps/worker
+    command: ['node', '--import', 'tsx', 'src/migrate.ts']
+    restart: 'no'
+    profiles: [release]
+
+  web:
+    <<: *app
+    expose:
+      - '3000'
+    mem_limit: ${WEB_MEMORY:-1536m}
+    # The image has no curl; node is the HTTP client. /health checks the database and the queue.
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3000/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  worker:
+    <<: *app
+    working_dir: /app/apps/worker
+    command: ['node', '--import', 'tsx', 'src/index.ts']
+    mem_limit: ${WORKER_MEMORY:-768m}
+    # Signing and bulk runs must leave the web responsive (PRD 9.2).
+    cpus: ${WORKER_CPUS:-1}
+
+  caddy:
+    # Bump with `docker buildx imagetools inspect caddy:2-alpine`.
+    image: caddy:2-alpine@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    # A directory mount, so a replaced Caddyfile is seen on reload.
+    volumes:
+      - ./caddy:/etc/caddy:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      SITE_HOSTS: ${SITE_HOSTS:?SITE_HOSTS is set by the deploy}
+    mem_limit: 128m
+    depends_on:
+      web:
+        condition: service_healthy
+
+volumes:
+  caddy_data:
+  caddy_config:

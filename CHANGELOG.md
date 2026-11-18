@@ -6,6 +6,8 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Added
 
+- Staging and production deployment (ADR-048): Terraform for one droplet per environment (firewall to Cloudflare only, reserved IP, DNS, hardened cloud-init), the stack on it (`infra/deploy`: migrate, web, worker, Caddy), and the pipeline: staging from `main` after CI, production from a published Release, Terraform planned on pull requests and applied on `main`, each environment behind its own switch.
+- `LANDING_URL`: the public pages on their own host (`comprobify.com`) and the app on `APP_URL` (`app.comprobify.com`), each path sent to its host.
 - The stock valuation **as of a day**, such as 31 December: the ledger summed to the end of that day, on screen and in its CSV (ADR-046, FR-INV-5).
 - **Importar un conteo** on Inventario: a CSV of counted quantities becomes adjustments in at the average or out, all with one reason, whole or not at all, and one `stock.counted` entry in the activity log (ADR-046, FR-INV-3).
 - An optional `externalReference` on facturas, notas de crédito and guías: the caller's own reference, never sent to SRI, shown on the document and found by the Comprobantes search (NFR-ARCH-3).

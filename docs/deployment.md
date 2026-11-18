@@ -1,6 +1,16 @@
 # Deployment
 
-Milestone 0 deploys locally only. Staging and production infrastructure (Terraform, CD, backups) arrive in Milestone 10, and this document grows with them.
+How the system runs locally, on staging and in production (ADR-048). Backups and the restore drill join in Milestone 10.
+
+## Environments
+
+| | Hosts | Droplet | Postgres | Deploys |
+|---|---|---|---|---|
+| local | `localhost:3000` (`pnpm dev`), `localhost:8080` (`pnpm stack:up`) | your machine | the `postgres18` container | — |
+| staging | `staging.comprobify.com` (public pages), `app-staging.comprobify.com` (app) | `comprobify-erp-staging`, `s-1vcpu-2gb`, `nyc1`, on demand | the staging cluster, created by hand | `main`, after CI passes |
+| production | `comprobify.com`, `app.comprobify.com` (from cutover); `api.comprobify.com` later | `comprobify-erp-production`, `s-2vcpu-4gb`, `nyc1` | the production cluster, created by hand | a published GitHub Release |
+
+Each environment is off until its repository variable is `true`: `STAGING_INFRA_ENABLED`, `PRODUCTION_INFRA_ENABLED`. While off, neither Terraform nor the deploy runs.
 
 ## One image, three commands
 
@@ -14,11 +24,47 @@ Milestone 0 deploys locally only. Staging and production infrastructure (Terrafo
 
 The image runs as `node`, includes `xmllint` for SRI XSD validation, and pins `node:24-slim` by digest.
 
+## Bringing an environment up
+
+Done once per environment by the owner, in this order. Names in `backticks` are GitHub settings (Settings → Environments, or Secrets and variables → Actions).
+
+1. **DigitalOcean.**
+   - Check that the Project exists (`Comprobify Staging`, `Comprobify Production`): Terraform looks it up and never creates it.
+   - Create the Postgres cluster in `nyc1` (PostgreSQL 18, the smallest size for staging), with its two roles and database ([Database roles](#database-roles-on-a-new-server)), and add the droplet to its trusted sources once it exists.
+   - Create a Spaces key for this repo's Terraform state (`comprobify-terraform-state`).
+2. **Deploy key.** Run `ssh-keygen -t ed25519 -C comprobify-erp-deploy-<env> -f ~/.ssh/comprobify_erp_<env>`. Use one key per environment, never shared.
+3. **GitHub, repository.** Set the secrets `TERRAFORM_SPACES_ACCESS_KEY_ID` and `TERRAFORM_SPACES_SECRET_ACCESS_KEY`.
+4. **GitHub, `<env>-infra` Environment.**
+   - Secrets: `DO_TOKEN` and `CLOUDFLARE_TOKEN` (DNS edit on `comprobify.com`).
+   - Variable: `INFRA_SSH_PUBLIC_KEY`, the `.pub` file's line.
+5. **Infrastructure.** Set `<ENV>_INFRA_ENABLED=true`, then run **Terraform** manually (environment, `apply`). Its output `reserved_ip` is the droplet's address. Wait three to five minutes for cloud-init.
+6. **GitHub, `<env>` Environment.** Production gets a required reviewer.
+   - Secrets:
+     - `DROPLET_IP`: the reserved IP.
+     - `INFRA_SSH_PRIVATE_KEY`: the private key file.
+     - `RUNTIME_ENV`: the whole `.env`, one `NAME=value` per line. See [Environment](#environment): `APP_ENV`, `APP_URL`, `LANDING_URL`, both database URLs with `?sslmode=require`, `AUTH_SECRET`, `CERT_ENCRYPTION_KEY`, Mailgun, `OPERATOR_RUC` and the rest.
+   - Variables:
+     - `DEPLOY_USERNAME`: `deploy_username` in the environment's `terraform.tfvars`.
+     - `SITE_HOSTS`: `staging.comprobify.com, app-staging.comprobify.com`.
+     - On staging's 2 GB, also `WEB_MEMORY=768m` and `WORKER_MEMORY=512m`.
+7. **First deploy.** Staging: run **Deploy staging** manually. Production: publish a Release.
+8. **Check.** `https://app-staging.comprobify.com/health` answers `{"status":"ok"}`, and the public pages answer on the landing host. Then make the operator account a super admin (below).
+
+**Tearing staging down:** run **Terraform** manually (staging, `destroy`), then set `STAGING_INFRA_ENABLED=false`. The cluster is not Terraform's; delete it in DigitalOcean when it is no longer needed.
+
+**Rebuilding a droplet** (after a cloud-init change, which is otherwise ignored): `terraform apply -replace=module.droplet.digitalocean_droplet.this` from the environment's folder. The reserved IP moves to the new droplet, so DNS and `DROPLET_IP` stay. Deploy again after it.
+
+**Cutover** (production): before the ERP takes `comprobify.com` and `app.comprobify.com`, the previous web app's Terraform must release the two records. Remove them from its state or delete them there. Then set `manage_dns = true` in `environments/production/terraform.tfvars` and apply. The data migration runs before, and has its own runbook.
+
 ## Release order
+
+`.github/workflows/deploy.yml` does this on staging and production; locally, `pnpm stack:up` does.
 
 1. Run **migrate** to completion, as `comprobify_erp_owner`. It also publishes a new version of any legal text that changed in the repo, which asks every company to accept it again. It sets `lock_timeout`, so a held lock fails it fast instead of blocking traffic. Close any SQL client on the database first (Appendix B, lesson 12).
 2. Start **web** and **worker** with the new image, as `comprobify_erp_app`.
 3. Wait for `GET /health` to return 200 before routing traffic.
+
+**Rollback:** release the previous tag again (run **Release to production** manually with it). Migrations don't go back, which is why each one must leave the schema usable by the code before it.
 
 Both web and worker refuse to start, with a list of problems, if the env is invalid or the role is a superuser, has `BYPASSRLS`, or would see an unprotected tenant table.
 
@@ -71,6 +117,7 @@ The area also requires two-step verification, so set it up on that account befor
 | `DATABASE_URL` | web, worker | `comprobify_erp_app` |
 | `MIGRATION_DATABASE_URL` | migrate | `comprobify_erp_owner` |
 | `APP_URL` | web, worker | Public URL. Email links point here, the worker's billing emails too. |
+| `LANDING_URL` | web | The public pages' own address when they live apart from the app (`https://comprobify.com` beside `APP_URL=https://app.comprobify.com`). Unset, one host serves both (ADR-048). |
 | `CERT_ENCRYPTION_KEY` | web, worker | 64 hex characters (`openssl rand -hex 32`). Encrypts each company's stored certificate private key; never signs anything itself. The worker decrypts a company's key with it to sign that company's re-issues; losing it makes every stored key unusable, so back it up with the database credentials. |
 | `AGREEMENTS_ENABLED` | web | `false` until the owner approves the legal texts (`docs/legal/review-notes.md`). When `true`, go-live requires acceptance. |
 | `SUPPORT_PHONE` | web | Optional. A WhatsApp number with country code, shown with `SUPPORT_EMAIL` on the public support page. |

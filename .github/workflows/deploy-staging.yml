@@ -1,0 +1,25 @@
+# ADR-048: staging follows main while it is up, once CI has passed on the commit.
+# STAGING_INFRA_ENABLED (a repository variable) turns staging's infrastructure and its deploys on
+# and off together. A manual run deploys the latest main.
+name: Deploy staging
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    if: >-
+      vars.STAGING_INFRA_ENABLED == 'true' &&
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: staging
+      ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+    secrets: inherit
+    permissions:
+      contents: read
+      packages: write

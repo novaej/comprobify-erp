@@ -226,5 +226,6 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `tests/integration/isolation-sweep.test.ts` | Every tenant table, from the catalog, proven isolated between companies and twins |
 | `tests/e2e/smoke.spec.ts` | Playwright smoke test |
 | `Dockerfile`, `infra/compose.yaml` | The image and the local stack |
+| `infra/terraform/`, `infra/deploy/`, `.github/workflows/deploy*.yml`, `terraform.yml`, `release-production.yml` | Staging and production: the droplet, the stack on it, and the pipeline (ADR-048); `apps/web/src/lib/hosts.ts` splits the landing and app hosts |
 | `.github/workflows/ci.yml` | CI |
 | `docs/architecture.md`, `docs/guides/` | How the system fits together, and how to work in it; `guides/repo-structure.md` explains the folders and layers and why |

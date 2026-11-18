@@ -177,6 +177,9 @@ export const webEnvSchema = z
     ...runtimeShape,
     ...sriShape,
     APP_URL: z.url(),
+    // ADR-048: the public pages' own address (comprobify.com) when they live apart from the app
+    // (app.comprobify.com). Unset, one host serves both, as locally.
+    LANDING_URL: z.url().optional(),
     // Signs session cookies and tokens. Rotating it signs everyone out.
     AUTH_SECRET: z.string().min(32),
     CERT_ENCRYPTION_KEY: certificateKey,
@@ -293,6 +296,19 @@ function parseEnv<T extends z.ZodType>(schema: T, source: Source): z.output<T> {
 }
 
 export const loadWebEnv = (source: Source = process.env): WebEnv => parseEnv(webEnvSchema, source);
+
+// The two addresses the request proxy routes by (ADR-048), without the rest of the web env, which
+// the proxy has no use for. Invalid or unset: one host for everything.
+export function loadHostEnv(source: Source = process.env): {
+  appUrl: string;
+  landingUrl: string | null;
+} {
+  const result = z
+    .object({ APP_URL: z.url(), LANDING_URL: z.url().optional() })
+    .safeParse(dropEmpty(source));
+  if (!result.success) return { appUrl: '', landingUrl: null };
+  return { appUrl: result.data.APP_URL, landingUrl: result.data.LANDING_URL ?? null };
+}
 
 export const loadWorkerEnv = (source: Source = process.env): WorkerEnv =>
   parseEnv(workerEnvSchema, source);

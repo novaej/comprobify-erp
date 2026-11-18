@@ -1,0 +1,111 @@
+# ADR-048: builds the image for a commit, pushes it to GHCR and releases it on an environment's
+# droplet: migrate first (a failure stops here, the running version stays), then web, worker and
+# Caddy, then waits for /health. Called by deploy-staging.yml and release-production.yml.
+#
+# Per GitHub Environment (staging, production):
+#   secrets  DROPLET_IP            the reserved IP (terraform output reserved_ip)
+#            INFRA_SSH_PRIVATE_KEY the deploy key's private half
+#            RUNTIME_ENV           the whole .env of the environment, one variable per line
+#                                  (docs/deployment.md lists them)
+#   vars     DEPLOY_USERNAME       deploy_username in the environment's terraform.tfvars
+#            SITE_HOSTS            the hostnames, comma-separated, as Caddy reads them
+#            WEB_MEMORY, WORKER_MEMORY, WORKER_CPUS  optional container limits
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+      ref:
+        description: The commit or tag to release.
+        type: string
+        required: true
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}:${{ inputs.ref }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push the image
+        run: |
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+
+      # Pinned to commit SHAs: these steps hold the deploy key and every runtime secret, and a
+      # moved tag would run someone else's code with them.
+      - name: Copy the stack to the droplet
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ vars.DEPLOY_USERNAME }}
+          key: ${{ secrets.INFRA_SSH_PRIVATE_KEY }}
+          source: infra/deploy/compose.yaml,infra/deploy/caddy/Caddyfile
+          target: /opt/comprobify-erp
+          strip_components: 2
+
+      - name: Migrate, start, wait for health
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1
+        env:
+          RUNTIME_ENV: ${{ secrets.RUNTIME_ENV }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+          SITE_HOSTS: ${{ vars.SITE_HOSTS }}
+          WEB_MEMORY: ${{ vars.WEB_MEMORY }}
+          WORKER_MEMORY: ${{ vars.WORKER_MEMORY }}
+          WORKER_CPUS: ${{ vars.WORKER_CPUS }}
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ vars.DEPLOY_USERNAME }}
+          key: ${{ secrets.INFRA_SSH_PRIVATE_KEY }}
+          envs: IMAGE,RUNTIME_ENV,GHCR_TOKEN,GHCR_USER,SITE_HOSTS,WEB_MEMORY,WORKER_MEMORY,WORKER_CPUS
+          script: |
+            set -euo pipefail
+            cd /opt/comprobify-erp
+            umask 077
+            printf '%s\n' "$RUNTIME_ENV" > .env
+            # The droplet's own login, by stdin so the token is never an argument; logged out after.
+            printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            docker compose pull web
+            docker logout ghcr.io
+            # Forward-only migrations with lock_timeout (CLAUDE.md rule 16). A failure stops the
+            # release here and the previous containers keep serving.
+            docker compose --profile release run --rm migrate
+            docker compose up -d --remove-orphans web worker caddy
+            # A bind-mounted Caddyfile change is invisible to `up`; a fresh container's admin API can
+            # take a moment to listen.
+            for i in 1 2 3 4 5; do
+              docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile && break
+              sleep 2
+            done
+            for i in $(seq 1 40); do
+              if docker compose exec -T web node -e "fetch('http://localhost:3000/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"; then
+                echo "Healthy after $i checks"
+                docker image prune -f
+                exit 0
+              fi
+              sleep 3
+            done
+            echo 'web did not become healthy within 2 minutes'
+            docker compose logs --tail=60 web worker
+            exit 1

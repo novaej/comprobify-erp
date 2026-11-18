@@ -19,3 +19,8 @@ next-env.d.ts
 # Signatures, real or generated, never committed
 *.p12
 *.pfx
+
+# Terraform working files; the lock files are committed.
+.terraform/
+*.tfstate
+*.tfstate.*

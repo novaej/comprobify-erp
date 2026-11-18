@@ -1,0 +1,24 @@
+# ADR-048: publishing a GitHub Release ships its tag to production. The `production` Environment
+# asks a reviewer to approve before the job runs. A manual run takes a tag, for a hotfix.
+name: Release to production
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The tag to release
+        required: true
+
+jobs:
+  deploy:
+    if: vars.PRODUCTION_INFRA_ENABLED == 'true'
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+      ref: ${{ github.event.release.tag_name || inputs.tag }}
+    secrets: inherit
+    permissions:
+      contents: read
+      packages: write

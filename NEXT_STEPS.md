@@ -21,6 +21,19 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 - **Not scheduled:** the vehicle plate on invoices of transport operators, excluding taxis (Anexo 25, Ficha v2.33), if such companies sign up.
 - **Not scheduled:** keyset paging for the smaller lists still on OFFSET (sale and purchase orders, bulk batches, the catalog, the platform's log and notices), each when it grows (ADR-047).
 
+## Milestone 10
+
+Steps in order; the gate is in PRD section 15.
+
+- [ ] **Owner: bring staging up** (`docs/deployment.md`, "Bringing an environment up"): the staging Postgres cluster and its roles, the Spaces key, the deploy key, the `staging-infra` and `staging` GitHub Environments, `STAGING_INFRA_ENABLED=true`, Terraform apply, `RUNTIME_ENV`, the first deploy. Then check TLS to the managed cluster (the hardening item below): the database URLs may need DigitalOcean's CA certificate.
+- [ ] Hardening backlog (below): the code-only items, then the rest on staging.
+- [ ] Security review, written up with each finding and its fix.
+- [ ] Load test on staging: NFR-PERF-1, then the 10,000-item batch (NFR-PERF-3) and the bulk caps; `pnpm bench:signing` on the droplet into ADR-013.
+- [ ] Backups and the restore drill on staging, as a runbook (email, webhooks and payments off in the restored copy, mistake 13).
+- [ ] Data migration from the current system, rehearsed on staging, with its reconciliation report (counts, sequentials, XML hashes).
+- [ ] Runbooks and the user guide.
+- [ ] Owner: the production cluster, `production-infra` and `production` Environments, `PRODUCTION_INFRA_ENABLED=true`, then the cutover (`docs/deployment.md`, "Cutover"); delete the staging cluster.
+
 ## Upcoming milestones
 
 - [ ] 10. Production readiness and cutover
@@ -50,7 +63,7 @@ Hardening deferred by an earlier milestone. Add an item whenever a milestone put
 
 The owner will delete `comprobify` and `comprobify-web`, so this repo must not depend on them (`CLAUDE.md`).
 
-- [ ] Copy what is still to come from them into this repo first: the Terraform, deploy and workflow patterns (Milestone 10), and the public API documentation site's content (Milestone 11+).
+- [ ] Copy what is still to come from them into this repo first: the public API documentation site's content (Milestone 11+). The Terraform, deploy and workflow patterns are in (ADR-048).
 
 ## After the first Terraform deploy
 
