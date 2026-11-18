@@ -1,10 +1,10 @@
 # Local stack: Caddy, migrate, web and worker on one image, using the shared
 # postgres18 container on the host (GETTING_STARTED.md). Production is documented
 # in docs/deployment.md.
-name: comprobify-erp
+name: comprobify
 
 x-app: &app
-  image: comprobify-erp:local
+  image: comprobify:local
   env_file:
     - path: ../.env
       required: false
@@ -21,7 +21,7 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-local}
       LOG_FORMAT: json
-      MIGRATION_DATABASE_URL: ${STACK_MIGRATION_DATABASE_URL:-postgres://comprobify_erp_owner:changeme@host.docker.internal:5432/comprobify_erp_e2e}
+      MIGRATION_DATABASE_URL: ${STACK_MIGRATION_DATABASE_URL:-postgres://comprobify_owner:changeme@host.docker.internal:5432/comprobify_e2e}
     restart: 'no'
 
   web:
@@ -32,7 +32,7 @@ services:
       APP_URL: ${STACK_APP_URL:-http://localhost:8080}
       # The stack never calls SRI, whatever ../.env says (ADR-014).
       SRI_MOCK_MODE: 'true'
-      DATABASE_URL: ${STACK_DATABASE_URL:-postgres://comprobify_erp_app:changeme@host.docker.internal:5432/comprobify_erp_e2e}
+      DATABASE_URL: ${STACK_DATABASE_URL:-postgres://comprobify_app:changeme@host.docker.internal:5432/comprobify_e2e}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -63,7 +63,7 @@ services:
       # The stack never emails anyone, whatever ../.env says: E2E addresses are made up.
       EMAIL_PROVIDER: log
       APP_URL: ${STACK_APP_URL:-http://localhost:8080}
-      DATABASE_URL: ${STACK_DATABASE_URL:-postgres://comprobify_erp_app:changeme@host.docker.internal:5432/comprobify_erp_e2e}
+      DATABASE_URL: ${STACK_DATABASE_URL:-postgres://comprobify_app:changeme@host.docker.internal:5432/comprobify_e2e}
     depends_on:
       migrate:
         condition: service_completed_successfully

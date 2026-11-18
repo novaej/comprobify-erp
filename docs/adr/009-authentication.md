@@ -17,7 +17,7 @@ Checked on 2026-11-02:
 - **Auth.js v5** has never had a stable release: it is still `5.0.0-beta.32`, the version the old app runs. Its email and password provider still requires JWT sessions.
 - **Better Auth 1.7.15** is MIT-licensed, stable since 2024 and actively released, with a Drizzle adapter. Its telemetry is off unless enabled.
 
-A spike ran Better Auth 1.7.15 against PostgreSQL 18 as `comprobify_erp_app`:
+A spike ran Better Auth 1.7.15 against PostgreSQL 18 as `comprobify_app`:
 
 | Check | Result |
 |---|---|

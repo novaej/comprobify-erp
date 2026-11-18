@@ -23,6 +23,6 @@ CREATE INDEX "document_reissues_document_idx" ON "document_reissues" USING btree
 SELECT app_enable_tenant_rls('public.document_reissues'::regclass);
 --> statement-breakpoint
 -- A re-issue's record is history: never rewritten.
-REVOKE UPDATE ON document_reissues FROM comprobify_erp_app;
+REVOKE UPDATE ON document_reissues FROM comprobify_app;
 --> statement-breakpoint
 SELECT set_config('app.rls_system', '', true);

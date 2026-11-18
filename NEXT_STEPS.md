@@ -67,6 +67,7 @@ The owner will delete `comprobify` and `comprobify-web`, so this repo must not d
 
 ## After the first Terraform deploy
 
+- [ ] Owner renames the repository to `comprobify` once the previous system's `comprobify` repository is deleted (ADR-050); the image name follows `github.repository`.
 - [ ] Owner makes `novaej/comprobify-erp` private. It stays public until then, because GitHub's free plan limits the permissions private repositories give the Terraform plan and apply workflows.
 
 ## Open questions

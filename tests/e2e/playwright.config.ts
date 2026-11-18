@@ -10,10 +10,10 @@ if (existsSync('../../.env')) process.loadEnvFile('../../.env');
 const e2e = loadE2eEnv({
   E2E_DATABASE_URL:
     process.env.E2E_DATABASE_URL ??
-    'postgres://comprobify_erp_app:changeme@localhost:5432/comprobify_erp_e2e',
+    'postgres://comprobify_app:changeme@localhost:5432/comprobify_e2e',
   E2E_MIGRATION_DATABASE_URL:
     process.env.E2E_MIGRATION_DATABASE_URL ??
-    'postgres://comprobify_erp_owner:changeme@localhost:5432/comprobify_erp_e2e',
+    'postgres://comprobify_owner:changeme@localhost:5432/comprobify_e2e',
 });
 // The app Playwright starts, its migrate step and the tests all read these.
 process.env.DATABASE_URL = e2e.E2E_DATABASE_URL;

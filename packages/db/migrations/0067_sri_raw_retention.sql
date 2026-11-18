@@ -7,7 +7,7 @@ ALTER TABLE "platform_audit_events" DROP CONSTRAINT "platform_audit_events_actio
 CREATE INDEX "sri_exchanges_raw_idx" ON "sri_exchanges" USING btree ("occurred_at") WHERE raw IS NOT NULL;--> statement-breakpoint
 ALTER TABLE "platform_audit_events" ADD CONSTRAINT "platform_audit_events_action_check" CHECK (action IN ('module.created', 'module.updated', 'module.feature_added', 'module.feature_removed', 'plan.created', 'plan.updated', 'plan.module_added', 'plan.module_removed', 'plan.limit_changed', 'price.drafted', 'price.published', 'price.discarded', 'iva.scheduled', 'iva.withdrawn', 'document.exchanges_viewed', 'job.retried', 'email_template.drafted', 'email_template.published', 'email_template.discarded', 'email_template.test_sent'));
 --> statement-breakpoint
-GRANT UPDATE (raw) ON sri_exchanges TO comprobify_erp_app;--> statement-breakpoint
+GRANT UPDATE (raw) ON sri_exchanges TO comprobify_app;--> statement-breakpoint
 CREATE FUNCTION public.app_sri_exchange_raw_clear_only() RETURNS trigger
   LANGUAGE plpgsql AS $$
 BEGIN

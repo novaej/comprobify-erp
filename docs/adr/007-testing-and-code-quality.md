@@ -14,7 +14,7 @@ PRD section 14 sets the strategy and leaves three choices open: Testcontainers o
 
 **Vitest** for unit and integration, **Playwright** for E2E.
 
-**Integration tests use the local `postgres18` container** in development and a `postgres:18` service in CI, against a dedicated `comprobify_erp_test` database. `GETTING_STARTED.md` covers creating that container when it doesn't exist, as the old repositories do, but with the named `postgres18_data` volume so data survives removing the container. The bootstrap script creating roles and databases is the same in both, is safe to re-run, and touches nothing belonging to other projects on the shared container. Tests connect as `comprobify_erp_app`, and refuse to run unless the database name ends in `_test`, as the old API does. Only fixtures that need DDL use the owner role.
+**Integration tests use the local `postgres18` container** in development and a `postgres:18` service in CI, against a dedicated `comprobify_test` database. `GETTING_STARTED.md` covers creating that container when it doesn't exist, as the old repositories do, but with the named `postgres18_data` volume so data survives removing the container. The bootstrap script creating roles and databases is the same in both, is safe to re-run, and touches nothing belonging to other projects on the shared container. Tests connect as `comprobify_app`, and refuse to run unless the database name ends in `_test`, as the old API does. Only fixtures that need DDL use the owner role.
 
 **ESLint + Prettier.** ESLint is needed for `eslint-config-next` and the import-boundary rules (ADR-001). Prettier formats.
 

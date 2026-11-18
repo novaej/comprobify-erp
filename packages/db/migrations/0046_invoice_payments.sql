@@ -25,6 +25,6 @@ CREATE INDEX "invoice_payments_document" ON "invoice_payments" USING btree ("ten
 --> statement-breakpoint
 SELECT app_enable_tenant_rls('public.invoice_payments'::regclass);--> statement-breakpoint
 -- A payment is never edited or deleted: only voided, with who and why (rule 12).
-REVOKE UPDATE ON invoice_payments FROM comprobify_erp_app;--> statement-breakpoint
-GRANT UPDATE (voided_at, voided_by, void_reason) ON invoice_payments TO comprobify_erp_app;--> statement-breakpoint
+REVOKE UPDATE ON invoice_payments FROM comprobify_app;--> statement-breakpoint
+GRANT UPDATE (voided_at, voided_by, void_reason) ON invoice_payments TO comprobify_app;--> statement-breakpoint
 SELECT set_config('app.rls_system', '', true);

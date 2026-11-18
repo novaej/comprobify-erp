@@ -61,7 +61,7 @@ jobs:
           username: ${{ vars.DEPLOY_USERNAME }}
           key: ${{ secrets.INFRA_SSH_PRIVATE_KEY }}
           source: infra/deploy/compose.yaml,infra/deploy/caddy/Caddyfile
-          target: /opt/comprobify-erp
+          target: /opt/comprobify
           strip_components: 2
 
       - name: Migrate, start, wait for health
@@ -81,7 +81,7 @@ jobs:
           envs: IMAGE,RUNTIME_ENV,GHCR_TOKEN,GHCR_USER,SITE_HOSTS,WEB_MEMORY,WORKER_MEMORY,WORKER_CPUS
           script: |
             set -euo pipefail
-            cd /opt/comprobify-erp
+            cd /opt/comprobify
             umask 077
             printf '%s\n' "$RUNTIME_ENV" > .env
             # The droplet's own login, by stdin so the token is never an argument; logged out after.

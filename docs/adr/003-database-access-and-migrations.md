@@ -22,10 +22,10 @@ RLS policies, triggers, CHECKs and partial indexes are central to this schema, s
 
 | Role | Used by | Rights |
 |---|---|---|
-| `comprobify_erp_owner` | `migrate` only | Owns all objects |
-| `comprobify_erp_app` | `web`, `worker` | `SELECT`, `INSERT`, `UPDATE` on application tables; no `DELETE`; no DDL; not superuser; no `BYPASSRLS` |
+| `comprobify_owner` | `migrate` only | Owns all objects |
+| `comprobify_app` | `web`, `worker` | `SELECT`, `INSERT`, `UPDATE` on application tables; no `DELETE`; no DDL; not superuser; no `BYPASSRLS` |
 
-The `erp` in the names avoids the existing `comprobify_app` role, which belongs to the old API. Databases are `comprobify_erp_local` and `comprobify_erp_test`.
+The names first carried an `erp` to avoid the old API's own `comprobify_app` role; with the previous system gone they dropped it (ADR-050). Locally the databases are `comprobify_local`, `comprobify_test` and `comprobify_e2e`; deployed ones are `comprobify_<env>_db`.
 
 Grants come from `ALTER DEFAULT PRIVILEGES`, so new tables need no grant lines. Withholding `DELETE` enforces "no hard deletes" in the database. Twin reset (Milestone 1) will use a dedicated function that refuses non-`TEST` tenants.
 

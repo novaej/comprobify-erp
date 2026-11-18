@@ -21,12 +21,12 @@ env:
   APP_URL: http://localhost:3000
   AUTH_SECRET: ci-only-secret-ci-only-secret-ci-only-secret
   CERT_ENCRYPTION_KEY: '0000000000000000000000000000000000000000000000000000000000000000'
-  DATABASE_URL: postgres://comprobify_erp_app:changeme@localhost:5432/comprobify_erp_local
-  MIGRATION_DATABASE_URL: postgres://comprobify_erp_owner:changeme@localhost:5432/comprobify_erp_local
-  TEST_DATABASE_URL: postgres://comprobify_erp_app:changeme@localhost:5432/comprobify_erp_test
-  TEST_MIGRATION_DATABASE_URL: postgres://comprobify_erp_owner:changeme@localhost:5432/comprobify_erp_test
-  E2E_DATABASE_URL: postgres://comprobify_erp_app:changeme@localhost:5432/comprobify_erp_e2e
-  E2E_MIGRATION_DATABASE_URL: postgres://comprobify_erp_owner:changeme@localhost:5432/comprobify_erp_e2e
+  DATABASE_URL: postgres://comprobify_app:changeme@localhost:5432/comprobify_local
+  MIGRATION_DATABASE_URL: postgres://comprobify_owner:changeme@localhost:5432/comprobify_local
+  TEST_DATABASE_URL: postgres://comprobify_app:changeme@localhost:5432/comprobify_test
+  TEST_MIGRATION_DATABASE_URL: postgres://comprobify_owner:changeme@localhost:5432/comprobify_test
+  E2E_DATABASE_URL: postgres://comprobify_app:changeme@localhost:5432/comprobify_e2e
+  E2E_MIGRATION_DATABASE_URL: postgres://comprobify_owner:changeme@localhost:5432/comprobify_e2e
   PGPASSWORD: postgres
   # CI never calls SRI (ADR-014); env.test.ts checks this line.
   SRI_MOCK_MODE: 'true'
@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - run: docker build -t comprobify-erp:ci .
+      - run: docker build -t comprobify:ci .
 
   e2e:
     name: E2E smoke test

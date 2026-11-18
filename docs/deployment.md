@@ -7,8 +7,8 @@ How the system runs locally, on staging and in production (ADR-048). Backups and
 | | Hosts | Droplet | Postgres | Deploys |
 |---|---|---|---|---|
 | local | `localhost:3000` (`pnpm dev`), `localhost:8080` (`pnpm stack:up`) | your machine | the `postgres18` container | — |
-| staging | `staging.comprobify.com` (public pages), `app-staging.comprobify.com` (app) | `comprobify-erp-staging`, `s-1vcpu-2gb`, `nyc1`, on demand | the staging cluster, created by hand | `main`, after CI passes |
-| production | `comprobify.com`, `app.comprobify.com` (from cutover); `api.comprobify.com` later | `comprobify-erp-production`, `s-2vcpu-4gb`, `nyc1` | the production cluster, created by hand | a published GitHub Release |
+| staging | `staging.comprobify.com` (public pages), `app-staging.comprobify.com` (app) | `comprobify-staging`, `s-1vcpu-2gb`, `nyc1`, on demand | the staging cluster, created by hand | `main`, after CI passes |
+| production | `comprobify.com`, `app.comprobify.com` (from cutover); `api.comprobify.com` later | `comprobify-production`, `s-2vcpu-4gb`, `nyc1` | the production cluster, created by hand | a published GitHub Release |
 
 Each environment is off until its repository variable is `true`: `STAGING_INFRA_ENABLED`, `PRODUCTION_INFRA_ENABLED`. While off, neither Terraform nor the deploy runs.
 
@@ -32,13 +32,14 @@ Done once per environment by the owner, in this order. Names in `backticks` are 
    - Check that the Project exists (`Comprobify Staging`, `Comprobify Production`): Terraform looks it up and never creates it.
    - Create the Postgres cluster in `nyc1` (PostgreSQL 18, the smallest size for staging), with its two roles and database ([Database roles](#database-roles-on-a-new-server)), and add the droplet to its trusted sources once it exists.
    - Create a Spaces key for this repo's Terraform state (`comprobify-terraform-state`).
-2. **Deploy key.** Run `ssh-keygen -t ed25519 -C comprobify-erp-deploy-<env> -f ~/.ssh/comprobify_erp_<env>`. Use one key per environment, never shared.
+2. **Deploy key.** Run `ssh-keygen -t ed25519 -C comprobify-deploy-<env> -f ~/.ssh/comprobify_<env>`. Use one key per environment, never shared.
 3. **GitHub, repository.** Set the secrets `TERRAFORM_SPACES_ACCESS_KEY_ID` and `TERRAFORM_SPACES_SECRET_ACCESS_KEY`.
 4. **GitHub, `<env>-infra` Environment.**
    - Secrets: `DO_TOKEN` and `CLOUDFLARE_TOKEN` (DNS edit on `comprobify.com`).
    - Variable: `INFRA_SSH_PUBLIC_KEY`, the `.pub` file's line.
-5. **Infrastructure.** Set `<ENV>_INFRA_ENABLED=true`, then run **Terraform** manually (environment, `apply`). Its output `reserved_ip` is the droplet's address. Wait three to five minutes for cloud-init.
-6. **GitHub, `<env>` Environment.** Production gets a required reviewer.
+5. **Infrastructure.** Set the repository variable `<ENV>_INFRA_ENABLED=true`. Then start the **Terraform** workflow in GitHub Actions, first with `plan` and then with `apply` (Actions → Terraform → Run workflow, or `gh workflow run terraform.yml -f environment=<env> -f action=apply`). It holds the tokens, so nothing runs on your machine. Its output `reserved_ip` is the droplet's address. Wait three to five minutes for cloud-init.
+6. **GitHub, `<env>` Environment.** Its deployment branches and tags: `main` only on staging, tags `v*` only on production.
+   - Production, and `production-infra`, also get the owner as required reviewer (self-review allowed, since there is one), so every production apply and release waits for approval. `staging-infra` has no rule: it plans pull requests from any branch, and GitHub never gives Environment secrets to a fork's pull request.
    - Secrets:
      - `DROPLET_IP`: the reserved IP.
      - `INFRA_SSH_PRIVATE_KEY`: the private key file.
@@ -60,8 +61,8 @@ Done once per environment by the owner, in this order. Names in `backticks` are 
 
 `.github/workflows/deploy.yml` does this on staging and production; locally, `pnpm stack:up` does.
 
-1. Run **migrate** to completion, as `comprobify_erp_owner`. It also publishes a new version of any legal text that changed in the repo, which asks every company to accept it again. It sets `lock_timeout`, so a held lock fails it fast instead of blocking traffic. Close any SQL client on the database first (Appendix B, lesson 12).
-2. Start **web** and **worker** with the new image, as `comprobify_erp_app`.
+1. Run **migrate** to completion, as `comprobify_owner`. It also publishes a new version of any legal text that changed in the repo, which asks every company to accept it again. It sets `lock_timeout`, so a held lock fails it fast instead of blocking traffic. Close any SQL client on the database first (Appendix B, lesson 12).
+2. Start **web** and **worker** with the new image, as `comprobify_app`.
 3. Wait for `GET /health` to return 200 before routing traffic.
 
 **Rollback:** release the previous tag again (run **Release to production** manually with it). Migrations don't go back, which is why each one must leave the schema usable by the code before it.
@@ -75,19 +76,30 @@ pnpm stack:up     # build, migrate, then web, worker and Caddy on http://localho
 pnpm stack:down
 ```
 
-It uses `comprobify_erp_e2e` on the `postgres18` container on the host, through `host.docker.internal`, the same database as the E2E tests. `STACK_HTTP_PORT`, `STACK_DATABASE_URL`, `STACK_MIGRATION_DATABASE_URL` and `STACK_APP_URL` override the defaults. Logs are JSON.
+It uses `comprobify_e2e` on the `postgres18` container on the host, through `host.docker.internal`, the same database as the E2E tests. `STACK_HTTP_PORT`, `STACK_DATABASE_URL`, `STACK_MIGRATION_DATABASE_URL` and `STACK_APP_URL` override the defaults. Logs are JSON.
 
 ## Database roles on a new server
 
-Managed Postgres needs the two roles created by hand once, as an admin user (ADR-003). Use strong, unique passwords from the secret store:
+Managed Postgres needs the two roles created by hand once, as an admin user (ADR-003). The names are fixed: the migrations grant to `comprobify_app` by name (ADR-050). The database is `comprobify_staging_db` or `comprobify_production_db`. Use strong, unique passwords from the secret store:
 
 ```sql
-CREATE ROLE comprobify_erp_owner LOGIN PASSWORD '…' NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
-CREATE ROLE comprobify_erp_app   LOGIN PASSWORD '…' NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
-CREATE DATABASE comprobify_erp OWNER comprobify_erp_owner;
-REVOKE ALL ON DATABASE comprobify_erp FROM PUBLIC;
-GRANT CONNECT ON DATABASE comprobify_erp TO comprobify_erp_app;
+CREATE ROLE comprobify_owner LOGIN PASSWORD '…' NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
+CREATE ROLE comprobify_app   LOGIN PASSWORD '…' NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
+CREATE DATABASE comprobify_<env>_db OWNER comprobify_owner;
+REVOKE ALL ON DATABASE comprobify_<env>_db FROM PUBLIC;
+GRANT CONNECT ON DATABASE comprobify_<env>_db TO comprobify_app;
 ```
+
+On DigitalOcean the two users and the database can be created in the panel instead. Then the database and its `public` schema belong to `doadmin`, so hand them over, as `doadmin` on that database:
+
+```sql
+ALTER DATABASE comprobify_<env>_db OWNER TO comprobify_owner;
+ALTER SCHEMA public OWNER TO comprobify_owner;
+REVOKE ALL ON DATABASE comprobify_<env>_db FROM PUBLIC;
+GRANT CONNECT ON DATABASE comprobify_<env>_db TO comprobify_app;
+```
+
+Panel users are never superusers and have no `BYPASSRLS`. `doadmin` can't change those two attributes, so check them instead of setting them: `SELECT rolname, rolsuper, rolbypassrls, rolcreatedb, rolcreaterole FROM pg_roles WHERE rolname IN ('comprobify_owner', 'comprobify_app')` should show `f` throughout. If it doesn't, `ALTER ROLE … NOCREATEDB NOCREATEROLE` fixes the last two.
 
 The migrations grant the app role its rights. Managed Postgres requires TLS: connection settings for it are verified in Milestone 10.
 
@@ -114,8 +126,8 @@ The area also requires two-step verification, so set it up on that account befor
 | `LOG_FORMAT` | all | `json` (default) or `pretty`. The image only supports `json`. |
 | `BETTERSTACK_SOURCE_TOKEN` | all | Optional. Ships logs to Betterstack. |
 | `SENTRY_DSN` | all | Optional. Server-side errors only (ADR-008). |
-| `DATABASE_URL` | web, worker | `comprobify_erp_app` |
-| `MIGRATION_DATABASE_URL` | migrate | `comprobify_erp_owner` |
+| `DATABASE_URL` | web, worker | `comprobify_app` |
+| `MIGRATION_DATABASE_URL` | migrate | `comprobify_owner` |
 | `APP_URL` | web, worker | Public URL. Email links point here, the worker's billing emails too. |
 | `LANDING_URL` | web | The public pages' own address when they live apart from the app (`https://comprobify.com` beside `APP_URL=https://app.comprobify.com`). Unset, one host serves both (ADR-048). |
 | `CERT_ENCRYPTION_KEY` | web, worker | 64 hex characters (`openssl rand -hex 32`). Encrypts each company's stored certificate private key; never signs anything itself. The worker decrypts a company's key with it to sign that company's re-issues; losing it makes every stored key unusable, so back it up with the database credentials. |

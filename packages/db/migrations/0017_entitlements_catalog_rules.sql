@@ -35,4 +35,4 @@ SELECT app_protect_platform_table('public.plan_modules'::regclass);
 SELECT app_protect_platform_table('public.plan_limits'::regclass);
 --> statement-breakpoint
 -- Feature keys come from the code registry, synced by the migrate step only.
-REVOKE INSERT, UPDATE ON features FROM comprobify_erp_app;
+REVOKE INSERT, UPDATE ON features FROM comprobify_app;

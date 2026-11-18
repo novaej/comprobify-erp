@@ -44,7 +44,20 @@ pnpm db:setup
 pnpm db:migrate
 ```
 
-`pnpm db:setup` is safe to re-run. It creates `comprobify_erp_owner`, `comprobify_erp_app` and three databases: `comprobify_erp_local` for `pnpm dev`, `comprobify_erp_test` for the integration tests, and `comprobify_erp_e2e` for the E2E tests and the Docker stack. Set `POSTGRES_CONTAINER` if your container has a different name.
+`pnpm db:setup` is safe to re-run. It creates `comprobify_owner`, `comprobify_app` and three databases: `comprobify_local` for `pnpm dev`, `comprobify_test` for the integration tests, and `comprobify_e2e` for the E2E tests and the Docker stack. Set `POSTGRES_CONTAINER` if your container has a different name.
+
+**A container set up before ADR-050** has the old names: this repo's `comprobify_erp_*` roles and databases, and possibly the previous system's `comprobify_app`, `comprobify_local` and `comprobify_test`. Stop `pnpm dev`, drop the previous system's databases and roles, then rename this repo's in place, which keeps your data:
+
+```bash
+docker exec postgres18 psql -U postgres -c "DROP DATABASE IF EXISTS comprobify_local" -c "DROP DATABASE IF EXISTS comprobify_test" \
+  -c "DROP DATABASE IF EXISTS comprobify_web_local" -c "DROP DATABASE IF EXISTS comprobify_web_test" \
+  -c "DROP ROLE IF EXISTS comprobify_app" -c "DROP ROLE IF EXISTS comprobify_web_app" \
+  -c "ALTER ROLE comprobify_erp_owner RENAME TO comprobify_owner" -c "ALTER ROLE comprobify_erp_app RENAME TO comprobify_app" \
+  -c "ALTER DATABASE comprobify_erp_local RENAME TO comprobify_local" -c "ALTER DATABASE comprobify_erp_test RENAME TO comprobify_test" \
+  -c "ALTER DATABASE comprobify_erp_e2e RENAME TO comprobify_e2e"
+```
+
+Then change the names in `.env` to match `.env.example`. The passwords are kept: they are SCRAM, which doesn't depend on the role's name.
 
 To start any of them over, `pnpm db:reset <local|test|e2e|all>` drops it, creates it again and migrates it. Nothing in the app deletes data, so this is how to clear it locally. Resetting `local` asks you to type its name first (or pass `--yes`), since it holds your own accounts and companies.
 
@@ -58,7 +71,7 @@ pnpm test
 pnpm test:integration
 ```
 
-`pnpm test:integration` migrates `comprobify_erp_test` itself, and refuses any database whose name doesn't end in `_test`.
+`pnpm test:integration` migrates `comprobify_test` itself, and refuses any database whose name doesn't end in `_test`.
 
 ## 6. Run the app
 
@@ -76,7 +89,7 @@ Both refuse to start if the env is invalid or the database role could bypass RLS
 pnpm stack:up
 ```
 
-This builds the image and runs migrate, web, worker and Caddy on http://localhost:8080, against `comprobify_erp_e2e` on the same `postgres18` container, so it doesn't touch what you create with `pnpm dev`. `pnpm stack:down` stops it. See [docs/deployment.md](docs/deployment.md).
+This builds the image and runs migrate, web, worker and Caddy on http://localhost:8080, against `comprobify_e2e` on the same `postgres18` container, so it doesn't touch what you create with `pnpm dev`. `pnpm stack:down` stops it. See [docs/deployment.md](docs/deployment.md).
 
 ## 8. Run the E2E smoke test
 
@@ -86,4 +99,4 @@ pnpm build
 pnpm test:e2e
 ```
 
-The tests run against `comprobify_erp_e2e` and migrate it first; each run leaves its accounts and companies there, and `pnpm db:reset e2e` clears them. To test the Docker stack instead: `E2E_BASE_URL=http://localhost:8080 pnpm test:e2e`. More in [docs/guides/testing.md](docs/guides/testing.md).
+The tests run against `comprobify_e2e` and migrate it first; each run leaves its accounts and companies there, and `pnpm db:reset e2e` clears them. To test the Docker stack instead: `E2E_BASE_URL=http://localhost:8080 pnpm test:e2e`. More in [docs/guides/testing.md](docs/guides/testing.md).

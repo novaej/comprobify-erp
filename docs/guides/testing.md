@@ -12,7 +12,7 @@ Next to the code, as `*.test.ts`. No database, no network. Take time from a `fix
 
 ## Integration tests
 
-- They run as `comprobify_erp_app`, the same role as production, so RLS applies. A role that bypasses RLS would make them pass for the wrong reason.
+- They run as `comprobify_app`, the same role as production, so RLS applies. A role that bypasses RLS would make them pass for the wrong reason.
 - They refuse any database whose name doesn't end in `_test`, and migrate it themselves first.
 - Fixtures that need DDL, such as probe tables, use the owner role through `asOwner()`. Give probe tables a unique name with `probeName()` and drop them afterwards.
 - Files run one at a time, because probe tables are visible to the catalog check in other files.
@@ -25,7 +25,7 @@ The isolation sweep fills every tenant table with rows for two companies and a t
 
 ## E2E tests
 
-They use their own database, `comprobify_erp_e2e` (`E2E_DATABASE_URL`, `E2E_MIGRATION_DATABASE_URL`; the name must end in `_e2e`), and Playwright migrates it before starting the app; the Docker stack's migrate step does it there. Every run leaves its accounts, companies and test plans behind, because nothing is deleted, so it is never the database used with `pnpm dev`. The Docker stack uses it too, so the tests can read its queued emails. `pnpm db:reset e2e` starts it over.
+They use their own database, `comprobify_e2e` (`E2E_DATABASE_URL`, `E2E_MIGRATION_DATABASE_URL`; the name must end in `_e2e`), and Playwright migrates it before starting the app; the Docker stack's migrate step does it there. Every run leaves its accounts, companies and test plans behind, because nothing is deleted, so it is never the database used with `pnpm dev`. The Docker stack uses it too, so the tests can read its queued emails. `pnpm db:reset e2e` starts it over.
 
 Playwright starts the built app on `:3000` (or `E2E_PORT`) unless `E2E_BASE_URL` is set. It never reuses a server already running there: a `pnpm dev` on `:3000` would be on another database, and the tests would register accounts in it, so with that port taken the run fails; set `E2E_PORT` instead:
 

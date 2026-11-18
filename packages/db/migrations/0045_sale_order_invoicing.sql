@@ -21,5 +21,5 @@ CREATE INDEX "sale_order_invoice_lines_document" ON "sale_order_invoice_lines" U
 --> statement-breakpoint
 SELECT app_enable_tenant_rls('public.sale_order_invoice_lines'::regclass);--> statement-breakpoint
 -- Append-only: a correction adds rows for its revision instead of changing these (rule 12).
-REVOKE UPDATE ON sale_order_invoice_lines FROM comprobify_erp_app;--> statement-breakpoint
+REVOKE UPDATE ON sale_order_invoice_lines FROM comprobify_app;--> statement-breakpoint
 SELECT set_config('app.rls_system', '', true);

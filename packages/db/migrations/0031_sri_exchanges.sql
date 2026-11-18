@@ -22,6 +22,6 @@ CREATE INDEX "sri_exchanges_document_idx" ON "sri_exchanges" USING btree ("docum
 SELECT app_enable_tenant_rls('public.sri_exchanges'::regclass);
 --> statement-breakpoint
 -- What SRI answered is history: never rewritten.
-REVOKE UPDATE ON sri_exchanges FROM comprobify_erp_app;
+REVOKE UPDATE ON sri_exchanges FROM comprobify_app;
 --> statement-breakpoint
 SELECT set_config('app.rls_system', '', true);

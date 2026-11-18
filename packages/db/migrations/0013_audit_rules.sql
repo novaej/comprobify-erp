@@ -2,4 +2,4 @@
 -- on top of the DELETE the app role never has.
 SELECT app_enable_tenant_rls('public.audit_events'::regclass);
 --> statement-breakpoint
-REVOKE UPDATE ON audit_events FROM comprobify_erp_app;
+REVOKE UPDATE ON audit_events FROM comprobify_app;

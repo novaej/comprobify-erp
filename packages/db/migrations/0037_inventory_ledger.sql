@@ -53,5 +53,5 @@ SELECT app_enable_tenant_rls('public.stock_movements'::regclass);--> statement-b
 CREATE TRIGGER stock_levels_touch_updated_at BEFORE UPDATE ON stock_levels
   FOR EACH ROW EXECUTE FUNCTION app_touch_updated_at();--> statement-breakpoint
 -- The ledger is append-only: no UPDATE, on top of the DELETE the app role never has.
-REVOKE UPDATE ON stock_movements FROM comprobify_erp_app;--> statement-breakpoint
+REVOKE UPDATE ON stock_movements FROM comprobify_app;--> statement-breakpoint
 SELECT set_config('app.rls_system', '', true);

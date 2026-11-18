@@ -157,14 +157,14 @@ Register the address you open the app on and `<address>/es/plan/card-return` as 
 pnpm db:reset local     # type the database name when asked; it migrates too
 ```
 
-This clears only `comprobify_erp_local`, the one `pnpm dev` uses. The test and E2E databases are not touched.
+This clears only `comprobify_local`, the one `pnpm dev` uses. The test and E2E databases are not touched.
 
 ### Attempt limits
 
 The app limits abuse, and a long test run can reach it ("Demasiados intentos"). Each limit counts per email or per IP address (the device's network address; locally none is seen, so only the per-email limits apply) and resets by itself: sign-in 5 wrong passwords per 15 minutes per email; password reset links 3 per hour per email; confirmation emails 5 per hour per email; sign-ups 5 per hour per IP address, so locally never. A2 asks for four reset links, so wait an hour between the first and last, or clear the counters during a run:
 
 ```bash
-docker exec postgres18 psql -U comprobify_erp_owner -d comprobify_erp_local -c "DELETE FROM rate_limit_hits"
+docker exec postgres18 psql -U comprobify_owner -d comprobify_local -c "DELETE FROM rate_limit_hits"
 ```
 
 ### 0.3 Test certificates

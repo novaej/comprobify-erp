@@ -21,7 +21,7 @@ The owner's choices: the ERP gets its own droplet per environment. Each environm
 - **Resources:** the droplet (plain Ubuntu 24.04, `resize_disk = false`), its SSH key, a reserved IP assigned separately (a droplet replacement keeps the address), and a firewall with 80/443 from Cloudflare's ranges only (fetched live) and 22 open. The droplet joins an existing DigitalOcean Project, looked up, never created. There is one proxied A record per hostname.
 - **cloud-init** creates the deploy user (docker group, no sudo, no root login, key only), installs Docker from its own apt repository, and sets up fail2ban, unattended upgrades, 2 GB of swap and log rotation. `user_data` is ignored after creation, so a cloud-init edit never replaces a running droplet by accident. A rebuild is a deliberate `-replace`.
 - **Postgres is not in Terraform.** The owner creates each cluster, and the two roles in it (docs/deployment.md).
-- **State:** `comprobify-terraform-state`, under `<env>/comprobify-erp/`, with a Spaces key for this repo alone.
+- **State:** `comprobify-terraform-state`, under `<env>/comprobify/`, with a Spaces key for this repo alone.
 - **Sizes:** staging `s-1vcpu-2gb`, production `s-2vcpu-4gb` (PRD 12), both in `nyc1`.
 - **DNS:** production has `manage_dns = false` until cutover, because the previous web app's Terraform still owns `comprobify.com` and `app.comprobify.com`.
 

@@ -10,12 +10,12 @@ terraform {
 }
 
 resource "digitalocean_ssh_key" "deploy" {
-  name       = "comprobify-erp-${var.environment}"
+  name       = "comprobify-${var.environment}"
   public_key = var.ssh_public_key
 }
 
 resource "digitalocean_droplet" "this" {
-  name     = "comprobify-erp-${var.environment}"
+  name     = "comprobify-${var.environment}"
   region   = var.region
   size     = var.droplet_size
   image    = var.image_slug
@@ -62,7 +62,7 @@ locals {
 }
 
 resource "digitalocean_firewall" "this" {
-  name        = "comprobify-erp-${var.environment}"
+  name        = "comprobify-${var.environment}"
   droplet_ids = [digitalocean_droplet.this.id]
 
   # Web traffic only through Cloudflare's proxy, never the droplet's address directly.

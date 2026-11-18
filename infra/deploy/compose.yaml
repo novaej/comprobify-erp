@@ -1,8 +1,8 @@
 # Staging and production on one droplet (ADR-048): Caddy, then web and worker on one image, after
-# the migrate step. The deploy workflow copies this directory to /opt/comprobify-erp, writes .env
+# the migrate step. The deploy workflow copies this directory to /opt/comprobify, writes .env
 # beside it and sets IMAGE (the image built for the commit). Postgres is the environment's managed
 # cluster.
-name: comprobify-erp
+name: comprobify
 
 x-app: &app
   image: ${IMAGE:?IMAGE is set by the deploy}

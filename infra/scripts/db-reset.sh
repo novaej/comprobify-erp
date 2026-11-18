@@ -24,7 +24,7 @@ esac
 # The data you work with: dropped only when the name is typed, or with --yes.
 for name in "${names[@]}"; do
   if [[ "$name" == local && "$confirmed" != --yes ]]; then
-    read -r -p "This deletes everything in comprobify_erp_local. Type 'local' to confirm: " answer
+    read -r -p "This deletes everything in comprobify_local. Type 'local' to confirm: " answer
     [[ "$answer" == local ]] || { echo "Nothing was reset." >&2; exit 1; }
   fi
 done
@@ -43,7 +43,7 @@ env_value() {
 
 # Each database's owner URL: from the environment or .env, else the .env.example default.
 owner_url() {
-  local fallback="postgres://comprobify_erp_owner:changeme@localhost:5432/comprobify_erp_$1"
+  local fallback="postgres://comprobify_owner:changeme@localhost:5432/comprobify_$1"
   local key
   case "$1" in
     local) key=MIGRATION_DATABASE_URL ;;
@@ -55,7 +55,7 @@ owner_url() {
 }
 
 for name in "${names[@]}"; do
-  database="comprobify_erp_$name"
+  database="comprobify_$name"
   url="$(owner_url "$name")"
   # The URL must name the database being reset, so a stray .env can't migrate another.
   [[ "$url" == */"$database" ]] || { echo "Owner URL for $name doesn't end in /$database" >&2; exit 1; }

@@ -36,5 +36,5 @@ CREATE INDEX "purchase_receipts_order" ON "purchase_receipts" USING btree ("tena
 SELECT app_enable_tenant_rls('public.purchase_receipts'::regclass);--> statement-breakpoint
 SELECT app_enable_tenant_rls('public.purchase_receipt_lines'::regclass);--> statement-breakpoint
 -- A receipt is a record of what arrived: append-only, as the stock ledger is.
-REVOKE UPDATE ON purchase_receipts, purchase_receipt_lines FROM comprobify_erp_app;--> statement-breakpoint
+REVOKE UPDATE ON purchase_receipts, purchase_receipt_lines FROM comprobify_app;--> statement-breakpoint
 SELECT set_config('app.rls_system', '', true);

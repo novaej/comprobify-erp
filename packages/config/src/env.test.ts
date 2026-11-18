@@ -197,8 +197,8 @@ describe('the operator RUC (Anexo 26)', () => {
 });
 
 describe('test env', () => {
-  const app = 'postgres://app:x@localhost:5432/comprobify_erp_test';
-  const owner = 'postgres://owner:x@localhost:5432/comprobify_erp_test';
+  const app = 'postgres://app:x@localhost:5432/comprobify_test';
+  const owner = 'postgres://owner:x@localhost:5432/comprobify_test';
 
   it('accepts databases named *_test', () => {
     expect(loadTestEnv({ TEST_DATABASE_URL: app, TEST_MIGRATION_DATABASE_URL: owner })).toEqual({
@@ -219,11 +219,11 @@ describe('test env', () => {
 
 describe('loadE2eEnv', () => {
   it('refuses a database that is not an E2E one', () => {
-    const app = 'postgres://app:secret@localhost:5432/comprobify_erp_local';
+    const app = 'postgres://app:secret@localhost:5432/comprobify_local';
     expect(() => loadE2eEnv({ E2E_DATABASE_URL: app, E2E_MIGRATION_DATABASE_URL: app })).toThrow(
       /E2E_DATABASE_URL: database name must end in _e2e/,
     );
-    const e2e = 'postgres://app:secret@localhost:5432/comprobify_erp_e2e';
+    const e2e = 'postgres://app:secret@localhost:5432/comprobify_e2e';
     expect(loadE2eEnv({ E2E_DATABASE_URL: e2e, E2E_MIGRATION_DATABASE_URL: e2e })).toEqual({
       E2E_DATABASE_URL: e2e,
       E2E_MIGRATION_DATABASE_URL: e2e,

@@ -134,7 +134,7 @@ Found while setting up this repo:
 
 19. Creating queues from the web or worker process. `createQueue` runs DDL for partitioned queues, so queues come from the registry in the migrate step, as the owner role.
 20. Treating `FORCE ROW LEVEL SECURITY` as owner-exempt. A migration that reads rows of an RLS table needs `app.rls_system`, set and cleared in its SQL: a data migration, and also adding a foreign key to a table with RLS and rows, because Postgres validates it with a query.
-21. Reusing role names from other projects. Postgres roles are cluster-wide and the local `postgres18` container is shared, so this repo uses `comprobify_erp_owner` and `comprobify_erp_app`, never `comprobify_app`.
+21. Reusing role names from other projects. Postgres roles are cluster-wide and the local `postgres18` container is shared, so another project's `comprobify_*` role there would collide with this repo's `comprobify_owner` and `comprobify_app`. The migrations name the app role, so its name is fixed once a deployed database has run them (ADR-050).
 22. Keeping a server singleton in a module variable in `apps/web`. Next bundles `instrumentation.ts` and routes separately, so each gets its own copy. Keep it on `globalThis`.
 23. Leaving a pino transport, or any other `serverExternalPackages` entry, out of `apps/web`'s dependencies. Inside a Next build they resolve from the app, so `pino-pretty`, `@logtail/pino` and `pdfkit` must be listed there too.
 24. Deciding the log format from `APP_ENV`. The image has no `pino-pretty`, so pretty logs crash it. `LOG_FORMAT` decides, and the stack forces `json`.

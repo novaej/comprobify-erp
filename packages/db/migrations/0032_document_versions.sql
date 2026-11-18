@@ -24,7 +24,7 @@ CREATE INDEX "document_versions_document_idx" ON "document_versions" USING btree
 ALTER TABLE "sri_exchanges" ADD CONSTRAINT "sri_exchanges_source_check" CHECK (source IN ('sri', 'mock'));--> statement-breakpoint
 SELECT app_enable_tenant_rls('public.document_versions'::regclass);
 --> statement-breakpoint
-REVOKE UPDATE ON document_versions FROM comprobify_erp_app;
+REVOKE UPDATE ON document_versions FROM comprobify_app;
 --> statement-breakpoint
 -- The documents signed before this table existed: their current version.
 INSERT INTO document_versions (tenant_id, document_id, reason, revision, access_key, issue_date, signed_xml, actor_user_id, created_at)

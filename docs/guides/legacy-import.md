@@ -31,7 +31,7 @@ The import only reads them, in read-only sessions.
 Put the values in the environment for this one command, never in a file in the repo:
 
 ```bash
-export DATABASE_URL='postgresql://comprobify_erp_app:…@<cluster host>:25060/<database>?sslmode=verify-full&sslrootcert=/path/to/ca-certificate.crt'
+export DATABASE_URL='postgresql://comprobify_app:…@<cluster host>:25060/comprobify_staging_db?sslmode=verify-full&sslrootcert=/path/to/ca-certificate.crt'
 export CERT_ENCRYPTION_KEY='<the environment's key>'
 export LEGACY_API_DATABASE_URL='postgresql://postgres:postgres@localhost:5432/legacy_api'
 export LEGACY_WEB_DATABASE_URL='postgresql://postgres:postgres@localhost:5432/legacy_web'

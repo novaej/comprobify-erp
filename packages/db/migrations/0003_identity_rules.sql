@@ -33,4 +33,4 @@ CREATE TRIGGER verifications_touch_updated_at BEFORE UPDATE ON verifications
 -- These rows are credentials and counters, not business records: sign-out,
 -- revocation, used tokens and old rate-limit hits are deleted. No other
 -- application table gets DELETE.
-GRANT DELETE ON sessions, verifications, rate_limit_hits TO comprobify_erp_app;
+GRANT DELETE ON sessions, verifications, rate_limit_hits TO comprobify_app;

@@ -43,13 +43,13 @@ $$;
 REVOKE ALL ON FUNCTION public.app_enable_tenant_rls(regclass) FROM PUBLIC;
 --> statement-breakpoint
 
-GRANT USAGE ON SCHEMA public TO comprobify_erp_app;
+GRANT USAGE ON SCHEMA public TO comprobify_app;
 --> statement-breakpoint
 
 -- No DELETE: no hard deletes, enforced by the database.
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
-  GRANT SELECT, INSERT, UPDATE ON TABLES TO comprobify_erp_app;
+  GRANT SELECT, INSERT, UPDATE ON TABLES TO comprobify_app;
 --> statement-breakpoint
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
-  GRANT USAGE, SELECT ON SEQUENCES TO comprobify_erp_app;
+  GRANT USAGE, SELECT ON SEQUENCES TO comprobify_app;

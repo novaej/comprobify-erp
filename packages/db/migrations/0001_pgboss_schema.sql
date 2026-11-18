@@ -5,12 +5,12 @@
 CREATE SCHEMA pgboss;
 --> statement-breakpoint
 
-GRANT USAGE ON SCHEMA pgboss TO comprobify_erp_app;
+GRANT USAGE ON SCHEMA pgboss TO comprobify_app;
 --> statement-breakpoint
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA pgboss
-  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO comprobify_erp_app;
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO comprobify_app;
 --> statement-breakpoint
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA pgboss
-  GRANT USAGE, SELECT ON SEQUENCES TO comprobify_erp_app;
+  GRANT USAGE, SELECT ON SEQUENCES TO comprobify_app;

@@ -70,3 +70,4 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [047](047-keyset-paging.md) | Keyset paging for the large lists | Accepted |
 | [048](048-staging-and-production-deployment.md) | Staging and production deployment | Accepted |
 | [049](049-importing-from-the-previous-system.md) | Importing from the previous system | Accepted |
+| [050](050-names-without-erp.md) | Names without "erp" | Accepted |

@@ -55,4 +55,4 @@ BEGIN
 END;
 $$;--> statement-breakpoint
 REVOKE ALL ON FUNCTION public.app_reset_twin(uuid) FROM PUBLIC;--> statement-breakpoint
-GRANT EXECUTE ON FUNCTION public.app_reset_twin(uuid) TO comprobify_erp_app;
+GRANT EXECUTE ON FUNCTION public.app_reset_twin(uuid) TO comprobify_app;

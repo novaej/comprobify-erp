@@ -19,9 +19,9 @@ Checked against `pg-boss@12.38.0`:
 
 ## Decision
 
-**pg-boss in its own `pgboss` schema.** A SQL migration creates the schema and its default privileges, so everything pg-boss installs is granted without a list. Install and upgrades then run in the `migrate` step as `comprobify_erp_owner`.
+**pg-boss in its own `pgboss` schema.** A SQL migration creates the schema and its default privileges, so everything pg-boss installs is granted without a list. Install and upgrades then run in the `migrate` step as `comprobify_owner`.
 
-**Queues are a code registry** in `packages/core/src/jobs/`: name, policy, retry and concurrency settings. The migrate step reads it and creates the queues. Web and worker never run DDL, which keeps the app role free of it (NFR-SEC-4). `comprobify_erp_app` gets DML on the `pgboss` schema, including `DELETE`, since pg-boss's own maintenance needs it.
+**Queues are a code registry** in `packages/core/src/jobs/`: name, policy, retry and concurrency settings. The migrate step reads it and creates the queues. Web and worker never run DDL, which keeps the app role free of it (NFR-SEC-4). `comprobify_app` gets DML on the `pgboss` schema, including `DELETE`, since pg-boss's own maintenance needs it.
 
 **Web only sends; the worker works.** Web starts pg-boss with `schedule: false` and `supervise: false`. The worker owns handlers, cron schedules and maintenance.
 
@@ -36,7 +36,7 @@ await withTenant(ctx, async (tx) => {
 
 **Schedules are declared in code** with `America/Guayaquil` (NFR-JOB-2), and applied at worker start. **SRI queues are separate** from email queues, with their own concurrency (NFR-JOB-3).
 
-Milestone 0 proves the wiring with one `system.heartbeat` queue and schedule. It proves a rollback removes the job, and that the worker runs as `comprobify_erp_app` with no DDL rights. If maintenance turns out to need `CREATE` on the `pgboss` schema, that single grant is the fallback, recorded here.
+Milestone 0 proves the wiring with one `system.heartbeat` queue and schedule. It proves a rollback removes the job, and that the worker runs as `comprobify_app` with no DDL rights. If maintenance turns out to need `CREATE` on the `pgboss` schema, that single grant is the fallback, recorded here.
 
 Checked in Milestone 0: maintenance runs as the app role without that grant. The one exception is automatic `REINDEX`, which needs table ownership, so the worker sets `reindex: false`. Bloat detection stays on, and rebuilds are a manual owner task if it reports any.
 

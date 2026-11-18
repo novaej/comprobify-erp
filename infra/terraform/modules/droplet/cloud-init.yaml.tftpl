@@ -1,5 +1,5 @@
 #cloud-config
-# First boot of a comprobify-erp droplet (ADR-048): an unprivileged deploy user, Docker from its
+# First boot of a comprobify droplet (ADR-048): an unprivileged deploy user, Docker from its
 # own apt repository, SSH hardening, swap, fail2ban and automatic security updates. Changes here
 # reach a droplet only through a deliberate replacement (main.tf, lifecycle).
 users:
@@ -10,7 +10,7 @@ users:
       - ${ssh_public_key}
 
 write_files:
-  - path: /etc/comprobify-erp-environment
+  - path: /etc/comprobify-environment
     content: |
       ${environment}
   # Ubuntu 24.04 ("noble"), as image_slug pins.
@@ -19,7 +19,7 @@ write_files:
       deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable
   # A drop-in, not an edit of sshd_config. The deploy user runs docker through its group only;
   # there is no sudo and no root login, so a leaked key has no path to root.
-  - path: /etc/ssh/sshd_config.d/99-comprobify-erp.conf
+  - path: /etc/ssh/sshd_config.d/99-comprobify.conf
     content: |
       PasswordAuthentication no
       PermitRootLogin no
@@ -35,8 +35,8 @@ write_files:
       {"log-driver": "json-file", "log-opts": {"max-size": "20m", "max-file": "5"}}
 
 runcmd:
-  - mkdir -p /opt/comprobify-erp
-  - chown ${deploy_username}:${deploy_username} /opt/comprobify-erp
+  - mkdir -p /opt/comprobify
+  - chown ${deploy_username}:${deploy_username} /opt/comprobify
   - fallocate -l ${swap_size} /swapfile
   - chmod 600 /swapfile
   - mkswap /swapfile
