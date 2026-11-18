@@ -2119,7 +2119,6 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await look(page, 'admin-exchanges');
     await page.goto('/es/admin');
     await page.getByRole('searchbox', { name: 'Buscar por RUC o nombre' }).fill(companyRuc);
-    await page.getByRole('button', { name: 'Buscar' }).click();
     await page
       .getByRole('row', { name: new RegExp(companyRuc) })
       .getByRole('link', { name: 'Delta Comercial S.A.' })
