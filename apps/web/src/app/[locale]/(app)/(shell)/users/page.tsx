@@ -47,6 +47,7 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
         currentUserId={actor.userId!}
         canManage={actor.permissions.includes('users.manage')}
         canManageOrganization={actor.permissions.includes('organization.manage')}
+        canTransfer={actor.permissions.includes('organization.transfer_ownership')}
         canSeePlan={actor.permissions.includes('billing.read')}
         seats={{ used: usage.USERS, limit: limitOf(actor.entitlements, 'USERS') }}
         requireTwoFactor={active.entry.requireTwoFactor}

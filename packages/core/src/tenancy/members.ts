@@ -348,6 +348,41 @@ export async function changeRole(
   );
 }
 
+// ADR-044: the owner hands the company to another active member, who becomes the owner of it and
+// its test copy; the old owner stays as an admin. Their email, typed, confirms who it goes to.
+export async function transferOwnership(
+  ctx: ActorContext,
+  db: Database,
+  raw: { userId: string; confirmation: string },
+): Promise<void> {
+  requirePermission(ctx, 'organization.transfer_ownership');
+  const userId = z.uuid().parse(raw.userId);
+  await db.withSystem(
+    'transfer the ownership of an organization and its twin',
+    async ({ db: tx }) => {
+      const pair = await pairOf(tx, ctx.tenantId);
+      const target = await targetMembership(tx, pair.realTenantId, userId);
+      guardTarget(ctx, target, userId);
+      const [user] = await tx
+        .select({ email: schema.users.email })
+        .from(schema.users)
+        .where(eq(schema.users.id, userId));
+      if (raw.confirmation.trim().toLowerCase() !== user!.email.toLowerCase())
+        throw new DomainError('CONFIRMATION_MISMATCH', 'Type the new owner’s email to confirm');
+      await writeMembership(tx, pair, userId, { role: 'OWNER', active: true });
+      await writeMembership(tx, pair, ctx.userId!, { role: 'ADMIN', active: true });
+      // An owner sees every issue point (FR-ROLE-2).
+      await applyIssuePoints(tx, pair, userId, []);
+      await recordAudit(tx, {
+        tenantId: pair.realTenantId,
+        actorUserId: ctx.userId ?? null,
+        action: 'member.ownership_transferred',
+        subjectUserId: userId,
+      });
+    },
+  );
+}
+
 // Soft removal (CLAUDE.md rule 12): the membership stays, inactive.
 export async function removeMember(ctx: ActorContext, db: Database, userId: string): Promise<void> {
   requirePermission(ctx, 'users.manage');

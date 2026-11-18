@@ -463,6 +463,43 @@ describe('invoicing a sale order', () => {
     ]);
   });
 
+  it('gives the payment without an amount what the others leave, and refuses others over the total', async () => {
+    const coffee = await product();
+    const created = await order(coffee, '3', '1');
+    const lineId = (await view(created.id)).lines[0]!.id;
+    const actor = await owner();
+    const input = (payments: { method: '01' | '19'; amount?: string }[]) => ({
+      orderId: created.id,
+      issuePointId: pointId,
+      lines: [{ orderLineId: lineId, quantity: '2' }],
+      payments,
+    });
+    expect(
+      await failure(
+        invoiceSaleOrder(
+          actor,
+          db,
+          input([{ method: '01' }, { method: '19', amount: '10.73' }]),
+          issueDeps,
+        ),
+      ),
+    ).toBe('PAYMENTS_TOTAL_MISMATCH');
+    const document = await invoiceSaleOrder(
+      actor,
+      db,
+      input([{ method: '01' }, { method: '19', amount: '4.00' }]),
+      issueDeps,
+    );
+    expect(document.total).toBe('10.73');
+    await sendDocument(deps, ref(document));
+    mock.queue('authorization', { kind: 'notAuthorized', code: '46', message: 'RUC no existe' });
+    await checkAuthorization(deps, ref(document));
+    expect((await orderInvoiceDraft(actor, db, document.id)).payments).toMatchObject([
+      { method: '01', amount: '6.73' },
+      { method: '19', amount: '4.00' },
+    ]);
+  });
+
   it('locks the order while invoices cover it, and gives the quantities back when one is voided', async () => {
     const coffee = await product();
     const created = await order(coffee, '10');

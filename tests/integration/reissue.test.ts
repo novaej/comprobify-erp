@@ -212,6 +212,15 @@ describe('the next-day re-issue', () => {
       expect.any(String),
       expect.objectContaining({ event: 'documents.reissue_skipped_month' }),
     );
+    // The company is told, so a person re-issues it (FR-DOC-6, FR-NOT-2).
+    const queued = await db.withSystem('test: read queued events', ({ executeSql }) =>
+      executeSql<{ type: string }>(
+        `SELECT data->>'type' AS type FROM pgboss.job WHERE name = 'notifications.send'
+         AND data->>'link' = $1`,
+        [`/documents/${document.id}`],
+      ),
+    );
+    expect(queued.rows.map((job) => job.type)).toContain('DOCUMENT_REISSUE_SKIPPED');
   });
 
   it('leaves D+2 to a person, and retries the job when SRI can’t be asked', async () => {

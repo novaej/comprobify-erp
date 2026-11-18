@@ -35,6 +35,8 @@ export const NOTIFICATION_TYPES = [
   'DOCUMENT_SEND_FAILED',
   'DOCUMENT_OVERDUE',
   'DOCUMENT_REISSUED',
+  // Left unsent at a month boundary, for a person to re-issue (FR-DOC-6).
+  'DOCUMENT_REISSUE_SKIPPED',
   'DOCUMENTS_AUTHORIZED',
   'BATCH_COMPLETED',
   // The signing certificate running out, and the document quota filling up (FR-NOT-2).

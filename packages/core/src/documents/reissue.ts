@@ -113,6 +113,10 @@ export async function reissueDocument(
       tenantId: row.tenantId,
       accessKey: row.accessKey,
     });
+    // The company decides: a person re-issues it after confirming the new date.
+    await db.withTenant({ tenantId: ref.tenantId }, (tx) =>
+      tell(deps.jobs, tx, row, 'DOCUMENT_REISSUE_SKIPPED'),
+    );
     return;
   }
 
@@ -194,7 +198,7 @@ export async function reissueDocument(
       {
         type: 'REISSUED',
         details: {
-          reason: 'AUTO_NEXT_DAY',
+          reason: job.reason,
           previousAccessKey: current.accessKey,
           issueDate: today,
         },

@@ -86,7 +86,7 @@ Both processes run from one Docker image. Postgres holds data, sessions and the 
 9. **The app role is never a superuser or `BYPASSRLS`** (NFR-SEC-4). Migrations run as the owner role, and the app refuses to boot on a role that bypasses RLS.
 10. **Enqueue jobs in the same transaction as the business write**, through the transaction handle. Never send from the pooled connection after commit. The one exception is Better Auth's emails, whose write isn't ours (ADR-009).
 11. **Job handlers are idempotent** (NFR-JOB-1): re-fetch by id, check state, then act. Schedules are declared in code with an explicit time zone (NFR-JOB-2).
-12. **No hard deletes.** Use status or `active`. The app role has no `DELETE` grant on application tables. Twin reset is the one exception (PRD glossary).
+12. **No hard deletes.** Use status or `active`. The app role has no `DELETE` grant on application tables. Twin reset is the one exception, through the `app_reset_twin` function only (PRD glossary, ADR-043).
 13. **Never interpolate SQL.** Use Drizzle or `sql` parameters.
 14. **Never use floats for money or quantities.** `numeric` in the database, a decimal library in the domain.
 15. **All date decisions use Ecuador time** (UTC-5, no DST) through one helper module. Servers run UTC.
@@ -205,7 +205,8 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `apps/web/src/app/[locale]/(app)/(shell)/notifications/`, `apps/web/src/components/notifications/` | The Notificaciones page with its preferences, and the bell in the top bar |
 | `packages/core/src/audit/` | `recordAudit` (same transaction as the change), the activity list in two categories, ACCOUNT and OPERATIONS (`listAuditEvents`; the lists of actions are in `packages/db/src/schema/audit.ts`, ADR-041), `recordDataExport`, sign-ins |
 | `packages/core/src/tenancy/settings.ts` | Tax data, branches, issue points, their document types (mirrored in the twin), and the sequentials of the company in use, forward only (ADR-039) |
-| `packages/core/src/tenancy/members.ts` | Invitations, role changes, removal, issue-point restrictions, all mirrored in the twin |
+| `packages/core/src/tenancy/twin-reset.ts` | Twin reset: `resetTwin` empties the test copy through `app_reset_twin` and copies the company's master data back (ADR-043) |
+| `packages/core/src/tenancy/members.ts` | Invitations, role changes, removal, issue-point restrictions, the ownership transfer (ADR-044), all mirrored in the twin |
 | `packages/core/src/certificates/` | P12 parsing, the RUC match, key encryption |
 | `packages/core/src/testing/` | Test helpers, such as generated P12 files (`@comprobify/core/testing`) |
 | `packages/core/src/email/` | Email templates (`templates.ts`, the layout), the copy and its placeholders (`copy.ts`, `DEFAULT_COPY`), the published versions read by the worker (`store.ts`: `loadCopy`, `syncEmailTemplates`), Mailgun and the local log provider; provider builders are used only in `apps/worker/src/index.ts` (lint-enforced), so every email goes through one wrapped path (ADR-037) |

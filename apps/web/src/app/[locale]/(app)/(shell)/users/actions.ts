@@ -7,6 +7,7 @@ import {
   revokeInvitation,
   setIssuePointAccess,
   setTwoFactorRequirement,
+  transferOwnership,
 } from '@comprobify/core';
 import { createRateLimiter, systemClock } from '@comprobify/core';
 import { revalidatePath } from 'next/cache';
@@ -91,4 +92,21 @@ export async function setTwoFactorRequirementAction(
   const { actor } = await loadShell(localeOf(form));
   const { db } = await getRuntime();
   return run(form, () => setTwoFactorRequirement(actor, db, form.get('required') === 'on'));
+}
+
+// ADR-044: the owner's role changes too, so the whole shell is refreshed (mistake 28).
+export async function transferOwnershipAction(
+  _: ActionState,
+  form: FormData,
+): Promise<ActionState> {
+  const { actor } = await loadShell(localeOf(form));
+  const { db } = await getRuntime();
+  const state = await toActionState(() =>
+    transferOwnership(actor, db, {
+      userId: text(form, 'userId'),
+      confirmation: text(form, 'confirmation'),
+    }),
+  );
+  if (state.done) revalidatePath(`/${localeOf(form)}`, 'layout');
+  return state;
 }

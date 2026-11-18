@@ -21,6 +21,8 @@ import { tenants } from './tenancy';
 export const ACCOUNT_AUDIT_ACTIONS = [
   'organization.created',
   'organization.went_live',
+  // The test copy emptied and refilled from the company (PRD glossary, ADR-043).
+  'organization.twin_reset',
   'organization.two_factor_requirement_changed',
   'organization.settings_changed',
   'branch.created',
@@ -35,6 +37,8 @@ export const ACCOUNT_AUDIT_ACTIONS = [
   'member.joined',
   'member.role_changed',
   'member.removed',
+  // The owner handed the company to another member and became an admin (ADR-044).
+  'member.ownership_transferred',
   'member.issue_points_changed',
   'agreements.accepted',
   'session.started',

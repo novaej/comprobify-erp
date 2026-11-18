@@ -11,12 +11,13 @@ import {
 import { Input } from '@comprobify/ui/components/input';
 import { Switch } from '@comprobify/ui/components/switch';
 import { cn } from '@comprobify/ui/lib/utils';
-import { Info, MailX, Pencil, Trash2, UserPlus } from 'lucide-react';
+import { Crown, Info, MailX, Pencil, Trash2, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
 import { Banner } from '@/components/banner';
 import { ChoiceSelect } from '@/components/choice-select';
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import { FormDialog } from '@/components/form-dialog';
 import { FormField } from '@/components/form-field';
 import { ScrollDialogContent } from '@/components/scroll-dialog-content';
 import {
@@ -36,6 +37,7 @@ import {
   removeMemberAction,
   revokeInvitationAction,
   setTwoFactorRequirementAction,
+  transferOwnershipAction,
   updateMemberAction,
 } from './actions';
 
@@ -69,6 +71,7 @@ export function UserManager({
   currentUserId,
   canManage,
   canManageOrganization,
+  canTransfer,
   canSeePlan,
   seats,
   requireTwoFactor,
@@ -79,6 +82,8 @@ export function UserManager({
   currentUserId: string;
   canManage: boolean;
   canManageOrganization: boolean;
+  // The owner: may hand the company to another member (ADR-044).
+  canTransfer: boolean;
   canSeePlan: boolean;
   seats: { used: number; limit: number | null };
   requireTwoFactor: boolean;
@@ -90,6 +95,7 @@ export function UserManager({
   const [editing, setEditing] = useState<MemberView | null>(null);
   const [removing, setRemoving] = useState<MemberView | null>(null);
   const [revoking, setRevoking] = useState<InvitationView | null>(null);
+  const [transferring, setTransferring] = useState<MemberView | null>(null);
   const roleOptions = ASSIGNABLE.map((role) => ({ value: role, label: tRoles(role) }));
 
   const remove = useServerAction(removeMemberAction, {
@@ -181,6 +187,17 @@ export function UserManager({
                     <StackCell className="pr-4">
                       {editable && (
                         <div className="flex items-center justify-end gap-0.5">
+                          {canTransfer && (
+                            <button
+                              type="button"
+                              onClick={() => setTransferring(member)}
+                              title={t('transfer')}
+                              aria-label={t('transferTo', { name: member.name })}
+                              className={iconButton}
+                            >
+                              <Crown className="h-4 w-4" aria-hidden />
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => setEditing(member)}
@@ -267,6 +284,24 @@ export function UserManager({
           onClose={() => setEditing(null)}
         />
       )}
+      <FormDialog
+        open={transferring !== null}
+        onOpenChange={(open) => !open && setTransferring(null)}
+        title={t('transferTitle', { name: transferring?.name ?? '' })}
+        description={t('transferDescription')}
+        submitLabel={t('transfer')}
+        action={transferOwnershipAction}
+        errors="usersError"
+        success={t('transferred')}
+        extra={{ userId: transferring?.userId ?? '' }}
+        destructive
+      >
+        <FormField label={t('transferConfirm', { email: transferring?.email ?? '' })}>
+          {(props) => (
+            <Input {...props} name="confirmation" type="email" autoComplete="off" required />
+          )}
+        </FormField>
+      </FormDialog>
       <ConfirmDialog
         open={removing !== null}
         onOpenChange={(open) => {

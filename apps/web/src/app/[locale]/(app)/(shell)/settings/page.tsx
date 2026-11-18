@@ -40,6 +40,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
           ...settings,
           sequentials,
           testMode: actor.tenantMode !== 'PRODUCTION',
+          canResetTwin: actor.permissions.includes('organization.reset_twin'),
           regimes: TAX_REGIMES.map((regime) => ({ value: regime, label: t(`regimes.${regime}`) })),
           documentTypes: SRI_DOCUMENT_TYPES.map((code) => ({
             value: code,

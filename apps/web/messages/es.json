@@ -337,7 +337,13 @@
     "seatUsage": "{used} de {limit} usuarios, contando las invitaciones pendientes",
     "seatUsageUnlimited": "{used} usuarios, sin límite en tu plan",
     "seatsFull": "Tu plan permite {seats, plural, one {# usuario} other {# usuarios}} y ya están ocupados, contando las invitaciones pendientes.",
-    "seePlan": "Ver el plan"
+    "seePlan": "Ver el plan",
+    "transfer": "Transferir la propiedad",
+    "transferTo": "Transferir la propiedad a {name}",
+    "transferTitle": "¿Transferir la empresa a {name}?",
+    "transferDescription": "Pasará a ser el propietario de la empresa y de su copia de pruebas: el único que puede pasarla a producción, aceptar los acuerdos y transferirla otra vez. Tú quedas como administrador. No se puede deshacer sin que el nuevo propietario la transfiera de vuelta.",
+    "transferConfirm": "Escribe su correo ({email}) para confirmar",
+    "transferred": "La empresa tiene un nuevo propietario."
   },
   "usersError": {
     "FORBIDDEN": "Tu rol no permite esta acción.",
@@ -351,7 +357,8 @@
     "INVALID_INPUT": "Revisa los datos ingresados.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
     "ACCOUNT_PAST_DUE": "Tu suscripción está vencida. Paga la renovación para seguir trabajando.",
-    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos."
+    "ACCOUNT_SUSPENDED": "Esta empresa está suspendida. Solo puedes consultar sus datos.",
+    "CONFIRMATION_MISMATCH": "El correo no coincide. Escríbelo tal como aparece."
   },
   "invite": {
     "title": "Te invitaron a {organization}",
@@ -429,6 +436,7 @@
       "organization": {
         "created": "creó la empresa",
         "went_live": "pasó la empresa a producción",
+        "twin_reset": "restableció la copia de pruebas",
         "two_factor_requirement_changed": "cambió la exigencia de verificación en dos pasos",
         "settings_changed": "cambió los datos tributarios",
         "suspended": "suspendió la empresa",
@@ -442,6 +450,7 @@
         "invitation_revoked": "anuló la invitación a",
         "joined": "se unió a la empresa",
         "role_changed": "cambió el rol de",
+        "ownership_transferred": "transfirió la propiedad de la empresa a",
         "removed": "quitó a",
         "issue_points_changed": "cambió los puntos de emisión de"
       },
@@ -1586,7 +1595,14 @@
     "certificateFile": "Archivo de la firma (.p12)",
     "certificatePassword": "Contraseña de la firma",
     "certificateRenew": "Reemplazar firma",
-    "certificateSaved": "Firma reemplazada."
+    "certificateSaved": "Firma reemplazada.",
+    "twinResetTitle": "Copia de pruebas",
+    "twinResetDescription": "Vacía la copia de pruebas y vuelve a empezar: se borran sus comprobantes, pedidos, órdenes de compra, inventario, productos, clientes, proveedores y plantillas, y se copian de nuevo los productos, clientes, proveedores y plantillas de la empresa. La numeración vuelve a 1. La empresa no cambia.",
+    "twinReset": "Restablecer la copia de pruebas",
+    "twinResetConfirmTitle": "¿Restablecer la copia de pruebas?",
+    "twinResetConfirmDescription": "Todo lo hecho en la copia de pruebas se borra y no se puede recuperar. Los usuarios, las sucursales, los puntos de emisión, la firma y el plan se mantienen.",
+    "twinResetConfirmLabel": "Escribe el RUC de la empresa ({ruc}) para confirmar",
+    "twinResetDone": "La copia de pruebas se restableció."
   },
   "settingsError": {
     "FORBIDDEN": "Tu rol no permite cambiar los datos de la empresa.",
@@ -1604,7 +1620,8 @@
     "CERTIFICATE_PASSWORD_INVALID": "La contraseña de la firma no es correcta.",
     "CERTIFICATE_KEY_NOT_FOUND": "La firma no contiene una clave que corresponda a su certificado.",
     "CERTIFICATE_EXPIRED": "La firma está vencida o todavía no es válida. Renuévala con tu entidad certificadora.",
-    "CERTIFICATE_RUC_MISMATCH": "La firma no pertenece al RUC de esta empresa."
+    "CERTIFICATE_RUC_MISMATCH": "La firma no pertenece al RUC de esta empresa.",
+    "CONFIRMATION_MISMATCH": "El RUC no coincide. Escríbelo tal como aparece."
   },
   "documents": {
     "title": "Comprobantes",
@@ -1869,7 +1886,9 @@
       "remove": "Quitar la forma de pago {number}",
       "remaining": "Falta asignar {amount}.",
       "over": "Los pagos superan el total por {amount}.",
-      "matched": "Los pagos cubren el total."
+      "matched": "Los pagos cubren el total.",
+      "rest": "El resto del total, calculado al emitir.",
+      "restEmpty": "Las otras formas de pago ya cubren el total: baja sus valores o quítalas."
     },
     "additional": {
       "title": "Información adicional",
@@ -2726,7 +2745,7 @@
       },
       "payment": {
         "title": "Forma de pago",
-        "description": "La factura se paga con una sola forma de pago por el total.",
+        "description": "La primera forma de pago lleva el resto del total; agrega otras con su valor si el cliente paga de varias formas.",
         "method": "Forma de pago",
         "term": "Plazo",
         "termUnit": "Unidad"
@@ -3351,6 +3370,11 @@
         "title": "Un documento se emitió de nuevo",
         "body": "El documento {number} se emitió de nuevo con fecha {date}."
       },
+      "DOCUMENT_REISSUE_SKIPPED": {
+        "label": "Documento por emitir de nuevo",
+        "title": "Un documento espera que lo emitas de nuevo",
+        "body": "El documento {number} no llegó al SRI y no se emitió de nuevo solo: con la fecha de hoy pasaría a otro mes. Ábrelo para emitirlo de nuevo."
+      },
       "DOCUMENTS_AUTHORIZED": {
         "label": "Documentos autorizados",
         "title": "{count, plural, one {Se autorizó # documento} other {Se autorizaron # documentos}}",
@@ -3490,6 +3514,10 @@
       "documentOverdue": {
         "name": "Sin respuesta del SRI",
         "use": "Cuando pasan 24 horas sin respuesta del SRI."
+      },
+      "documentReissueSkipped": {
+        "name": "Documento por emitir de nuevo",
+        "use": "Cuando un documento sin enviar no se emite de nuevo solo porque pasaría a otro mes."
       },
       "batchCompleted": {
         "name": "Lote terminado",

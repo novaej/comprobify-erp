@@ -57,3 +57,7 @@ Questions the PRD leaves open:
 - **Keeping an invoiced quantity on the order line:** rejected. It is a second copy that a void, a correction and a failed send would each have to keep in step.
 - **Moving the hold only when SRI authorizes:** rejected. Between creating the invoice and the answer, another sale could take the goods, and a rejected invoice must keep its claim (ADR-020).
 - **Hooks registered by `sales` for `documents` to call:** rejected. A module-level registry is duplicated across Next's bundles (CLAUDE.md mistake 22), and the explicit calls are easier to follow.
+
+## Addendum: several payments on an order's invoice (2026-11-18)
+
+The order's invoice form now offers several payments, through the same payment block as the direct invoice (`apps/web/src/components/payments-card.tsx`). The first payment carries no amount and gets what the others leave of the total core works out, so the screen's estimate still never has to match to the cent; the others carry their amounts. Core accepts at most one payment without an amount (`PAYMENT_AMOUNT_REQUIRED` otherwise) and refuses others that reach the total (`PAYMENTS_TOTAL_MISMATCH`). A correction offers the payments as last signed, the first again taking the rest.

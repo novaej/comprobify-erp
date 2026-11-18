@@ -63,3 +63,5 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [040](040-replies-to-the-company.md) | Replies to emails sent for a company | Accepted |
 | [041](041-activity-log-categories.md) | One activity log, two categories | Accepted |
 | [042](042-order-invoices-at-the-warehouses-issue-point.md) | An order's invoice is issued at its warehouse's issue point | Accepted |
+| [043](043-twin-reset.md) | Twin reset | Accepted |
+| [044](044-ownership-transfer.md) | Ownership transfer | Accepted |

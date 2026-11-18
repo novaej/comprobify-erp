@@ -337,7 +337,13 @@
     "seatUsage": "{used} of {limit} users, counting pending invitations",
     "seatUsageUnlimited": "{used} users, no limit on your plan",
     "seatsFull": "Your plan allows {seats, plural, one {# user} other {# users}}, and all are taken, counting pending invitations.",
-    "seePlan": "See the plan"
+    "seePlan": "See the plan",
+    "transfer": "Transfer ownership",
+    "transferTo": "Transfer ownership to {name}",
+    "transferTitle": "Transfer the company to {name}?",
+    "transferDescription": "They become the owner of the company and its test copy: the only one who can take it live, accept the agreements and transfer it again. You stay as an administrator. It can't be undone unless the new owner transfers it back.",
+    "transferConfirm": "Type their email ({email}) to confirm",
+    "transferred": "The company has a new owner."
   },
   "usersError": {
     "FORBIDDEN": "Your role doesn't allow this.",
@@ -351,7 +357,8 @@
     "INVALID_INPUT": "Check the details you entered.",
     "UNKNOWN": "An unexpected error occurred. Please try again.",
     "ACCOUNT_PAST_DUE": "Your subscription is past due. Pay the renewal to keep working.",
-    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data."
+    "ACCOUNT_SUSPENDED": "This company is suspended. You can only view its data.",
+    "CONFIRMATION_MISMATCH": "The email doesn't match. Type it as shown."
   },
   "invite": {
     "title": "You're invited to {organization}",
@@ -429,6 +436,7 @@
       "organization": {
         "created": "created the company",
         "went_live": "took the company live",
+        "twin_reset": "reset the test copy",
         "two_factor_requirement_changed": "changed the two-step verification requirement",
         "settings_changed": "changed the tax details",
         "suspended": "suspended the company",
@@ -442,6 +450,7 @@
         "invitation_revoked": "revoked the invitation to",
         "joined": "joined the company",
         "role_changed": "changed the role of",
+        "ownership_transferred": "transferred the ownership of the company to",
         "removed": "removed",
         "issue_points_changed": "changed the issue points of"
       },
@@ -1586,7 +1595,14 @@
     "certificateFile": "Signature file (.p12)",
     "certificatePassword": "Signature password",
     "certificateRenew": "Replace signature",
-    "certificateSaved": "Signature replaced."
+    "certificateSaved": "Signature replaced.",
+    "twinResetTitle": "Test copy",
+    "twinResetDescription": "Empty the test copy and start over: its documents, orders, purchase orders, stock, products, clients, providers and templates are deleted, and the company's products, clients, providers and templates are copied in again. Numbering goes back to 1. The company does not change.",
+    "twinReset": "Reset the test copy",
+    "twinResetConfirmTitle": "Reset the test copy?",
+    "twinResetConfirmDescription": "Everything done in the test copy is deleted and can't be recovered. Users, branches, issue points, the signature and the plan stay.",
+    "twinResetConfirmLabel": "Type the company's RUC ({ruc}) to confirm",
+    "twinResetDone": "The test copy was reset."
   },
   "settingsError": {
     "FORBIDDEN": "Your role can't change the company details.",
@@ -1604,7 +1620,8 @@
     "CERTIFICATE_PASSWORD_INVALID": "The signature password is wrong.",
     "CERTIFICATE_KEY_NOT_FOUND": "The signature has no key that matches its certificate.",
     "CERTIFICATE_EXPIRED": "The signature is expired or not valid yet. Renew it with your certification authority.",
-    "CERTIFICATE_RUC_MISMATCH": "The signature does not belong to this company's RUC."
+    "CERTIFICATE_RUC_MISMATCH": "The signature does not belong to this company's RUC.",
+    "CONFIRMATION_MISMATCH": "The RUC doesn't match. Type it as shown."
   },
   "documents": {
     "title": "Documents",
@@ -1869,7 +1886,9 @@
       "remove": "Remove payment method {number}",
       "remaining": "{amount} left to assign.",
       "over": "Payments exceed the total by {amount}.",
-      "matched": "Payments cover the total."
+      "matched": "Payments cover the total.",
+      "rest": "The rest of the total, worked out when issuing.",
+      "restEmpty": "The other payments already cover the total: lower them or remove them."
     },
     "additional": {
       "title": "Additional information",
@@ -2726,7 +2745,7 @@
       },
       "payment": {
         "title": "Payment",
-        "description": "The invoice is paid with a single method for the total.",
+        "description": "The first payment carries the rest of the total; add others with their amount if the client pays in several ways.",
         "method": "Payment method",
         "term": "Term",
         "termUnit": "Unit"
@@ -3351,6 +3370,11 @@
         "title": "A document was issued again",
         "body": "Document {number} was issued again with the date {date}."
       },
+      "DOCUMENT_REISSUE_SKIPPED": {
+        "label": "Document to issue again",
+        "title": "A document is waiting to be issued again",
+        "body": "Document {number} did not reach SRI and was not issued again on its own: with today's date it would move to another month. Open it to issue it again."
+      },
       "DOCUMENTS_AUTHORIZED": {
         "label": "Documents authorized",
         "title": "{count, plural, one {# document was authorized} other {# documents were authorized}}",
@@ -3490,6 +3514,10 @@
       "documentOverdue": {
         "name": "No answer from SRI",
         "use": "When 24 hours pass without an answer from SRI."
+      },
+      "documentReissueSkipped": {
+        "name": "Document to issue again",
+        "use": "When an unsent document is not issued again on its own because it would move to another month."
       },
       "batchCompleted": {
         "name": "Batch finished",

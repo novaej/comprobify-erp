@@ -32,6 +32,7 @@ export const EMAIL_TEMPLATES = [
   'documentRejected',
   'documentSendFailed',
   'documentOverdue',
+  'documentReissueSkipped',
   'batchCompleted',
   'certificateExpiring',
   'certificateExpired',

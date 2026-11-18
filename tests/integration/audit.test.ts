@@ -20,6 +20,7 @@ import {
   resolveActor,
   setNegativeStockRule,
   setOverride,
+  transferOwnership,
   type ActorContext,
   type Auth,
   type CreatedOrganization,
@@ -278,6 +279,37 @@ describe('audit log and go-live', () => {
         mode: 'PRODUCTION',
       });
       expect(await actions()).toContain('organization.went_live');
+    });
+  });
+
+  // Last: it changes who owns the company (ADR-044).
+  describe('ownership transfer', () => {
+    it('hands the company and its test copy to a member, and leaves the old owner an admin', async () => {
+      const member = await join('ACCOUNTANT');
+      const admin = await join('ADMIN');
+      await expect(
+        transferOwnership(admin.ctx, db, { userId: member.id, confirmation: member.email }),
+      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      await expect(
+        transferOwnership(ownerCtx, db, { userId: member.id, confirmation: 'someone@example.com' }),
+      ).rejects.toMatchObject({ code: 'CONFIRMATION_MISMATCH' });
+      await expect(
+        transferOwnership(ownerCtx, db, { userId: owner, confirmation: 'x' }),
+      ).rejects.toMatchObject({ code: 'OWNER_PROTECTED' });
+
+      await transferOwnership(ownerCtx, db, {
+        userId: member.id,
+        confirmation: ` ${member.email.toUpperCase()} `,
+      });
+      for (const tenantId of [org.realTenantId, org.twinTenantId]) {
+        expect(
+          (await resolveActor(db, { userId: member.id, tenantId, clock })).permissions,
+        ).toContain('organization.go_live');
+        const before = await resolveActor(db, { userId: owner, tenantId, clock });
+        expect(before.permissions).toContain('users.manage');
+        expect(before.permissions).not.toContain('organization.go_live');
+      }
+      expect(await actions()).toContain('member.ownership_transferred');
     });
   });
 });

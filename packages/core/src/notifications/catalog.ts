@@ -82,6 +82,7 @@ export const NOTIFICATIONS: Record<NotificationType, NotificationSpec> = {
   DOCUMENT_SEND_FAILED: documents('documentSendFailed'),
   DOCUMENT_OVERDUE: documents('documentOverdue'),
   DOCUMENT_REISSUED: inAppOnly(['IN_APP'], 'documents.issue'),
+  DOCUMENT_REISSUE_SKIPPED: documents('documentReissueSkipped'),
   // One notice with a count per minute, off until a member asks for it (a company authorizing
   // hundreds a day would drown in them).
   DOCUMENTS_AUTHORIZED: inAppOnly([], 'documents.read'),

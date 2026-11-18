@@ -4,6 +4,7 @@ import {
   createBranch,
   createIssuePoint,
   replaceCertificate,
+  resetTwin,
   setCompanyLogo,
   setIssuePointDocumentType,
   setIssuePointPaused,
@@ -143,4 +144,13 @@ export async function setSequentialsAction(_: ActionState, form: FormData): Prom
     return [{ branchCode: match[1]!, pointCode: match[2]!, documentType: match[3]! as '01', next }];
   });
   return run(form, () => setCompanySequentials(actor, db, entries));
+}
+
+// PRD glossary: the test copy emptied and refilled from the company; the RUC typed to confirm.
+export async function resetTwinAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const { actor } = await loadShell(localeOf(form));
+  const { db } = await getRuntime();
+  return run(form, async () => {
+    await resetTwin(actor, db, { confirmation: text(form, 'confirmation') });
+  });
 }

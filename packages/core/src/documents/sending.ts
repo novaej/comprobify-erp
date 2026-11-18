@@ -87,6 +87,7 @@ export const tell = (
     | 'DOCUMENT_SEND_FAILED'
     | 'DOCUMENT_OVERDUE'
     | 'DOCUMENT_REISSUED'
+    | 'DOCUMENT_REISSUE_SKIPPED'
     | 'DOCUMENTS_AUTHORIZED',
   params: Record<string, string> = {},
 ) =>

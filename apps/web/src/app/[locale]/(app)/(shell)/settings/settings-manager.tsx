@@ -3,7 +3,7 @@
 import { Button, buttonVariants } from '@comprobify/ui/components/button';
 import { Input } from '@comprobify/ui/components/input';
 import { Switch } from '@comprobify/ui/components/switch';
-import { FileStack, Info, Pencil, Plus } from 'lucide-react';
+import { FileStack, Info, Pencil, Plus, RotateCcw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
 import { ActionForm } from '@/components/action-form';
@@ -21,6 +21,7 @@ import {
   saveBranchAction,
   setDocumentTypesAction,
   renewCertificateAction,
+  resetTwinAction,
   setLogoAction,
   setNegativeStockAction,
   setSequentialsAction,
@@ -54,6 +55,8 @@ export type SettingsView = {
   sequentials: { branchCode: string; pointCode: string; documentType: string; next: number }[];
   // In the test copy, where the numbers are the test copy's.
   testMode: boolean;
+  // Owner or Admin: may empty the test copy and refill it from the company.
+  canResetTwin: boolean;
   maxBranches: number | null;
   maxPoints: number | null;
   canSeePlan: boolean;
@@ -232,6 +235,8 @@ export function SettingsManager({ settings }: { settings: SettingsView }) {
       <LogoCard hasLogo={settings.hasLogo} prints={settings.logoPrints} />
 
       {settings.inventory && <StockRuleCard allowed={settings.negativeStock === 'ALLOW'} />}
+
+      {settings.canResetTwin && <TwinResetCard ruc={profile.ruc} />}
 
       {dialog?.kind === 'profile' && <ProfileDialog settings={settings} onClose={close} />}
       {dialog?.kind === 'branch' && <BranchDialog branch={dialog.branch} onClose={close} />}
@@ -756,5 +761,42 @@ function TypesDialog({
         <p className="text-xs text-muted-foreground">{t('moreTypesInPlan')}</p>
       )}
     </FormDialog>
+  );
+}
+
+// PRD glossary "Twin reset": the test copy's documents, orders, stock and master data go, and the
+// company's master data comes back in; numbering starts at 1. The company itself is never touched.
+function TwinResetCard({ ruc }: { ruc: string }) {
+  const t = useTranslations('settings');
+  const [open, setOpen] = useState(false);
+  return (
+    <SectionCard
+      title={t('twinResetTitle')}
+      description={t('twinResetDescription')}
+      action={
+        <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
+          <RotateCcw className="mr-1.5 h-4 w-4" aria-hidden />
+          {t('twinReset')}
+        </Button>
+      }
+    >
+      <FormDialog
+        open={open}
+        onOpenChange={setOpen}
+        title={t('twinResetConfirmTitle')}
+        description={t('twinResetConfirmDescription')}
+        submitLabel={t('twinReset')}
+        action={resetTwinAction}
+        errors="settingsError"
+        success={t('twinResetDone')}
+        destructive
+      >
+        <FormField label={t('twinResetConfirmLabel', { ruc })}>
+          {(props) => (
+            <Input {...props} name="confirmation" inputMode="numeric" autoComplete="off" required />
+          )}
+        </FormField>
+      </FormDialog>
+    </SectionCard>
   );
 }

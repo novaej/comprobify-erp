@@ -30,7 +30,7 @@ Add a screenshot when the problem is how something looks. "Looks wrong" is enoug
 | J | [Users and roles](#part-j-users-and-roles) · J1–J4 |
 | K | [Notifications](#part-k-notifications) · K1–K3 |
 | L | [Dashboard and reports](#part-l-dashboard-and-reports) · L1–L4 |
-| M | [Going live](#part-m-going-live) · M1–M3 |
+| M | [Going live](#part-m-going-live) · M1–M5 |
 | N | [The admin area](#part-n-the-admin-area) · N1–N7 |
 | R | [The real SRI (optional)](#part-r-the-real-sri-optional) · R1 |
 
@@ -91,6 +91,8 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | M1 | Take the company to production | ✅ |
 | M2 | The first production invoice | ✅ |
 | M3 | The quota fills up | ✅ |
+| M4 | Reset the test copy | ✅ |
+| M5 | Hand the company over, and back | ✅ |
 | N1 | A company's plan, exceptions and suspension | ✅ |
 | N2 | Prices and the IVA | ✅ |
 | N3 | Plans and modules | ✅ |
@@ -682,7 +684,7 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 | # | Do | Expect |
 |---|---|---|
 | 1 | PV-000001 → invoice it: 4 now, payment on credit (30 days). Look at the **Punto de emisión** choice | Only the issue points of the order's warehouse branch (`001-001` for Matriz): Norte's isn't offered. An authorized invoice; the order "Parcialmente facturado" |
-| 2 | Invoice the remaining 6 | "Facturado"; the reservation is gone, stock went down by 10 in all |
+| 2 | Invoice the remaining 6, with **Agregar forma de pago**: 10,00 by transfer, the rest in cash | The first payment shows "El resto del total" and follows the lines; typing more than the total in the second says to lower it. "Facturado"; the reservation is gone, stock went down by 10 in all; the invoice shows both payments |
 | 3 | Each invoice | Links back to the order |
 
 ### H3 · Collect and the aging report
@@ -947,6 +949,29 @@ The log has two categories (ADR-041): **Cuenta y configuración** (who signed in
 | 7 | Issue another invoice | The pack does not go down this time: the 7th counts against the plan's 2000 ("7 de 2.000") |
 
 The test copy never uses quota: invoices in Pruebas don't count.
+
+### M4 · Reset the test copy
+
+**Needs:** M1. **Leaves:** the test copy empty, with the company's master data, numbering from 1.
+
+| # | Do | Expect |
+|---|---|---|
+| 1 | As the accountant | No **Empresa** in the menu, so no way to reset (only the owner and admins have it) |
+| 2 | As the owner, in the test copy: **Empresa** → **Restablecer la copia de pruebas**, type a wrong RUC | "El RUC no coincide." Nothing changes |
+| 3 | Type the RUC | "La copia de pruebas se restableció." Comprobantes, pedidos and inventory of the test copy are empty; Productos and Clientes hold the company's; the production company is unchanged |
+| 4 | Issue an invoice in the test copy | Number `001-001-000000001` |
+| 5 | **Actividad** | "restableció la copia de pruebas" |
+
+### M5 · Hand the company over, and back
+
+**Needs:** J1. **Leaves:** the owner as before.
+
+| # | Do | Expect |
+|---|---|---|
+| 1 | As an admin: **Usuarios** | No crown button on anyone |
+| 2 | As the owner: the crown beside the admin → type a wrong email | "El correo no coincide." Nothing changes |
+| 3 | Type the admin's email | "La empresa tiene un nuevo propietario." The admin shows as Propietario, you as Administrador, in Producción and Pruebas; **Pasar a producción** and the crowns are gone for you |
+| 4 | As the new owner, transfer it back | As before. **Actividad** lists both transfers |
 
 ---
 

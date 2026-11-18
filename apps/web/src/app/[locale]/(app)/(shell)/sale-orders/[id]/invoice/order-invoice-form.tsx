@@ -10,6 +10,12 @@ import { ChoiceSelect, type Choice } from '@/components/choice-select';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { FormActionBar } from '@/components/form-action-bar';
 import { FormField } from '@/components/form-field';
+import {
+  newPayment,
+  PaymentsCard,
+  paymentsMatch,
+  type PaymentRow,
+} from '@/components/payments-card';
 import { SectionCard } from '@/components/section-card';
 import {
   StackBody,
@@ -42,9 +48,7 @@ export type OrderLineOption = {
 // An invoice being corrected, as last signed.
 export type OrderInvoiceDraft = {
   documentId: string;
-  method: string;
-  term: string;
-  termUnit: string;
+  payments: { method: string; amount: string; term: string; termUnit: string }[];
 };
 
 // FR-SAL-3: pick what to invoice from what the order has left, and how it is paid.
@@ -90,9 +94,12 @@ export function OrderInvoiceForm({
       ]),
     ),
   );
-  const [method, setMethod] = useState(draft?.method ?? paymentMethods[0]?.value ?? '01');
-  const [term, setTerm] = useState(draft?.term ?? '');
-  const [termUnit, setTermUnit] = useState(draft?.termUnit || termUnits[0]?.value || 'dias');
+  const [payments, setPayments] = useState<PaymentRow[]>(() =>
+    draft && draft.payments.length > 0
+      ? draft.payments.map((payment) => ({ key: crypto.randomUUID(), ...payment }))
+      : [newPayment(paymentMethods[0]?.value ?? '01')],
+  );
+  const mark = locale === 'en' ? '.' : ',';
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string>();
   const money = new Intl.NumberFormat(locale === 'en' ? 'en' : 'es-EC', {
@@ -138,7 +145,8 @@ export function OrderInvoiceForm({
     issuePointId !== '' &&
     chosen.length > 0 &&
     !totals.incomplete &&
-    !chosen.some((line) => zero(line) || over(line));
+    !chosen.some((line) => zero(line) || over(line)) &&
+    paymentsMatch(payments, totals.total, true);
 
   const send = () => {
     const form = new FormData();
@@ -148,15 +156,13 @@ export function OrderInvoiceForm({
         orderLineId: line.orderLineId,
         quantity: normalizeDecimal(quantities[line.orderLineId]!),
       })),
-      // No amount: core gives the single payment the invoice's total.
-      payments: [
-        {
-          method,
-          amount: null,
-          term: term.trim() === '' ? null : Number(term),
-          termUnit: term.trim() === '' ? null : termUnit,
-        },
-      ],
+      // The first has no amount: core gives it what the others leave of the total it works out.
+      payments: payments.map((payment, index) => ({
+        method: payment.method,
+        amount: index === 0 ? null : normalizeDecimal(payment.amount),
+        term: payment.term.trim() === '' ? null : Number(payment.term),
+        termUnit: payment.term.trim() === '' ? null : payment.termUnit || 'dias',
+      })),
     };
     form.set(
       'payload',
@@ -297,41 +303,17 @@ export function OrderInvoiceForm({
             </TableCard>
           </section>
 
-          <SectionCard title={t('payment.title')} description={t('payment.description')}>
-            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_6rem_8rem]">
-              <FormField label={t('payment.method')}>
-                {(a11y) => (
-                  <ChoiceSelect
-                    a11y={a11y}
-                    value={method}
-                    options={paymentMethods}
-                    onChange={setMethod}
-                  />
-                )}
-              </FormField>
-              <FormField label={t('payment.term')}>
-                {(a11y) => (
-                  <Input
-                    {...a11y}
-                    inputMode="numeric"
-                    className="text-right tabular-nums"
-                    value={term}
-                    onChange={(event) => setTerm(event.target.value)}
-                  />
-                )}
-              </FormField>
-              <FormField label={t('payment.termUnit')}>
-                {(a11y) => (
-                  <ChoiceSelect
-                    a11y={a11y}
-                    value={termUnit}
-                    options={termUnits}
-                    onChange={setTermUnit}
-                  />
-                )}
-              </FormField>
-            </div>
-          </SectionCard>
+          <PaymentsCard
+            payments={payments}
+            onChange={setPayments}
+            paymentMethods={paymentMethods}
+            termUnits={termUnits}
+            total={totals.total}
+            mark={mark}
+            show={show}
+            firstTakesRest
+            description={t('payment.description')}
+          />
         </div>
 
         <SectionCard title={t('totals.title')} className="xl:sticky xl:top-6">

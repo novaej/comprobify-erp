@@ -63,7 +63,7 @@ SRI's answers, the overdue sweep and a batch closing happen in the worker, in a 
 
 - **Retries tell once.** `announce` gives each event a random `dedupeKey`, which the job passes to `notify`; `notifications` has a unique index on (tenant, key), so a retried job writes nothing and emails no one.
 - **Authorizations are grouped.** `DOCUMENTS_AUTHORIZED` has no key: an event inside 60 seconds of a notice's creation adds one to its `count` (one `UPDATE`, under an advisory lock per company and type), and a later one opens a new notice. It is in the app only and off by default, so no row exists until a member turns it on.
-- **What fires.** `DOCUMENT_REJECTED` when SRI returns or does not authorize a document (code 45 included); `DOCUMENT_SEND_FAILED` only after the deadline check leaves a document unsent, not on each retry; `DOCUMENT_OVERDUE` once per document after 24 hours; `DOCUMENT_REISSUED` when it is re-issued; `BATCH_COMPLETED` when the batch closes.
+- **What fires.** `DOCUMENT_REJECTED` when SRI returns or does not authorize a document (code 45 included); `DOCUMENT_SEND_FAILED` only after the deadline check leaves a document unsent, not on each retry; `DOCUMENT_OVERDUE` once per document after 24 hours; `DOCUMENT_REISSUED` when it is re-issued; `DOCUMENT_REISSUE_SKIPPED` (both channels) when the next-day run leaves it because the new date would fall in another month, so a person re-issues it; `BATCH_COMPLETED` when the batch closes.
 
 ## Addendum: warnings found by a sweep (2026-11-10)
 

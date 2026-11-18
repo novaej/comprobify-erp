@@ -21,6 +21,7 @@ export {
 } from './organizations';
 export type { CreatedOrganization, OrganizationEntry, StoredCertificate } from './organizations';
 export { replaceCertificate } from './certificate-renewal';
+export { resetTwin, resetTwinInput } from './twin-reset';
 export { companyLogo, documentLogo, LOGO_MAX_BYTES, setCompanyLogo, sniffLogo } from './logo';
 export type { Logo } from './logo';
 export {
@@ -40,6 +41,7 @@ export {
   revokeInvitation,
   setIssuePointAccess,
   setTwoFactorRequirement,
+  transferOwnership,
 } from './members';
 export type {
   BillingContact,

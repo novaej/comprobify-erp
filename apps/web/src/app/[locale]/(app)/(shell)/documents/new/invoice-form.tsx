@@ -2,7 +2,6 @@
 
 import { Button } from '@comprobify/ui/components/button';
 import { Input } from '@comprobify/ui/components/input';
-import { cn } from '@comprobify/ui/lib/utils';
 import { AlertCircle, Plus, Send, Trash2, UserRound, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState, useTransition, type KeyboardEvent } from 'react';
@@ -12,8 +11,14 @@ import { Combobox, type ComboOption } from '@/components/combobox';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { FormActionBar } from '@/components/form-action-bar';
 import { FormField } from '@/components/form-field';
+import {
+  paymentAmounts,
+  paymentDifference,
+  PaymentsCard,
+  type PaymentRow,
+} from '@/components/payments-card';
 import { SectionCard } from '@/components/section-card';
-import { formatCents, formTotals, normalizeDecimal, parseDecimal } from '@/lib/invoice-totals';
+import { formatCents, formTotals, normalizeDecimal } from '@/lib/invoice-totals';
 import { correctInvoiceAction, createInvoiceAction } from './actions';
 import { TemplateMenu, type TemplateOption } from './template-menu';
 
@@ -64,7 +69,7 @@ type Line = {
   ivaRateCode: string;
 };
 
-type Payment = { key: string; method: string; amount: string; term: string; termUnit: string };
+type Payment = PaymentRow;
 type Field = { key: string; name: string; value: string };
 
 // What a template holds: the form minus where and when it's issued (FR-MD-5).
@@ -257,16 +262,9 @@ export function InvoiceForm({
   });
 
   const totals = formTotals(lines, percents);
-  const single = payments.length === 1;
   // One payment always carries the whole total.
-  const paymentAmounts = single
-    ? [formatCents(totals.total)]
-    : payments.map((payment) => payment.amount);
-  const paid = paymentAmounts.reduce((sum, amount) => {
-    const value = parseDecimal(amount || '0');
-    return value === null ? sum : sum + value / 10_000n;
-  }, 0n);
-  const difference = totals.total - paid;
+  const amounts = paymentAmounts(payments, totals.total);
+  const difference = paymentDifference(amounts, totals.total);
 
   const updateLine = (key: string, change: Partial<Line>) => {
     setLineError((current) => (current?.line === key ? undefined : current));
@@ -363,7 +361,7 @@ export function InvoiceForm({
     })),
     payments: payments.map((payment, index) => ({
       method: payment.method,
-      amount: normalizeDecimal(paymentAmounts[index] ?? '0'),
+      amount: normalizeDecimal(amounts[index] ?? '0'),
       term: payment.term.trim() === '' ? null : Number(payment.term),
       termUnit: payment.term.trim() === '' ? null : payment.termUnit || 'dias',
     })),
@@ -736,146 +734,15 @@ export function InvoiceForm({
             </div>
           </SectionCard>
 
-          <SectionCard
-            title={t('payment.title')}
-            action={
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setPayments((current) => [
-                    ...current.map((payment, index) =>
-                      // The first payment keeps the total it showed.
-                      index === 0 && current.length === 1
-                        ? { ...payment, amount: formatCents(totals.total) }
-                        : payment,
-                    ),
-                    {
-                      key: newKey(),
-                      method: paymentMethods[0]?.value ?? '01',
-                      amount: '',
-                      term: '',
-                      termUnit: '',
-                    },
-                  ])
-                }
-              >
-                <Plus className="mr-1.5 h-4 w-4" aria-hidden />
-                {t('payment.add')}
-              </Button>
-            }
-          >
-            <ol className="space-y-3">
-              {payments.map((payment, index) => (
-                <li
-                  key={payment.key}
-                  className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_5rem_7rem_2.25rem] sm:items-start"
-                >
-                  <FormField label={t('payment.method')}>
-                    {(a11y) => (
-                      <ChoiceSelect
-                        a11y={a11y}
-                        value={payment.method}
-                        options={paymentMethods}
-                        onChange={(method) =>
-                          setPayments((current) =>
-                            current.map((item) =>
-                              item.key === payment.key ? { ...item, method } : item,
-                            ),
-                          )
-                        }
-                      />
-                    )}
-                  </FormField>
-                  <FormField label={t('payment.amount')}>
-                    {(a11y) => (
-                      <Input
-                        {...a11y}
-                        inputMode="decimal"
-                        className="text-right tabular-nums"
-                        readOnly={single}
-                        value={
-                          single ? formatCents(totals.total).replace('.', mark) : payment.amount
-                        }
-                        onChange={(event) =>
-                          setPayments((current) =>
-                            current.map((item) =>
-                              item.key === payment.key
-                                ? { ...item, amount: event.target.value }
-                                : item,
-                            ),
-                          )
-                        }
-                      />
-                    )}
-                  </FormField>
-                  <FormField label={t('payment.term')}>
-                    {(a11y) => (
-                      <Input
-                        {...a11y}
-                        inputMode="numeric"
-                        className="text-right tabular-nums"
-                        value={payment.term}
-                        onChange={(event) =>
-                          setPayments((current) =>
-                            current.map((item) =>
-                              item.key === payment.key
-                                ? { ...item, term: event.target.value }
-                                : item,
-                            ),
-                          )
-                        }
-                      />
-                    )}
-                  </FormField>
-                  <FormField label={t('payment.termUnit')}>
-                    {(a11y) => (
-                      <ChoiceSelect
-                        a11y={a11y}
-                        value={payment.termUnit || termUnits[0]?.value || 'dias'}
-                        options={termUnits}
-                        onChange={(termUnit) =>
-                          setPayments((current) =>
-                            current.map((item) =>
-                              item.key === payment.key ? { ...item, termUnit } : item,
-                            ),
-                          )
-                        }
-                      />
-                    )}
-                  </FormField>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    disabled={single}
-                    // Level with the fields, under their labels.
-                    className="sm:mt-6"
-                    aria-label={t('payment.remove', { number: index + 1 })}
-                    title={t('payment.remove', { number: index + 1 })}
-                    onClick={() =>
-                      setPayments((current) => current.filter((item) => item.key !== payment.key))
-                    }
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden />
-                  </Button>
-                </li>
-              ))}
-            </ol>
-            {!single && (
-              <p
-                role="status"
-                className={cn('mt-3 text-sm', difference === 0n ? 'text-success' : 'text-warning')}
-              >
-                {difference === 0n
-                  ? t('payment.matched')
-                  : difference > 0n
-                    ? t('payment.remaining', { amount: show(difference) })
-                    : t('payment.over', { amount: show(-difference) })}
-              </p>
-            )}
-          </SectionCard>
+          <PaymentsCard
+            payments={payments}
+            onChange={setPayments}
+            paymentMethods={paymentMethods}
+            termUnits={termUnits}
+            total={totals.total}
+            mark={mark}
+            show={show}
+          />
 
           <SectionCard
             title={t('additional.title')}

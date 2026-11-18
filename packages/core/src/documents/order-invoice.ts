@@ -48,8 +48,8 @@ export const orderInvoiceInput = z.object({
     .array(z.object({ orderLineId: z.uuid(), quantity }))
     .min(1)
     .max(200),
-  // The payment is chosen when invoicing: formaPago and plazo (FR-SAL-3). A single payment
-  // with no amount carries the whole total, which core works out from the order's prices.
+  // The payments are chosen when invoicing: formaPago and plazo (FR-SAL-3). One may go without an
+  // amount and carries the rest of the total, which core works out from the order's prices.
   payments: z
     .array(
       z.object({
@@ -122,17 +122,31 @@ function invoiceLines(coverage: LineCoverage[], requested: Requested) {
   return { lines, links };
 }
 
-// Payments with amounts: a single one without gets the invoice's total (FR-SAL-3).
+// Payments with amounts, of which one may go without: it gets what the others leave of the
+// invoice's total, which only core knows to the cent (FR-SAL-3, ADR-022).
 function resolvePayments(
   payments: z.output<typeof orderInvoiceCorrectionInput>['payments'],
   lines: ParsedInvoice['lines'],
 ) {
-  if (payments.every((payment) => payment.amount !== null))
-    return payments as ((typeof payments)[number] & { amount: string })[];
-  if (payments.length !== 1)
-    throw new DomainError('PAYMENT_AMOUNT_REQUIRED', 'Several payments each need an amount');
+  const open = payments.filter((payment) => payment.amount === null);
+  if (open.length === 0) return payments as ((typeof payments)[number] & { amount: string })[];
+  if (open.length > 1)
+    throw new DomainError('PAYMENT_AMOUNT_REQUIRED', 'Only one payment can go without an amount');
   const { total } = documentTotals(lines);
-  return [{ ...payments[0]!, amount: toSriAmount(total) }];
+  const others = payments.reduce(
+    (sum, payment) => (payment.amount === null ? sum : sum.add(payment.amount)),
+    new Dec(0),
+  );
+  const rest = total.sub(others);
+  if (rest.lte(0))
+    throw new DomainError('PAYMENTS_TOTAL_MISMATCH', 'The payments must add up to the total', {
+      total: toSriAmount(total),
+      paid: toSriAmount(others),
+    });
+  return payments.map((payment) => ({
+    ...payment,
+    amount: payment.amount ?? toSriAmount(rest),
+  }));
 }
 
 // The order's lines go to an invoice of their own (the direct invoice calls the same pipeline,

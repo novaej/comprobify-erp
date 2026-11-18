@@ -112,6 +112,13 @@ export const DEFAULT_COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       button: 'Ver el documento',
       footer: '',
     },
+    documentReissueSkipped: {
+      subject: 'El documento {number} de {organization} espera que lo emitas de nuevo',
+      heading: 'El documento {number} no se emitió de nuevo',
+      body: 'El documento {number} no llegó al SRI y no lo emitimos de nuevo solos: con la fecha de hoy pasaría a otro mes. Ábrelo y emítelo de nuevo cuando lo confirmes.',
+      button: 'Ver el documento',
+      footer: '',
+    },
     batchCompleted: {
       subject: 'Terminó el lote de {organization}: {count} facturas',
       heading: 'Terminó tu lote de facturas',
@@ -282,6 +289,13 @@ export const DEFAULT_COPY: Record<EmailLocale, Record<EmailTemplate, Copy>> = {
       button: 'View the document',
       footer: '',
     },
+    documentReissueSkipped: {
+      subject: 'Document {number} of {organization} is waiting for you to issue it again',
+      heading: 'Document {number} was not issued again',
+      body: 'Document {number} did not reach SRI and we did not issue it again on our own: with today’s date it would move to another month. Open it and issue it again once you confirm.',
+      button: 'View the document',
+      footer: '',
+    },
     batchCompleted: {
       subject: 'The batch of {organization} is done: {count} invoices',
       heading: 'Your batch of invoices is done',
@@ -382,6 +396,7 @@ export const TEMPLATE_PLACEHOLDERS: Record<
   documentRejected: { allowed: ['organization', 'number'], required: ['number'] },
   documentSendFailed: { allowed: ['organization', 'number'], required: ['number'] },
   documentOverdue: { allowed: ['organization', 'number'], required: ['number'] },
+  documentReissueSkipped: { allowed: ['organization', 'number'], required: ['number'] },
   batchCompleted: { allowed: ['organization', 'count'], required: ['count'] },
   certificateExpiring: {
     allowed: ['organization', 'date', 'count'],

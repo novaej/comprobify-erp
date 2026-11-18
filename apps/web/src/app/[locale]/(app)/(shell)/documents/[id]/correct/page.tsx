@@ -229,7 +229,6 @@ async function CorrectOrderInvoice({
   }
   const t = await getTranslations('saleOrders.invoice');
   const data = await orderInvoiceFormData(actor, draft.lines);
-  const payment = draft.payments[0];
   const number = saleOrderNumber(draft.order.number);
 
   return (
@@ -247,9 +246,13 @@ async function CorrectOrderInvoice({
         issuePoints={[{ value: draft.issuePointId, label: draft.issuePoint }]}
         draft={{
           documentId: draft.id,
-          method: payment?.method ?? '01',
-          term: payment?.term === null || payment?.term === undefined ? '' : String(payment.term),
-          termUnit: payment?.termUnit ?? '',
+          // The first takes the rest again, as when it was issued; the others keep their amounts.
+          payments: draft.payments.map((payment) => ({
+            method: payment.method,
+            amount: locale === 'en' ? payment.amount : payment.amount.replace('.', ','),
+            term: payment.term === null ? '' : String(payment.term),
+            termUnit: payment.termUnit ?? '',
+          })),
         }}
       />
     </div>

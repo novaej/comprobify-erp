@@ -6,6 +6,10 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Added
 
+- Ownership transfer: on Usuarios the owner hands the company and its test copy to another active member, typing their email to confirm; the old owner stays as an admin, and the change is in the activity log (PRD section 3, ADR-044).
+- **Restablecer la copia de pruebas** on Empresa, for the owner and admins: the test copy's documents, orders, stock and master data are deleted, the company's products, clients, providers and templates copied in again, and the numbering starts at 1, after typing the RUC. The deleting is one database function that refuses anything but a test copy, and the app role still has no `DELETE` grant (PRD glossary, FR-ONB-5, ADR-043).
+- Several formas de pago on an order's invoice, from the same payment block as the direct invoice: the first takes what the others leave of the total (FR-SAL-3, ADR-022).
+- A notice, in the app and by email, when the next-day re-issue leaves a document because today's date would move it into another month: **Documento por emitir de nuevo**, leading to the document to re-issue it (FR-DOC-6, FR-NOT-2, ADR-036).
 - The platform's company list searches as you type, like every other list (FR-ADM-1).
 - A yellow banner "Sistema local / de staging: no es producción" for a company in production on a system that isn't, and every email from such a system now starts with **[LOCAL]** or **[STAGING]** and says so in its first line, apart from the [PRUEBAS] of a test copy (FR-ONB-6).
 - Comprobantes can be ordered by number, date, buyer, total or status from the column headers, with the filters kept (FR-DOC-12).
@@ -160,6 +164,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Fixed
 
+- A manual re-issue's timeline entry says it was manual; it always said "next day".
 - The email editor: **Usar como borrador** now shows the restored text at once, the button is gone from the draft and the version in use (where it did nothing), and the draft badge and a note say it is unpublished and what publishing does.
 - A company is shown by its razón social, not its nombre comercial, in the switcher, the platform and purchase orders (the nombre comercial stays beneath it on the order).
 - A suspended or past-due company opening a form that issues documents (new invoice, credit note, guide, correction, bulk, invoicing an order) sees "You can't do this right now" instead of "Algo salió mal".
