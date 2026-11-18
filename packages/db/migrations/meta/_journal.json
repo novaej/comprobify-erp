@@ -540,6 +540,13 @@
       "when": 1795010547364,
       "tag": "0076_stock_count",
       "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1795026322264,
+      "tag": "0077_legacy_import_audit",
+      "breakpoints": true
     }
   ]
 }

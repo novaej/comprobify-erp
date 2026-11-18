@@ -54,7 +54,7 @@ Done once per environment by the owner, in this order. Names in `backticks` are 
 
 **Rebuilding a droplet** (after a cloud-init change, which is otherwise ignored): `terraform apply -replace=module.droplet.digitalocean_droplet.this` from the environment's folder. The reserved IP moves to the new droplet, so DNS and `DROPLET_IP` stay. Deploy again after it.
 
-**Cutover** (production): before the ERP takes `comprobify.com` and `app.comprobify.com`, the previous web app's Terraform must release the two records. Remove them from its state or delete them there. Then set `manage_dns = true` in `environments/production/terraform.tfvars` and apply. The data migration runs before, and has its own runbook.
+**Cutover** (production): before the ERP takes `comprobify.com` and `app.comprobify.com`, the previous web app's Terraform must release the two records. Remove them from its state or delete them there. Then set `manage_dns = true` in `environments/production/terraform.tfvars` and apply. The data migration runs before: `docs/guides/legacy-import.md` (ADR-049).
 
 ## Release order
 

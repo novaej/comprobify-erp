@@ -244,6 +244,18 @@ export const migrateEnvSchema = z.object({
   MIGRATION_DATABASE_URL: postgresUrl,
 });
 
+// ADR-049: the one-off import from the previous system. It writes as the app role, so RLS and
+// the boot guard apply, and reads the restored copies of the previous databases.
+export const legacyImportEnvSchema = z.object({
+  ...sharedShape,
+  DATABASE_URL: postgresUrl,
+  CERT_ENCRYPTION_KEY: certificateKey,
+  LEGACY_API_DATABASE_URL: postgresUrl,
+  LEGACY_WEB_DATABASE_URL: postgresUrl,
+  // The previous API's ENCRYPTION_KEY, which encrypted the certificate's key.
+  LEGACY_ENCRYPTION_KEY: certificateKey,
+});
+
 // Tests truncate and probe freely, so they can only run on a *_test database.
 const testDatabaseUrl = postgresUrl.refine((url) => new URL(url).pathname.endsWith('_test'), {
   message: 'database name must end in _test',
@@ -268,6 +280,7 @@ export const e2eEnvSchema = z.object({
 export type WebEnv = z.output<typeof webEnvSchema>;
 export type WorkerEnv = z.output<typeof workerEnvSchema>;
 export type MigrateEnv = z.output<typeof migrateEnvSchema>;
+export type LegacyImportEnv = z.output<typeof legacyImportEnvSchema>;
 export type TestEnv = z.output<typeof testEnvSchema>;
 export type E2eEnv = z.output<typeof e2eEnvSchema>;
 
@@ -315,6 +328,9 @@ export const loadWorkerEnv = (source: Source = process.env): WorkerEnv =>
 
 export const loadMigrateEnv = (source: Source = process.env): MigrateEnv =>
   parseEnv(migrateEnvSchema, source);
+
+export const loadLegacyImportEnv = (source: Source = process.env): LegacyImportEnv =>
+  parseEnv(legacyImportEnvSchema, source);
 
 export const loadTestEnv = (source: Source = process.env): TestEnv =>
   parseEnv(testEnvSchema, source);

@@ -1,7 +1,9 @@
 import { schema, type IdentityDb } from '@comprobify/db';
 import { betterAuth, type BetterAuthPlugin } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { hashPassword, verifyPassword } from 'better-auth/crypto';
 import { twoFactor } from 'better-auth/plugins';
+import bcrypt from 'bcryptjs';
 import type { EmailLocale } from '../email';
 import { SESSION_LIFETIME_SECONDS, TRUSTED_DEVICE_SECONDS } from './session-activity';
 import { forgetTrustedDevices } from './trusted-devices';
@@ -24,6 +26,8 @@ export type AuthOptions = {
 // Better Auth types the callback user without our extra fields.
 const localeOf = (user: object): EmailLocale =>
   'locale' in user && user.locale === 'en' ? 'en' : 'es';
+
+const isBcrypt = (hash: string) => /^\$2[aby]\$\d{2}\$/.test(hash);
 
 export function createAuth(options: AuthOptions) {
   const { db, secret, appUrl, emails, plugins = [] } = options;
@@ -58,6 +62,13 @@ export function createAuth(options: AuthOptions) {
       autoSignIn: false,
       minPasswordLength: 10,
       maxPasswordLength: 128,
+      // ADR-049: accounts brought from the previous system keep their bcrypt hash until the
+      // next password change, which stores Better Auth's own.
+      password: {
+        hash: hashPassword,
+        verify: ({ hash, password }) =>
+          isBcrypt(hash) ? bcrypt.compare(password, hash) : verifyPassword({ hash, password }),
+      },
       resetPasswordTokenExpiresIn: 60 * 60,
       revokeSessionsOnPasswordReset: true,
       // A new password also forgets every remembered device (ADR-045).

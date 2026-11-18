@@ -17,6 +17,8 @@ export type { DocumentTotals, LineAmounts, LineInput, TaxTotal } from './totals'
 export { accessKey, module11, randomNumericCode } from './access-key';
 export type { AccessKeyParts } from './access-key';
 export { buildFactura, FACTURA_VERSION, RIMPE_LEGENDS } from './factura';
+export { readFactura } from './read-factura';
+export type { ReadFactura } from './read-factura';
 export type { FacturaInput, NameValue } from './factura';
 export {
   buildGuiaRemision,

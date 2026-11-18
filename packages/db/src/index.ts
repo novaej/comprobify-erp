@@ -1,4 +1,4 @@
-export { createDatabase } from './context';
+export { createDatabase, inOneTransaction } from './context';
 export type { Database, DatabaseOptions, IdentityDb, TenantContext, Tx } from './context';
 export * as schema from './schema';
 export {

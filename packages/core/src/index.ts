@@ -23,3 +23,4 @@ export * from './reports';
 export * from './masterdata';
 export { registerHandlers } from './register-handlers';
 export type { HandlerDeps } from './register-handlers';
+export * from './legacy';

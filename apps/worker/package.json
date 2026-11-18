@@ -11,17 +11,20 @@
     "typecheck": "tsc",
     "test-certificate": "tsx src/test-certificate.ts",
     "super-admin": "tsx --env-file-if-exists=../../.env src/super-admin.ts",
-    "run-job": "tsx --env-file-if-exists=../../.env src/run-job.ts"
+    "run-job": "tsx --env-file-if-exists=../../.env src/run-job.ts",
+    "import:legacy": "tsx --env-file-if-exists=../../.env src/import-legacy.ts"
   },
   "dependencies": {
     "@comprobify/config": "workspace:*",
     "@comprobify/core": "workspace:*",
     "@comprobify/db": "workspace:*",
     "@sentry/node": "11.10.0",
+    "pg": "8.23.1",
     "tsx": "4.23.15"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
+    "@types/pg": "8.23.1",
     "typescript": "6.0.3"
   }
 }

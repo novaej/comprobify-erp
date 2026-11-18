@@ -5,6 +5,7 @@ import {
   emailProviderOf,
   InvalidEnvError,
   loadE2eEnv,
+  loadLegacyImportEnv,
   loadMigrateEnv,
   loadTestEnv,
   loadWebEnv,
@@ -91,6 +92,21 @@ describe('env loading', () => {
       loadMigrateEnv({ APP_ENV: 'local', MIGRATION_DATABASE_URL: 'postgresql://o:p@h/d' }),
     ).toMatchObject({ MIGRATION_DATABASE_URL: 'postgresql://o:p@h/d' });
     expect(failure(() => loadMigrateEnv(worker))).toContain('MIGRATION_DATABASE_URL');
+  });
+
+  it('asks the legacy import for both old databases and the old key (ADR-049)', () => {
+    const legacy = {
+      APP_ENV: 'local',
+      DATABASE_URL: 'postgresql://a:p@h/d',
+      CERT_ENCRYPTION_KEY: 'ab'.repeat(32),
+      LEGACY_API_DATABASE_URL: 'postgresql://a:p@h/api',
+      LEGACY_WEB_DATABASE_URL: 'postgresql://a:p@h/web',
+      LEGACY_ENCRYPTION_KEY: 'cd'.repeat(32),
+    };
+    expect(loadLegacyImportEnv(legacy).LEGACY_WEB_DATABASE_URL).toBe('postgresql://a:p@h/web');
+    expect(
+      failure(() => loadLegacyImportEnv({ ...legacy, LEGACY_ENCRYPTION_KEY: 'short' })),
+    ).toContain('LEGACY_ENCRYPTION_KEY');
   });
 });
 

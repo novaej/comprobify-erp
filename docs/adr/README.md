@@ -69,3 +69,4 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [046](046-stock-at-year-end.md) | Stock at year end | Accepted |
 | [047](047-keyset-paging.md) | Keyset paging for the large lists | Accepted |
 | [048](048-staging-and-production-deployment.md) | Staging and production deployment | Accepted |
+| [049](049-importing-from-the-previous-system.md) | Importing from the previous system | Accepted |

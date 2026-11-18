@@ -6,6 +6,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Added
 
+- `pnpm import:legacy`: the owner's company from restored dumps of the previous system, with its accounts (old passwords keep working), certificate (re-encrypted), sequentials continuing exactly, authorized facturas and their XML, clients, products and templates, on Empresa, courtesy. It runs in one transaction, a dry run unless `--commit`, and prints a reconciliation of counts, sequentials and XML hashes; a failed check keeps nothing (ADR-049, PRD section 15).
 - Staging and production deployment (ADR-048): Terraform for one droplet per environment (firewall to Cloudflare only, reserved IP, DNS, hardened cloud-init), the stack on it (`infra/deploy`: migrate, web, worker, Caddy), and the pipeline: staging from `main` after CI, production from a published Release, Terraform planned on pull requests and applied on `main`, each environment behind its own switch.
 - `LANDING_URL`: the public pages on their own host (`comprobify.com`) and the app on `APP_URL` (`app.comprobify.com`), each path sent to its host.
 - The stock valuation **as of a day**, such as 31 December: the ledger summed to the end of that day, on screen and in its CSV (ADR-046, FR-INV-5).

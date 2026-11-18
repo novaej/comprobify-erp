@@ -52,6 +52,7 @@ pnpm test-certificate <ruc> [days]  # a test P12 (password: secret) to try onboa
 pnpm super-admin <email>      # give an existing account the platform area (--revoke takes it away)
 pnpm bench:signing            # what building, XSD-checking and signing an invoice costs (ADR-013)
 pnpm run-job <queue>          # run a scheduled job now, locally or on staging (the QA script uses it)
+pnpm import:legacy --ruc <ruc> --super-admin <email>  # bring a company from the previous system's restored dumps; a dry run unless --commit (ADR-049, docs/guides/legacy-import.md)
 ```
 
 ---
@@ -200,6 +201,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/receivables/` | Payments received for invoices, the balance and status, and the aging report (`payments.ts`, `aging.ts`; ADR-024); the table is in `packages/db/src/schema/receivables.ts` |
 | `apps/web/src/app/[locale]/(app)/(shell)/receivables/` | The aging report and the actions that record and void a payment (shown on the invoice's page) |
 | `packages/core/src/masterdata/` | What go-live copies from the twin to the real company: products, clients, providers, templates (ADR-025) |
+| `packages/core/src/legacy/`, `apps/worker/src/import-legacy.ts` | The import from the previous system: what the script reads (`input.ts`), `importLegacyCompany` through core's own workflows, `reconcileLegacyImport`; documents are rebuilt from their XML by `documents/imported.ts` and `sri/read-factura.ts`, the run is one transaction (`inOneTransaction` in `packages/db/src/context.ts`, ADR-049) |
 | `packages/core/src/agreements/` | Legal texts (`texts/*.md`, published by the migrate step), personalization, acceptance |
 | `docs/legal/review-notes.md` | What changed in the legal texts and the open legal questions |
 | `packages/core/src/notifications/` | The notification centre: the catalogue of types with their channels, defaults, audience and mandatory flag (`catalog.ts`), `notify` (the one way to tell a company, in the caller's transaction), what a member reads and sets (`queries.ts`), and `announce` / `deliverNotificationEvent` (`events.ts`) for events with no actor at hand, queued in the transaction that caused them, and `watchCertificates` (`watch.ts`; `watchQuota` is in `documents/quota-watch.ts`) for the warnings a schedule finds, and `platform.ts` for the operators' own notices (`tellOperators`, `announceOperators`, the super admin's reads); the tables are in `packages/db/src/schema/notifications.ts`, ADR-036 |

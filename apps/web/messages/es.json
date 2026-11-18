@@ -438,6 +438,7 @@
       "organization": {
         "created": "creó la empresa",
         "went_live": "pasó la empresa a producción",
+        "imported": "trajo la empresa del sistema anterior",
         "twin_reset": "restableció la copia de pruebas",
         "two_factor_requirement_changed": "cambió la exigencia de verificación en dos pasos",
         "settings_changed": "cambió los datos tributarios",

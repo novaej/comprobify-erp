@@ -13,6 +13,8 @@ export {
 export {
   createIdentity,
   createVerifiedUser,
+  importAccount,
+  importedAccountInput,
   newUserInput,
   pruneIdentityTables,
   setActiveTenant,

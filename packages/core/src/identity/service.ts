@@ -378,6 +378,48 @@ export async function createVerifiedUser(
   return { id: user.id };
 }
 
+export const importedAccountInput = z.object({
+  name: z.string().trim().min(1).max(120),
+  email,
+  emailVerified: z.boolean(),
+  isSuperAdmin: z.boolean(),
+  // The previous system's bcrypt hash, verified as is at sign-in (ADR-049). Null: none set.
+  passwordHash: z
+    .string()
+    .regex(/^\$2[aby]\$\d{2}\$.{53}$/)
+    .nullable(),
+  createdAt: z.date(),
+});
+
+// ADR-049: an account from the previous system, written as Better Auth's own sign-up writes it.
+export async function importAccount(
+  db: IdentityDb,
+  raw: z.input<typeof importedAccountInput>,
+): Promise<{ id: string }> {
+  const input = importedAccountInput.parse(raw);
+  const { users, accounts } = schema;
+  const [taken] = await db.select({ id: users.id }).from(users).where(eq(users.email, input.email));
+  if (taken) throw new DomainError('EMAIL_TAKEN', 'An account with this email already exists');
+  const [user] = await db
+    .insert(users)
+    .values({
+      name: input.name,
+      email: input.email,
+      emailVerified: input.emailVerified,
+      isSuperAdmin: input.isSuperAdmin,
+      createdAt: input.createdAt,
+    })
+    .returning({ id: users.id });
+  if (input.passwordHash)
+    await db.insert(accounts).values({
+      userId: user!.id,
+      providerId: 'credential',
+      accountId: user!.id,
+      password: input.passwordHash,
+    });
+  return { id: user!.id };
+}
+
 // Called by tenancy after it checked the membership; the session belongs to identity.
 export async function setActiveTenant(
   db: IdentityDb,

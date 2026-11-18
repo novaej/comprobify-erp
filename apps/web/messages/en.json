@@ -438,6 +438,7 @@
       "organization": {
         "created": "created the company",
         "went_live": "took the company live",
+        "imported": "brought the company from the previous system",
         "twin_reset": "reset the test copy",
         "two_factor_requirement_changed": "changed the two-step verification requirement",
         "settings_changed": "changed the tax details",

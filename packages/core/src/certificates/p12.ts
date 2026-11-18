@@ -78,7 +78,33 @@ export function parseP12(file: Uint8Array, password: string, now: Date): ParsedC
   if (!pair)
     return fail('CERTIFICATE_KEY_NOT_FOUND', 'No signing key matches a certificate in the file');
 
-  const { key, cert } = pair;
+  return describe(pair.key, pair.cert, now);
+}
+
+// ADR-049: a key and certificate stored as PEM by the previous system, checked as a P12 is.
+export function parseCertificatePair(
+  privateKeyPem: string,
+  certificatePem: string,
+  now: Date,
+): ParsedCertificate {
+  let key: forge.pki.rsa.PrivateKey;
+  let cert: forge.pki.Certificate;
+  try {
+    key = forge.pki.privateKeyFromPem(privateKeyPem);
+    cert = forge.pki.certificateFromPem(certificatePem);
+  } catch {
+    return fail('CERTIFICATE_INVALID', 'Not a PEM key and certificate');
+  }
+  if (!(cert.publicKey as forge.pki.rsa.PublicKey).n?.equals(key.n))
+    return fail('CERTIFICATE_KEY_NOT_FOUND', 'The key does not match the certificate');
+  return describe(key, cert, now);
+}
+
+function describe(
+  key: forge.pki.rsa.PrivateKey,
+  cert: forge.pki.Certificate,
+  now: Date,
+): ParsedCertificate {
   if (now < cert.validity.notBefore || now > cert.validity.notAfter) {
     fail('CERTIFICATE_EXPIRED', 'The certificate is not valid today');
   }

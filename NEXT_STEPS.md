@@ -30,7 +30,7 @@ Steps in order; the gate is in PRD section 15.
 - [ ] Security review, written up with each finding and its fix.
 - [ ] Load test on staging: NFR-PERF-1, then the 10,000-item batch (NFR-PERF-3) and the bulk caps; `pnpm bench:signing` on the droplet into ADR-013.
 - [ ] Backups and the restore drill on staging, as a runbook (email, webhooks and payments off in the restored copy, mistake 13).
-- [ ] Data migration from the current system, rehearsed on staging, with its reconciliation report (counts, sequentials, XML hashes).
+- [ ] Data migration: `pnpm import:legacy` (ADR-049) from the final dumps into staging, dry run then `--commit`, its reconciliation clean, then checked in the app (`docs/guides/legacy-import.md`). Again on production before cutover.
 - [ ] Runbooks and the user guide.
 - [ ] Owner: the production cluster, `production-infra` and `production` Environments, `PRODUCTION_INFRA_ENABLED=true`, then the cutover (`docs/deployment.md`, "Cutover"); delete the staging cluster.
 

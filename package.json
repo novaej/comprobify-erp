@@ -23,6 +23,7 @@
     "stack:up": "docker compose -f infra/compose.yaml up -d --build --wait",
     "super-admin": "pnpm --filter @comprobify/worker super-admin",
     "run-job": "pnpm --filter @comprobify/worker run-job",
+    "import:legacy": "pnpm --filter @comprobify/worker import:legacy",
     "test": "turbo run test",
     "test-certificate": "pnpm --filter @comprobify/worker test-certificate",
     "test:e2e": "pnpm --filter @comprobify/e2e-tests test:e2e",

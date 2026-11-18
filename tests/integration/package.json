@@ -16,6 +16,7 @@
     "@comprobify/db": "workspace:*",
     "@types/node": "24.19.2",
     "@types/pg": "8.23.1",
+    "bcryptjs": "3.0.3",
     "better-auth": "1.7.15",
     "drizzle-orm": "0.45.4",
     "pg": "8.23.1",
