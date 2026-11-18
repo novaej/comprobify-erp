@@ -2,7 +2,7 @@
 # the load test or real traffic asks for more (PRD 12 planned 2 vCPU / 4 GB).
 region          = "nyc1" # the production Postgres cluster's region
 droplet_size    = "s-1vcpu-2gb"
-deploy_username = "cpfyerpdeploy8p"
+deploy_username = "cpfydeploy8p"
 project_name    = "Comprobify Production"
 
 cloudflare_zone_id = "7d75cca935a373030ac39b7f1ba7696c"
