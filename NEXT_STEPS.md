@@ -25,7 +25,7 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 Steps in order; the gate is in PRD section 15.
 
-- [ ] Owner: the GitHub settings in `docs/guides/git-flow.md` (squash only, the `main` and release-tag rulesets), and the docs site's `DOCS_CLOUDFLARE_API_TOKEN` and `DOCS_CLOUDFLARE_ACCOUNT_ID` secrets, then run the Docs workflow once (ADR-051).
+- [ ] Owner: the `staging-plan` and `production-plan` Environments with read-only tokens, and `INFRA_SSH_PUBLIC_KEY` moved there from `-infra` (`docs/deployment.md`, step 4); the GitHub settings in `docs/guides/git-flow.md` (squash only, the release-tag ruleset; `main`'s is set), and the docs site's `DOCS_CLOUDFLARE_API_TOKEN` and `DOCS_CLOUDFLARE_ACCOUNT_ID` secrets, then run the Docs workflow once (ADR-051).
 - [ ] Hardening backlog (below): the code-only items, then the rest on staging.
 - [ ] Security review, written up with each finding and its fix.
 - [ ] Load test on staging: NFR-PERF-1, then the 10,000-item batch (NFR-PERF-3) and the bulk caps; `pnpm bench:signing` on the droplet into ADR-013.

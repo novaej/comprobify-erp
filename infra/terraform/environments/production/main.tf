@@ -7,13 +7,11 @@ terraform {
   }
 }
 
-provider "digitalocean" {
-  token = var.do_token
-}
+# Tokens from DIGITALOCEAN_TOKEN and CLOUDFLARE_API_TOKEN, never variables: a saved plan holds every
+# variable's value, and the plan travels to the apply job as an artifact (ADR-051).
+provider "digitalocean" {}
 
-provider "cloudflare" {
-  api_token = var.cloudflare_token
-}
+provider "cloudflare" {}
 
 module "droplet" {
   source = "../../modules/droplet"

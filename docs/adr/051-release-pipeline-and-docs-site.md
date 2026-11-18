@@ -37,7 +37,11 @@ No approval is required: the owner works alone and GitHub doesn't let an author 
 | Published Release | `production.yml` | Refuses a tag not `vX.Y.Z`; Terraform if `infra/terraform` changed since the previous release (approved); the deploy (approved) |
 | Manual | `terraform.yml`, `staging.yml`, `production.yml`, `docs.yml` | Bring an environment up or down, redeploy staging, roll back or hotfix production from a tag, republish the docs |
 
-`terraform-run.yml` is the one Terraform job, with the environment, action and ref as inputs, so every caller runs the same steps under the same `-infra` reviewer and a per-environment lock.
+`terraform-run.yml` is the one Terraform run, with the environment, action and ref as inputs, so every caller runs the same steps under one per-environment lock. It has two jobs in two GitHub Environments:
+- **The plan** runs in `<env>-plan`, with no reviewer and read-only tokens (DigitalOcean Read Only, Cloudflare DNS: Read). It can't change anything, so it needs no approval, and its output is in the log.
+- **The apply** runs in `<env>-infra`, with the reviewer and the tokens that can change things, and only when the plan found changes. It applies the saved plan itself, passed as an artifact for a day, so what was read is what runs. Terraform refuses a saved plan if the state moved after it. A destroy is planned and approved the same way.
+
+The providers read their tokens from the environment (`DIGITALOCEAN_TOKEN`, `CLOUDFLARE_API_TOKEN`), not from Terraform variables: a saved plan holds every variable's value, and this one travels as an artifact.
 
 **Staging comes and goes; production stays.** Staging is up for the cutover rehearsal and is destroyed after the first production release. It comes back only when something needs testing outside production, then goes again. `STAGING_INFRA_ENABLED` switches its Terraform and its deploys on and off together. A release doesn't depend on it, so production can be released while staging is up or down.
 

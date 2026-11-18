@@ -34,12 +34,15 @@ Done once per environment by the owner, in this order. Names in `backticks` are 
    - Create a Spaces key for this repo's Terraform state (`comprobify-terraform-state`).
 2. **Deploy key.** Run `ssh-keygen -t ed25519 -C comprobify-deploy-<env> -f ~/.ssh/comprobify_<env>`. Use one key per environment, never shared.
 3. **GitHub, repository.** Set the secrets `TERRAFORM_SPACES_ACCESS_KEY_ID` and `TERRAFORM_SPACES_SECRET_ACCESS_KEY`.
-4. **GitHub, `<env>-infra` Environment.**
-   - Secrets: `DO_TOKEN` and `CLOUDFLARE_TOKEN` (DNS edit on `comprobify.com`).
-   - Variable: `INFRA_SSH_PUBLIC_KEY`, the `.pub` file's line.
-5. **Infrastructure.** Set the repository variable `<ENV>_INFRA_ENABLED=true`. Then start the **Terraform** workflow in GitHub Actions, first with `plan` and then with `apply` (Actions → Terraform → Run workflow, or `gh workflow run terraform.yml -f environment=<env> -f action=apply`). It holds the tokens, so nothing runs on your machine. Its output `reserved_ip` is the droplet's address. Wait three to five minutes for cloud-init.
+4. **GitHub, two Environments per environment for Terraform** (ADR-051). The plan reads, the apply changes things, and only the apply waits for you.
+   - **`<env>-plan`**, with no reviewer:
+     - secrets `DO_TOKEN`, a DigitalOcean token with **Read Only** scope, and `CLOUDFLARE_TOKEN`, with **Zone → DNS: Read** on `comprobify.com`;
+     - variable `INFRA_SSH_PUBLIC_KEY`, the `.pub` file's line.
+   - **`<env>-infra`**, with the owner as required reviewer:
+     - secrets `DO_TOKEN`, with full access, and `CLOUDFLARE_TOKEN`, with **DNS: Edit** on `comprobify.com`.
+5. **Infrastructure.** Set the repository variable `<ENV>_INFRA_ENABLED=true`. Then start the **Terraform** workflow in GitHub Actions with `apply` (Actions → Terraform → Run workflow, or `gh workflow run terraform.yml -f environment=<env> -f action=apply`). Its plan job runs at once: read it in the log. The apply job then waits for **Review deployments → Approve**, and applies exactly that plan. A plan with nothing to change skips the apply. It holds the tokens, so nothing runs on your machine. Its output `reserved_ip` is the droplet's address. Wait three to five minutes for cloud-init.
 6. **GitHub, `<env>` Environment.** Its deployment branches and tags: `main` only on staging, tags `v*` only on production.
-   - Both `-infra` Environments and `production` get the owner as required reviewer (self-review allowed, since there is one). Every Terraform run on either environment, and every production release, waits in Actions for **Review deployments → Approve**. Staging's app deploy doesn't wait.
+   - Both `-infra` Environments and `production` get the owner as required reviewer (self-review allowed, since there is one). Every Terraform apply or destroy, and every production release, waits in Actions for **Review deployments → Approve**. Plans and staging's app deploy don't wait.
    - These rules exist only while the repository is public: GitHub's free plan has no Environment protection for a private one. Secrets keep working. Production is then held by `PRODUCTION_INFRA_ENABLED`, by publishing a Release, and by Terraform applying only from `main` or a manual run.
    - Secrets:
      - `DROPLET_IP`: the reserved IP.
