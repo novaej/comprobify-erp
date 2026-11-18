@@ -7,10 +7,10 @@ How the system runs locally, on staging and in production (ADR-048). Backups and
 | | Hosts | Droplet | Postgres | Deploys |
 |---|---|---|---|---|
 | local | `localhost:3000` (`pnpm dev`), `localhost:8080` (`pnpm stack:up`) | your machine | the `postgres18` container | — |
-| staging | `staging.comprobify.com` (public pages), `app-staging.comprobify.com` (app) | `comprobify-staging`, `s-1vcpu-2gb`, `nyc1`, on demand | the staging cluster, created by hand | `main`, after CI passes and, when the push changed `infra/terraform`, its approved Terraform run |
-| production | `comprobify.com`, `app.comprobify.com` (from cutover); `api.comprobify.com` later | `comprobify-production`, `s-1vcpu-2gb`, `nyc1` | the production cluster, created by hand | a published GitHub Release |
+| staging | `staging.comprobify.com` (public pages), `app-staging.comprobify.com` (app) | `comprobify-staging`, `s-1vcpu-2gb`, `nyc1`, on demand | the staging cluster, created by hand | each merge to `main`: CI, then Terraform when it changed `infra/terraform` (approved), then the deploy |
+| production | `comprobify.com`, `app.comprobify.com` (from cutover); `api.comprobify.com` later | `comprobify-production`, `s-1vcpu-2gb`, `nyc1` | the production cluster, created by hand | a published `vX.Y.Z` Release (approved) |
 
-Each environment is off until its repository variable is `true`: `STAGING_INFRA_ENABLED`, `PRODUCTION_INFRA_ENABLED`. While off, neither Terraform nor the deploy runs.
+Each environment is off until its repository variable is `true`: `STAGING_INFRA_ENABLED`, `PRODUCTION_INFRA_ENABLED`. While off, neither Terraform nor the deploy runs. Production stays live; staging is switched on when something needs testing and off again after (`docs/guides/git-flow.md`, ADR-051).
 
 ## One image, three commands
 
@@ -47,10 +47,10 @@ Done once per environment by the owner, in this order. Names in `backticks` are 
      - `DATABASE_CA_CERT`: the cluster's CA certificate, `ca-certificate.crt` from its connection details. The deploy writes it beside the stack and mounts it in migrate, web and worker.
      - `RUNTIME_ENV`: the whole `.env`, one `NAME=value` per line. See [Environment](#environment): `APP_ENV`, `APP_URL`, `LANDING_URL`, both database URLs on the cluster's private host ending in `?sslmode=verify-full&sslrootcert=/etc/comprobify/db-ca.crt`, `AUTH_SECRET`, `CERT_ENCRYPTION_KEY`, Mailgun, `OPERATOR_RUC` and the rest.
    - No variables: the deploy reads the deploy user, the hostnames Caddy serves and the containers' limits (`web_memory`, `worker_memory`, `worker_cpus`) from the environment's `terraform.tfvars`, the one place they are set.
-7. **First deploy.** Staging: run **Deploy staging** manually. Production: publish a Release.
+7. **First deploy.** Staging: run the **Staging** workflow manually (`gh workflow run staging.yml`). Production: publish a Release (`docs/guides/git-flow.md`).
 8. **Check.** `https://app-staging.comprobify.com/health` answers `{"status":"ok"}`, and the public pages answer on the landing host. Then make the operator account a super admin (below).
 
-**Tearing staging down:** run **Terraform** manually (staging, `destroy`), then set `STAGING_INFRA_ENABLED=false`. The cluster is not Terraform's; delete it in DigitalOcean when it is no longer needed.
+**Tearing staging down:** run the **Terraform** workflow (staging, `destroy`: `gh workflow run terraform.yml -f environment=staging -f action=destroy`), then set `STAGING_INFRA_ENABLED=false`. The cluster is not Terraform's; delete it in DigitalOcean when it is no longer needed.
 
 **Rebuilding a droplet** (after a cloud-init change, which is otherwise ignored): `terraform apply -replace=module.droplet.digitalocean_droplet.this` from the environment's folder. The reserved IP moves to the new droplet, so DNS and `DROPLET_IP` stay. Deploy again after it.
 
@@ -64,7 +64,7 @@ Done once per environment by the owner, in this order. Names in `backticks` are 
 2. Start **web** and **worker** with the new image, as `comprobify_app`.
 3. Wait for `GET /health` to return 200 before routing traffic.
 
-**Rollback:** release the previous tag again (run **Release to production** manually with it). Migrations don't go back, which is why each one must leave the schema usable by the code before it.
+**Rollback:** run the **Production** workflow from the previous tag (`gh workflow run production.yml --ref vX.Y.Z`). Migrations don't go back, which is why each one must leave the schema usable by the code before it.
 
 Both web and worker refuse to start, with a list of problems, if the env is invalid or the role is a superuser, has `BYPASSRLS`, or would see an unprotected tenant table.
 

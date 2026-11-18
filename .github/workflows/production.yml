@@ -1,0 +1,75 @@
+# ADR-048, ADR-051: publishing a GitHub Release ships its tag to production, in one run, whether or
+# not staging is up. Terraform runs when infra/terraform changed since the previous release, once the
+# production-infra reviewer approves; the deploy waits for the production reviewer. A manual run,
+# for a rollback or a hotfix, is started from the tag itself (`gh workflow run production.yml --ref
+# vX.Y.Z`), since the production Environment accepts only v* tags.
+name: Production
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The tag to release, vX.Y.Z; empty means the ref the run was started from.
+        required: false
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Production is switched on, and the tag is a version.
+  ready:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.check.outputs.tag }}
+      infra: ${{ steps.check.outputs.infra }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.release.tag_name || inputs.tag || github.ref_name }}
+      - id: check
+        env:
+          TAG: ${{ github.event.release.tag_name || inputs.tag || github.ref_name }}
+          PRODUCTION: ${{ vars.PRODUCTION_INFRA_ENABLED }}
+        run: |
+          [ "$PRODUCTION" = true ] || { echo '::error::PRODUCTION_INFRA_ENABLED is not true.'; exit 1; }
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::$TAG is not a vX.Y.Z tag."; exit 1; }
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          # The release before this one; none means the first, which applies to be sure.
+          previous=$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' "$TAG^" 2>/dev/null || true)
+          if [ -n "$previous" ] && git diff --quiet "$previous" "$TAG" -- infra/terraform; then
+            echo infra=false >> "$GITHUB_OUTPUT"
+          else
+            echo infra=true >> "$GITHUB_OUTPUT"
+          fi
+          echo "Releasing $TAG (previous: ${previous:-none})"
+
+  terraform:
+    needs: ready
+    if: needs.ready.outputs.infra == 'true'
+    uses: ./.github/workflows/terraform-run.yml
+    with:
+      environment: production
+      action: apply
+      ref: ${{ needs.ready.outputs.tag }}
+    secrets: inherit
+
+  deploy:
+    needs: [ready, terraform]
+    if: >-
+      always() && needs.ready.result == 'success' &&
+      (needs.terraform.result == 'success' || needs.terraform.result == 'skipped')
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+      ref: ${{ needs.ready.outputs.tag }}
+    secrets: inherit
+    permissions:
+      contents: read
+      packages: write

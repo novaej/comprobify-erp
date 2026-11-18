@@ -13,6 +13,7 @@ Primary guide for AI assistants and developers. Every rule here takes precedence
 3. **Every change updates its docs in the same piece of work.** A change isn't done until its docs are (`docs/guides/documentation-checklist.md`).
 4. **Read the surrounding code and tests before changing anything.**
 5. **Commit and PR titles are `type: description`** (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`). Reference requirement ids in the body (`FR-…`, `NFR-…`).
+6. **Changes reach `main` by pull request only** (`docs/guides/git-flow.md`, ADR-051). Work on a `type/short-name` branch, push it, and open the PR. The owner squash-merges it once CI is green. Never push to `main`, and never publish a Release: releasing is the owner's.
 
 ---
 
@@ -52,6 +53,7 @@ pnpm test-certificate <ruc> [days]  # a test P12 (password: secret) to try onboa
 pnpm super-admin <email>      # give an existing account the platform area (--revoke takes it away)
 pnpm bench:signing            # what building, XSD-checking and signing an invoice costs (ADR-013)
 pnpm run-job <queue>          # run a scheduled job now, locally or on staging (the QA script uses it)
+pnpm --filter @comprobify/docs dev  # the docs site (docs.comprobify.com), ADR-051
 pnpm import:legacy --ruc <ruc> --super-admin <email>  # bring a company from the previous system's restored dumps; a dry run unless --commit (ADR-049, docs/guides/legacy-import.md)
 ```
 
@@ -228,6 +230,8 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `tests/integration/isolation-sweep.test.ts` | Every tenant table, from the catalog, proven isolated between companies and twins |
 | `tests/e2e/smoke.spec.ts` | Playwright smoke test |
 | `Dockerfile`, `infra/compose.yaml` | The image and the local stack |
-| `infra/terraform/`, `infra/deploy/`, `.github/workflows/deploy*.yml`, `terraform.yml`, `release-production.yml` | Staging and production: the droplet, the stack on it, and the pipeline (ADR-048); `apps/web/src/lib/hosts.ts` splits the landing and app hosts |
+| `infra/terraform/`, `infra/deploy/`, `.github/workflows/` | Staging and production: the droplet and the stack on it (ADR-048); the pipeline: `ci.yml` (pull requests), `staging.yml` (a merge to `main`), `production.yml` (a Release), `terraform.yml` and `terraform-run.yml`, `deploy.yml` (ADR-051); `apps/web/src/lib/hosts.ts` splits the landing and app hosts |
+| `docs/guides/git-flow.md` | Branches, pull requests, releases, hotfixes and the GitHub rulesets |
+| `apps/docs/` | The docs site at docs.comprobify.com (VitePress, a placeholder until the public API), published by `docs.yml` (ADR-051) |
 | `.github/workflows/ci.yml` | CI |
 | `docs/architecture.md`, `docs/guides/` | How the system fits together, and how to work in it; `guides/repo-structure.md` explains the folders and layers and why |

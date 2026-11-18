@@ -24,3 +24,7 @@ next-env.d.ts
 .terraform/
 *.tfstate
 *.tfstate.*
+
+# The docs site build (apps/docs)
+.vitepress/dist/
+.vitepress/cache/

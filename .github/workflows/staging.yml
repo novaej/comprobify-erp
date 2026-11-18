@@ -1,0 +1,71 @@
+# ADR-048: what a merge to main does, in one run. CI first; then, while staging is up
+# (STAGING_INFRA_ENABLED), Terraform when the merge changed infra/terraform, once its reviewer
+# approves; then the deploy. Nothing waits on another workflow, so one merge is one run.
+# A manual run redeploys main as it is, after CI, without Terraform.
+name: Staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One merge at a time; a newer one waits rather than cancelling a deploy halfway.
+concurrency:
+  group: staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  # Did this push change the infrastructure? Compared with what main was before it.
+  changes:
+    if: vars.STAGING_INFRA_ENABLED == 'true' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      infra: ${{ steps.diff.outputs.infra }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          # A new branch or a rewritten history has no usable "before": plan it to be sure.
+          if ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            echo infra=true >> "$GITHUB_OUTPUT"
+          elif git diff --quiet "$BEFORE" "$GITHUB_SHA" -- infra/terraform; then
+            echo infra=false >> "$GITHUB_OUTPUT"
+          else
+            echo infra=true >> "$GITHUB_OUTPUT"
+          fi
+
+  terraform:
+    needs: [ci, changes]
+    if: needs.changes.outputs.infra == 'true'
+    uses: ./.github/workflows/terraform-run.yml
+    with:
+      environment: staging
+      action: apply
+    secrets: inherit
+
+  deploy:
+    needs: [ci, changes, terraform]
+    # Runs when CI passed and Terraform applied or had nothing to do.
+    if: >-
+      always() && vars.STAGING_INFRA_ENABLED == 'true' &&
+      needs.ci.result == 'success' &&
+      (needs.terraform.result == 'success' || needs.terraform.result == 'skipped') &&
+      (needs.changes.result == 'success' || needs.changes.result == 'skipped')
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: staging
+      ref: ${{ github.sha }}
+    secrets: inherit
+    permissions:
+      contents: read
+      packages: write

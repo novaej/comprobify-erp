@@ -1,19 +1,19 @@
 name: CI
 
-# PRD section 12: lint, type-check, unit, integration, image build and audit on
-# every PR and push to main; the E2E smoke test on main.
+# PRD section 12: lint, type-check, unit, integration, image build and audit on every pull request,
+# and on main as the first step of staging.yml, which calls this; the E2E smoke test on main only.
+# A pull request's newer push cancels its older run; main's runs finish.
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
+  workflow_call:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   APP_ENV: local
@@ -91,7 +91,7 @@ jobs:
 
   e2e:
     name: E2E smoke test
-    if: github.event_name == 'push'
+    if: github.event_name != 'pull_request'
     needs: [checks, integration]
     runs-on: ubuntu-latest
     services:
