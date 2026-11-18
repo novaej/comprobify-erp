@@ -14,6 +14,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { EmptyState } from '@/components/empty-state';
 import { FeatureLocked } from '@/components/feature-locked';
 import { NoAccess } from '@/components/no-access';
+import { WriteBlocked, writesBlocked } from '@/components/write-blocked';
 import { PageHeader } from '@/components/page-header';
 import { Link } from '@/i18n/navigation';
 import { pageTitle } from '@/server/page-title';
@@ -38,6 +39,7 @@ export default async function NewBatchPage({
     return <FeatureLocked actor={actor} />;
   if (!actor.permissions.includes('sales.manage') || !actor.permissions.includes('documents.issue'))
     return <NoAccess />;
+  if (writesBlocked(actor)) return <WriteBlocked />;
 
   const { db } = await getRuntime();
   const page = Math.max(1, Number.parseInt(search.page ?? '1', 10) || 1);

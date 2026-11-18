@@ -17,5 +17,5 @@ export async function pairOf(tx: Tx['db'], tenantId: string): Promise<Pair> {
     .select({ id: tenants.id })
     .from(tenants)
     .where(eq(tenants.twinOf, realTenantId));
-  return { realTenantId, twinTenantId: twin?.id ?? null, name: real!.tradeName ?? real!.legalName };
+  return { realTenantId, twinTenantId: twin?.id ?? null, name: real!.legalName };
 }

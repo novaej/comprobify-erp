@@ -120,6 +120,7 @@ export function EmailEditor({
           </>
         }
       >
+        {hasDraft && <p className="mb-3 text-sm text-muted-foreground">{t('draftHint')}</p>}
         <dl className="mb-4 grid gap-2 rounded-md bg-muted/40 p-3 text-xs sm:grid-cols-2">
           <div>
             <dt className="text-muted-foreground">{t('allowed')}</dt>
@@ -306,19 +307,21 @@ export function EmailEditor({
                   <StackCell label={t('whenColumn')}>{row.when}</StackCell>
                   <StackCell label={t('authorColumn')}>{row.author ?? '—'}</StackCell>
                   <StackCell className="text-right">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      disabled={restore.pending}
-                      onClick={() => restore.run(form({ version: String(row.version) }))}
-                    >
-                      {t('useAsDraft')}
-                      <span className="sr-only">
-                        {' '}
-                        {t('useAsDraftFor', { version: row.version })}
-                      </span>
-                    </Button>
+                    {row.status === 'DRAFT' || row.version === inUseVersion ? null : (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        disabled={restore.pending}
+                        onClick={() => restore.run(form({ version: String(row.version) }))}
+                      >
+                        {t('useAsDraft')}
+                        <span className="sr-only">
+                          {' '}
+                          {t('useAsDraftFor', { version: row.version })}
+                        </span>
+                      </Button>
+                    )}
                   </StackCell>
                 </StackRow>
               ))}

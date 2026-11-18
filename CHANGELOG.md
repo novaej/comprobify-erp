@@ -6,6 +6,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Added
 
+- The platform's company list searches as you type, like every other list (FR-ADM-1).
 - A yellow banner "Sistema local / de staging: no es producción" for a company in production on a system that isn't, and every email from such a system now starts with **[LOCAL]** or **[STAGING]** and says so in its first line, apart from the [PRUEBAS] of a test copy (FR-ONB-6).
 - Comprobantes can be ordered by number, date, buyer, total or status from the column headers, with the filters kept (FR-DOC-12).
 - The accountant's export can include each document's PDF (RIDE) beside its XML, ticked by default; a month over 1,000 documents asks to go without them (FR-REP-3).
@@ -159,6 +160,10 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Fixed
 
+- The email editor: **Usar como borrador** now shows the restored text at once, the button is gone from the draft and the version in use (where it did nothing), and the draft badge and a note say it is unpublished and what publishing does.
+- A company is shown by its razón social, not its nombre comercial, in the switcher, the platform and purchase orders (the nombre comercial stays beneath it on the order).
+- A suspended or past-due company opening a form that issues documents (new invoice, credit note, guide, correction, bulk, invoicing an order) sees "You can't do this right now" instead of "Algo salió mal".
+- `data-scroll-behavior="smooth"` on the page root, silencing Next's navigation warning.
 - The bell and **Notificaciones** in the production company show only production's notices; the test copy still shows all, marked as such. "Marcar todas" touches only what is shown (FR-NOT-1).
 - A "Se autorizaron N documentos" notice always opens the Comprobantes list, including ones made before, instead of the first invoice (FR-NOT-2).
 - Toasts now appear at the top centre with a close button, so they no longer cover a form's buttons at the bottom right (FR-UX-2).

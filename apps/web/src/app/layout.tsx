@@ -20,6 +20,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html
       lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} ${display.variable} h-full`}
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <body className="h-full antialiased">

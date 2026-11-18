@@ -379,7 +379,9 @@
   },
   "noAccess": {
     "title": "No tienes acceso",
-    "description": "Tu rol no incluye esta sección. Pide acceso al propietario o a un administrador."
+    "description": "Tu rol no incluye esta sección. Pide acceso al propietario o a un administrador.",
+    "blockedTitle": "Ahora no puedes hacer esto",
+    "blockedDescription": "Mientras la empresa esté vencida o suspendida solo puedes consultar tus datos. Revisa el aviso de arriba."
   },
   "twoFactor": {
     "title": "Verificación en dos pasos",
@@ -3534,7 +3536,7 @@
       "title": "Texto del correo",
       "description": "El diseño es fijo: tú escribes el asunto, el título, el mensaje, el botón y el pie. Guarda para tener un borrador, mira la vista previa o envíate una prueba, y publica cuando esté bien.",
       "inUse": "Versión {version} en uso",
-      "draft": "Borrador {version}",
+      "draft": "Borrador sin publicar (nº {version})",
       "allowed": "Campos que puedes usar",
       "required": "Campos obligatorios",
       "none": "Ninguno",
@@ -3563,7 +3565,7 @@
       "discardTitle": "Descartar el borrador",
       "discardDescription": "Se pierde este texto. El que está en uso no cambia.",
       "historyTitle": "Historial",
-      "historyDescription": "Cada versión que ha tenido este correo. Para volver a una, úsala como borrador y publícala: queda como una versión nueva.",
+      "historyDescription": "Cada versión que ha tenido este correo. Para volver a una antigua, úsala como borrador (reemplaza el borrador actual) y publícala: queda como una versión nueva. La versión en uso y el borrador no tienen ese botón.",
       "versionColumn": "Versión",
       "statusColumn": "Estado",
       "whenColumn": "Fecha",
@@ -3572,7 +3574,8 @@
       "versionLabel": "Versión {version}",
       "useAsDraft": "Usar como borrador",
       "useAsDraftFor": "(versión {version})",
-      "restored": "La versión pasó a tu borrador."
+      "restored": "La versión pasó a tu borrador.",
+      "draftHint": "Guardar crea un borrador: nadie lo recibe hasta que lo publiques. Al publicarlo pasa a ser la versión en uso."
     }
   },
   "adminNotifications": {

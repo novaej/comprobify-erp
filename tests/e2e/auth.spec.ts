@@ -2290,6 +2290,8 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
       .getByRole('button', { name: /Usar como borrador/ })
       .click();
     await expect(page.getByText('La versión pasó a tu borrador.')).toBeVisible();
+    // The editor shows the restored text at once, without a reload.
+    await expect(page.getByLabel('Título')).not.toHaveValue('You are on the Free plan now');
     await page.getByLabel('Título').fill('Your company is on the Free plan');
     await page.getByRole('button', { name: 'Descartar el borrador' }).click();
     await page

@@ -33,7 +33,6 @@ const columns = () => {
     realTenantId: tenants.id,
     ruc: tenants.ruc,
     legalName: tenants.legalName,
-    tradeName: tenants.tradeName,
     status: tenants.status,
     suspensionReason: tenants.suspensionReason,
     suspendedAt: tenants.suspendedAt,
@@ -44,7 +43,7 @@ const columns = () => {
 
 async function withTwins(
   tx: Tx['db'],
-  rows: (Omit<CompanyRow, 'twinTenantId' | 'name'> & { tradeName: string | null })[],
+  rows: Omit<CompanyRow, 'twinTenantId' | 'name'>[],
 ): Promise<CompanyRow[]> {
   if (rows.length === 0) return [];
   const { tenants } = schema;
@@ -58,11 +57,11 @@ async function withTwins(
       ),
     );
   const twinOf = new Map(twins.map((twin) => [twin.twinOf!, twin.id]));
-  return rows.map(({ tradeName, ...row }) => {
+  return rows.map((row) => {
     const twinTenantId = twinOf.get(row.realTenantId);
     // Every company is created with its twin (FR-ONB-4).
     if (!twinTenantId) throw new Error(`Company ${row.realTenantId} has no twin`);
-    return { ...row, twinTenantId, name: tradeName ?? row.legalName };
+    return { ...row, twinTenantId, name: row.legalName };
   });
 }
 

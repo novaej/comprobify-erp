@@ -98,16 +98,14 @@ function header(doc: Doc, data: OrderPdfData): number {
       // A logo pdfkit can't read is left out rather than failing the order.
     }
   }
-  write(doc, data.company.tradeName ?? data.company.legalName, M, y, leftW, {
+  write(doc, data.company.legalName, M, y, leftW, {
     size: 12,
     bold: true,
   });
-  y +=
-    height(doc, data.company.tradeName ?? data.company.legalName, leftW, { size: 12, bold: true }) +
-    2;
+  y += height(doc, data.company.legalName, leftW, { size: 12, bold: true }) + 2;
   if (data.company.tradeName) {
-    write(doc, data.company.legalName, M, y, leftW, { color: GREY });
-    y += height(doc, data.company.legalName, leftW) + 1;
+    write(doc, data.company.tradeName, M, y, leftW, { color: GREY });
+    y += height(doc, data.company.tradeName, leftW) + 1;
   }
   write(doc, `RUC: ${data.company.ruc}`, M, y, leftW, { color: GREY });
   y += 11;

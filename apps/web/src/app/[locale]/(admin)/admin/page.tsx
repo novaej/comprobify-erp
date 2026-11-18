@@ -1,9 +1,8 @@
 import { listCompanies } from '@comprobify/core';
-import { Button } from '@comprobify/ui/components/button';
-import { Input } from '@comprobify/ui/components/input';
-import { Building2, Search } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { EmptyState } from '@/components/empty-state';
+import { ListToolbar } from '@/components/list-toolbar';
 import { PageHeader } from '@/components/page-header';
 import {
   StackBody,
@@ -45,19 +44,7 @@ export default async function AdminCompaniesPage({
         description={t('companiesDescription')}
         className="mb-2"
       />
-      <form className="flex max-w-md gap-2" role="search">
-        <Input
-          name="q"
-          type="search"
-          defaultValue={q ?? ''}
-          aria-label={t('search')}
-          placeholder={t('search')}
-        />
-        <Button type="submit" variant="outline">
-          <Search className="mr-1.5 h-4 w-4" aria-hidden />
-          {t('searchButton')}
-        </Button>
-      </form>
+      <ListToolbar searchLabel={t('search')} query={q ?? ''} />
       <TableCard>
         {companies.length === 0 ? (
           <EmptyState

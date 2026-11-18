@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { EmptyState } from '@/components/empty-state';
 import { NoAccess } from '@/components/no-access';
+import { WriteBlocked, writesBlocked } from '@/components/write-blocked';
 import { PageHeader } from '@/components/page-header';
 import { Link, redirect } from '@/i18n/navigation';
 import { safeBack, withBack } from '@/lib/back';
@@ -29,6 +30,7 @@ export default async function NewCreditNotePage({
   setRequestLocale(locale);
   const { actor } = await loadShell(locale);
   if (!actor.permissions.includes('documents.issue')) return <NoAccess />;
+  if (writesBlocked(actor)) return <WriteBlocked />;
 
   const { db } = await getRuntime();
   let origin: DocumentDetail;

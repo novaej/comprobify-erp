@@ -4,6 +4,7 @@ import { Store } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { EmptyState } from '@/components/empty-state';
 import { NoAccess } from '@/components/no-access';
+import { WriteBlocked, writesBlocked } from '@/components/write-blocked';
 import { PageHeader } from '@/components/page-header';
 import { Link } from '@/i18n/navigation';
 import { pageTitle } from '@/server/page-title';
@@ -19,6 +20,7 @@ export default async function NewInvoicePage({ params }: { params: Promise<{ loc
   setRequestLocale(locale);
   const { actor } = await loadShell(locale);
   if (!actor.permissions.includes('documents.issue')) return <NoAccess />;
+  if (writesBlocked(actor)) return <WriteBlocked />;
 
   const data = await invoiceFormData(actor);
   const t = await getTranslations('invoiceForm');

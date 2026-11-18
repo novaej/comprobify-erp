@@ -379,7 +379,9 @@
   },
   "noAccess": {
     "title": "You don't have access",
-    "description": "Your role doesn't include this section. Ask the owner or an administrator for access."
+    "description": "Your role doesn't include this section. Ask the owner or an administrator for access.",
+    "blockedTitle": "You can't do this right now",
+    "blockedDescription": "While the company is past due or suspended you can only view your data. See the notice above."
   },
   "twoFactor": {
     "title": "Two-step verification",
@@ -3534,7 +3536,7 @@
       "title": "The email's text",
       "description": "The layout is fixed: you write the subject, heading, message, button and footer. Save to keep a draft, look at the preview or send yourself a test, and publish when it's right.",
       "inUse": "Version {version} in use",
-      "draft": "Draft {version}",
+      "draft": "Unpublished draft (no. {version})",
       "allowed": "Fields you can use",
       "required": "Required fields",
       "none": "None",
@@ -3563,7 +3565,7 @@
       "discardTitle": "Discard the draft",
       "discardDescription": "This text is lost. The one in use doesn't change.",
       "historyTitle": "History",
-      "historyDescription": "Every version this email has had. To go back to one, use it as a draft and publish it: it becomes a new version.",
+      "historyDescription": "Every version this email has had. To go back to an old one, use it as the draft (it replaces the current draft) and publish it: it becomes a new version. The version in use and the draft don't have that button.",
       "versionColumn": "Version",
       "statusColumn": "Status",
       "whenColumn": "Date",
@@ -3572,7 +3574,8 @@
       "versionLabel": "Version {version}",
       "useAsDraft": "Use as draft",
       "useAsDraftFor": "(version {version})",
-      "restored": "The version is now your draft."
+      "restored": "The version is now your draft.",
+      "draftHint": "Saving creates a draft: nobody receives it until you publish it. Publishing makes it the version in use."
     }
   },
   "adminNotifications": {

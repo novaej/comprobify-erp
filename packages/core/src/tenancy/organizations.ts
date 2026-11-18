@@ -224,7 +224,7 @@ export async function listOrganizations(
         realTenantId: row.id,
         twinTenantId: twins.get(row.id) ?? null,
         ruc: row.ruc,
-        name: row.tradeName ?? row.legalName,
+        name: row.legalName,
         role: row.role,
         live: row.liveAt !== null,
         requireTwoFactor: row.requireTwoFactor,

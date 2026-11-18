@@ -91,13 +91,13 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | M1 | Take the company to production | ✅ |
 | M2 | The first production invoice | ✅ |
 | M3 | The quota fills up | ✅ |
-| N1 | A company's plan, exceptions and suspension | ⬜ |
-| N2 | Prices and the IVA | ⬜ |
-| N3 | Plans and modules | ⬜ |
-| N4 | The email editor | ⬜ |
-| N5 | Jobs and notices | ⬜ |
-| N6 | The admin log | ⬜ |
-| N7 | SRI's answers for a document | ⬜ |
+| N1 | A company's plan, exceptions and suspension | ✅ |
+| N2 | Prices and the IVA | ✅ |
+| N3 | Plans and modules | ✅ |
+| N4 | The email editor | ✅ |
+| N5 | Jobs and notices | ✅ |
+| N6 | The admin log | ✅ |
+| N7 | SRI's answers for a document | ✅ |
 | R1 | The real SRI, test environment | ⬜ |
 
 ---

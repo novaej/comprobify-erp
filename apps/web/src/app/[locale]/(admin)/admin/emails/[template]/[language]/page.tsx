@@ -47,6 +47,7 @@ export default async function AdminEmailPage({
         className="mb-2"
       />
       <EmailEditor
+        key={JSON.stringify([detail.draft?.version ?? null, saved])}
         template={detail.template}
         language={detail.locale}
         placeholders={{
