@@ -91,6 +91,7 @@ export const OPERATIONS_AUDIT_ACTIONS = [
   'stock.adjusted',
   'stock.opening_set',
   'stock.opening_imported',
+  'stock.counted',
   'product.created',
   'product.updated',
   'product.active_changed',

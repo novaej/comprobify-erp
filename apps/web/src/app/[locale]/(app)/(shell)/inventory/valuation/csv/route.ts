@@ -8,12 +8,14 @@ const cell = (value: string, delimiter: string) =>
   value.includes(delimiter) || /["\r\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
 
 // FR-INV-5: the valuation's lines, in the format the locale's spreadsheet opens directly.
-export async function GET(_: Request, { params }: { params: Promise<{ locale: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const { actor } = await loadShell(locale);
   const { db } = await getRuntime();
   try {
-    const valuation = await stockValuation(actor, db);
+    // A past day, such as 31 December; core reads anything else as today.
+    const asOf = new URL(request.url).searchParams.get('asOf') ?? undefined;
+    const valuation = await stockValuation(actor, db, { asOf });
     // The screen reads the same figures; this download is data taken out.
     await recordDataExport(actor, db, 'stock_valuation');
     const t = await getTranslations({ locale, namespace: 'inventory.valuation.csv' });
@@ -51,7 +53,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ locale: st
     return new Response(body, {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="${t('filename')}"`,
+        'Content-Disposition': `attachment; filename="${t('filename', { date: valuation.asOf })}"`,
         'Cache-Control': 'private, no-store',
       },
     });

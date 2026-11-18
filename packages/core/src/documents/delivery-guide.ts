@@ -89,6 +89,9 @@ export const guideInput = z.object({
   recipients: z.array(recipient).min(1).max(50),
   // The provider RUC takes the fifteenth place.
   additionalInfo: z.array(nameValue).max(14).default([]),
+  // NFR-ARCH-3: the caller's own reference for the document (an order number, another system's
+  // id). Stored and searchable, never sent to SRI.
+  externalReference: z.string().trim().min(1).max(100).nullable().default(null),
   idempotencyKey: z.string().trim().min(1).max(100).nullable().default(null),
 });
 export type GuideInput = z.input<typeof guideInput>;
@@ -97,6 +100,7 @@ export const guideCorrectionInput = guideInput.omit({
   issuePointId: true,
   originId: true,
   idempotencyKey: true,
+  externalReference: true,
 });
 export type GuideCorrectionInput = z.input<typeof guideCorrectionInput>;
 
@@ -270,6 +274,7 @@ export async function createGuide(
         ambiente,
         relatedDocumentId: origin?.id ?? null,
         idempotencyKey: input.idempotencyKey,
+        externalReference: input.externalReference,
         payloadHash,
         createdBy: ctx.userId ?? null,
       })

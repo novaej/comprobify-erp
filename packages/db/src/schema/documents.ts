@@ -156,6 +156,8 @@ export const documents = pgTable(
     overdueAlertedAt: timestamp('overdue_alerted_at', { withTimezone: true }),
     // FR-DOC-2: the same key and payload give the same document; another payload, a conflict.
     idempotencyKey: text('idempotency_key'),
+    // NFR-ARCH-3: the caller's own reference, searchable; never sent to SRI.
+    externalReference: text('external_reference'),
     payloadHash: text('payload_hash'),
     createdBy: uuid('created_by').references(() => users.id),
     createdAt: createdAt(),
@@ -192,6 +194,16 @@ export const documents = pgTable(
       .on(table.tenantId, table.idempotencyKey)
       .where(sql`idempotency_key IS NOT NULL`),
     index('documents_tenant_status_idx').on(table.tenantId, table.status),
+    // Comprobantes, newest first, page by page (NFR-PERF-4).
+    index('documents_tenant_recent_idx').on(
+      table.tenantId,
+      table.issueDate,
+      table.sequential,
+      table.id,
+    ),
+    index('documents_external_reference_idx')
+      .on(table.tenantId, table.externalReference)
+      .where(sql`external_reference IS NOT NULL`),
     // The overdue sweep reads across tenants.
     index('documents_received_idx')
       .on(table.receivedAt)

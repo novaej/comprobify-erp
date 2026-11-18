@@ -50,6 +50,7 @@ pnpm stack:up            # Docker stack on :8080: caddy, migrate, web, worker, u
 pnpm stack:down
 pnpm test-certificate <ruc> [days]  # a test P12 (password: secret) to try onboarding locally; days: expires that soon
 pnpm super-admin <email>      # give an existing account the platform area (--revoke takes it away)
+pnpm bench:signing            # what building, XSD-checking and signing an invoice costs (ADR-013)
 pnpm run-job <queue>          # run a scheduled job now, locally or on staging (the QA script uses it)
 ```
 
@@ -172,7 +173,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/db/migrations/` | Reviewed SQL migrations |
 | `packages/config/src/env.ts` | Env schemas per process |
 | `packages/config/src/logger.ts` | Allow-listed logger |
-| `packages/core/src/kernel/` | Actor context (with its `standing`), `DomainError`, `Clock`, entitlement checks, the write block in `requirePermission` (ADR-031), Ecuador time (`ecuador-time.ts`, the one place for rule 15) |
+| `packages/core/src/kernel/` | Actor context (with its `standing`), `DomainError`, `Clock`, entitlement checks, the write block in `requirePermission` (ADR-031), Ecuador time (`ecuador-time.ts`, the one place for rule 15), keyset paging (`keyset.ts`, ADR-047) |
 | `packages/core/src/jobs/` | Queue registry and schedules |
 | `packages/core/src/identity/` | Better Auth setup, rate limits, sessions and idle timeout |
 | `packages/core/src/tenancy/` | Organizations and twins, roles and permissions, actor context, ambiente |

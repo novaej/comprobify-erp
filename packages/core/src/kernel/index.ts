@@ -50,4 +50,14 @@ export {
   type CsvTable,
 } from './csv-table';
 export { createZip, ZIP_MAX_ENTRIES, type ZipEntry } from './zip';
+export {
+  cursorInput,
+  decodeCursor,
+  encodeCursor,
+  keysetPage,
+  type CursorValue,
+  type KeysetColumn,
+  type KeysetPage,
+  type KeysetRequest,
+} from './keyset';
 export { RETENTION } from './retention';

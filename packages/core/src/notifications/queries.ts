@@ -14,7 +14,14 @@ import {
   type NotificationType,
 } from '@comprobify/db';
 import { z } from 'zod';
-import { DomainError, type ActorContext, type TenantMode } from '../kernel';
+import {
+  cursorInput,
+  DomainError,
+  keysetPage,
+  type ActorContext,
+  type KeysetRequest,
+  type TenantMode,
+} from '../kernel';
 import { realTenantOf } from '../tenancy';
 import { NOTIFICATIONS, type Catalogue } from './catalog';
 import { channelsFor } from './notify';
@@ -59,42 +66,54 @@ export const PAGE_SIZE = 20;
 export async function listNotifications(
   ctx: ActorContext,
   db: Database,
-  options: { unreadOnly?: boolean; page?: number; pageSize?: number } = {},
-): Promise<{ items: NotificationView[]; hasMore: boolean }> {
+  options: { unreadOnly?: boolean; pageSize?: number } & KeysetRequest = {},
+): Promise<{ items: NotificationView[]; next: string | null; previous: string | null }> {
   const { userId, tenantId } = await own(ctx, db);
   const size = Math.min(Math.max(options.pageSize ?? PAGE_SIZE, 1), 100);
-  const page = Math.max(options.page ?? 1, 1);
+  const cursor = {
+    after: cursorInput.catch(undefined).parse(options.after),
+    before: cursorInput.catch(undefined).parse(options.before),
+  };
   return db.withTenant({ tenantId }, async ({ db: tx }) => {
     const { notificationReceipts: receipts, notifications } = schema;
-    const rows = await tx
-      .select({
-        id: receipts.id,
-        type: notifications.type,
-        params: notifications.params,
-        link: notifications.link,
-        environment: notifications.environment,
-        createdAt: notifications.createdAt,
-        readAt: receipts.readAt,
-      })
-      .from(receipts)
-      .innerJoin(
-        notifications,
-        and(
-          eq(notifications.tenantId, receipts.tenantId),
-          eq(notifications.id, receipts.notificationId),
-        ),
-      )
-      .where(
-        and(
-          eq(receipts.userId, userId),
-          options.unreadOnly ? isNull(receipts.readAt) : undefined,
-          visibleIn(ctx),
-        ),
-      )
-      .orderBy(desc(notifications.createdAt), desc(receipts.id))
-      .limit(size + 1)
-      .offset((page - 1) * size);
-    return { items: rows.slice(0, size).map(withLink), hasMore: rows.length > size };
+    // Newest first, by the receipt's uuidv7: exact, where a timestamp in JavaScript is not
+    // (NFR-PERF-4).
+    const page = await keysetPage(
+      [{ expr: sql`${receipts.id}`, direction: 'desc' }],
+      cursor,
+      size,
+      (seek, order, limit) =>
+        tx
+          .select({
+            id: receipts.id,
+            type: notifications.type,
+            params: notifications.params,
+            link: notifications.link,
+            environment: notifications.environment,
+            createdAt: notifications.createdAt,
+            readAt: receipts.readAt,
+          })
+          .from(receipts)
+          .innerJoin(
+            notifications,
+            and(
+              eq(notifications.tenantId, receipts.tenantId),
+              eq(notifications.id, receipts.notificationId),
+            ),
+          )
+          .where(
+            and(
+              eq(receipts.userId, userId),
+              options.unreadOnly ? isNull(receipts.readAt) : undefined,
+              visibleIn(ctx),
+              seek,
+            ),
+          )
+          .orderBy(...order)
+          .limit(limit),
+      (row) => [row.id],
+    );
+    return { items: page.rows.map(withLink), next: page.next, previous: page.previous };
   });
 }
 

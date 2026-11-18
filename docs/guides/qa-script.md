@@ -538,12 +538,14 @@ All of Parts D to L happen in Comercial Andina's **test copy** (Pruebas). Part M
 
 ### E3 · Valuation and the nightly check
 
-**Needs:** E2. **Leaves:** nothing new.
+**Needs:** E2. **Leaves:** CAF-1 at 47 in Matriz.
 
 | # | Do | Expect |
 |---|---|---|
 | 1 | **Inventario** → valuation | Each product's quantity, average cost and value, by warehouse; the total (CAF-1 in both Matriz and Norte) |
 | 2 | Download its CSV and open it in Excel | The same quantities, costs and values as on the screen, by warehouse, with accents intact |
+| 2b | **Al día**: pick yesterday, then a day before the first movement | Yesterday's figures (today's changes left out); then nothing. The CSV's name carries the day |
+| 2c | **Importar un conteo**: download the template, put CAF-1 with Matriz 47 and Norte 20, reason "Conteo físico QA" | "Se hizo 1 ajuste; 1 sin cambios." Matriz 47 with a "Salida" of 1 and the reason; **Actividad** → Operaciones: "importó un conteo físico". A line with a code that doesn't exist refuses the whole file |
 | 3 | `pnpm run-job inventory.verify` | The command only queues the job ("Queued inventory.verify …; the worker runs it next"). Look in the terminal where `pnpm dev` runs, the worker's output: within seconds a line "Checked N stock levels, 0 with drift" (N is the products times their warehouses). A line "A stock level differs from its ledger" would be a problem |
 
 ---

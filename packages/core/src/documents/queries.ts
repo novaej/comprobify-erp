@@ -1,7 +1,6 @@
 import {
   and,
   asc,
-  desc,
   eq,
   gte,
   ilike,
@@ -20,6 +19,11 @@ import {
   hasFeature,
   requirePermission,
   type ActorContext,
+  cursorInput,
+  keysetPage,
+  type CursorValue,
+  type KeysetColumn,
+  type KeysetPage,
 } from '../kernel';
 import { authorizedXmlFile, CONSUMER_FINAL_ID, SELECTABLE_IVA_RATES, SRI_IVA_RATES } from '../sri';
 import { rideData, type Transport } from '../sri';
@@ -109,7 +113,9 @@ export const documentFilters = z.object({
   to: z.iso.date().optional(),
   // Number, buyer name or identification.
   query: z.string().trim().max(100).optional(),
-  page: z.coerce.number().int().min(1).max(10_000).default(1),
+  // NFR-PERF-4: the page after or before a row of the list, from the previous page's links.
+  after: cursorInput,
+  before: cursorInput,
   sort: z.enum(DOCUMENT_SORTS).optional(),
   direction: z.enum(['asc', 'desc']).optional(),
 });
@@ -132,7 +138,7 @@ export async function listDocuments(
   ctx: ActorContext,
   db: Database,
   raw: DocumentFilters = {},
-): Promise<{ rows: DocumentListRow[]; total: number; page: number; pageSize: number }> {
+): Promise<KeysetPage<DocumentListRow>> {
   requirePermission(ctx, 'documents.read');
   const filters = documentFilters.parse(raw);
   const { documents } = schema;
@@ -152,6 +158,7 @@ export async function listDocuments(
       ? or(
           ilike(documents.buyerName, `%${query}%`),
           ilike(documents.buyerIdentification, `${query}%`),
+          ilike(documents.externalReference, `${query}%`),
           sequential !== null && Number.isSafeInteger(sequential) && sequential > 0
             ? eq(documents.sequential, sequential)
             : undefined,
@@ -165,46 +172,61 @@ export async function listDocuments(
     total: [sql`${documents.total}`],
     status: [sql`${documents.status}`],
   };
-  // A chosen column, then newest first so equal values stay in a steady order.
-  const order = filters.sort
-    ? [
-        ...columns[filters.sort].map((column) =>
-          filters.direction === 'desc' ? sql`${column} DESC` : sql`${column} ASC`,
-        ),
-        desc(documents.issueDate),
-        desc(documents.sequential),
-      ]
-    : [desc(documents.issueDate), desc(documents.sequential)];
+  // A chosen column, then newest first so equal values stay in a steady order; the id last, so
+  // no two rows tie and the keyset never skips one.
+  const direction: KeysetColumn['direction'] = filters.direction === 'desc' ? 'desc' : 'asc';
+  const order: KeysetColumn[] = [
+    ...(filters.sort
+      ? columns[filters.sort].map((expr): KeysetColumn => ({ expr, direction }))
+      : []),
+    { expr: sql`${documents.issueDate}`, direction: 'desc' },
+    { expr: sql`${documents.sequential}`, direction: 'desc' },
+    { expr: sql`${documents.id}`, direction: 'desc' },
+  ];
   return db.withTenant({ tenantId: ctx.tenantId }, async ({ db: tx }) => {
-    const [count] = await tx
-      .select({ total: sql<number>`count(*)::int` })
-      .from(documents)
-      .where(where);
-    const rows = await tx
-      .select({
-        id: documents.id,
-        series: documents.series,
-        sequential: documents.sequential,
-        documentType: documents.documentType,
-        issueDate: documents.issueDate,
-        buyerName: documents.buyerName,
-        buyerIdentification: documents.buyerIdentification,
-        total: documents.total,
-        status: documents.status,
-      })
-      .from(documents)
-      .where(where)
-      .orderBy(...order)
-      .limit(DOCUMENTS_PAGE_SIZE)
-      .offset((filters.page - 1) * DOCUMENTS_PAGE_SIZE);
+    const page = await keysetPage(
+      order,
+      filters,
+      DOCUMENTS_PAGE_SIZE,
+      (seek, orderBy, limit) =>
+        tx
+          .select({
+            id: documents.id,
+            series: documents.series,
+            sequential: documents.sequential,
+            documentType: documents.documentType,
+            issueDate: documents.issueDate,
+            buyerName: documents.buyerName,
+            buyerIdentification: documents.buyerIdentification,
+            total: documents.total,
+            status: documents.status,
+          })
+          .from(documents)
+          .where(and(where, seek))
+          .orderBy(...orderBy)
+          .limit(limit),
+      (row) => {
+        const sorted: Record<(typeof DOCUMENT_SORTS)[number], CursorValue[]> = {
+          number: [row.series, row.sequential],
+          date: [row.issueDate],
+          buyer: [row.buyerName.toLowerCase()],
+          total: [row.total],
+          status: [row.status],
+        };
+        return [
+          ...(filters.sort ? sorted[filters.sort] : []),
+          row.issueDate,
+          row.sequential,
+          row.id,
+        ];
+      },
+    );
     return {
-      rows: rows.map(({ series, sequential: number, ...row }) => ({
+      ...page,
+      rows: page.rows.map(({ series, sequential: number, ...row }) => ({
         ...row,
         number: documentNumber(series, number),
       })),
-      total: count!.total,
-      page: filters.page,
-      pageSize: DOCUMENTS_PAGE_SIZE,
     };
   });
 }
@@ -241,6 +263,8 @@ export type DocumentDetail = {
   total: string;
   authorizationNumber: string | null;
   authorizedAt: Date | null;
+  // NFR-ARCH-3.
+  externalReference: string | null;
   revision: number;
   // The sale order an invoice was made from, or a guía's through its invoice (FR-SAL-3, FR-SAL-9).
   saleOrder: { id: string; number: number } | null;
@@ -431,6 +455,7 @@ export async function getDocument(
       total: row.total,
       authorizationNumber: row.authorizationNumber,
       authorizedAt: row.authorizedAt,
+      externalReference: row.externalReference,
       revision: row.revision,
       // An invoice's order, and a guía's through the invoice it goes with.
       saleOrder:

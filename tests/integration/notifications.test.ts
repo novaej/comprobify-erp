@@ -166,7 +166,8 @@ describe('the notification centre', () => {
       expect(await unreadCount(await as(who), db)).toBe(0);
       await expect(listNotifications(await as(who), db)).resolves.toEqual({
         items: [],
-        hasMore: false,
+        next: null,
+        previous: null,
       });
     }
     expect(await unreadCount(await as('owner'), db)).toBe(1);
@@ -214,11 +215,13 @@ describe('the notification centre', () => {
     const owner = await as('owner', org.twinTenantId);
     const first = await listNotifications(owner, db, { pageSize: 1 });
     expect(first.items).toHaveLength(1);
-    expect(first.hasMore).toBe(true);
-    const second = await listNotifications(owner, db, { pageSize: 1, page: 2 });
+    expect(first.next).not.toBeNull();
+    const second = await listNotifications(owner, db, { pageSize: 1, after: first.next! });
     expect(second.items).toHaveLength(1);
     expect(second.items[0]!.id).not.toBe(first.items[0]!.id);
-    expect(second.hasMore).toBe(false);
+    expect(second.next).toBeNull();
+    const back = await listNotifications(owner, db, { pageSize: 1, before: second.previous! });
+    expect(back.items[0]!.id).toBe(first.items[0]!.id);
   });
 
   it('lists only the types a role receives, and honours what a member turns off', async () => {
@@ -434,7 +437,11 @@ describe('the notification centre', () => {
       tenantId: other.realTenantId,
       clock,
     });
-    await expect(listNotifications(mine, db)).resolves.toEqual({ items: [], hasMore: false });
+    await expect(listNotifications(mine, db)).resolves.toEqual({
+      items: [],
+      next: null,
+      previous: null,
+    });
     expect(await unreadCount(mine, db)).toBe(0);
   });
 });

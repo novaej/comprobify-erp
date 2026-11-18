@@ -66,3 +66,5 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [043](043-twin-reset.md) | Twin reset | Accepted |
 | [044](044-ownership-transfer.md) | Ownership transfer | Accepted |
 | [045](045-remembered-devices-and-idle-timeout.md) | Remembered devices and the company's idle timeout | Accepted |
+| [046](046-stock-at-year-end.md) | Stock at year end | Accepted |
+| [047](047-keyset-paging.md) | Keyset paging for the large lists | Accepted |

@@ -6,6 +6,10 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Added
 
+- The stock valuation **as of a day**, such as 31 December: the ledger summed to the end of that day, on screen and in its CSV (ADR-046, FR-INV-5).
+- **Importar un conteo** on Inventario: a CSV of counted quantities becomes adjustments in at the average or out, all with one reason, whole or not at all, and one `stock.counted` entry in the activity log (ADR-046, FR-INV-3).
+- An optional `externalReference` on facturas, notas de crédito and guías: the caller's own reference, never sent to SRI, shown on the document and found by the Comprobantes search (NFR-ARCH-3).
+- `pnpm bench:signing` measures building, XSD-checking and signing an invoice; the figures are in ADR-013 (about 4 ms an invoice, NFR-PERF-2).
 - **Recordar este dispositivo por 30 días** on the two-step code page: that browser skips the code at sign-in (not the password), renewed each time; signing out everywhere, a password reset or turning the code off forgets every device, and the super admin is always asked (FR-USR-3, ADR-045).
 - The idle timeout is the company's: Empresa → **Sesiones**, from 5 minutes to 8 hours, the same in its test copy; it was always 30 minutes before (FR-USR-2, ADR-045).
 - Ownership transfer: on Usuarios the owner hands the company and its test copy to another active member, typing their email to confirm; the old owner stays as an admin, and the change is in the activity log (PRD section 3, ADR-044).
@@ -151,6 +155,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Changed
 
+- Comprobantes, a product's movements and the notification list page by keyset, with **Anterior** and **Siguiente** instead of page numbers, so the thousandth page costs what the first does (NFR-PERF-4, ADR-047).
 - An invoice made from a sale order must use an issue point of the branch of the order's warehouse, as the goods leave from there: core refuses any other (`ISSUE_POINT_WAREHOUSE_MISMATCH`), the invoice-from-order form lists only those issue points, and bulk invoicing lists the orders held in the chosen issue point's warehouse, one batch per warehouse (FR-SAL-4, FR-BULK-1, ADR-042).
 - Emails sent for a company (a purchase order, the buyer's copy of an invoice) carry the company's new **contact email** as Reply-To and name it in the footer, which now says the sender address receives no messages. The contact email is asked for in onboarding (prefilled with the account's) and edited in Empresa. A purchase order falls back to the address of the person who sent it. The purchase order's closing line asks the provider to reply to confirm that it received the order and when it can deliver (it read as if the goods had arrived) (FR-PUR-3, FR-DOC-11, ADR-040).
 - On a narrow screen the remove button of a purchase or sale order line sits in the corner of its card, instead of alone on a row.

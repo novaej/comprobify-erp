@@ -85,6 +85,9 @@ export const invoiceInput = z.object({
   additionalInfo: z.array(nameValue).max(10).default([]),
   // Edits to the client made in the form, saved with the invoice (FR-MD-2).
   clientChanges: buyerChangesInput.nullable().default(null),
+  // NFR-ARCH-3: the caller's own reference for the document (an order number, another system's
+  // id). Stored and searchable, never sent to SRI.
+  externalReference: z.string().trim().min(1).max(100).nullable().default(null),
   // FR-DOC-2: the same key and payload return the same document.
   idempotencyKey: z.string().trim().min(1).max(100).nullable().default(null),
 });
@@ -298,6 +301,7 @@ export async function issueInvoice(
       sequential,
       ambiente,
       idempotencyKey: input.idempotencyKey,
+      externalReference: input.externalReference,
       payloadHash,
       createdBy: ctx.userId ?? null,
     })
@@ -340,7 +344,11 @@ export async function issueInvoice(
   return issued(document!, true);
 }
 
-export const correctionInput = invoiceInput.omit({ issuePointId: true, idempotencyKey: true });
+export const correctionInput = invoiceInput.omit({
+  issuePointId: true,
+  idempotencyKey: true,
+  externalReference: true,
+});
 export type CorrectionInput = z.input<typeof correctionInput>;
 
 const CORRECTABLE = ['RETURNED', 'NOT_AUTHORIZED', 'SEND_FAILED'] as const;

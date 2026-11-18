@@ -134,7 +134,8 @@ export type ImportProblem = {
     | 'QUANTITY_INVALID'
     | 'COST_INVALID'
     | 'DUPLICATE_ROW'
-    | 'STOCK_ALREADY_MOVED';
+    | 'STOCK_ALREADY_MOVED'
+    | 'BELOW_RESERVED';
 };
 
 export type OpeningImportResult = { imported: number; problems: ImportProblem[] };
@@ -253,5 +254,149 @@ export async function importOpeningBalances(
       details: { count: planned.length },
     });
     return { imported: planned.length, problems: [] };
+  });
+}
+
+export const countImportInput = z.object({
+  // Written on every adjustment the count makes, such as "Conteo físico 2026".
+  reason: z.string().trim().min(3).max(300),
+});
+
+export type CountImportResult = {
+  // Lines whose count differs from the books, and so made an adjustment.
+  adjusted: number;
+  // Lines that matched.
+  unchanged: number;
+  problems: ImportProblem[];
+};
+
+const COUNT_COLUMNS = {
+  code: COLUMNS.code,
+  branch: COLUMNS.branch,
+  counted: ['counted', 'contado', 'conteo', 'quantity', 'cantidad'],
+} as const;
+
+const notNegative = preciseInput.refine((value) => new Dec(value).gte(0), 'Must be 0 or more');
+
+// ADR-046: a physical count from a spreadsheet. Each line says what a warehouse holds of a
+// product; the difference from the books becomes an adjustment in (at the average) or out, all
+// with the same reason. Checked whole first, so a file applies once or not at all.
+export async function importStockCount(
+  ctx: ActorContext,
+  db: Database,
+  text: string,
+  raw: z.input<typeof countImportInput>,
+): Promise<CountImportResult> {
+  canAdjust(ctx);
+  const { reason } = countImportInput.parse(raw);
+  const csv = readCsvTable<keyof typeof COUNT_COLUMNS>(
+    text,
+    COUNT_COLUMNS,
+    ['code', 'counted'],
+    OPENING_IMPORT_MAX_ROWS,
+  );
+  const { rows } = csv;
+
+  return db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
+    const products = new Map(
+      (await productsByCode(tx, [...new Set(rows.map((row) => row.cell('code')))])).map((p) => [
+        p.code,
+        p,
+      ]),
+    );
+    const warehouses = (await warehousesOf(tx)).filter((warehouse) => warehouse.active);
+    const byBranch = new Map(warehouses.map((warehouse) => [warehouse.branchCode, warehouse]));
+
+    const problems: ImportProblem[] = [];
+    const planned: { line: number; productId: string; warehouseId: string; counted: string }[] = [];
+    const seen = new Set<string>();
+    rows.forEach((row) => {
+      const line = row.line;
+      const problem = (code: ImportProblem['code']) => problems.push({ line, code });
+      const code = row.cell('code');
+      if (!code) return problem('CODE_REQUIRED');
+      const product = products.get(code);
+      if (!product) return problem('PRODUCT_NOT_FOUND');
+      if (product.kind !== 'GOOD' || !product.tracksStock) return problem('PRODUCT_NOT_STOCKED');
+      const branch = row.cell('branch');
+      const warehouse = branch
+        ? byBranch.get(branch.padStart(3, '0'))
+        : warehouses.length === 1
+          ? warehouses[0]
+          : undefined;
+      if (!warehouse) return problem(branch ? 'BRANCH_NOT_FOUND' : 'BRANCH_REQUIRED');
+      const counted = csvDecimal(row.cell('counted'), csv.delimiter);
+      if (!notNegative.safeParse(counted).success) return problem('QUANTITY_INVALID');
+      const key = `${product.id}:${warehouse.id}`;
+      if (seen.has(key)) return problem('DUPLICATE_ROW');
+      seen.add(key);
+      planned.push({ line, productId: product.id, warehouseId: warehouse.id, counted });
+    });
+
+    // What the books say each line's warehouse holds, and has promised to invoices and orders.
+    const { stockLevels } = schema;
+    const levels = planned.length
+      ? await tx.db
+          .select({
+            productId: stockLevels.productId,
+            warehouseId: stockLevels.warehouseId,
+            onHand: stockLevels.onHand,
+            reserved: stockLevels.reserved,
+          })
+          .from(stockLevels)
+          .where(
+            inArray(
+              stockLevels.productId,
+              planned.map((entry) => entry.productId),
+            ),
+          )
+      : [];
+    const levelOf = new Map(
+      levels.map((level) => [`${level.productId}:${level.warehouseId}`, level]),
+    );
+    const changes = planned.flatMap((entry) => {
+      const level = levelOf.get(`${entry.productId}:${entry.warehouseId}`);
+      // Goods promised to an invoice or order are still on the shelf: a count below them is wrong.
+      if (level && new Dec(entry.counted).lt(level.reserved)) {
+        problems.push({ line: entry.line, code: 'BELOW_RESERVED' });
+        return [];
+      }
+      const difference = new Dec(entry.counted).sub(level?.onHand ?? 0);
+      return difference.isZero() ? [] : [{ ...entry, difference }];
+    });
+    if (problems.length > 0)
+      return { adjusted: 0, unchanged: 0, problems: problems.sort((a, b) => a.line - b.line) };
+
+    const source = { type: 'STOCK_COUNT' as const, id: randomUUID() };
+    for (const change of changes) {
+      const common = {
+        productId: change.productId,
+        warehouseId: change.warehouseId,
+        quantity: change.difference.abs().toString(),
+        reason,
+        source,
+      };
+      // Found goods come in at the average, as a hand adjustment does; missing ones leave at it.
+      await applyMovement(
+        ctx,
+        tx,
+        change.difference.gt(0)
+          ? { type: 'ADJUSTMENT_IN', unitCost: null, ...common }
+          : { type: 'ADJUSTMENT_OUT', ...common },
+      );
+    }
+    await recordAudit(tx.db, {
+      tenantId: ctx.tenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'stock.counted',
+      details: {
+        lines: planned.length,
+        adjusted: changes.length,
+        found: changes.filter((change) => change.difference.gt(0)).length,
+        missing: changes.filter((change) => change.difference.lt(0)).length,
+        reason,
+      },
+    });
+    return { adjusted: changes.length, unchanged: planned.length - changes.length, problems: [] };
   });
 }

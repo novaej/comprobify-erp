@@ -12,6 +12,7 @@ import { buttonVariants } from '@comprobify/ui/components/button';
 import { ChevronRight, Clock, FileText, Plus, Truck } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { EmptyState } from '@/components/empty-state';
+import { ListPager } from '@/components/list-pager';
 import { NoAccess } from '@/components/no-access';
 import { PageHeader } from '@/components/page-header';
 import { SortHead } from '@/components/sort-head';
@@ -42,7 +43,8 @@ type Search = {
   from?: string;
   to?: string;
   q?: string;
-  page?: string;
+  after?: string;
+  before?: string;
   sort?: string;
   dir?: string;
 };
@@ -70,7 +72,8 @@ export default async function DocumentsPage({
     from: search.from || undefined,
     to: search.to || undefined,
     query: search.q || undefined,
-    page: search.page,
+    after: search.after,
+    before: search.before,
     sort: ordering.sort,
     direction: ordering.direction,
   });
@@ -91,8 +94,9 @@ export default async function DocumentsPage({
     currency: 'USD',
   });
   const date = (iso: string) => iso.split('-').reverse().join('/');
-  const pages = Math.max(1, Math.ceil(list.total / list.pageSize));
-  const searching = Object.values(filters).some((value) => value !== undefined && value !== 1);
+  const { after: _after, before: _before, ...chosen } = filters;
+  void [_after, _before];
+  const searching = Object.values(chosen).some((value) => value !== undefined);
   const here = listAddress('/documents', search);
   const tList = await getTranslations('listToolbar');
   // What is in the URL besides the order, so choosing a column keeps the filters.
@@ -103,10 +107,13 @@ export default async function DocumentsPage({
     to: search.to,
     q: search.q,
   };
-  const pageHref = (page: number) => ({
-    pathname: '/documents' as const,
-    query: { ...search, page: String(page) },
-  });
+  // The same list, from the row a cursor names: the other cursor and any old page number dropped.
+  const pageHref = (cursor: { after?: string; before?: string }) => {
+    const { after: _a, before: _b, ...rest } = search as Search & { page?: string };
+    void [_a, _b];
+    delete (rest as { page?: string }).page;
+    return { pathname: '/documents' as const, query: { ...rest, ...cursor } };
+  };
 
   return (
     <div className="max-w-6xl">
@@ -247,36 +254,11 @@ export default async function DocumentsPage({
           </StackTable>
         )}
       </TableCard>
-      {pages > 1 && (
-        <nav
-          aria-label={t('pagination.label')}
-          className="mt-4 flex items-center justify-between gap-3 text-sm"
-        >
-          {list.page > 1 ? (
-            <Link
-              href={pageHref(list.page - 1)}
-              className={buttonVariants({ variant: 'outline', size: 'sm' })}
-            >
-              {t('pagination.previous')}
-            </Link>
-          ) : (
-            <span />
-          )}
-          <span className="text-muted-foreground">
-            {t('pagination.page', { page: list.page, pages })}
-          </span>
-          {list.page < pages ? (
-            <Link
-              href={pageHref(list.page + 1)}
-              className={buttonVariants({ variant: 'outline', size: 'sm' })}
-            >
-              {t('pagination.next')}
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-      )}
+      <ListPager
+        label={t('pagination.label')}
+        previous={list.previous ? pageHref({ before: list.previous }) : null}
+        next={list.next ? pageHref({ after: list.next }) : null}
+      />
     </div>
   );
 }

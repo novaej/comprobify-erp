@@ -26,7 +26,7 @@ import { Link } from '@/i18n/navigation';
 import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
-import { ImportDialog } from './import-dialog';
+import { CountDialog, ImportDialog } from './import-dialog';
 import { quantityFormat } from './format';
 import { StockFilters } from './stock-filters';
 
@@ -97,6 +97,7 @@ export default async function InventoryPage({
               {t('valuationLink')}
             </Link>
             {canAdjust && <ImportDialog multipleWarehouses={activeWarehouses.length > 1} />}
+            {canAdjust && <CountDialog multipleWarehouses={activeWarehouses.length > 1} />}
           </>
         }
       />

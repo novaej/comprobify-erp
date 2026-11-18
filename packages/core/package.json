@@ -9,6 +9,7 @@
     "./testing": "./src/testing/index.ts"
   },
   "scripts": {
+    "bench:signing": "SIGNING_BENCH=1 vitest run src/sri/signing-cost.test.ts --silent=false",
     "test": "vitest run",
     "typecheck": "tsc",
     "xsd:embed": "node scripts/embed-xsd.mjs"

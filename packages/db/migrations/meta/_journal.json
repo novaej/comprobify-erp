@@ -519,6 +519,27 @@
       "when": 1794980518422,
       "tag": "0073_ownership_transfer_audit",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1795009709587,
+      "tag": "0074_document_external_reference",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1795010333293,
+      "tag": "0075_keyset_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1795010547364,
+      "tag": "0076_stock_count",
+      "breakpoints": true
     }
   ]
 }

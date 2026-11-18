@@ -516,7 +516,8 @@
       "stock": {
         "adjusted": "ajustó las existencias de",
         "opening_set": "registró un saldo inicial de",
-        "opening_imported": "importó saldos iniciales"
+        "opening_imported": "importó saldos iniciales",
+        "counted": "importó un conteo físico"
       },
       "product": {
         "created": "creó el producto",
@@ -1799,7 +1800,8 @@
         "recipient": "Destinatario {number}",
         "support": "Factura {number}",
         "firstRecipient": "Primer destinatario"
-      }
+      },
+      "externalReference": "Referencia externa"
     },
     "pendingLink": "Pendientes",
     "pending": {
@@ -2190,6 +2192,7 @@
     "sources": {
       "ADJUSTMENT": "Ajuste",
       "OPENING_IMPORT": "Importado de un archivo",
+      "STOCK_COUNT": "Conteo físico",
       "PURCHASE_RECEIPT": "Recepción",
       "DOCUMENT": "Comprobante",
       "SALE_ORDER": "Pedido de venta"
@@ -2271,7 +2274,7 @@
       "emptyTitle": "Sin existencias",
       "empty": "Cuando haya existencias, aquí verás su valor.",
       "csv": {
-        "filename": "valoracion-inventario.csv",
+        "filename": "valoracion-inventario-{date}.csv",
         "branch": "Sucursal",
         "warehouse": "Bodega",
         "code": "Código",
@@ -2281,6 +2284,36 @@
         "reserved": "Reservado",
         "averageCost": "Costo promedio",
         "value": "Valor"
+      },
+      "asOf": "Al día",
+      "asOfHint": "Elige un día pasado, como el 31 de diciembre, para ver lo que había y lo que valía al cierre de ese día.",
+      "totalsAsOf": "Totales al {date}"
+    },
+    "count": {
+      "open": "Importar un conteo",
+      "title": "Importar un conteo físico",
+      "description": "Un archivo CSV con el código del producto y la cantidad contada. Donde el conteo no coincide con el sistema se hace un ajuste: lo que sobra entra al costo promedio, lo que falta sale. Se aplica completo o nada.",
+      "descriptionBranches": "Un archivo CSV con el código del producto, el código de la sucursal y la cantidad contada. Donde el conteo no coincide con el sistema se hace un ajuste: lo que sobra entra al costo promedio, lo que falta sale. Se aplica completo o nada.",
+      "template": "Descargar plantilla",
+      "templateFile": "plantilla-conteo.csv",
+      "file": "Archivo CSV",
+      "fileHint": "Guárdalo desde Excel como «CSV UTF-8» o «CSV (delimitado por comas)»; también se lee «Texto (delimitado por tabulaciones)».",
+      "reason": "Motivo",
+      "reasonHint": "Se escribe en cada ajuste, por ejemplo «Conteo físico 2026».",
+      "submit": "Aplicar el conteo",
+      "cancel": "Cancelar",
+      "done": "{created, plural, =0 {El conteo coincide con el sistema: no hizo falta ningún ajuste.} one {Se hizo # ajuste; {updated} sin cambios.} other {Se hicieron # ajustes; {updated} sin cambios.}}",
+      "problems": "{count, plural, one {Una línea tiene un problema; no se aplicó nada.} other {# líneas tienen problemas; no se aplicó nada.}}",
+      "line": "Línea {line}:",
+      "problem": {
+        "CODE_REQUIRED": "falta el código del producto.",
+        "PRODUCT_NOT_FOUND": "no existe un producto con ese código.",
+        "PRODUCT_NOT_STOCKED": "el producto no controla inventario.",
+        "BRANCH_REQUIRED": "falta el código de la sucursal.",
+        "BRANCH_NOT_FOUND": "no existe esa sucursal.",
+        "QUANTITY_INVALID": "la cantidad contada debe ser un número de cero o más, con hasta 6 decimales.",
+        "DUPLICATE_ROW": "el producto ya aparece antes en el archivo para esa bodega.",
+        "BELOW_RESERVED": "lo contado es menos de lo reservado para facturas o pedidos en esa bodega."
       }
     }
   },
@@ -4134,5 +4167,9 @@
     "inventory": "Inventario",
     "valuation": "Valoración",
     "product": "Producto"
+  },
+  "listPager": {
+    "previous": "Anterior",
+    "next": "Siguiente"
   }
 }

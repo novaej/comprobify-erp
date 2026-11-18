@@ -22,6 +22,8 @@ import {
   type InvoiceInput,
   type IssueDeps,
   type Jobs,
+  getDocument,
+  listDocuments,
 } from '@comprobify/core';
 import { createTestP12, testRuc } from '@comprobify/core/testing';
 import { and, eq, schema, type Database } from '@comprobify/db';
@@ -198,6 +200,21 @@ describe('creating an invoice', () => {
       ),
     ).rejects.toMatchObject({ code: 'IDEMPOTENCY_CONFLICT' });
     expect((await sendJobs(first.id)).rows).toHaveLength(1);
+  });
+
+  it('keeps the caller’s own reference, and finds the document by it (NFR-ARCH-3)', async () => {
+    const owner = await actor(org.twinTenantId);
+    const point = await pointOf(owner);
+    const reference = `PED-${randomUUID().slice(0, 8)}`;
+    const issued = await createInvoice(
+      owner,
+      db,
+      invoice(point, { externalReference: reference }),
+      deps,
+    );
+    expect((await getDocument(owner, db, issued.id)).externalReference).toBe(reference);
+    const found = await listDocuments(owner, db, { query: reference });
+    expect(found.rows.map((row) => row.id)).toEqual([issued.id]);
   });
 
   it('refuses what FR-DOC-9 forbids, and a refused one gives its number back', async () => {

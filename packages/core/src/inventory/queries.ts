@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, schema, sql, type Database, type Tx } from '@comprobify/db';
+import { and, asc, eq, lt, inArray, schema, sql, type Database, type Tx } from '@comprobify/db';
 import { z } from 'zod';
 import { productSummary, stockedProducts, type StockedProduct } from '../catalog';
 import {
@@ -8,6 +8,11 @@ import {
   requirePermission,
   toSriAmount,
   type ActorContext,
+  cursorInput,
+  keysetPage,
+  type KeysetRequest,
+  ecuadorDate,
+  endOfEcuadorDay,
 } from '../kernel';
 import { negativeStockRule, warehousesOf, type Warehouse } from '../tenancy';
 
@@ -137,9 +142,9 @@ export type ProductStock = {
   warehouses: (Warehouse & StockFigures & { moved: boolean })[];
   total: StockFigures;
   movements: MovementRow[];
-  movementsTotal: number;
-  page: number;
-  pageSize: number;
+  // NFR-PERF-4: cursors to the next and previous pages of movements, or null.
+  movementsNext: string | null;
+  movementsPrevious: string | null;
   negativeStock: 'BLOCK' | 'ALLOW';
 };
 
@@ -148,17 +153,14 @@ export async function productStock(
   ctx: ActorContext,
   db: Database,
   productId: string,
-  options: { page?: number } = {},
+  options: KeysetRequest = {},
 ): Promise<ProductStock> {
   canRead(ctx);
   const id = z.uuid().parse(productId);
-  const page = z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(10_000)
-    .catch(1)
-    .parse(options.page ?? 1);
+  const cursor = {
+    after: cursorInput.catch(undefined).parse(options.after),
+    before: cursorInput.catch(undefined).parse(options.before),
+  };
   return db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
     const product = await productSummary(tx, id);
     if (!product || product.kind !== 'GOOD' || !product.tracksStock)
@@ -171,17 +173,22 @@ export async function productStock(
       .selectDistinct({ warehouseId: stockMovements.warehouseId })
       .from(stockMovements)
       .where(eq(stockMovements.productId, id));
-    const [count] = await tx.db
-      .select({ total: sql<number>`count(*)::int` })
-      .from(stockMovements)
-      .where(eq(stockMovements.productId, id));
-    const movements = await tx.db
-      .select()
-      .from(stockMovements)
-      .where(eq(stockMovements.productId, id))
-      .orderBy(desc(stockMovements.createdAt), desc(stockMovements.id))
-      .limit(MOVEMENTS_PAGE_SIZE)
-      .offset((page - 1) * MOVEMENTS_PAGE_SIZE);
+    // Newest first, by id: a uuidv7 grows with time and is exact, where a timestamp read back in
+    // JavaScript loses its microseconds and could not be a cursor.
+    const page = await keysetPage(
+      [{ expr: sql`${stockMovements.id}`, direction: 'desc' }],
+      cursor,
+      MOVEMENTS_PAGE_SIZE,
+      (seek, order, limit) =>
+        tx.db
+          .select()
+          .from(stockMovements)
+          .where(and(eq(stockMovements.productId, id), seek))
+          .orderBy(...order)
+          .limit(limit),
+      (row) => [row.id],
+    );
+    const movements = page.rows;
     const negativeStock = await negativeStockRule(tx, ctx.tenantId);
     const movedIn = new Set(moved.map((row) => row.warehouseId));
     const names = new Map(warehouses.map((warehouse) => [warehouse.id, warehouse.name]));
@@ -217,9 +224,8 @@ export async function productStock(
         sourceId: row.sourceId,
         createdAt: row.createdAt,
       })),
-      movementsTotal: count!.total,
-      page,
-      pageSize: MOVEMENTS_PAGE_SIZE,
+      movementsNext: page.next,
+      movementsPrevious: page.previous,
       negativeStock,
     };
   });
@@ -235,23 +241,62 @@ export type ValuationLine = {
 } & StockFigures;
 
 export type Valuation = {
+  // The day it was worked out for, in Ecuador time: today unless one was asked for.
+  asOf: string;
   warehouses: (Warehouse & { products: number; value: string })[];
   total: string;
   lines: ValuationLine[];
 };
 
 // FR-INV-5: what the stock is worth at its average cost, per warehouse and in all, with the
-// lines behind it for export. Only levels that hold or reserve something.
-export async function stockValuation(ctx: ActorContext, db: Database): Promise<Valuation> {
+// lines behind it for export. Only levels that hold or reserve something. With `asOf`, a past
+// day (such as 31 December): the ledger summed up to the end of that day in Ecuador, the
+// average cost being the value over the quantity then. The ledger is append-only, so the
+// figures for a day never change.
+export async function stockValuation(
+  ctx: ActorContext,
+  db: Database,
+  options: { asOf?: string } = {},
+): Promise<Valuation> {
   canRead(ctx);
+  const today = ecuadorDate(ctx.clock.now());
+  const asked = z.iso.date().optional().catch(undefined).parse(options.asOf);
+  const asOf = asked && asked < today ? asked : today;
   return db.withTenant({ tenantId: ctx.tenantId }, async (tx) => {
-    const { stockLevels } = schema;
+    const { stockLevels, stockMovements: m } = schema;
     const warehouses = await warehousesOf(tx);
-    const levels = await tx.db
-      .select()
-      .from(stockLevels)
-      .where(sql`${stockLevels.onHand} <> 0 OR ${stockLevels.reserved} <> 0`)
-      .orderBy(asc(stockLevels.warehouseId));
+    const levels: Level[] =
+      asOf === today
+        ? await tx.db
+            .select()
+            .from(stockLevels)
+            .where(sql`${stockLevels.onHand} <> 0 OR ${stockLevels.reserved} <> 0`)
+            .orderBy(asc(stockLevels.warehouseId))
+        : (
+            await tx.db
+              .select({
+                productId: m.productId,
+                warehouseId: m.warehouseId,
+                onHand: sql<string>`sum(${m.quantity})`,
+                reserved: sql<string>`sum(${m.reserved})`,
+                value: sql<string>`sum(${m.value})`,
+              })
+              .from(m)
+              // Before the next day's midnight, so no fraction of the last millisecond is lost.
+              .where(lt(m.createdAt, new Date(endOfEcuadorDay(asOf).getTime() + 1)))
+              .groupBy(m.productId, m.warehouseId)
+              .having(sql`sum(${m.quantity}) <> 0 OR sum(${m.reserved}) <> 0`)
+              .orderBy(asc(m.warehouseId))
+          ).map((row) => ({
+            ...row,
+            id: `${row.productId}:${row.warehouseId}`,
+            tenantId: ctx.tenantId,
+            createdAt: endOfEcuadorDay(asOf),
+            averageCost: new Dec(row.onHand).gt(0)
+              ? new Dec(row.value).div(row.onHand).toFixed(6)
+              : '0',
+            updatedAt: endOfEcuadorDay(asOf),
+          }));
     const productIds = [...new Set(levels.map((level) => level.productId))];
     const products =
       productIds.length === 0
@@ -281,6 +326,7 @@ export async function stockValuation(ctx: ActorContext, db: Database): Promise<V
     const valueOf = (rows: Level[]) =>
       toSriAmount(rows.reduce((sum, level) => sum.add(level.value), new Dec(0)).toDecimalPlaces(2));
     return {
+      asOf,
       warehouses: warehouses
         .map((warehouse) => {
           const own = levels.filter((level) => level.warehouseId === warehouse.id);

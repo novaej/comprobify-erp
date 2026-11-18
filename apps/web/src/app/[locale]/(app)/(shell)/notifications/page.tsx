@@ -1,10 +1,7 @@
-import {
-  listNotifications,
-  notificationPreferences,
-  NOTIFICATIONS_PAGE_SIZE,
-} from '@comprobify/core';
+import { listNotifications, notificationPreferences } from '@comprobify/core';
 import { buttonVariants } from '@comprobify/ui/components/button';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { ListPager } from '@/components/list-pager';
 import { PageHeader } from '@/components/page-header';
 import { Link } from '@/i18n/navigation';
 import { pageTitle } from '@/server/page-title';
@@ -22,25 +19,23 @@ export default async function NotificationsPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ page?: string; unread?: string }>;
+  searchParams: Promise<{ after?: string; before?: string; unread?: string }>;
 }) {
   const { locale } = await params;
   const search = await searchParams;
   setRequestLocale(locale);
   const { actor } = await loadShell(locale);
   const { db } = await getRuntime();
-  const page = Math.max(1, Number.parseInt(search.page ?? '1', 10) || 1);
   const unreadOnly = search.unread === '1';
   const [list, preferences] = await Promise.all([
-    listNotifications(actor, db, { page, unreadOnly }),
+    listNotifications(actor, db, { after: search.after, before: search.before, unreadOnly }),
     notificationPreferences(actor, db),
   ]);
   const t = await getTranslations('notifications');
-  const query = (next: number) =>
-    `/notifications?${new URLSearchParams({
-      ...(unreadOnly ? { unread: '1' } : {}),
-      ...(next > 1 ? { page: String(next) } : {}),
-    }).toString()}`;
+  const pageHref = (cursor: { after?: string; before?: string }) => ({
+    pathname: '/notifications' as const,
+    query: { ...(unreadOnly ? { unread: '1' } : {}), ...cursor },
+  });
 
   return (
     <div className="max-w-4xl space-y-6">
@@ -82,30 +77,11 @@ export default async function NotificationsPage({
             readAt: item.readAt?.toISOString() ?? null,
           }))}
         />
-        {(page > 1 || list.hasMore) && (
-          <nav
-            aria-label={t('pagination.label')}
-            className="flex items-center justify-between gap-3 text-sm"
-          >
-            {page > 1 ? (
-              <Link href={query(page - 1)} className="underline-offset-4 hover:underline">
-                {t('pagination.previous')}
-              </Link>
-            ) : (
-              <span />
-            )}
-            <span className="text-muted-foreground">
-              {t('pagination.page', { page, size: NOTIFICATIONS_PAGE_SIZE })}
-            </span>
-            {list.hasMore ? (
-              <Link href={query(page + 1)} className="underline-offset-4 hover:underline">
-                {t('pagination.next')}
-              </Link>
-            ) : (
-              <span />
-            )}
-          </nav>
-        )}
+        <ListPager
+          label={t('pagination.label')}
+          previous={list.previous ? pageHref({ before: list.previous }) : null}
+          next={list.next ? pageHref({ after: list.next }) : null}
+        />
       </section>
 
       <Preferences

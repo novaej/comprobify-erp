@@ -9,6 +9,7 @@
     "node": "24.x"
   },
   "scripts": {
+    "bench:signing": "pnpm --filter @comprobify/core bench:signing",
     "build": "turbo run build",
     "db:generate": "pnpm --filter @comprobify/db db:generate",
     "db:migrate": "pnpm --filter @comprobify/worker db:migrate",

@@ -109,6 +109,8 @@ export const notificationReceipts = pgTable(
     }),
     unique('notification_receipts_one_per_user').on(table.notificationId, table.userId),
     index('notification_receipts_user_recent').on(table.tenantId, table.userId, table.createdAt),
+    // A member's list, newest first, page by page (NFR-PERF-4).
+    index('notification_receipts_user_id').on(table.tenantId, table.userId, table.id),
     index('notification_receipts_user_unread')
       .on(table.tenantId, table.userId)
       .where(sql`read_at IS NULL`),

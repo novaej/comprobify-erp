@@ -4,8 +4,7 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 ## Carried forward
 
-- **Year end for stock (found in the review; Milestone 10 or after):** there is no close, and none is needed to stay correct (SRI documents can't be backdated, and the accounting close belongs to the accountant's software), but the accountant needs two things the ledger already supports. (1) The stock valuation **as of a date**, such as 31 December, with its CSV: the sum of each product's and warehouse's signed quantity and value up to that day, the average cost being their ratio. Today it only shows now. (2) A **count import**: a CSV of counted quantities per product and warehouse that creates the adjustments in one step, each with a reason such as "Conteo físico 2026", so a full count isn't one adjustment at a time. The count import writes its own audit entry.
-- **Audit, left over (ADR-041):** the log now has the ACCOUNT and OPERATIONS categories and records voids, stock adjustments and counts, master data, collections, order cancellations, bulk batches and data exports. Not yet: retention per category (`RETENTION`; nothing prunes the log today); the count import and the as-of valuation below (they will write `stock.counted` and `data.exported` entries); an operator's read of a company's operations log (the platform log records the lookup of SRI exchanges only).
+- **Audit, left over (ADR-041):** the log now has the ACCOUNT and OPERATIONS categories and records voids, stock adjustments and counts, master data, collections, order cancellations, bulk batches and data exports. The stock count writes `stock.counted` (ADR-046). Not yet: retention per category (`RETENTION`; nothing prunes the log today); an operator's read of a company's operations log (the platform log records the lookup of SRI exchanges only).
 - **Not scheduled:** a minimum stock per product, so the dashboard's "low stock" (FR-REP-1) and the post-MVP stock-below-minimum notice (FR-NOT-2) mean below a threshold; today the dashboard lists stocked products with nothing available.
 - **Not scheduled:** retenciones issued and received in the tax summary (FR-REP-2) arrive with the document type, after the MVP; XLSX is not planned, since the CSV opens in Excel. The accountant's ZIP is built in memory, up to 65,535 files (no ZIP64): revisit if a month ever comes near it.
 - **Not scheduled:** a CSV batch could also import the file as sale orders to invoice from the batch screen, on plans with Sales (`SALE_ORDERS`); today a CSV makes invoices directly. A CSV batch pays every invoice with one method; per-invoice payment columns are not offered.
@@ -20,6 +19,7 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 - **Not scheduled:** prune in-app notifications older than 180 days, the other periodic duplicate in `docs/legal/retention.md`: it needs its own narrow exception on the pattern of ADR-038 and a `RETENTION` line.
 - **Owner, before go-live:** the real prices, pack sizes and plan limits in place of the placeholders (platform area: Precios, Planes), the operator's bank account (`BANK_TRANSFER_*`) and Payphone's production credentials (ADR-027, ADR-033).
 - **Not scheduled:** the vehicle plate on invoices of transport operators, excluding taxis (Anexo 25, Ficha v2.33), if such companies sign up.
+- **Not scheduled:** keyset paging for the smaller lists still on OFFSET (sale and purchase orders, bulk batches, the catalog, the platform's log and notices), each when it grows (ADR-047).
 
 ## Upcoming milestones
 

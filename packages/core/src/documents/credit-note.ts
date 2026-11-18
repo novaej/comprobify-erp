@@ -74,6 +74,9 @@ export const creditNoteInput = z.object({
   // FR-SAL-8: the return lines' goods come back to stock once SRI authorizes the note, up to
   // what the invoice sold (ADR-020). Needs Inventario.
   returnStock: z.boolean().default(false),
+  // NFR-ARCH-3: the caller's own reference for the document (an order number, another system's
+  // id). Stored and searchable, never sent to SRI.
+  externalReference: z.string().trim().min(1).max(100).nullable().default(null),
   idempotencyKey: z.string().trim().min(1).max(100).nullable().default(null),
 });
 export type CreditNoteInput = z.input<typeof creditNoteInput>;
@@ -82,6 +85,7 @@ export const creditNoteCorrectionInput = creditNoteInput.omit({
   issuePointId: true,
   originId: true,
   idempotencyKey: true,
+  externalReference: true,
 });
 export type CreditNoteCorrectionInput = z.input<typeof creditNoteCorrectionInput>;
 
@@ -425,6 +429,7 @@ export async function createCreditNote(
         ambiente,
         relatedDocumentId: origin.id,
         idempotencyKey: input.idempotencyKey,
+        externalReference: input.externalReference,
         payloadHash,
         createdBy: ctx.userId ?? null,
       })

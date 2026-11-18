@@ -516,7 +516,8 @@
       "stock": {
         "adjusted": "adjusted the stock of",
         "opening_set": "set an opening balance for",
-        "opening_imported": "imported opening balances"
+        "opening_imported": "imported opening balances",
+        "counted": "imported a physical count"
       },
       "product": {
         "created": "created the product",
@@ -1799,7 +1800,8 @@
         "recipient": "Recipient {number}",
         "support": "Invoice {number}",
         "firstRecipient": "First recipient"
-      }
+      },
+      "externalReference": "External reference"
     },
     "pendingLink": "Pending",
     "pending": {
@@ -2190,6 +2192,7 @@
     "sources": {
       "ADJUSTMENT": "Adjustment",
       "OPENING_IMPORT": "Imported from a file",
+      "STOCK_COUNT": "Physical count",
       "PURCHASE_RECEIPT": "Receipt",
       "DOCUMENT": "Document",
       "SALE_ORDER": "Sale order"
@@ -2271,7 +2274,7 @@
       "emptyTitle": "No stock",
       "empty": "Once there is stock, its value shows here.",
       "csv": {
-        "filename": "inventory-valuation.csv",
+        "filename": "stock-valuation-{date}.csv",
         "branch": "Branch",
         "warehouse": "Warehouse",
         "code": "Code",
@@ -2281,6 +2284,36 @@
         "reserved": "Reserved",
         "averageCost": "Average cost",
         "value": "Value"
+      },
+      "asOf": "As of",
+      "asOfHint": "Pick a past day, such as 31 December, to see what there was and what it was worth at the end of that day.",
+      "totalsAsOf": "Totals as of {date}"
+    },
+    "count": {
+      "open": "Import a count",
+      "title": "Import a physical count",
+      "description": "A CSV file with the product code and the counted quantity. Where the count differs from the books an adjustment is made: extra goods come in at the average cost, missing ones go out. Applied whole or not at all.",
+      "descriptionBranches": "A CSV file with the product code, the branch code and the counted quantity. Where the count differs from the books an adjustment is made: extra goods come in at the average cost, missing ones go out. Applied whole or not at all.",
+      "template": "Download the template",
+      "templateFile": "count-template.csv",
+      "file": "CSV file",
+      "fileHint": "Save it from Excel as “CSV UTF-8 (comma delimited)”; tab-delimited text is read too.",
+      "reason": "Reason",
+      "reasonHint": "Written on every adjustment, for example \"Physical count 2026\".",
+      "submit": "Apply the count",
+      "cancel": "Cancel",
+      "done": "{created, plural, =0 {The count matches the books: no adjustment was needed.} one {# adjustment made; {updated} unchanged.} other {# adjustments made; {updated} unchanged.}}",
+      "problems": "{count, plural, one {One line has a problem; nothing was applied.} other {# lines have problems; nothing was applied.}}",
+      "line": "Line {line}:",
+      "problem": {
+        "CODE_REQUIRED": "the product code is missing.",
+        "PRODUCT_NOT_FOUND": "no product has that code.",
+        "PRODUCT_NOT_STOCKED": "the product doesn't track stock.",
+        "BRANCH_REQUIRED": "the branch code is missing.",
+        "BRANCH_NOT_FOUND": "that branch doesn't exist.",
+        "QUANTITY_INVALID": "the counted quantity must be a number of zero or more, with up to 6 decimals.",
+        "DUPLICATE_ROW": "the product is already earlier in the file for that warehouse.",
+        "BELOW_RESERVED": "the count is less than what is reserved for invoices or orders in that warehouse."
       }
     }
   },
@@ -4134,5 +4167,9 @@
     "inventory": "Inventory",
     "valuation": "Valuation",
     "product": "Product"
+  },
+  "listPager": {
+    "previous": "Previous",
+    "next": "Next"
   }
 }

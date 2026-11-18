@@ -31,6 +31,8 @@ export const STOCK_MOVEMENT_TYPES = [
 export const STOCK_SOURCE_TYPES = [
   'ADJUSTMENT',
   'OPENING_IMPORT',
+  // A physical count's file: the adjustments it made (ADR-046).
+  'STOCK_COUNT',
   'PURCHASE_RECEIPT',
   'DOCUMENT',
   'SALE_ORDER',
@@ -112,6 +114,8 @@ export const stockMovements = pgTable(
       table.warehouseId,
       table.createdAt,
     ),
+    // A product's movements, newest first, page by page (NFR-PERF-4).
+    index('stock_movements_product_id').on(table.tenantId, table.productId, table.id),
     index('stock_movements_source').on(table.tenantId, table.sourceType, table.sourceId),
     check('stock_movements_type_check', oneOf('type', STOCK_MOVEMENT_TYPES)),
     check('stock_movements_source_check', oneOf('source_type', STOCK_SOURCE_TYPES)),

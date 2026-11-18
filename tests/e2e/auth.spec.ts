@@ -2177,7 +2177,8 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     await pack.getByLabel('Precio sin IVA').fill('12,50');
     await pack.getByRole('button', { name: 'Guardar borrador' }).click();
     await expect(page.getByText('Borrador guardado.')).toBeVisible();
-    const packRow = page.getByRole('row', { name: new RegExp(`Paquete de ${packSize}`) });
+    // Anchored: a size of 200 must not also match the starting pack of 2000.
+    const packRow = page.getByRole('row', { name: new RegExp(`^Paquete de ${packSize} `) });
     await packRow.getByRole('button', { name: 'Publicar' }).click();
     await page
       .getByRole('dialog', { name: `Publicar el precio de Paquete de ${packSize}` })

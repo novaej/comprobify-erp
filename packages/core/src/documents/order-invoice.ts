@@ -62,6 +62,7 @@ export const orderInvoiceInput = z.object({
     .min(1)
     .max(10),
   additionalInfo: invoiceInput.shape.additionalInfo,
+  externalReference: invoiceInput.shape.externalReference,
   idempotencyKey: invoiceInput.shape.idempotencyKey,
 });
 export type OrderInvoiceInput = z.input<typeof orderInvoiceInput>;
@@ -70,6 +71,7 @@ export const orderInvoiceCorrectionInput = orderInvoiceInput.omit({
   orderId: true,
   issuePointId: true,
   idempotencyKey: true,
+  externalReference: true,
 });
 export type OrderInvoiceCorrectionInput = z.input<typeof orderInvoiceCorrectionInput>;
 
@@ -202,6 +204,7 @@ async function invoiceOrderIn(
     lines: built.lines,
     payments: resolvePayments(input.payments, built.lines),
     additionalInfo: input.additionalInfo,
+    externalReference: input.externalReference,
     idempotencyKey: input.idempotencyKey,
   });
   const issued = await issueInvoice(

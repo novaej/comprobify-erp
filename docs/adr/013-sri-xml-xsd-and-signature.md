@@ -102,3 +102,15 @@ The two signed subtrees, `SignedInfo` and `SignedProperties`, are digested with 
 - **A C14N library at runtime, such as `xml-crypto` for signing:** it would replace the string building. Not adopted: SRI's accepted profile is fixed and simple, and the library's defaults differ from it (it adds a KeyInfo reference, a `Transforms` element on every reference, and so on), so matching the profile means fighting its defaults. It verifies in tests instead.
 - **Declaring namespaces on the root:** simpler to write. Rejected because inclusive C14N carries them into every signed subtree.
 - **SHA-1 and three references:** the first version. SRI rejected it.
+
+## Addendum: what signing costs (2026-11-18, NFR-PERF-2)
+
+`pnpm bench:signing` builds, checks against the XSD and signs 200 invoices of each size on one core, and prints the average. On an Apple M3 Pro, in milliseconds per invoice:
+
+| Lines | Build | XSD | Sign | Total |
+|---|---|---|---|---|
+| 1 | 0.05 | 3.1 | 0.75 | about 4 |
+| 20 | 0.25 | 3.3 | 0.74 | about 4 |
+| 200 | 1.7 | 4.1 | 0.78 | about 7 |
+
+The XSD check costs most, and signing is flat: one RSA signature over two digests, whatever the size. Even on a server core a few times slower, a worker signs well over a hundred invoices a second, while the bulk feeder sends about one a second per company (ADR-026). SRI, not signing, sets the pace. Worker concurrency stays a setting for SRI's sake, not for the CPU. Run the bench again on the production droplet during the Milestone 10 load test and add its figures here.

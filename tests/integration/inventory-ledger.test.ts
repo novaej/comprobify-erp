@@ -550,7 +550,8 @@ describe('inventory ledger', () => {
       ['001', '10', true],
       ['002', '5', true],
     ]);
-    expect(detail.movementsTotal).toBe(2);
+    expect(detail.movements).toHaveLength(2);
+    expect(detail.movementsNext).toBeNull();
     expect(detail.total).toMatchObject({ onHand: '15', value: '45.00' });
 
     const valuation = await stockValuation(actor, db);

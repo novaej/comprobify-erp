@@ -235,6 +235,9 @@ export default async function DocumentPage({
           {document.authorizedAt && (
             <DetailTile label={t('detail.authorizedAt')} value={when(document.authorizedAt)} />
           )}
+          {document.externalReference && (
+            <DetailTile label={t('detail.externalReference')} value={document.externalReference} />
+          )}
         </dl>
         <div className="mt-4 rounded-md bg-muted/40 px-3 py-2">
           <p className="text-xs text-muted-foreground">{t('detail.accessKey')}</p>

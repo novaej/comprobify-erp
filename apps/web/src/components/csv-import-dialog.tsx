@@ -36,19 +36,23 @@ export function CsvImportDialog({
   action,
   template,
   descriptionKey = 'description',
+  withReason = false,
 }: {
-  namespace: 'inventory.import' | 'products.import' | 'clients.import';
+  namespace: 'inventory.import' | 'inventory.count' | 'products.import' | 'clients.import';
   errorNamespace: 'inventoryError' | 'productsError' | 'clientsError';
-  action: (locale: string, content: string) => Promise<CsvImportState>;
+  action: (locale: string, content: string, reason: string) => Promise<CsvImportState>;
   // The file offered as a model, in the person's language.
   template: string;
   descriptionKey?: 'description' | 'descriptionBranches';
+  // A reason typed beside the file, written on what the import makes (a stock count, ADR-046).
+  withReason?: boolean;
 }) {
   const t = useTranslations(namespace);
   const tError = useTranslations(errorNamespace);
   const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [reason, setReason] = useState('');
   const [result, setResult] = useState<CsvImportState>();
   const [pending, startTransition] = useTransition();
   const say = t as unknown as (key: string, values?: Record<string, unknown>) => string;
@@ -57,13 +61,14 @@ export function CsvImportDialog({
     setOpen(next);
     if (!next) {
       setFile(null);
+      setReason('');
       setResult(undefined);
     }
   };
   const send = () => {
-    if (!file) return;
+    if (!file || (withReason && reason.trim().length < 3)) return;
     startTransition(async () => {
-      const state = await action(locale, await readCsvFile(file));
+      const state = await action(locale, await readCsvFile(file), reason.trim());
       const made = (state.imported ?? 0) + (state.created ?? 0) + (state.updated ?? 0);
       if (made > 0) {
         toast.success(
@@ -122,6 +127,20 @@ export function CsvImportDialog({
                 />
               )}
             </FormField>
+            {withReason && (
+              <FormField label={say('reason')} hint={say('reasonHint')} required>
+                {(a11y) => (
+                  <Input
+                    {...a11y}
+                    value={reason}
+                    minLength={3}
+                    maxLength={300}
+                    required
+                    onChange={(event) => setReason(event.target.value)}
+                  />
+                )}
+              </FormField>
+            )}
             {result?.error && (
               <p role="alert" className="text-sm text-destructive">
                 {tError.has(result.error as 'UNKNOWN')
@@ -153,7 +172,10 @@ export function CsvImportDialog({
               <Button type="button" variant="outline" onClick={() => close(false)}>
                 {t('cancel')}
               </Button>
-              <Button type="submit" disabled={!file || pending}>
+              <Button
+                type="submit"
+                disabled={!file || pending || (withReason && reason.trim().length < 3)}
+              >
                 {t('submit')}
               </Button>
             </DialogFooter>

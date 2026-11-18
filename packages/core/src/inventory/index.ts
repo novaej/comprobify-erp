@@ -18,6 +18,8 @@ export {
   adjustStock,
   importOpeningBalances,
   OPENING_IMPORT_MAX_ROWS,
+  countImportInput,
+  importStockCount,
   openingBalanceInput,
   setOpeningBalance,
 } from './adjustments';
@@ -26,6 +28,7 @@ export type {
   ImportProblem,
   OpeningBalanceInput,
   OpeningImportResult,
+  CountImportResult,
 } from './adjustments';
 export {
   listStock,

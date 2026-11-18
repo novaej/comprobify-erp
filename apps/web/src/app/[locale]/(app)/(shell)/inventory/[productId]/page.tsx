@@ -1,5 +1,4 @@
 import { hasFeature, isDomainError, productStock, type ProductStock } from '@comprobify/core';
-import { buttonVariants } from '@comprobify/ui/components/button';
 import { cn } from '@comprobify/ui/lib/utils';
 import { AlertTriangle, History } from 'lucide-react';
 import { notFound } from 'next/navigation';
@@ -7,6 +6,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Banner } from '@/components/banner';
 import { DetailTile } from '@/components/detail-tile';
 import { EmptyState } from '@/components/empty-state';
+import { ListPager } from '@/components/list-pager';
 import { FeatureLocked } from '@/components/feature-locked';
 import { NoAccess } from '@/components/no-access';
 import { PageHeader } from '@/components/page-header';
@@ -48,7 +48,7 @@ export default async function ProductStockPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; productId: string }>;
-  searchParams: Promise<{ page?: string; warehouseId?: string }>;
+  searchParams: Promise<{ after?: string; before?: string; warehouseId?: string }>;
 }) {
   const [{ locale, productId }, search] = await Promise.all([params, searchParams]);
   setRequestLocale(locale);
@@ -59,7 +59,10 @@ export default async function ProductStockPage({
   const { db } = await getRuntime();
   let stock: ProductStock;
   try {
-    stock = await productStock(actor, db, productId, { page: Number(search.page) || 1 });
+    stock = await productStock(actor, db, productId, {
+      after: search.after,
+      before: search.before,
+    });
   } catch (error) {
     if (isDomainError(error, 'NOT_FOUND') || (error instanceof Error && error.name === 'ZodError'))
       notFound();
@@ -81,10 +84,9 @@ export default async function ProductStockPage({
     timeZone: 'America/Guayaquil',
   });
   const unit = stock.product.unit ? ` ${stock.product.unit}` : '';
-  const pages = Math.max(1, Math.ceil(stock.movementsTotal / stock.pageSize));
-  const pageHref = (page: number) => ({
+  const pageHref = (cursor: { after?: string; before?: string }) => ({
     pathname: `/inventory/${stock.product.id}` as const,
-    query: { ...search, page: String(page) },
+    query: { ...(search.warehouseId ? { warehouseId: search.warehouseId } : {}), ...cursor },
   });
   const multiple = stock.warehouses.length > 1;
   const negative = stock.warehouses.some((warehouse) => warehouse.onHand.startsWith('-'));
@@ -305,36 +307,11 @@ export default async function ProductStockPage({
             </StackTable>
           )}
         </TableCard>
-        {pages > 1 && (
-          <nav
-            aria-label={t('pagination.label')}
-            className="mt-4 flex items-center justify-between gap-3 text-sm"
-          >
-            {stock.page > 1 ? (
-              <Link
-                href={pageHref(stock.page - 1)}
-                className={buttonVariants({ variant: 'outline', size: 'sm' })}
-              >
-                {t('pagination.previous')}
-              </Link>
-            ) : (
-              <span />
-            )}
-            <span className="text-muted-foreground">
-              {t('pagination.page', { page: stock.page, pages })}
-            </span>
-            {stock.page < pages ? (
-              <Link
-                href={pageHref(stock.page + 1)}
-                className={buttonVariants({ variant: 'outline', size: 'sm' })}
-              >
-                {t('pagination.next')}
-              </Link>
-            ) : (
-              <span />
-            )}
-          </nav>
-        )}
+        <ListPager
+          label={t('pagination.label')}
+          previous={stock.movementsPrevious ? pageHref({ before: stock.movementsPrevious }) : null}
+          next={stock.movementsNext ? pageHref({ after: stock.movementsNext }) : null}
+        />
       </section>
     </div>
   );

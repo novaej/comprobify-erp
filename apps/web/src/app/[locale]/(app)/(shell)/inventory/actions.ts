@@ -3,6 +3,7 @@
 import {
   adjustStock,
   importOpeningBalances,
+  importStockCount,
   isDomainError,
   setOpeningBalance,
   type ImportProblem,
@@ -64,6 +65,27 @@ export async function importOpeningAction(locale: string, content: string): Prom
     const result = await importOpeningBalances(actor, db, content);
     if (result.imported > 0) revalidatePath(`/${locale}/inventory`, 'layout');
     return result;
+  } catch (error) {
+    if (isDomainError(error)) return { error: error.code };
+    if (error instanceof Error && error.name === 'ZodError') return { error: 'IMPORT_TOO_LARGE' };
+    throw error;
+  }
+}
+
+// ADR-046: a physical count; every difference from the books becomes an adjustment with the reason.
+export async function importCountAction(
+  locale: string,
+  content: string,
+  reason: string,
+): Promise<ImportState & { created?: number; updated?: number }> {
+  const { actor } = await loadShell(locale === 'en' ? 'en' : 'es');
+  const { db } = await getRuntime();
+  try {
+    const result = await importStockCount(actor, db, content, { reason });
+    if (result.problems.length > 0) return { problems: result.problems };
+    revalidatePath(`/${locale}/inventory`, 'layout');
+    // As the dialog counts: adjusted lines and those that matched the books.
+    return { created: result.adjusted, updated: result.unchanged };
   } catch (error) {
     if (isDomainError(error)) return { error: error.code };
     if (error instanceof Error && error.name === 'ZodError') return { error: 'IMPORT_TOO_LARGE' };

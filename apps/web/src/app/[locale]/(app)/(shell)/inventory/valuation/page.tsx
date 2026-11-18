@@ -1,4 +1,4 @@
-import { hasFeature, stockValuation } from '@comprobify/core';
+import { ecuadorDate, hasFeature, stockValuation, systemClock } from '@comprobify/core';
 import { buttonVariants } from '@comprobify/ui/components/button';
 import { Download, Scale } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
@@ -22,19 +22,28 @@ import { pageTitle } from '@/server/page-title';
 import { getRuntime } from '@/server/runtime';
 import { loadShell } from '@/server/shell';
 import { quantityFormat } from '../format';
+import { AsOfFilter } from './as-of-filter';
 
 export const generateMetadata = pageTitle('inventoryValuation');
 
 // FR-INV-5: what the stock is worth at its weighted average cost, per warehouse.
-export default async function ValuationPage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params;
+export default async function ValuationPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ asOf?: string }>;
+}) {
+  const [{ locale }, search] = await Promise.all([params, searchParams]);
   setRequestLocale(locale);
   const { actor } = await loadShell(locale);
   if (!hasFeature(actor, 'INVENTORY')) return <FeatureLocked actor={actor} />;
   if (!actor.permissions.includes('inventory.read')) return <NoAccess />;
 
   const { db } = await getRuntime();
-  const valuation = await stockValuation(actor, db);
+  const valuation = await stockValuation(actor, db, { asOf: search.asOf });
+  const today = ecuadorDate(systemClock.now());
+  const past = valuation.asOf !== today;
   const t = await getTranslations('inventory');
   const numberLocale = locale === 'en' ? 'en' : 'es-EC';
   const money = new Intl.NumberFormat(numberLocale, { style: 'currency', currency: 'USD' });
@@ -58,7 +67,7 @@ export default async function ValuationPage({ params }: { params: Promise<{ loca
           valuation.lines.length > 0 ? (
             // A file download, not a page: a plain link to the route.
             <a
-              href={`/${locale}/inventory/valuation/csv`}
+              href={`/${locale}/inventory/valuation/csv${past ? `?asOf=${valuation.asOf}` : ''}`}
               className={buttonVariants({ variant: 'outline', size: 'sm' })}
             >
               <Download className="mr-1.5 h-4 w-4" aria-hidden />
@@ -68,7 +77,15 @@ export default async function ValuationPage({ params }: { params: Promise<{ loca
         }
       />
 
-      <SectionCard title={t('valuation.totalsTitle')}>
+      <AsOfFilter asOf={valuation.asOf} today={today} />
+
+      <SectionCard
+        title={
+          past
+            ? t('valuation.totalsAsOf', { date: valuation.asOf.split('-').reverse().join('/') })
+            : t('valuation.totalsTitle')
+        }
+      >
         <dl className="grid gap-2 sm:grid-cols-2">
           {multiple &&
             valuation.warehouses.map((warehouse) => (
