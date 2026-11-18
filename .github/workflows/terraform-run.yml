@@ -35,7 +35,8 @@ concurrency:
 
 jobs:
   plan:
-    name: plan ${{ inputs.environment }}${{ inputs.action == 'destroy' && ' (destroy)' || '' }}
+    # Fixed names: a skipped job shows its name unevaluated. The caller prefixes the environment.
+    name: Plan
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}-plan
     outputs:
@@ -84,7 +85,7 @@ jobs:
           retention-days: 1
 
   apply:
-    name: ${{ inputs.action }} ${{ inputs.environment }}
+    name: Apply
     needs: plan
     if: inputs.action != 'plan' && needs.plan.outputs.changes == 'true'
     runs-on: ubuntu-latest
