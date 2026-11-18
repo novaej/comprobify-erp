@@ -41,7 +41,7 @@ Keep this table up to date as you go: ✅ passed, ❌ failed (note the steps), �
 | Flow | What | Status |
 |---|---|---|
 | P1 | The landing page | ✅ |
-| P2 | Pricing | 🟡 steps 1–5 passed; 6 needs the operator (after N2) |
+| P2 | Pricing | ✅ |
 | P3 | Support | ✅ |
 | A1 | Register and confirm the email | ✅ |
 | A2 | Sign out, a wrong password, a reset | ✅ |
