@@ -14,9 +14,9 @@ export default async function TwoFactorPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; remember?: string }>;
 }) {
-  const [{ locale }, { next }] = await Promise.all([params, searchParams]);
+  const [{ locale }, { next, remember }] = await Promise.all([params, searchParams]);
   setRequestLocale(locale);
   const t = await getTranslations('twoFactor');
   const tAuth = await getTranslations('auth');
@@ -28,7 +28,7 @@ export default async function TwoFactorPage({
       topLeft={<BackLink href="/login">{tAuth('backToLogin')}</BackLink>}
     >
       <AuthCard>
-        <TwoFactorForm next={safeNextPath(next) ?? undefined} />
+        <TwoFactorForm next={safeNextPath(next) ?? undefined} canRemember={remember !== '0'} />
       </AuthCard>
     </AuthShell>
   );

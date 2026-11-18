@@ -805,6 +805,10 @@ And for each: open a document or an order, so the read side is seen too.
 | 1 | Owner: **Mi cuenta** → turn on two-step verification | On, with backup codes |
 | 2 | **Usuarios** → **Exigir verificación en dos pasos a todos los miembros** | Saved |
 | 3 | Adela (Administrador) signs in | Sent to set it up before she can work |
+| 4 | Owner: sign out, sign in, and at the code tick **Recordar este dispositivo por 30 días** | In. Sign out and in again: no code asked, only the password. In a private window the code is still asked |
+| 5 | **Mi cuenta** → **Cerrar sesión en todos los dispositivos**, then sign in again | The code is asked again |
+| 6 | Operator (super admin): sign in | No "Recordar este dispositivo" box; the code every time |
+| 7 | Owner: **Empresa** → **Sesiones** → 5 minutes. Leave the tab untouched for 6 minutes, then click | Back to the sign-in page: "Tu sesión se cerró por inactividad." Set it back to 30 minutes |
 
 ---
 

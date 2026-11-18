@@ -6,6 +6,8 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Added
 
+- **Recordar este dispositivo por 30 días** on the two-step code page: that browser skips the code at sign-in (not the password), renewed each time; signing out everywhere, a password reset or turning the code off forgets every device, and the super admin is always asked (FR-USR-3, ADR-045).
+- The idle timeout is the company's: Empresa → **Sesiones**, from 5 minutes to 8 hours, the same in its test copy; it was always 30 minutes before (FR-USR-2, ADR-045).
 - Ownership transfer: on Usuarios the owner hands the company and its test copy to another active member, typing their email to confirm; the old owner stays as an admin, and the change is in the activity log (PRD section 3, ADR-044).
 - **Restablecer la copia de pruebas** on Empresa, for the owner and admins: the test copy's documents, orders, stock and master data are deleted, the company's products, clients, providers and templates copied in again, and the numbering starts at 1, after typing the RUC. The deleting is one database function that refuses anything but a test copy, and the app role still has no `DELETE` grant (PRD glossary, FR-ONB-5, ADR-043).
 - Several formas de pago on an order's invoice, from the same payment block as the direct invoice: the first takes what the others leave of the total (FR-SAL-3, ADR-022).

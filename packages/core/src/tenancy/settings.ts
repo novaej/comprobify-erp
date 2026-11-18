@@ -14,6 +14,11 @@ import {
 import { z } from 'zod';
 import { recordAudit } from '../audit';
 import {
+  DEFAULT_IDLE_TIMEOUT_MINUTES,
+  MAX_IDLE_TIMEOUT_MINUTES,
+  MIN_IDLE_TIMEOUT_MINUTES,
+} from '../identity';
+import {
   DomainError,
   requireFeature,
   requirePermission,
@@ -75,6 +80,8 @@ export type CompanySettings = {
     contactEmail: string | null;
   };
   negativeStock: (typeof NEGATIVE_STOCK_RULES)[number];
+  // Minutes without activity before a session in this company ends (FR-USR-2).
+  idleTimeoutMinutes: number;
   // Whether a logo is stored, whatever the plan; it prints only with the Marca module.
   hasLogo: boolean;
   branches: {
@@ -122,6 +129,7 @@ export async function companySettings(ctx: ActorContext, db: Database): Promise<
         contactEmail: tenant!.contactEmail,
       },
       negativeStock: tenant!.negativeStock,
+      idleTimeoutMinutes: tenant!.idleTimeoutMinutes,
       hasLogo:
         (await tx.select({ id: schema.tenantLogos.tenantId }).from(schema.tenantLogos)).length > 0,
       branches: branchRows.map((branch) => ({
@@ -193,6 +201,37 @@ export const setNegativeStockRule = (
       details: { negativeStock: rule },
     });
   });
+
+// FR-USR-2: how long a session in the company may go without real activity. On the company and
+// its twin, so switching between them never changes it.
+export const setIdleTimeout = (ctx: ActorContext, db: Database, raw: number) =>
+  change(ctx, db, 'set the idle timeout of a company and its twin', async (tx, pair) => {
+    const minutes = z.int().min(MIN_IDLE_TIMEOUT_MINUTES).max(MAX_IDLE_TIMEOUT_MINUTES).parse(raw);
+    await tx
+      .update(schema.tenants)
+      .set({ idleTimeoutMinutes: minutes, updatedAt: sql`now()` })
+      .where(inArray(schema.tenants.id, tenantsOf(pair)));
+    await recordAudit(tx, {
+      tenantId: pair.realTenantId,
+      actorUserId: ctx.userId ?? null,
+      action: 'organization.settings_changed',
+      details: { idleTimeoutMinutes: minutes },
+    });
+  });
+
+// The idle timeout a session follows: its company's, or the default outside one (the platform
+// area, onboarding) or when the company can't be read.
+export async function sessionIdleMinutes(db: Database, tenantId: string | null): Promise<number> {
+  const id = z.uuid().safeParse(tenantId);
+  if (!id.success) return DEFAULT_IDLE_TIMEOUT_MINUTES;
+  const [row] = await db.withTenant({ tenantId: id.data }, ({ db: tx }) =>
+    tx
+      .select({ minutes: schema.tenants.idleTimeoutMinutes })
+      .from(schema.tenants)
+      .where(eq(schema.tenants.id, id.data)),
+  );
+  return row?.minutes ?? DEFAULT_IDLE_TIMEOUT_MINUTES;
+}
 
 // Branch or issue point in the actor's tenant, by id; its codes find the twin's copy.
 async function branchCodes(tx: Tx['db'], tenantId: string, branchId: string) {

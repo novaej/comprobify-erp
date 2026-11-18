@@ -69,6 +69,8 @@ export {
   productionSequentials,
   setIssuePointDocumentType,
   setIssuePointPaused,
+  setIdleTimeout,
+  sessionIdleMinutes,
   setNegativeStockRule,
   setCompanySequentials,
   TAX_REGIMES,

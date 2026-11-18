@@ -23,6 +23,7 @@ import {
   renewCertificateAction,
   resetTwinAction,
   setLogoAction,
+  setIdleTimeoutAction,
   setNegativeStockAction,
   setSequentialsAction,
   setPausedAction,
@@ -42,6 +43,7 @@ export type SettingsView = {
     taxRegime: string;
   };
   negativeStock: 'BLOCK' | 'ALLOW';
+  idleTimeoutMinutes: number;
   // The Inventario module, which the negative-stock rule belongs to.
   inventory: boolean;
   hasLogo: boolean;
@@ -235,6 +237,8 @@ export function SettingsManager({ settings }: { settings: SettingsView }) {
       <LogoCard hasLogo={settings.hasLogo} prints={settings.logoPrints} />
 
       {settings.inventory && <StockRuleCard allowed={settings.negativeStock === 'ALLOW'} />}
+
+      <SessionCard minutes={settings.idleTimeoutMinutes} />
 
       {settings.canResetTwin && <TwinResetCard ruc={profile.ruc} />}
 
@@ -797,6 +801,48 @@ function TwinResetCard({ ruc }: { ruc: string }) {
           )}
         </FormField>
       </FormDialog>
+    </SectionCard>
+  );
+}
+
+// FR-USR-2: how long a session in the company may sit without real activity (ADR-045).
+const IDLE_CHOICES = [5, 15, 30, 60, 120, 240, 480];
+
+function SessionCard({ minutes }: { minutes: number }) {
+  const t = useTranslations('settings');
+  const [value, setValue] = useState(String(minutes));
+  const save = useServerAction(setIdleTimeoutAction, {
+    errors: 'settingsError',
+    success: t('idleSaved'),
+  });
+  const choices = [...new Set([...IDLE_CHOICES, minutes])]
+    .sort((a, b) => a - b)
+    .map((option) => ({
+      value: String(option),
+      label:
+        option < 60 ? t('idleMinutes', { count: option }) : t('idleHours', { count: option / 60 }),
+    }));
+  return (
+    <SectionCard title={t('sessionTitle')} description={t('sessionDescription')}>
+      <FormField label={t('idleLabel')} className="max-w-xs">
+        {(a11y) => (
+          <ChoiceSelect
+            a11y={a11y}
+            value={value}
+            options={choices}
+            disabled={save.pending}
+            onChange={(next) => {
+              setValue(next);
+              save.run({ minutes: next });
+            }}
+          />
+        )}
+      </FormField>
+      {save.error && (
+        <p role="alert" className="mt-2 text-sm text-destructive">
+          {save.error}
+        </p>
+      )}
     </SectionCard>
   );
 }

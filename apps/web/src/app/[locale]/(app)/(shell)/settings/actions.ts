@@ -8,6 +8,7 @@ import {
   setCompanyLogo,
   setIssuePointDocumentType,
   setIssuePointPaused,
+  setIdleTimeout,
   setNegativeStockRule,
   setCompanySequentials,
   updateBranch,
@@ -153,4 +154,11 @@ export async function resetTwinAction(_: ActionState, form: FormData): Promise<A
   return run(form, async () => {
     await resetTwin(actor, db, { confirmation: text(form, 'confirmation') });
   });
+}
+
+// FR-USR-2: minutes without activity before a session in the company ends.
+export async function setIdleTimeoutAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const { actor } = await loadShell(localeOf(form));
+  const { db } = await getRuntime();
+  return run(form, () => setIdleTimeout(actor, db, Number(text(form, 'minutes'))));
 }

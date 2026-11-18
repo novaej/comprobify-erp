@@ -126,6 +126,7 @@ export {
   inArray,
   isNotNull,
   isNull,
+  like,
   lt,
   lte,
   max,

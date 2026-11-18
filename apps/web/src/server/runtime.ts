@@ -8,6 +8,7 @@ import {
   createMockSri,
   createSriClient,
   createIdentity,
+  sessionIdleMinutes,
   createJobs,
   createRateLimiter,
   systemClock,
@@ -106,6 +107,7 @@ async function start(): Promise<Runtime> {
     db: db.identity,
     rateLimiter: createRateLimiter(db.identity, () => systemClock.now()),
     clock: systemClock,
+    idleMinutesFor: (tenantId) => sessionIdleMinutes(db, tenantId),
   });
 
   logger.info('Web started', { event: 'web.started' });

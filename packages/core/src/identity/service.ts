@@ -6,6 +6,7 @@ import { DomainError, type Clock } from '../kernel';
 import type { Auth } from './auth';
 import type { RateLimiter } from './rate-limit';
 import { DEFAULT_IDLE_TIMEOUT_MINUTES, isIdle } from './session-activity';
+import { forgetTrustedDevices } from './trusted-devices';
 
 const email = z
   .email()
@@ -100,10 +101,16 @@ export type IdentityOptions = {
   db: IdentityDb;
   rateLimiter: RateLimiter;
   clock: Clock;
+  // The idle timeout of the company a session works in (FR-USR-2); the default without it.
+  idleMinutesFor?: (tenantId: string | null) => Promise<number>;
 };
 
-export function createIdentity({ auth, db, rateLimiter, clock }: IdentityOptions) {
+export function createIdentity({ auth, db, rateLimiter, clock, idleMinutesFor }: IdentityOptions) {
   const { sessions } = schema;
+  const idleOf = (session: { activeTenantId?: unknown }) =>
+    idleMinutesFor
+      ? idleMinutesFor(typeof session.activeTenantId === 'string' ? session.activeTenantId : null)
+      : Promise.resolve(DEFAULT_IDLE_TIMEOUT_MINUTES);
 
   return {
     async signUp(raw: z.input<typeof signUpInput>, meta: RequestMeta): Promise<void> {
@@ -114,19 +121,27 @@ export function createIdentity({ auth, db, rateLimiter, clock }: IdentityOptions
 
     // Only failures count, so a user signing in often is never locked out. With 2FA on,
     // no session exists yet: the code page finishes the sign-in (FR-USR-3).
+    // `canRememberDevice` is false for the super admin, who is asked for the code every time.
     async signIn(
       raw: z.input<typeof signInInput>,
       meta: RequestMeta,
-    ): Promise<{ twoFactorRequired: boolean }> {
+    ): Promise<{ twoFactorRequired: boolean; canRememberDevice: boolean }> {
       const input = signInInput.parse(raw);
       await rateLimiter.check('sign-in:email', input.email);
       if (meta.ip) await rateLimiter.check('sign-in:ip', meta.ip);
+      const [account] = await db
+        .select({ id: schema.users.id, isSuperAdmin: schema.users.isSuperAdmin })
+        .from(schema.users)
+        .where(eq(schema.users.email, input.email));
+      // The platform account sees every company: no remembered device ever skips its code.
+      if (account?.isSuperAdmin) await forgetTrustedDevices(db, account.id);
       try {
         const result = await mapAuthErrors(() =>
           auth.api.signInEmail({ body: input, headers: meta.headers }),
         );
         return {
           twoFactorRequired: 'twoFactorRedirect' in result && result.twoFactorRedirect === true,
+          canRememberDevice: account?.isSuperAdmin !== true,
         };
       } catch (error) {
         await rateLimiter.hit('sign-in:email', input.email);
@@ -141,6 +156,8 @@ export function createIdentity({ auth, db, rateLimiter, clock }: IdentityOptions
 
     // FR-USR-2: every session of this user, on every device.
     async signOutEverywhere(meta: RequestMeta): Promise<void> {
+      const found = await auth.api.getSession({ headers: meta.headers });
+      if (found) await forgetTrustedDevices(db, found.user.id);
       await auth.api.revokeSessions({ headers: meta.headers });
       await auth.api.signOut({ headers: meta.headers });
     },
@@ -224,16 +241,27 @@ export function createIdentity({ auth, db, rateLimiter, clock }: IdentityOptions
     },
 
     // The second step of a sign-in: a TOTP code or one of the backup codes.
+    // `rememberDevice` lets this browser skip the code for 30 days (ADR-045).
     async verifyTwoFactor(
-      raw: { code: string; backup: boolean },
+      raw: { code: string; backup: boolean; rememberDevice?: boolean },
       meta: RequestMeta,
     ): Promise<void> {
       const code = z.string().trim().min(6).max(64).parse(raw.code);
-      await mapAuthErrors(() =>
+      const trustDevice = raw.rememberDevice === true;
+      const result = await mapAuthErrors(() =>
         raw.backup
-          ? auth.api.verifyBackupCode({ body: { code }, headers: meta.headers })
-          : auth.api.verifyTOTP({ body: { code }, headers: meta.headers }),
+          ? auth.api.verifyBackupCode({ body: { code, trustDevice }, headers: meta.headers })
+          : auth.api.verifyTOTP({ body: { code, trustDevice }, headers: meta.headers }),
       );
+      // Asked for anyway by the super admin: the device is forgotten at once.
+      const userId = (result as { user?: { id?: unknown } }).user?.id;
+      if (trustDevice && typeof userId === 'string') {
+        const [account] = await db
+          .select({ isSuperAdmin: schema.users.isSuperAdmin })
+          .from(schema.users)
+          .where(eq(schema.users.id, userId));
+        if (account?.isSuperAdmin) await forgetTrustedDevices(db, userId);
+      }
     },
 
     // Step one of setup: the password confirms it is the user; nothing is on until
@@ -261,18 +289,17 @@ export function createIdentity({ auth, db, rateLimiter, clock }: IdentityOptions
       await mapAuthErrors(() =>
         auth.api.disableTwoFactor({ body: { password }, headers: meta.headers }),
       );
+      const found = await auth.api.getSession({ headers: meta.headers });
+      if (found) await forgetTrustedDevices(db, found.user.id);
     },
 
     // Reading the session never extends it. An idle session is deleted here, so
     // it can't come back; the stale cookie then matches nothing.
-    async currentSession(
-      headers: Headers,
-      idleMinutes = DEFAULT_IDLE_TIMEOUT_MINUTES,
-    ): Promise<SessionState> {
+    async currentSession(headers: Headers, idleMinutes?: number): Promise<SessionState> {
       const found = await auth.api.getSession({ headers });
       if (!found) return { status: 'none' };
       const lastActivityAt = new Date(found.session.lastActivityAt ?? found.session.createdAt);
-      if (isIdle(lastActivityAt, idleMinutes, clock.now())) {
+      if (isIdle(lastActivityAt, idleMinutes ?? (await idleOf(found.session)), clock.now())) {
         await db.delete(sessions).where(eq(sessions.id, found.session.id));
         return { status: 'idle' };
       }
@@ -295,14 +322,12 @@ export function createIdentity({ auth, db, rateLimiter, clock }: IdentityOptions
     },
 
     // Called only from real input in the browser, never from page loads or polling.
-    async recordActivity(
-      headers: Headers,
-      idleMinutes = DEFAULT_IDLE_TIMEOUT_MINUTES,
-    ): Promise<void> {
+    async recordActivity(headers: Headers, idleMinutes?: number): Promise<void> {
       const found = await auth.api.getSession({ headers });
       if (!found) return;
       const now = clock.now();
-      const stillLive = new Date(now.getTime() - idleMinutes * 60_000);
+      const minutes = idleMinutes ?? (await idleOf(found.session));
+      const stillLive = new Date(now.getTime() - minutes * 60_000);
       const writtenRecently = new Date(now.getTime() - ACTIVITY_WRITE_INTERVAL_MS);
       await db
         .update(sessions)

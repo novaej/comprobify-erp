@@ -38,8 +38,9 @@ export async function signInAction(_: ActionState, form: FormData): Promise<Acti
   const meta = await requestMeta();
   const email = field(form, 'email');
   let twoFactorRequired = false;
+  let canRememberDevice = true;
   const state = await toActionState(async () => {
-    ({ twoFactorRequired } = await identity.signIn(
+    ({ twoFactorRequired, canRememberDevice } = await identity.signIn(
       { email, password: field(form, 'password') },
       meta,
     ));
@@ -53,8 +54,12 @@ export async function signInAction(_: ActionState, form: FormData): Promise<Acti
   const next = safeNextPath(field(form, 'next'));
   // No session yet: the code page finishes the sign-in (FR-USR-3).
   if (state.done && twoFactorRequired) {
-    const query = next ? `?next=${encodeURIComponent(next)}` : '';
-    redirect({ href: `/login/two-factor${query}`, locale: localeOf(form) });
+    const query = new URLSearchParams({
+      ...(next ? { next } : {}),
+      // Only hides the box: core forgets a super admin's device whatever is sent (ADR-045).
+      ...(canRememberDevice ? {} : { remember: '0' }),
+    }).toString();
+    redirect({ href: `/login/two-factor${query ? `?${query}` : ''}`, locale: localeOf(form) });
   }
   if (state.done) redirect({ href: next ?? '/dashboard', locale: localeOf(form) });
   return state;
@@ -110,7 +115,11 @@ export async function verifyTwoFactorAction(_: ActionState, form: FormData): Pro
   const meta = await requestMeta();
   const state = await toActionState(() =>
     identity.verifyTwoFactor(
-      { code: field(form, 'code'), backup: form.get('backup') === 'on' },
+      {
+        code: field(form, 'code'),
+        backup: form.get('backup') === 'on',
+        rememberDevice: form.get('remember') === 'on',
+      },
       meta,
     ),
   );

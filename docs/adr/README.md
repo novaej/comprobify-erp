@@ -65,3 +65,4 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [042](042-order-invoices-at-the-warehouses-issue-point.md) | An order's invoice is issued at its warehouse's issue point | Accepted |
 | [043](043-twin-reset.md) | Twin reset | Accepted |
 | [044](044-ownership-transfer.md) | Ownership transfer | Accepted |
+| [045](045-remembered-devices-and-idle-timeout.md) | Remembered devices and the company's idle timeout | Accepted |

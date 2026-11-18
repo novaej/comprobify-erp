@@ -95,7 +95,7 @@ describe('identity', () => {
       code: 'EMAIL_NOT_VERIFIED',
     });
     await identity.verifyEmail({ token: sent[`verify:${email.toLowerCase()}`]! }, meta());
-    await expect(identity.signIn({ email, password }, meta())).resolves.toEqual({
+    await expect(identity.signIn({ email, password }, meta())).resolves.toMatchObject({
       twoFactorRequired: false,
     });
     // The link is spent: opening it again must not verify, or sign anyone in, a second time.
@@ -122,7 +122,7 @@ describe('identity', () => {
     expect(users).toHaveLength(1);
     expect(users[0]).toMatchObject({ name: 'Ana', locale: 'es', emailVerified: true });
     expect(sent[`verify:${email}`]).toBeUndefined();
-    await expect(identity.signIn({ email, password }, meta())).resolves.toEqual({
+    await expect(identity.signIn({ email, password }, meta())).resolves.toMatchObject({
       twoFactorRequired: false,
     });
   });
@@ -205,6 +205,21 @@ describe('identity', () => {
     expect(gone).toHaveLength(0);
   });
 
+  it('ends a session at the idle timeout of its company (FR-USR-2)', async () => {
+    const short = createIdentity({
+      auth,
+      db: db.identity,
+      rateLimiter: createRateLimiter(db.identity, () => clock.now()),
+      clock,
+      idleMinutesFor: () => Promise.resolve(5),
+    });
+    const headers = new Headers({ cookie: await cookieFor(await verifiedUser()) });
+    clock.set(new Date(Date.now() + 4 * 60_000).toISOString());
+    await expect(short.currentSession(headers)).resolves.toMatchObject({ status: 'active' });
+    clock.set(new Date(Date.now() + 6 * 60_000).toISOString());
+    await expect(short.currentSession(headers)).resolves.toEqual({ status: 'idle' });
+  });
+
   it('records real activity, at most once a minute, and never revives an idle session', async () => {
     const email = await verifiedUser();
     const headers = new Headers({ cookie: await cookieFor(email) });
@@ -271,7 +286,7 @@ describe('identity', () => {
     expect(sessions).toHaveLength(0);
     await expect(
       identity.signIn({ email, password: 'a brand new passphrase' }, meta()),
-    ).resolves.toEqual({ twoFactorRequired: false });
+    ).resolves.toMatchObject({ twoFactorRequired: false });
   });
 
   it('replaces an unused reset link when another is requested', async () => {

@@ -15,7 +15,7 @@ import {
   type Identity,
 } from '@comprobify/core';
 import { testRuc } from '@comprobify/core/testing';
-import type { Database } from '@comprobify/db';
+import { eq, schema, type Database } from '@comprobify/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appDatabase } from './helpers';
 
@@ -90,7 +90,7 @@ describe('two-factor sign-in', () => {
     await createVerifiedUser(auth, { name: 'Ana', email, password, locale: 'es' });
     const signedIn = await auth.api.signInEmail({ body: { email, password }, returnHeaders: true });
     await identity.startTwoFactorSetup({ password }, meta(cookieOf(signedIn.headers)));
-    await expect(identity.signIn({ email, password }, meta(''))).resolves.toEqual({
+    await expect(identity.signIn({ email, password }, meta(''))).resolves.toMatchObject({
       twoFactorRequired: false,
     });
   });
@@ -111,6 +111,7 @@ describe('two-factor sign-in', () => {
     const { email, setup } = await userWithTwoFactor();
     await expect(identity.signIn({ email, password }, meta(''))).resolves.toEqual({
       twoFactorRequired: true,
+      canRememberDevice: true,
     });
 
     const { cookie } = await firstStep(email);
@@ -124,6 +125,50 @@ describe('two-factor sign-in', () => {
       { code: await codeFor(setup.totpUri), backup: false },
       meta(cookie),
     );
+  });
+
+  // ADR-045: a remembered device skips the code, until it is forgotten.
+  const rememberedDevice = async (email: string, totpUri: string) => {
+    const { cookie } = await firstStep(email);
+    const verified = await auth.api.verifyTOTP({
+      body: { code: await codeFor(totpUri), trustDevice: true },
+      headers: new Headers({ cookie }),
+      returnHeaders: true,
+    });
+    return cookieOf(verified.headers)
+      .split('; ')
+      .filter((part) => part.includes('trust_device'))
+      .join('; ');
+  };
+
+  it('skips the code on a remembered device, until signing out everywhere', async () => {
+    const { email, setup, session } = await userWithTwoFactor();
+    const trusted = await rememberedDevice(email, setup.totpUri);
+    expect(trusted).not.toBe('');
+    await expect(identity.signIn({ email, password }, meta(trusted))).resolves.toMatchObject({
+      twoFactorRequired: false,
+    });
+    // Another browser, without the cookie, is still asked.
+    await expect(identity.signIn({ email, password }, meta(''))).resolves.toMatchObject({
+      twoFactorRequired: true,
+    });
+    await identity.signOutEverywhere(meta(session));
+    await expect(identity.signIn({ email, password }, meta(trusted))).resolves.toMatchObject({
+      twoFactorRequired: true,
+    });
+  });
+
+  it('never remembers a device for the super admin', async () => {
+    const { id, email, setup } = await userWithTwoFactor();
+    await db.identity
+      .update(schema.users)
+      .set({ isSuperAdmin: true })
+      .where(eq(schema.users.id, id));
+    const trusted = await rememberedDevice(email, setup.totpUri);
+    await expect(identity.signIn({ email, password }, meta(trusted))).resolves.toEqual({
+      twoFactorRequired: true,
+      canRememberDevice: false,
+    });
   });
 
   it('accepts each backup code once', async () => {
@@ -174,7 +219,7 @@ describe('two-factor sign-in', () => {
       code: 'INVALID_CREDENTIALS',
     });
     await identity.disableTwoFactor({ password }, meta(session));
-    await expect(identity.signIn({ email, password }, meta(''))).resolves.toEqual({
+    await expect(identity.signIn({ email, password }, meta(''))).resolves.toMatchObject({
       twoFactorRequired: false,
     });
   });

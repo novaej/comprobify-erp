@@ -397,7 +397,9 @@
     "codeHint": "Los 6 dígitos de tu app, o un código de respaldo.",
     "useBackup": "Usar un código de respaldo",
     "submit": "Verificar",
-    "submitting": "Verificando..."
+    "submitting": "Verificando...",
+    "remember": "Recordar este dispositivo por 30 días",
+    "rememberHint": "En este navegador no te pediremos el código al iniciar sesión; la contraseña sí. No lo marques en un equipo compartido."
   },
   "security": {
     "title": "Seguridad",
@@ -1602,7 +1604,13 @@
     "twinResetConfirmTitle": "¿Restablecer la copia de pruebas?",
     "twinResetConfirmDescription": "Todo lo hecho en la copia de pruebas se borra y no se puede recuperar. Los usuarios, las sucursales, los puntos de emisión, la firma y el plan se mantienen.",
     "twinResetConfirmLabel": "Escribe el RUC de la empresa ({ruc}) para confirmar",
-    "twinResetDone": "La copia de pruebas se restableció."
+    "twinResetDone": "La copia de pruebas se restableció.",
+    "sessionTitle": "Sesiones",
+    "sessionDescription": "Cuánto tiempo puede quedar una sesión sin actividad antes de cerrarse, para todos en la empresa y en su copia de pruebas. Abrir páginas o esperar no cuenta como actividad; escribir o hacer clic sí. Una sesión dura como máximo 7 días.",
+    "idleLabel": "Cerrar la sesión tras",
+    "idleMinutes": "{count} minutos",
+    "idleHours": "{count, plural, one {# hora} other {# horas}}",
+    "idleSaved": "Tiempo de inactividad guardado."
   },
   "settingsError": {
     "FORBIDDEN": "Tu rol no permite cambiar los datos de la empresa.",

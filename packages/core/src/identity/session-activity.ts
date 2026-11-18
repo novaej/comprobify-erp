@@ -16,3 +16,7 @@ export function isValidIdleTimeout(minutes: number): boolean {
     minutes <= MAX_IDLE_TIMEOUT_MINUTES
   );
 }
+
+// FR-USR-3: a device the user chose to remember skips the code at sign-in for this long, renewed
+// each time it is used (ADR-045).
+export const TRUSTED_DEVICE_SECONDS = 30 * 24 * 60 * 60;

@@ -3,7 +3,8 @@ import { betterAuth, type BetterAuthPlugin } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { twoFactor } from 'better-auth/plugins';
 import type { EmailLocale } from '../email';
-import { SESSION_LIFETIME_SECONDS } from './session-activity';
+import { SESSION_LIFETIME_SECONDS, TRUSTED_DEVICE_SECONDS } from './session-activity';
+import { forgetTrustedDevices } from './trusted-devices';
 
 export type AuthEmails = {
   // Both receive our page's URL, never Better Auth's own route (ADR-009).
@@ -59,6 +60,8 @@ export function createAuth(options: AuthOptions) {
       maxPasswordLength: 128,
       resetPasswordTokenExpiresIn: 60 * 60,
       revokeSessionsOnPasswordReset: true,
+      // A new password also forgets every remembered device (ADR-045).
+      onPasswordReset: ({ user }) => forgetTrustedDevices(db, user.id),
       sendResetPassword: ({ user, token }) =>
         emails.passwordReset(user.email, localeOf(user), token),
     },
@@ -87,8 +90,11 @@ export function createAuth(options: AuthOptions) {
       },
     },
     // TOTP only (FR-USR-3). Its lockout, 10 wrong codes then 15 minutes, applies to
-    // server calls too. No trusted devices: every sign-in asks for the code.
-    plugins: [twoFactor({ issuer: 'Comprobify' }), ...plugins],
+    // server calls too. A device the user asks to remember skips the code (ADR-045).
+    plugins: [
+      twoFactor({ issuer: 'Comprobify', trustDeviceMaxAge: TRUSTED_DEVICE_SECONDS }),
+      ...plugins,
+    ],
   });
 }
 

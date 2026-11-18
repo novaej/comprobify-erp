@@ -209,7 +209,13 @@ export function ResetPasswordForm({ token }: { token: string }) {
   );
 }
 
-export function TwoFactorForm({ next }: { next?: string | undefined }) {
+export function TwoFactorForm({
+  next,
+  canRemember,
+}: {
+  next?: string | undefined;
+  canRemember: boolean;
+}) {
   const t = useTranslations('twoFactor');
   return (
     <AuthForm
@@ -235,6 +241,15 @@ export function TwoFactorForm({ next }: { next?: string | undefined }) {
         <input type="checkbox" name="backup" className="h-4 w-4 accent-primary" />
         {t('useBackup')}
       </label>
+      {canRemember && (
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" name="remember" className="mt-0.5 h-4 w-4 accent-primary" />
+          <span>
+            {t('remember')}
+            <span className="block text-xs text-muted-foreground">{t('rememberHint')}</span>
+          </span>
+        </label>
+      )}
     </AuthForm>
   );
 }

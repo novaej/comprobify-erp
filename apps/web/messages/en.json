@@ -397,7 +397,9 @@
     "codeHint": "The 6 digits from your app, or a backup code.",
     "useBackup": "Use a backup code",
     "submit": "Verify",
-    "submitting": "Verifying..."
+    "submitting": "Verifying...",
+    "remember": "Remember this device for 30 days",
+    "rememberHint": "This browser won't be asked for the code at sign-in; the password still is. Don't tick it on a shared computer."
   },
   "security": {
     "title": "Security",
@@ -1602,7 +1604,13 @@
     "twinResetConfirmTitle": "Reset the test copy?",
     "twinResetConfirmDescription": "Everything done in the test copy is deleted and can't be recovered. Users, branches, issue points, the signature and the plan stay.",
     "twinResetConfirmLabel": "Type the company's RUC ({ruc}) to confirm",
-    "twinResetDone": "The test copy was reset."
+    "twinResetDone": "The test copy was reset.",
+    "sessionTitle": "Sessions",
+    "sessionDescription": "How long a session may sit without activity before it ends, for everyone in the company and its test copy. Opening pages or waiting doesn't count as activity; typing or clicking does. A session lasts 7 days at most.",
+    "idleLabel": "End the session after",
+    "idleMinutes": "{count} minutes",
+    "idleHours": "{count, plural, one {# hour} other {# hours}}",
+    "idleSaved": "Idle time saved."
   },
   "settingsError": {
     "FORBIDDEN": "Your role can't change the company details.",
