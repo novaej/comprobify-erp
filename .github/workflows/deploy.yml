@@ -7,9 +7,8 @@
 #            INFRA_SSH_PRIVATE_KEY the deploy key's private half
 #            RUNTIME_ENV           the whole .env of the environment, one variable per line
 #                                  (docs/deployment.md lists them)
-#   vars     DEPLOY_USERNAME       deploy_username in the environment's terraform.tfvars
-#            SITE_HOSTS            the hostnames, comma-separated, as Caddy reads them
-#            WEB_MEMORY, WORKER_MEMORY, WORKER_CPUS  optional container limits
+# Everything else (the deploy user, the hostnames, the containers' limits) comes from the
+# environment's infra/terraform/environments/<env>/terraform.tfvars, the one place it is set.
 name: Deploy
 
 on:
@@ -41,6 +40,28 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
 
+      # The settings Terraform's tfvars already hold, read once for the steps below.
+      - name: Read the environment's settings
+        id: settings
+        env:
+          TFVARS: infra/terraform/environments/${{ inputs.environment }}/terraform.tfvars
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import os, re
+          text = open(os.environ['TFVARS']).read()
+          def value(name):
+              found = re.search(rf'^{name}\s*=\s*"([^"]*)"', text, re.M)
+              if not found: raise SystemExit(f'{name} is missing from terraform.tfvars')
+              return found.group(1)
+          hosts = re.search(r'^hostnames\s*=\s*\[([^\]]*)\]', text, re.M)
+          if not hosts: raise SystemExit('hostnames is missing from terraform.tfvars')
+          print('deploy_username=' + value('deploy_username'))
+          # Caddy's site address: the hostnames, comma-separated.
+          print('site_hosts=' + ', '.join(re.findall(r'"([^"]+)"', hosts.group(1))))
+          for name in ('web_memory', 'worker_memory', 'worker_cpus'):
+              print(f'{name}={value(name)}')
+          PY
+
       - uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -58,7 +79,7 @@ jobs:
         uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
         with:
           host: ${{ secrets.DROPLET_IP }}
-          username: ${{ vars.DEPLOY_USERNAME }}
+          username: ${{ steps.settings.outputs.deploy_username }}
           key: ${{ secrets.INFRA_SSH_PRIVATE_KEY }}
           source: infra/deploy/compose.yaml,infra/deploy/caddy/Caddyfile
           target: /opt/comprobify
@@ -70,13 +91,13 @@ jobs:
           RUNTIME_ENV: ${{ secrets.RUNTIME_ENV }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
-          SITE_HOSTS: ${{ vars.SITE_HOSTS }}
-          WEB_MEMORY: ${{ vars.WEB_MEMORY }}
-          WORKER_MEMORY: ${{ vars.WORKER_MEMORY }}
-          WORKER_CPUS: ${{ vars.WORKER_CPUS }}
+          SITE_HOSTS: ${{ steps.settings.outputs.site_hosts }}
+          WEB_MEMORY: ${{ steps.settings.outputs.web_memory }}
+          WORKER_MEMORY: ${{ steps.settings.outputs.worker_memory }}
+          WORKER_CPUS: ${{ steps.settings.outputs.worker_cpus }}
         with:
           host: ${{ secrets.DROPLET_IP }}
-          username: ${{ vars.DEPLOY_USERNAME }}
+          username: ${{ steps.settings.outputs.deploy_username }}
           key: ${{ secrets.INFRA_SSH_PRIVATE_KEY }}
           envs: IMAGE,RUNTIME_ENV,GHCR_TOKEN,GHCR_USER,SITE_HOSTS,WEB_MEMORY,WORKER_MEMORY,WORKER_CPUS
           script: |

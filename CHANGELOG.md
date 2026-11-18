@@ -158,6 +158,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Changed
 
+- The deploy reads the deploy user, the hostnames and the containers' limits from the environment's `terraform.tfvars`; the `DEPLOY_USERNAME`, `SITE_HOSTS`, `WEB_MEMORY`, `WORKER_MEMORY` and `WORKER_CPUS` GitHub variables are gone. Production's DNS is managed from the start, the previous system's records having gone with it, and production starts on the same 1 vCPU / 2 GB droplet as staging (ADR-048).
 - Names without "erp": the database roles are `comprobify_owner` and `comprobify_app`, the local databases `comprobify_local`, `comprobify_test` and `comprobify_e2e`, the deployed ones `comprobify_<env>_db`, and the droplets, paths and Terraform state `comprobify`. The merged migrations that name the role were edited once, before any deployed database ran them; GETTING_STARTED.md has the commands for an existing local container (ADR-050).
 - Comprobantes, a product's movements and the notification list page by keyset, with **Anterior** and **Siguiente** instead of page numbers, so the thousandth page costs what the first does (NFR-PERF-4, ADR-047).
 - An invoice made from a sale order must use an issue point of the branch of the order's warehouse, as the goods leave from there: core refuses any other (`ISSUE_POINT_WAREHOUSE_MISMATCH`), the invoice-from-order form lists only those issue points, and bulk invoicing lists the orders held in the chosen issue point's warehouse, one batch per warehouse (FR-SAL-4, FR-BULK-1, ADR-042).

@@ -42,3 +42,17 @@ variable "manage_dns" {
   type    = bool
   default = true
 }
+
+# Not used by Terraform: the deploy workflow reads them from terraform.tfvars, so each
+# environment's settings live in one file (ADR-048). The containers' memory and CPU limits.
+variable "web_memory" {
+  type = string
+}
+
+variable "worker_memory" {
+  type = string
+}
+
+variable "worker_cpus" {
+  type = string
+}

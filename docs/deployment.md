@@ -8,7 +8,7 @@ How the system runs locally, on staging and in production (ADR-048). Backups and
 |---|---|---|---|---|
 | local | `localhost:3000` (`pnpm dev`), `localhost:8080` (`pnpm stack:up`) | your machine | the `postgres18` container | — |
 | staging | `staging.comprobify.com` (public pages), `app-staging.comprobify.com` (app) | `comprobify-staging`, `s-1vcpu-2gb`, `nyc1`, on demand | the staging cluster, created by hand | `main`, after CI passes |
-| production | `comprobify.com`, `app.comprobify.com` (from cutover); `api.comprobify.com` later | `comprobify-production`, `s-2vcpu-4gb`, `nyc1` | the production cluster, created by hand | a published GitHub Release |
+| production | `comprobify.com`, `app.comprobify.com` (from cutover); `api.comprobify.com` later | `comprobify-production`, `s-1vcpu-2gb`, `nyc1` | the production cluster, created by hand | a published GitHub Release |
 
 Each environment is off until its repository variable is `true`: `STAGING_INFRA_ENABLED`, `PRODUCTION_INFRA_ENABLED`. While off, neither Terraform nor the deploy runs.
 
@@ -39,15 +39,13 @@ Done once per environment by the owner, in this order. Names in `backticks` are 
    - Variable: `INFRA_SSH_PUBLIC_KEY`, the `.pub` file's line.
 5. **Infrastructure.** Set the repository variable `<ENV>_INFRA_ENABLED=true`. Then start the **Terraform** workflow in GitHub Actions, first with `plan` and then with `apply` (Actions → Terraform → Run workflow, or `gh workflow run terraform.yml -f environment=<env> -f action=apply`). It holds the tokens, so nothing runs on your machine. Its output `reserved_ip` is the droplet's address. Wait three to five minutes for cloud-init.
 6. **GitHub, `<env>` Environment.** Its deployment branches and tags: `main` only on staging, tags `v*` only on production.
-   - Production, and `production-infra`, also get the owner as required reviewer (self-review allowed, since there is one), so every production apply and release waits for approval. `staging-infra` has no rule: it plans pull requests from any branch, and GitHub never gives Environment secrets to a fork's pull request.
+   - Both `-infra` Environments and `production` get the owner as required reviewer (self-review allowed, since there is one). Every Terraform run on either environment, and every production release, waits in Actions for **Review deployments → Approve**. Staging's app deploy doesn't wait.
+   - These rules exist only while the repository is public: GitHub's free plan has no Environment protection for a private one. Secrets keep working. Production is then held by `PRODUCTION_INFRA_ENABLED`, by publishing a Release, and by Terraform applying only from `main` or a manual run.
    - Secrets:
      - `DROPLET_IP`: the reserved IP.
      - `INFRA_SSH_PRIVATE_KEY`: the private key file.
      - `RUNTIME_ENV`: the whole `.env`, one `NAME=value` per line. See [Environment](#environment): `APP_ENV`, `APP_URL`, `LANDING_URL`, both database URLs with `?sslmode=require`, `AUTH_SECRET`, `CERT_ENCRYPTION_KEY`, Mailgun, `OPERATOR_RUC` and the rest.
-   - Variables:
-     - `DEPLOY_USERNAME`: `deploy_username` in the environment's `terraform.tfvars`.
-     - `SITE_HOSTS`: `staging.comprobify.com, app-staging.comprobify.com`.
-     - On staging's 2 GB, also `WEB_MEMORY=768m` and `WORKER_MEMORY=512m`.
+   - No variables: the deploy reads the deploy user, the hostnames Caddy serves and the containers' limits (`web_memory`, `worker_memory`, `worker_cpus`) from the environment's `terraform.tfvars`, the one place they are set.
 7. **First deploy.** Staging: run **Deploy staging** manually. Production: publish a Release.
 8. **Check.** `https://app-staging.comprobify.com/health` answers `{"status":"ok"}`, and the public pages answer on the landing host. Then make the operator account a super admin (below).
 
@@ -55,7 +53,7 @@ Done once per environment by the owner, in this order. Names in `backticks` are 
 
 **Rebuilding a droplet** (after a cloud-init change, which is otherwise ignored): `terraform apply -replace=module.droplet.digitalocean_droplet.this` from the environment's folder. The reserved IP moves to the new droplet, so DNS and `DROPLET_IP` stay. Deploy again after it.
 
-**Cutover** (production): before the ERP takes `comprobify.com` and `app.comprobify.com`, the previous web app's Terraform must release the two records. Remove them from its state or delete them there. Then set `manage_dns = true` in `environments/production/terraform.tfvars` and apply. The data migration runs before: `docs/guides/legacy-import.md` (ADR-049).
+**Cutover** (production): the previous system's records for `comprobify.com` and `app.comprobify.com` were deleted with it, so production's apply creates its own (`manage_dns = true`). The data migration runs before the first release: `docs/guides/legacy-import.md` (ADR-049).
 
 ## Release order
 
