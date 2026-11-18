@@ -44,7 +44,8 @@ Done once per environment by the owner, in this order. Names in `backticks` are 
    - Secrets:
      - `DROPLET_IP`: the reserved IP.
      - `INFRA_SSH_PRIVATE_KEY`: the private key file.
-     - `RUNTIME_ENV`: the whole `.env`, one `NAME=value` per line. See [Environment](#environment): `APP_ENV`, `APP_URL`, `LANDING_URL`, both database URLs with `?sslmode=require`, `AUTH_SECRET`, `CERT_ENCRYPTION_KEY`, Mailgun, `OPERATOR_RUC` and the rest.
+     - `DATABASE_CA_CERT`: the cluster's CA certificate, `ca-certificate.crt` from its connection details. The deploy writes it beside the stack and mounts it in migrate, web and worker.
+     - `RUNTIME_ENV`: the whole `.env`, one `NAME=value` per line. See [Environment](#environment): `APP_ENV`, `APP_URL`, `LANDING_URL`, both database URLs on the cluster's private host ending in `?sslmode=verify-full&sslrootcert=/etc/comprobify/db-ca.crt`, `AUTH_SECRET`, `CERT_ENCRYPTION_KEY`, Mailgun, `OPERATOR_RUC` and the rest.
    - No variables: the deploy reads the deploy user, the hostnames Caddy serves and the containers' limits (`web_memory`, `worker_memory`, `worker_cpus`) from the environment's `terraform.tfvars`, the one place they are set.
 7. **First deploy.** Staging: run **Deploy staging** manually. Production: publish a Release.
 8. **Check.** `https://app-staging.comprobify.com/health` answers `{"status":"ok"}`, and the public pages answer on the landing host. Then make the operator account a super admin (below).
@@ -99,7 +100,9 @@ GRANT CONNECT ON DATABASE comprobify_<env>_db TO comprobify_app;
 
 Panel users are never superusers and have no `BYPASSRLS`. `doadmin` can't change those two attributes, so check them instead of setting them: `SELECT rolname, rolsuper, rolbypassrls, rolcreatedb, rolcreaterole FROM pg_roles WHERE rolname IN ('comprobify_owner', 'comprobify_app')` should show `f` throughout. If it doesn't, `ALTER ROLE … NOCREATEDB NOCREATEROLE` fixes the last two.
 
-The migrations grant the app role its rights. Managed Postgres requires TLS: connection settings for it are verified in Milestone 10.
+The migrations grant the app role its rights.
+
+**TLS.** node-postgres treats `sslmode=require` as `verify-full`, and DigitalOcean signs the cluster's certificate with its own CA, so a URL without that CA fails with "self-signed certificate in certificate chain". The URLs name the CA the deploy writes (`DATABASE_CA_CERT`): `?sslmode=verify-full&sslrootcert=/etc/comprobify/db-ca.crt`. The server is then checked fully, its certificate and its name, on the private network too. The droplet must be in the cluster's trusted sources, or the connection times out instead (`ETIMEDOUT` on the private address).
 
 ## Super admins
 

@@ -158,6 +158,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Changed
 
+- The deployed database connections verify the cluster's certificate against its CA (`DATABASE_CA_CERT`, `sslmode=verify-full`), which node-postgres requires of `sslmode=require` too (ADR-048).
 - Staging deploys after CI and, when the push changed the infrastructure, after its approved Terraform run, so the app never arrives before the hostname or resize it needs (ADR-048).
 - The deploy reads the deploy user, the hostnames and the containers' limits from the environment's `terraform.tfvars`; the `DEPLOY_USERNAME`, `SITE_HOSTS`, `WEB_MEMORY`, `WORKER_MEMORY` and `WORKER_CPUS` GitHub variables are gone. Production's DNS is managed from the start, the previous system's records having gone with it, and production starts on the same 1 vCPU / 2 GB droplet as staging (ADR-048).
 - Names without "erp": the database roles are `comprobify_owner` and `comprobify_app`, the local databases `comprobify_local`, `comprobify_test` and `comprobify_e2e`, the deployed ones `comprobify_<env>_db`, and the droplets, paths and Terraform state `comprobify`. The merged migrations that name the role were edited once, before any deployed database ran them; GETTING_STARTED.md has the commands for an existing local container (ADR-050).

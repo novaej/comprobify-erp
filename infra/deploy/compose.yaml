@@ -8,6 +8,10 @@ x-app: &app
   image: ${IMAGE:?IMAGE is set by the deploy}
   env_file: .env
   restart: unless-stopped
+  # The managed cluster's CA, written by the deploy: the database URLs verify the server against
+  # it (sslmode=verify-full&sslrootcert=/etc/comprobify/db-ca.crt).
+  volumes:
+    - ./db-ca.crt:/etc/comprobify/db-ca.crt:ro
   environment:
     # The image has no pino-pretty (CLAUDE.md mistake 24).
     LOG_FORMAT: json

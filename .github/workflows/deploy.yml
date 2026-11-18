@@ -7,6 +7,7 @@
 #            INFRA_SSH_PRIVATE_KEY the deploy key's private half
 #            RUNTIME_ENV           the whole .env of the environment, one variable per line
 #                                  (docs/deployment.md lists them)
+#            DATABASE_CA_CERT      the managed cluster's CA certificate (ca-certificate.crt)
 # Everything else (the deploy user, the hostnames, the containers' limits) comes from the
 # environment's infra/terraform/environments/<env>/terraform.tfvars, the one place it is set.
 name: Deploy
@@ -89,6 +90,7 @@ jobs:
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1
         env:
           RUNTIME_ENV: ${{ secrets.RUNTIME_ENV }}
+          DATABASE_CA_CERT: ${{ secrets.DATABASE_CA_CERT }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
           SITE_HOSTS: ${{ steps.settings.outputs.site_hosts }}
@@ -99,12 +101,15 @@ jobs:
           host: ${{ secrets.DROPLET_IP }}
           username: ${{ steps.settings.outputs.deploy_username }}
           key: ${{ secrets.INFRA_SSH_PRIVATE_KEY }}
-          envs: IMAGE,RUNTIME_ENV,GHCR_TOKEN,GHCR_USER,SITE_HOSTS,WEB_MEMORY,WORKER_MEMORY,WORKER_CPUS
+          envs: IMAGE,RUNTIME_ENV,DATABASE_CA_CERT,GHCR_TOKEN,GHCR_USER,SITE_HOSTS,WEB_MEMORY,WORKER_MEMORY,WORKER_CPUS
           script: |
             set -euo pipefail
             cd /opt/comprobify
             umask 077
             printf '%s\n' "$RUNTIME_ENV" > .env
+            # Public, not secret: readable by the containers' own user.
+            if [ -z "$DATABASE_CA_CERT" ]; then echo 'DATABASE_CA_CERT is not set'; exit 1; fi
+            (umask 022; printf '%s\n' "$DATABASE_CA_CERT" > db-ca.crt)
             # The droplet's own login, by stdin so the token is never an argument; logged out after.
             printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             docker compose pull web
