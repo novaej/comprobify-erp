@@ -30,7 +30,7 @@ The owner's choices: the ERP gets its own droplet per environment. Each environm
 **The pipeline** (`.github/workflows`):
 
 - `deploy.yml` (reusable) builds and pushes the image to GHCR, copies the stack, and writes `.env`. It runs `migrate`, and a failure stops there with the old containers still serving. It then starts web, worker and Caddy, reloads Caddy, and waits up to two minutes for `/health`.
-- `deploy-staging.yml` deploys `main` after CI passes, while `STAGING_INFRA_ENABLED` is true.
+- `deploy-staging.yml` deploys `main` after CI passes, while `STAGING_INFRA_ENABLED` is true. When the push also changed `infra/terraform/**`, it waits for that Terraform run too, approved and applied: CI and Terraform both trigger it, and the one that finishes last deploys. A rejected or failed Terraform run deploys nothing; a manual run deploys at once.
 - `release-production.yml` deploys a published Release's tag, after the `production` Environment's reviewer approves, while `PRODUCTION_INFRA_ENABLED` is true. A manual run takes a tag, for a hotfix.
 - `terraform.yml` plans on a pull request and applies on `main`, one job per environment, each behind its switch. A manual run can plan, apply or destroy one environment.
 

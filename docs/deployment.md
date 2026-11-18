@@ -7,7 +7,7 @@ How the system runs locally, on staging and in production (ADR-048). Backups and
 | | Hosts | Droplet | Postgres | Deploys |
 |---|---|---|---|---|
 | local | `localhost:3000` (`pnpm dev`), `localhost:8080` (`pnpm stack:up`) | your machine | the `postgres18` container | — |
-| staging | `staging.comprobify.com` (public pages), `app-staging.comprobify.com` (app) | `comprobify-staging`, `s-1vcpu-2gb`, `nyc1`, on demand | the staging cluster, created by hand | `main`, after CI passes |
+| staging | `staging.comprobify.com` (public pages), `app-staging.comprobify.com` (app) | `comprobify-staging`, `s-1vcpu-2gb`, `nyc1`, on demand | the staging cluster, created by hand | `main`, after CI passes and, when the push changed `infra/terraform`, its approved Terraform run |
 | production | `comprobify.com`, `app.comprobify.com` (from cutover); `api.comprobify.com` later | `comprobify-production`, `s-1vcpu-2gb`, `nyc1` | the production cluster, created by hand | a published GitHub Release |
 
 Each environment is off until its repository variable is `true`: `STAGING_INFRA_ENABLED`, `PRODUCTION_INFRA_ENABLED`. While off, neither Terraform nor the deploy runs.
