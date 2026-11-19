@@ -1,6 +1,10 @@
-# ADR-048: builds the image for a commit, pushes it to GHCR and releases it on an environment's
-# droplet: migrate first (a failure stops here, the running version stays), then web, worker and
-# Caddy, then waits for /health. Called by staging.yml and production.yml.
+# ADR-048, ADR-051: releases a commit's image on an environment's droplet: migrate first (a failure
+# stops here, the running version stays), then web, worker and Caddy, then waits for /health.
+# Called by staging.yml and production.yml.
+#
+# One image per commit, built once: ghcr.io/<repo>:<commit>. Staging builds it; a release of that
+# commit reuses the same image, tags it vX.Y.Z, and runs it by digest, so production runs exactly
+# what staging ran. A commit with no image yet (staging was off) is built here.
 #
 # Per GitHub Environment (staging, production):
 #   secrets  DROPLET_IP            the reserved IP (terraform output reserved_ip)
@@ -10,7 +14,7 @@
 #            DATABASE_CA_CERT      the managed cluster's CA certificate (ca-certificate.crt)
 # Everything else (the deploy user, the hostnames, the containers' limits) comes from the
 # environment's infra/terraform/environments/<env>/terraform.tfvars, the one place it is set.
-name: Deploy
+name: Deploy (shared job)
 
 on:
   workflow_call:
@@ -34,8 +38,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    env:
-      IMAGE: ghcr.io/${{ github.repository }}:${{ inputs.ref }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -69,10 +71,27 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push the image
+      - name: The commit's image, built once
+        env:
+          REF: ${{ inputs.ref }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          docker build -t "$IMAGE" .
-          docker push "$IMAGE"
+          repo="ghcr.io/${REPOSITORY,,}"
+          commit=$(git rev-parse HEAD)
+          if docker buildx imagetools inspect "$repo:$commit" > /dev/null 2>&1; then
+            echo "Reusing $repo:$commit, built for an earlier deploy of this commit."
+          else
+            docker build -t "$repo:$commit" .
+            docker push "$repo:$commit"
+          fi
+          # A release names the same image by its version too.
+          if [[ "$REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            docker buildx imagetools create -t "$repo:$REF" "$repo:$commit"
+          fi
+          # By digest: what runs can't change under the tag.
+          digest=$(docker buildx imagetools inspect "$repo:$commit" --format '{{json .Manifest}}' | jq -r .digest)
+          echo "IMAGE=$repo@$digest" >> "$GITHUB_ENV"
+          echo "Deploying $repo@$digest ($commit)"
 
       # Pinned to commit SHAs: these steps hold the deploy key and every runtime secret, and a
       # moved tag would run someone else's code with them.

@@ -30,7 +30,7 @@ The owner's choices: the ERP gets its own droplet per environment. Each environm
 **The pipeline** (`.github/workflows`):
 
 - `deploy.yml` (reusable) builds and pushes the image to GHCR, copies the stack, and writes `.env`. It runs `migrate`, and a failure stops there with the old containers still serving. It then starts web, worker and Caddy, reloads Caddy, and waits up to two minutes for `/health`.
-- The workflows that call it, and the release flow around them, are ADR-051: `staging.yml` on a merge to `main`, `production.yml` on a published Release, and `terraform.yml` for pull request plans and manual runs, all running Terraform through `terraform-run.yml`.
+- The workflows that call it, and the release flow around them, are ADR-051: `staging.yml` on a merge to `main`, `production.yml` on a published Release, and `infrastructure.yml` for pull request plans and manual runs, all running Terraform through `infrastructure-job.yml`.
 
 **Two hosts, one app.** With `LANDING_URL` set apart from `APP_URL`, the request proxy sends the public pages (`/`, `/es`, `/en` and their pricing and support pages) to the landing host and everything else to the app host, with a 308 that keeps the path and query (`apps/web/src/lib/hosts.ts`). Locally, and with `LANDING_URL` unset, one host serves both. Emails keep linking to `APP_URL`.
 
@@ -39,7 +39,7 @@ The owner's choices: the ERP gets its own droplet per environment. Each environm
 - Nothing exists until the owner turns a switch on. Bringing staging up is: switch on, apply, set `DROPLET_IP`, deploy. Tearing it down is a manual `destroy`, which leaves the database cluster, since that isn't Terraform's.
 - The deploy has a short gap while web restarts (one container, no rolling update). It is acceptable at this size, and Caddy retries meanwhile.
 - A rollback is a release of the previous tag. Migrations are forward-only, so the older code must tolerate the newer schema, which the forward-only rule already asks of every migration.
-- The image is built twice, once in CI and once in the deploy. One build pushed from CI is a later saving.
+- Each commit's image is built once, by the first deploy that needs it, and production runs the one staging ran (ADR-051).
 
 ## Alternatives considered
 

@@ -230,7 +230,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `tests/integration/isolation-sweep.test.ts` | Every tenant table, from the catalog, proven isolated between companies and twins |
 | `tests/e2e/smoke.spec.ts` | Playwright smoke test |
 | `Dockerfile`, `infra/compose.yaml` | The image and the local stack |
-| `infra/terraform/`, `infra/deploy/`, `.github/workflows/` | Staging and production: the droplet and the stack on it (ADR-048); the pipeline: `ci.yml` (pull requests), `staging.yml` (a merge to `main`), `production.yml` (a Release), `terraform.yml` and `terraform-run.yml`, `deploy.yml` (ADR-051); `apps/web/src/lib/hosts.ts` splits the landing and app hosts |
+| `infra/terraform/`, `infra/deploy/`, `.github/workflows/` | Staging and production: the droplet and the stack on it (ADR-048); the pipeline: `ci.yml` (pull requests), `staging.yml` (a merge to `main`), `production.yml` (a Release), `infrastructure.yml` and `infrastructure-job.yml`, `deploy.yml` (ADR-051); `apps/web/src/lib/hosts.ts` splits the landing and app hosts |
 | `docs/guides/git-flow.md` | Branches, pull requests, releases, hotfixes and the GitHub rulesets |
 | `apps/docs/` | The docs site at docs.comprobify.com (VitePress, a placeholder until the public API), published by `docs.yml` (ADR-051) |
 | `.github/workflows/ci.yml` | CI |

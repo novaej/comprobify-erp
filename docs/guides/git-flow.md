@@ -13,15 +13,15 @@ feat/xyz ──PR──▶ main ──▶ Staging workflow ──▶ (staging, w
 1. **Branch from `main`.** Name it by the commit type: `feat/`, `fix/`, `docs/`, `refactor/`, `test/`, `chore/` or `ci/`, then a few words, such as `feat/branch-selector`.
 2. **Commit** with `type: description` titles. Requirement ids (`FR-…`, `NFR-…`, `ADR-…`) go in the body (CLAUDE.md, working agreements).
 3. **Open a pull request into `main`.** Its title follows the same `type: description` form. It becomes the squash commit's title, so it's what `main`'s history shows. The body follows the template (`.github/pull_request_template.md`): why, what changes, how it was checked, screens for UI, the checklist of this repo's rules, anything to do on deploy, and how to roll back. Leave out what doesn't apply.
-   - CI runs: lint, types, unit tests and audit, integration tests, and the Docker image. All three are required. A PR that only changes docs (`docs/`, `apps/docs/`, `*.md`) skips them, and skipped counts as passed; any other file runs all three.
+   - CI runs: lint, types, unit tests and audit, integration tests, and the Docker image. All three are required. A PR that only changes docs (`docs/`, `apps/docs/`, `*.md`) skips them, and skipped counts as passed; any other file runs all three. A PR that touches `apps/docs/` also builds the docs site.
    - A change under `infra/terraform` also gets a Terraform plan for each environment that is up, with no approval needed: read it before merging.
 4. **Squash-merge** once CI is green. The branch is deleted on merge.
 5. **The merge runs the Staging workflow**, once:
-   - CI on `main`, with the E2E smoke test.
+   - The E2E smoke test. The other checks passed on the PR, and the merge holds exactly that code, since `main`'s ruleset requires the PR to be up to date.
    - While staging is up: Terraform, if the merge changed `infra/terraform`, after its approval.
    - The deploy.
 
-   While staging is down, only CI runs.
+   While staging is down, only the E2E test runs.
 
 ## Releasing to production
 
@@ -32,13 +32,13 @@ Production stays live once it is up. Staging is temporary: it's up now for the c
 3. **Publish a GitHub Release** (Releases → Draft a new release). Create the tag `vX.Y.Z` on `main`, use the changelog section as the notes, and publish. This starts the Production workflow:
    - It checks that production is switched on and that the tag is `vX.Y.Z`.
    - Terraform plans if `infra/terraform` changed since the previous release. If the plan changes something, its apply waits for the `production-infra` reviewer.
-   - The deploy runs after the `production` reviewer approves.
+   - The deploy runs after the `production` reviewer approves. It runs the image staging ran for that commit, now also tagged `vX.Y.Z`; one is built only if no staging deploy reached that commit.
 4. **Check** `https://app.comprobify.com/health`.
 
 ### Staging off and on
 
-- **Off**, after the first production release and whenever it's no longer needed: run the Terraform workflow (staging, `destroy`), then set `STAGING_INFRA_ENABLED=false`. From then on, merges to `main` only run CI. The database cluster isn't Terraform's: delete it in DigitalOcean, or keep it for the next time.
-- **On again:** create the cluster if it was deleted (`docs/deployment.md`, "Database roles on a new server"), set `STAGING_INFRA_ENABLED=true`, then run the Terraform workflow (staging, `apply`). Update `DROPLET_IP` with the new reserved IP and add the droplet to the cluster's trusted sources, then run the Staging workflow. Production keeps running throughout.
+- **Off**, after the first production release and whenever it's no longer needed: run the Infrastructure workflow (staging, `destroy`), then set `STAGING_INFRA_ENABLED=false`. From then on, merges to `main` only run CI. The database cluster isn't Terraform's: delete it in DigitalOcean, or keep it for the next time.
+- **On again:** create the cluster if it was deleted (`docs/deployment.md`, "Database roles on a new server"), set `STAGING_INFRA_ENABLED=true`, then run the Infrastructure workflow (staging, `apply`). Update `DROPLET_IP` with the new reserved IP and add the droplet to the cluster's trusted sources, then run the Staging workflow. Production keeps running throughout.
 
 Versions follow semantic versioning: the major for a change companies must act on, the minor for features, the patch for fixes. The first production release is `v1.0.0`, at cutover.
 

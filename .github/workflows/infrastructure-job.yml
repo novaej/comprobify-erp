@@ -1,5 +1,5 @@
-# ADR-048, ADR-051: one Terraform run on one environment, called by terraform.yml (pull requests and
-# manual runs), staging.yml and production.yml. Two jobs, two GitHub Environments:
+# ADR-048, ADR-051: one Terraform run on one environment, called by infrastructure.yml (pull requests
+# and manual runs), staging.yml and production.yml. Two jobs, two GitHub Environments:
 #   plan   in <env>-plan, no reviewer, with read-only tokens: it only reads, and its output is in
 #          the log for anyone to read before approving.
 #   apply  in <env>-infra, whose reviewer approves it after reading that plan, with the tokens that
@@ -10,7 +10,7 @@
 # DNS: Read), variable INFRA_SSH_PUBLIC_KEY. Per <env>-infra Environment: secrets DO_TOKEN and
 # CLOUDFLARE_TOKEN (DNS: Edit). Repository secrets TERRAFORM_SPACES_ACCESS_KEY_ID and
 # TERRAFORM_SPACES_SECRET_ACCESS_KEY: a Spaces key for the state bucket, used by this repo only.
-name: Terraform run
+name: Infrastructure (shared job)
 
 on:
   workflow_call:

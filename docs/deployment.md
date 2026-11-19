@@ -40,7 +40,7 @@ Done once per environment by the owner, in this order. Names in `backticks` are 
      - variable `INFRA_SSH_PUBLIC_KEY`, the `.pub` file's line.
    - **`<env>-infra`**, with the owner as required reviewer:
      - secrets `DO_TOKEN`, with full access, and `CLOUDFLARE_TOKEN`, with **DNS: Edit** on `comprobify.com`.
-5. **Infrastructure.** Set the repository variable `<ENV>_INFRA_ENABLED=true`. Then start the **Terraform** workflow in GitHub Actions with `apply` (Actions → Terraform → Run workflow, or `gh workflow run terraform.yml -f environment=<env> -f action=apply`). Its plan job runs at once: read it in the log. The apply job then waits for **Review deployments → Approve**, and applies exactly that plan. A plan with nothing to change skips the apply. It holds the tokens, so nothing runs on your machine. Its output `reserved_ip` is the droplet's address. Wait three to five minutes for cloud-init.
+5. **Infrastructure.** Set the repository variable `<ENV>_INFRA_ENABLED=true`. Then start the **Infrastructure** workflow in GitHub Actions with `apply` (Actions → Infrastructure → Run workflow, or `gh workflow run infrastructure.yml -f environment=<env> -f action=apply`). Its plan job runs at once: read it in the log. The apply job then waits for **Review deployments → Approve**, and applies exactly that plan. A plan with nothing to change skips the apply. It holds the tokens, so nothing runs on your machine. Its output `reserved_ip` is the droplet's address. Wait three to five minutes for cloud-init.
 6. **GitHub, `<env>` Environment.** Its deployment branches and tags: `main` only on staging, tags `v*` only on production.
    - Both `-infra` Environments and `production` get the owner as required reviewer (self-review allowed, since there is one). Every Terraform apply or destroy, and every production release, waits in Actions for **Review deployments → Approve**. Plans and staging's app deploy don't wait.
    - These rules exist only while the repository is public: GitHub's free plan has no Environment protection for a private one. Secrets keep working. Production is then held by `PRODUCTION_INFRA_ENABLED`, by publishing a Release, and by Terraform applying only from `main` or a manual run.
@@ -53,7 +53,7 @@ Done once per environment by the owner, in this order. Names in `backticks` are 
 7. **First deploy.** Staging: run the **Staging** workflow manually (`gh workflow run staging.yml`). Production: publish a Release (`docs/guides/git-flow.md`).
 8. **Check.** `https://app-staging.comprobify.com/health` answers `{"status":"ok"}`, and the public pages answer on the landing host. Then make the operator account a super admin (below).
 
-**Tearing staging down:** run the **Terraform** workflow (staging, `destroy`: `gh workflow run terraform.yml -f environment=staging -f action=destroy`), then set `STAGING_INFRA_ENABLED=false`. The cluster is not Terraform's; delete it in DigitalOcean when it is no longer needed.
+**Tearing staging down:** run the **Infrastructure** workflow (staging, `destroy`: `gh workflow run infrastructure.yml -f environment=staging -f action=destroy`), then set `STAGING_INFRA_ENABLED=false`. The cluster is not Terraform's; delete it in DigitalOcean when it is no longer needed.
 
 **Rebuilding a droplet** (after a cloud-init change, which is otherwise ignored): `terraform apply -replace=module.droplet.digitalocean_droplet.this` from the environment's folder. The reserved IP moves to the new droplet, so DNS and `DROPLET_IP` stay. Deploy again after it.
 
