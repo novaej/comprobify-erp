@@ -1,8 +1,10 @@
 name: CI
 
-# PRD section 12: lint, type-check, unit, integration, image build and audit on every pull request,
-# and on main as the first step of staging.yml, which calls this; the E2E smoke test on main only.
-# A pull request's newer push cancels its older run; main's runs finish.
+# PRD section 12, ADR-051. A pull request: lint, types, unit tests and audit, integration tests and
+# the image build, skipped when it changes only docs; the docs site's build when it touches
+# apps/docs. On main, as the first step of staging.yml: the E2E smoke test only, since the main
+# ruleset merges a pull request only up to date with main, so the merge holds exactly the code its
+# checks passed. A pull request's newer push cancels its older run; main's runs finish.
 on:
   pull_request:
     branches: [main]
@@ -32,14 +34,13 @@ env:
   SRI_MOCK_MODE: 'true'
 
 jobs:
-  # A pull request that only touches docs (docs/, apps/docs/, *.md) skips the three checks below;
-  # skipped counts as passed for a required check. Any other file runs everything, and main always
-  # runs everything (ADR-051).
+  # Decides what the run checks, and says why in the summary.
   changes:
     name: What changed
     runs-on: ubuntu-latest
     outputs:
       code: ${{ steps.diff.outputs.code }}
+      docs_site: ${{ steps.diff.outputs.docs_site }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -53,10 +54,16 @@ jobs:
             echo
           } >> "$GITHUB_STEP_SUMMARY"
           if [ "${{ github.event_name }}" != pull_request ]; then
-            echo "On \`main\`: every check runs, whatever changed." >> "$GITHUB_STEP_SUMMARY"
-            echo code=true >> "$GITHUB_OUTPUT"; exit 0
+            { echo code=false; echo docs_site=false; } >> "$GITHUB_OUTPUT"
+            echo "On \`main\`: the pull request's checks already passed on this exact code, so only the E2E smoke test runs." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
           fi
           files=$(git diff --name-only "$BASE...HEAD")
+          if printf '%s\n' "$files" | grep -q '^apps/docs/'; then
+            echo docs_site=true >> "$GITHUB_OUTPUT"
+          else
+            echo docs_site=false >> "$GITHUB_OUTPUT"
+          fi
           other=$(printf '%s\n' "$files" | grep -Ev '^(docs/|apps/docs/)|\.md$' || true)
           total=$(printf '%s\n' "$files" | grep -c . || true)
           if [ -z "$other" ]; then
@@ -72,6 +79,22 @@ jobs:
               [ "$count" -le 25 ] || echo "- … and $((count - 25)) more"
             } >> "$GITHUB_STEP_SUMMARY"
           fi
+
+  # The docs site is published only after a merge (docs.yml), so a pull request builds it first.
+  docs-site:
+    name: Docs site build
+    needs: changes
+    if: needs.changes.outputs.docs_site == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --filter @comprobify/docs
+      - run: pnpm --filter @comprobify/docs build
 
   checks:
     name: Lint, types, unit tests, audit
@@ -139,7 +162,7 @@ jobs:
   e2e:
     name: E2E smoke test
     if: github.event_name != 'pull_request'
-    needs: [checks, integration]
+    needs: changes
     runs-on: ubuntu-latest
     services:
       postgres:

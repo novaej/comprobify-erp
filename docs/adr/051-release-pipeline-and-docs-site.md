@@ -32,12 +32,12 @@ No approval is required: the owner works alone and GitHub doesn't let an author 
 
 | Event | Workflow | What it does |
 |---|---|---|
-| Pull request | `ci.yml`, and `terraform.yml` when `infra/terraform` changed | Checks, skipped when the PR changes only docs (`docs/`, `apps/docs/`, `*.md`); a plan for each environment that is up |
-| Merge to `main` | `staging.yml` | CI (calling `ci.yml`, with E2E), then, while staging is up, Terraform if the merge changed `infra/terraform` (approved), then the deploy |
+| Pull request | `ci.yml`, and `infrastructure.yml` when `infra/terraform` changed | Lint, types, unit tests and audit, integration tests and the image build, skipped when the PR changes only docs (`docs/`, `apps/docs/`, `*.md`); the docs site's build when it touches `apps/docs/`; a plan for each environment that is up |
+| Merge to `main` | `staging.yml` | The E2E smoke test (calling `ci.yml`), then, while staging is up, Terraform if the merge changed `infra/terraform` (approved), then the deploy |
 | Published Release | `production.yml` | Refuses a tag not `vX.Y.Z`; Terraform if `infra/terraform` changed since the previous release (approved); the deploy (approved) |
-| Manual | `terraform.yml`, `staging.yml`, `production.yml`, `docs.yml` | Bring an environment up or down, redeploy staging, roll back or hotfix production from a tag, republish the docs |
+| Manual | `infrastructure.yml`, `staging.yml`, `production.yml`, `docs.yml` | Bring an environment up or down, redeploy staging, roll back or hotfix production from a tag, republish the docs |
 
-`terraform-run.yml` is the one Terraform run, with the environment, action and ref as inputs, so every caller runs the same steps under one per-environment lock. It has two jobs in two GitHub Environments:
+`infrastructure-job.yml` is the one Terraform run, with the environment, action and ref as inputs, so every caller runs the same steps under one per-environment lock. It has two jobs in two GitHub Environments:
 - **The plan** runs in `<env>-plan`, with no reviewer and read-only tokens (DigitalOcean Read Only, Cloudflare DNS: Read). It can't change anything, so it needs no approval, and its output is in the log.
 - **The apply** runs in `<env>-infra`, with the reviewer and the tokens that can change things, and only when the plan found changes. It applies the saved plan itself, passed as an artifact for a day, so what was read is what runs. Terraform refuses a saved plan if the state moved after it. A destroy is planned and approved the same way.
 
@@ -45,7 +45,11 @@ The providers read their tokens from the environment (`DIGITALOCEAN_TOKEN`, `CLO
 
 **Staging comes and goes; production stays.** Staging is up for the cutover rehearsal and is destroyed after the first production release. It comes back only when something needs testing outside production, then goes again. `STAGING_INFRA_ENABLED` switches its Terraform and its deploys on and off together. A release doesn't depend on it, so production can be released while staging is up or down.
 
-**The docs site** is `apps/docs`, a VitePress placeholder in Spanish (at the root) and English (`/en/`). It says the API documentation comes with the API and links to the app and to support. It isn't in the image (`.dockerignore`). `docs.yml` builds and publishes it with wrangler to `comprobify-docs` when a merge changes it, using repository secrets `DOCS_CLOUDFLARE_API_TOKEN` and `DOCS_CLOUDFLARE_ACCOUNT_ID`. The public header, footer and mobile menu link to it in the visitor's language (`apps/web/src/lib/docs.ts`). The API reference joins it with the public API.
+**A merge doesn't repeat its pull request's checks.** The `main` ruleset merges a pull request only when it is up to date with `main`, so the squash commit holds exactly the code its checks passed. On `main`, CI runs only the E2E smoke test, which pull requests skip for its length (about 12 minutes). If that rule were ever turned off, the guarantee would go with it, so the ruleset is part of the pipeline.
+
+**One image per commit, built once and promoted.** `deploy.yml` names the image `ghcr.io/<repo>:<commit>` and builds it only if that tag doesn't exist yet. Staging builds it. A release of the same commit reuses it, adds the `vX.Y.Z` tag, and runs it by digest, so production runs exactly the image staging ran. A commit no staging deploy reached (staging was off, or a hotfix tag) is built at release. CI's image job only checks on pull requests that the image builds, and pushes nothing.
+
+**The docs site** is `apps/docs`, a VitePress placeholder in Spanish (at the root) and English (`/en/`). It says the API documentation comes with the API and links to the app and to support. It isn't in the image (`.dockerignore`). A pull request that touches it builds it in CI (**Docs site build**), so a broken site is found before the merge that would publish it. `docs.yml` builds and publishes it with wrangler to `comprobify-docs` when a merge changes it, using repository secrets `DOCS_CLOUDFLARE_API_TOKEN` and `DOCS_CLOUDFLARE_ACCOUNT_ID`. The public header, footer and mobile menu link to it in the visitor's language (`apps/web/src/lib/docs.ts`). The API reference joins it with the public API.
 
 ## Consequences
 
@@ -60,7 +64,6 @@ The providers read their tokens from the environment (`DIGITALOCEAN_TOKEN`, `CLO
 - With staging down, a merge only runs CI. An infrastructure change merged then reaches staging when it next comes up (the manual apply builds from `main`) and production with the next release.
 - With staging off, a release is tested by CI and locally only, unless staging is brought up for it.
 - The rulesets and Environment rules exist only while the repository is public (GitHub's free plan). After it goes private they are conventions, and the switches and Releases are the remaining gates.
-- The image is still built twice, in CI and in the deploy (ADR-048).
 
 ### Alternatives considered
 

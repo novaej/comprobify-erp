@@ -47,7 +47,7 @@ jobs:
   terraform:
     needs: [ci, changes]
     if: needs.changes.outputs.infra == 'true'
-    uses: ./.github/workflows/terraform-run.yml
+    uses: ./.github/workflows/infrastructure-job.yml
     with:
       environment: staging
       action: apply

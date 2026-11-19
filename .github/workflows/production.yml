@@ -53,7 +53,7 @@ jobs:
   terraform:
     needs: ready
     if: needs.ready.outputs.infra == 'true'
-    uses: ./.github/workflows/terraform-run.yml
+    uses: ./.github/workflows/infrastructure-job.yml
     with:
       environment: production
       action: apply

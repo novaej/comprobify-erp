@@ -161,6 +161,9 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Changed
 
+- One image per commit: the deploy builds `ghcr.io/<repo>:<commit>` only if it doesn't exist, and a release reuses staging's image, tags it `vX.Y.Z` and runs it by digest, so production runs what staging ran (ADR-051).
+- A merge to `main` runs only the E2E smoke test before the deploy: its pull request's checks already passed on the same code. A pull request that touches `apps/docs/` builds the docs site (ADR-051).
+- The Terraform workflows are **Infrastructure** (`infrastructure.yml`: pull request plans, manual plan, apply and destroy) and **Infrastructure (shared job)** (`infrastructure-job.yml`); Deploy is **Deploy (shared job)**.
 - A pull request that changes only docs (`docs/`, `apps/docs/`, `*.md`) skips CI's three checks; any other file runs them all, and `main` always runs everything (ADR-051).
 - CI's job summaries name their suite: **Unit tests · config**, **· db**, **· web**, **· core** and **Integration tests**, instead of four untitled "Vitest Test Report" blocks.
 - One workflow per event (ADR-051): a merge to `main` runs **Staging** (CI, then Terraform if the infrastructure changed and it is approved, then the deploy), and a published Release runs **Production**, whether staging is up or not; `STAGING_INFRA_ENABLED` switches staging's infrastructure and deploys together. The chained Deploy staging and Release to production workflows are gone, and CI on `main` runs inside Staging. Terraform plans without approval in a `<env>-plan` Environment with read-only tokens; only the apply, of exactly that plan, waits for the `<env>-infra` reviewer.
