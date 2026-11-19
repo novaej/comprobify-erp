@@ -48,15 +48,29 @@ jobs:
         env:
           BASE: ${{ github.event.pull_request.base.sha }}
         run: |
+          {
+            echo '## What changed'
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
           if [ "${{ github.event_name }}" != pull_request ]; then
+            echo "On \`main\`: every check runs, whatever changed." >> "$GITHUB_STEP_SUMMARY"
             echo code=true >> "$GITHUB_OUTPUT"; exit 0
           fi
-          other=$(git diff --name-only "$BASE...HEAD" | grep -Ev '^(docs/|apps/docs/)|\.md$' || true)
+          files=$(git diff --name-only "$BASE...HEAD")
+          other=$(printf '%s\n' "$files" | grep -Ev '^(docs/|apps/docs/)|\.md$' || true)
+          total=$(printf '%s\n' "$files" | grep -c . || true)
           if [ -z "$other" ]; then
-            echo 'Docs only: the checks are skipped.'
             echo code=false >> "$GITHUB_OUTPUT"
+            echo "Docs only ($total files): lint, tests and the image are skipped." >> "$GITHUB_STEP_SUMMARY"
           else
             echo code=true >> "$GITHUB_OUTPUT"
+            count=$(printf '%s\n' "$other" | grep -c .)
+            {
+              echo "Code changed: every check runs. $count of $total files are outside the docs:"
+              echo
+              printf '%s\n' "$other" | head -25 | sed "s/^/- \`/; s/\$/\`/"
+              [ "$count" -le 25 ] || echo "- … and $((count - 25)) more"
+            } >> "$GITHUB_STEP_SUMMARY"
           fi
 
   checks:
