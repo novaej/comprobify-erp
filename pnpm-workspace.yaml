@@ -9,6 +9,8 @@ allowBuilds:
   '@parcel/watcher': false
   '@swc/core': false
   esbuild: false
+  # wrangler's local runtime; the docs site only uploads static files with it (ADR-051).
+  workerd: false
 
 # GHSA-fc5q-39xc-vjpf: picomatch ReDoS through extglob patterns, no patched release yet. Every path
 # to it is build or file-watching tooling (Sentry's bundler plugin, next-intl's watcher, eslint,

@@ -184,6 +184,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Fixed
 
+- The Docs workflow publishes with the docs package's own pinned wrangler; wrangler-action's install failed in the pnpm workspace (ADR-051).
 - A manual re-issue's timeline entry says it was manual; it always said "next day".
 - The email editor: **Usar como borrador** now shows the restored text at once, the button is gone from the draft and the version in use (where it did nothing), and the draft badge and a note say it is unpublished and what publishing does.
 - A company is shown by its razón social, not its nombre comercial, in the switcher, the platform and purchase orders (the nombre comercial stays beneath it on the order).
