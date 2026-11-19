@@ -7,6 +7,7 @@ import { Logomark } from '@/components/logo';
 import { MarketingMobileMenu } from '@/components/marketing/marketing-mobile-menu';
 import { SkipToContent } from '@/components/skip-to-content';
 import { Link } from '@/i18n/navigation';
+import { docsUrl } from '@/lib/docs';
 import { getRuntime } from '@/server/runtime';
 import { getSession } from '@/server/session';
 
@@ -47,6 +48,9 @@ export default async function MarketingLayout({
               <Link href="/support" className={NAV_LINK}>
                 {t('nav.support')}
               </Link>
+              <a href={docsUrl(locale)} className={NAV_LINK}>
+                {t('nav.docs')}
+              </a>
             </nav>
           </div>
 
@@ -114,6 +118,9 @@ export default async function MarketingLayout({
               <Link href="/support" className="transition-colors hover:text-foreground">
                 {t('nav.support')}
               </Link>
+              <a href={docsUrl(locale)} className="transition-colors hover:text-foreground">
+                {t('nav.docs')}
+              </a>
               {support.email && (
                 <a
                   href={`mailto:${support.email}`}

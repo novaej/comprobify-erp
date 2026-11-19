@@ -13,3 +13,5 @@
 docs/reference
 playwright-report
 test-results
+# The docs site deploys to Cloudflare Pages on its own (ADR-051).
+apps/docs

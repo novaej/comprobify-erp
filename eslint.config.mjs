@@ -35,6 +35,7 @@ export default tseslint.config(
     ignores: [
       '**/node_modules/',
       '**/dist/',
+      '**/.vitepress/cache/',
       '**/.next/',
       '**/.turbo/',
       '**/coverage/',

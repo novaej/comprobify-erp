@@ -13,5 +13,9 @@ export default defineConfig({
     globalSetup: './global-setup.ts',
     // Probe tables are visible to the catalog check in other files.
     fileParallelism: false,
+    // On GitHub, the job summary says which suite this is.
+    reporters: process.env.GITHUB_ACTIONS
+      ? ['default', ['github-actions', { jobSummary: { title: 'Integration tests' } }]]
+      : ['default'],
   },
 });

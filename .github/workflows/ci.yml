@@ -1,19 +1,19 @@
 name: CI
 
-# PRD section 12: lint, type-check, unit, integration, image build and audit on
-# every PR and push to main; the E2E smoke test on main.
+# PRD section 12: lint, type-check, unit, integration, image build and audit on every pull request,
+# and on main as the first step of staging.yml, which calls this; the E2E smoke test on main only.
+# A pull request's newer push cancels its older run; main's runs finish.
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
+  workflow_call:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   APP_ENV: local
@@ -32,8 +32,51 @@ env:
   SRI_MOCK_MODE: 'true'
 
 jobs:
+  # A pull request that only touches docs (docs/, apps/docs/, *.md) skips the three checks below;
+  # skipped counts as passed for a required check. Any other file runs everything, and main always
+  # runs everything (ADR-051).
+  changes:
+    name: What changed
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          {
+            echo '## What changed'
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ github.event_name }}" != pull_request ]; then
+            echo "On \`main\`: every check runs, whatever changed." >> "$GITHUB_STEP_SUMMARY"
+            echo code=true >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          files=$(git diff --name-only "$BASE...HEAD")
+          other=$(printf '%s\n' "$files" | grep -Ev '^(docs/|apps/docs/)|\.md$' || true)
+          total=$(printf '%s\n' "$files" | grep -c . || true)
+          if [ -z "$other" ]; then
+            echo code=false >> "$GITHUB_OUTPUT"
+            echo "Docs only ($total files): lint, tests and the image are skipped." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo code=true >> "$GITHUB_OUTPUT"
+            count=$(printf '%s\n' "$other" | grep -c .)
+            {
+              echo "Code changed: every check runs. $count of $total files are outside the docs:"
+              echo
+              printf '%s\n' "$other" | head -25 | sed "s/^/- \`/; s/\$/\`/"
+              [ "$count" -le 25 ] || echo "- … and $((count - 25)) more"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   checks:
     name: Lint, types, unit tests, audit
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -54,6 +97,8 @@ jobs:
 
   integration:
     name: Integration tests
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -84,6 +129,8 @@ jobs:
 
   image:
     name: Docker image
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -91,7 +138,7 @@ jobs:
 
   e2e:
     name: E2E smoke test
-    if: github.event_name == 'push'
+    if: github.event_name != 'pull_request'
     needs: [checks, integration]
     runs-on: ubuntu-latest
     services:

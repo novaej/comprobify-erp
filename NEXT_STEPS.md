@@ -25,7 +25,7 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 Steps in order; the gate is in PRD section 15.
 
-- [ ] **Owner: bring staging up** (`docs/deployment.md`, "Bringing an environment up"): the staging Postgres cluster and its roles, the Spaces key, the deploy key, the `staging-infra` and `staging` GitHub Environments, `STAGING_INFRA_ENABLED=true`, Terraform apply, `RUNTIME_ENV`, the first deploy. Then check TLS to the managed cluster (the hardening item below): the database URLs may need DigitalOcean's CA certificate.
+- [ ] Owner: the `staging-plan` and `production-plan` Environments with read-only tokens, and `INFRA_SSH_PUBLIC_KEY` moved there from `-infra` (`docs/deployment.md`, step 4); the GitHub settings in `docs/guides/git-flow.md` (squash only, the release-tag ruleset; `main`'s is set), and the docs site's `DOCS_CLOUDFLARE_API_TOKEN` and `DOCS_CLOUDFLARE_ACCOUNT_ID` secrets, then run the Docs workflow once (ADR-051).
 - [ ] Hardening backlog (below): the code-only items, then the rest on staging.
 - [ ] Security review, written up with each finding and its fix.
 - [ ] Load test on staging: NFR-PERF-1, then the 10,000-item batch (NFR-PERF-3) and the bulk caps; `pnpm bench:signing` on the droplet into ADR-013.
@@ -48,7 +48,6 @@ Steps in order; the gate is in PRD section 15.
 
 Hardening deferred by an earlier milestone. Add an item whenever a milestone puts one off, with where it's recorded. Milestone 10 works through the list, and its gate needs it empty or each remaining item accepted by the owner.
 
-- [ ] TLS for managed Postgres connections, verified against DigitalOcean (`docs/deployment.md`).
 - [ ] Slimmer Docker image: 1.45 GB with the full `node_modules` (`Dockerfile`).
 - [ ] Browser-side Sentry, with the DSN from the server at runtime (ADR-008).
 - [ ] Moderate audit findings in Sentry's dependencies (`glob`, `minimatch`). Recheck on each Sentry upgrade.

@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { ThemeToggle } from '@comprobify/ui/theme';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { Link } from '@/i18n/navigation';
+import { docsUrl } from '@/lib/docs';
 
 const ITEM = 'rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent';
 
@@ -66,6 +67,9 @@ export function MarketingMobileMenu() {
             <Link href="/support" onClick={() => setOpen(false)} className={ITEM}>
               {t('nav.support')}
             </Link>
+            <a href={docsUrl(locale)} onClick={() => setOpen(false)} className={ITEM}>
+              {t('nav.docs')}
+            </a>
             <Link href="/login" onClick={() => setOpen(false)} className={ITEM}>
               {t('nav.login')}
             </Link>

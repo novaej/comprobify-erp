@@ -1,6 +1,6 @@
 # ADR-048: builds the image for a commit, pushes it to GHCR and releases it on an environment's
 # droplet: migrate first (a failure stops here, the running version stays), then web, worker and
-# Caddy, then waits for /health. Called by deploy-staging.yml and release-production.yml.
+# Caddy, then waits for /health. Called by staging.yml and production.yml.
 #
 # Per GitHub Environment (staging, production):
 #   secrets  DROPLET_IP            the reserved IP (terraform output reserved_ip)

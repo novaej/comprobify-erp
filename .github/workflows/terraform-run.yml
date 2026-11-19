@@ -1,0 +1,115 @@
+# ADR-048, ADR-051: one Terraform run on one environment, called by terraform.yml (pull requests and
+# manual runs), staging.yml and production.yml. Two jobs, two GitHub Environments:
+#   plan   in <env>-plan, no reviewer, with read-only tokens: it only reads, and its output is in
+#          the log for anyone to read before approving.
+#   apply  in <env>-infra, whose reviewer approves it after reading that plan, with the tokens that
+#          can change things. It applies exactly the saved plan (a destroy's too), and runs only
+#          when the plan found something to change.
+#
+# Per <env>-plan Environment: secrets DO_TOKEN (DigitalOcean, read only) and CLOUDFLARE_TOKEN (Zone
+# DNS: Read), variable INFRA_SSH_PUBLIC_KEY. Per <env>-infra Environment: secrets DO_TOKEN and
+# CLOUDFLARE_TOKEN (DNS: Edit). Repository secrets TERRAFORM_SPACES_ACCESS_KEY_ID and
+# TERRAFORM_SPACES_SECRET_ACCESS_KEY: a Spaces key for the state bucket, used by this repo only.
+name: Terraform run
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: staging or production
+        type: string
+        required: true
+      action:
+        description: plan, apply or destroy
+        type: string
+        required: true
+      ref:
+        description: The commit or tag whose configuration runs; the triggering one when empty.
+        type: string
+        default: ''
+
+# Two runs on one state would fight over it.
+concurrency:
+  group: terraform-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    # Fixed names: a skipped job shows its name unevaluated. The caller prefixes the environment.
+    name: Plan
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}-plan
+    outputs:
+      changes: ${{ steps.plan.outputs.changes }}
+    defaults:
+      run:
+        working-directory: infra/terraform/environments/${{ inputs.environment }}
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_SPACES_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_SPACES_SECRET_ACCESS_KEY }}
+      DIGITALOCEAN_TOKEN: ${{ secrets.DO_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+      TF_VAR_ssh_public_key: ${{ vars.INFRA_SSH_PUBLIC_KEY }}
+      TF_IN_AUTOMATION: 'true'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
+        with:
+          terraform_version: 1.9.8
+          # The plan's exit code says whether anything changes; the wrapper would hide it.
+          terraform_wrapper: false
+      - run: terraform fmt -check -recursive ../..
+      - run: terraform init -input=false
+      - id: plan
+        env:
+          DESTROY: ${{ inputs.action == 'destroy' && '-destroy' || '' }}
+        run: |
+          set +e
+          # shellcheck disable=SC2086 # DESTROY is one flag or nothing
+          terraform plan -input=false -detailed-exitcode $DESTROY -out=plan.tfplan
+          code=$?
+          set -e
+          # 0: nothing to change, 2: changes, anything else: the plan failed.
+          case $code in
+            0) echo changes=false >> "$GITHUB_OUTPUT" ;;
+            2) echo changes=true >> "$GITHUB_OUTPUT" ;;
+            *) exit "$code" ;;
+          esac
+      - if: inputs.action != 'plan' && steps.plan.outputs.changes == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: tfplan-${{ inputs.environment }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: infra/terraform/environments/${{ inputs.environment }}/plan.tfplan
+          retention-days: 1
+
+  apply:
+    name: Apply
+    needs: plan
+    if: inputs.action != 'plan' && needs.plan.outputs.changes == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}-infra
+    defaults:
+      run:
+        working-directory: infra/terraform/environments/${{ inputs.environment }}
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.TERRAFORM_SPACES_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.TERRAFORM_SPACES_SECRET_ACCESS_KEY }}
+      DIGITALOCEAN_TOKEN: ${{ secrets.DO_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+      TF_IN_AUTOMATION: 'true'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
+        with:
+          terraform_version: 1.9.8
+      - run: terraform init -input=false
+      - uses: actions/download-artifact@v8
+        with:
+          name: tfplan-${{ inputs.environment }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: infra/terraform/environments/${{ inputs.environment }}
+      # Exactly what was reviewed; Terraform refuses it if the state moved since the plan.
+      - run: terraform apply -input=false plan.tfplan

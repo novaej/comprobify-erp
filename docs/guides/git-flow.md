@@ -1,0 +1,157 @@
+# Git flow
+
+How a change travels from a branch to production, and the GitHub settings that hold it to that path. The pipeline behind it is ADR-051.
+
+## The path of a change
+
+```
+feat/xyz ──PR──▶ main ──▶ Staging workflow ──▶ (staging, while it's up)
+                  │
+                  └─ tag vX.Y.Z ──▶ GitHub Release ──▶ Production workflow ──▶ production
+```
+
+1. **Branch from `main`.** Name it by the commit type: `feat/`, `fix/`, `docs/`, `refactor/`, `test/`, `chore/` or `ci/`, then a few words, such as `feat/branch-selector`.
+2. **Commit** with `type: description` titles. Requirement ids (`FR-…`, `NFR-…`, `ADR-…`) go in the body (CLAUDE.md, working agreements).
+3. **Open a pull request into `main`.** Its title follows the same `type: description` form. It becomes the squash commit's title, so it's what `main`'s history shows. The body follows the template (`.github/pull_request_template.md`): why, what changes, how it was checked, screens for UI, the checklist of this repo's rules, anything to do on deploy, and how to roll back. Leave out what doesn't apply.
+   - CI runs: lint, types, unit tests and audit, integration tests, and the Docker image. All three are required. A PR that only changes docs (`docs/`, `apps/docs/`, `*.md`) skips them, and skipped counts as passed; any other file runs all three.
+   - A change under `infra/terraform` also gets a Terraform plan for each environment that is up, with no approval needed: read it before merging.
+4. **Squash-merge** once CI is green. The branch is deleted on merge.
+5. **The merge runs the Staging workflow**, once:
+   - CI on `main`, with the E2E smoke test.
+   - While staging is up: Terraform, if the merge changed `infra/terraform`, after its approval.
+   - The deploy.
+
+   While staging is down, only CI runs.
+
+## Releasing to production
+
+Production stays live once it is up. Staging is temporary: it's up now for the cutover rehearsal, is destroyed after the first production release, and comes back only when something needs testing outside production. Its switch, `STAGING_INFRA_ENABLED`, turns its infrastructure and its deploys on and off together. A release doesn't depend on it.
+
+1. **Test**, on staging when it's up (merges to `main` deploy there), with `docs/guides/qa-script.md` for a full pass.
+2. **Prepare the release** with a PR named `chore: release vX.Y.Z`. In `CHANGELOG.md`, it renames `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD` and opens a new empty `[Unreleased]` above it. Merge it.
+3. **Publish a GitHub Release** (Releases → Draft a new release). Create the tag `vX.Y.Z` on `main`, use the changelog section as the notes, and publish. This starts the Production workflow:
+   - It checks that production is switched on and that the tag is `vX.Y.Z`.
+   - Terraform plans if `infra/terraform` changed since the previous release. If the plan changes something, its apply waits for the `production-infra` reviewer.
+   - The deploy runs after the `production` reviewer approves.
+4. **Check** `https://app.comprobify.com/health`.
+
+### Staging off and on
+
+- **Off**, after the first production release and whenever it's no longer needed: run the Terraform workflow (staging, `destroy`), then set `STAGING_INFRA_ENABLED=false`. From then on, merges to `main` only run CI. The database cluster isn't Terraform's: delete it in DigitalOcean, or keep it for the next time.
+- **On again:** create the cluster if it was deleted (`docs/deployment.md`, "Database roles on a new server"), set `STAGING_INFRA_ENABLED=true`, then run the Terraform workflow (staging, `apply`). Update `DROPLET_IP` with the new reserved IP and add the droplet to the cluster's trusted sources, then run the Staging workflow. Production keeps running throughout.
+
+Versions follow semantic versioning: the major for a change companies must act on, the minor for features, the patch for fixes. The first production release is `v1.0.0`, at cutover.
+
+### A fix that can't wait
+
+If `main` holds nothing unreleased, fix it on `main` through a PR and release the next patch as usual.
+
+If `main` already holds unreleased work, branch from the release in production instead:
+
+```bash
+git switch -c hotfix/short-name vX.Y.Z
+# fix, commit, push, and let CI run on a PR into main (don't merge it yet)
+git tag vX.Y.(Z+1) && git push origin vX.Y.(Z+1)
+```
+
+Then publish a Release from that tag; it deploys like any other. Afterwards, merge the hotfix PR into `main` so the fix is in the next release.
+
+A manual run of the Production workflow must start from the tag (`--ref`): the `production` Environment accepts only `v*` tags, so a run started from `main` is refused.
+
+### Rolling back
+
+Run the Production workflow from the previous tag:
+
+```bash
+gh workflow run production.yml --ref vX.Y.Z
+```
+
+Migrations are forward-only, so the older code must work with the newer schema, which every migration already guarantees (rule 16).
+
+## GitHub settings
+
+Set once by the owner. They apply while the repository is public: on GitHub's free plan a private repository has no rulesets and no Environment rules. If it goes private, these become conventions only.
+
+### Repository
+
+Merge commits and rebase merges off, squash on with the PR's title and body, branches deleted after merge:
+
+```bash
+gh api -X PATCH repos/novaej/comprobify-erp \
+  -F allow_merge_commit=false -F allow_rebase_merge=false -F allow_squash_merge=true \
+  -f squash_merge_commit_title=PR_TITLE -f squash_merge_commit_message=PR_BODY \
+  -F delete_branch_on_merge=true
+```
+
+### Ruleset on `main`
+
+`main` changes only by pull request with CI green. Nobody force-pushes it or deletes it, and no one bypasses the rule, the owner included. No approval is required, since a sole author can't approve their own pull request; the required checks are the gate.
+
+```bash
+gh api -X POST repos/novaej/comprobify-erp/rulesets --input - <<'EOF'
+{
+  "name": "main",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": { "ref_name": { "include": ["~DEFAULT_BRANCH"], "exclude": [] } },
+  "bypass_actors": [],
+  "rules": [
+    { "type": "deletion" },
+    { "type": "non_fast_forward" },
+    { "type": "required_linear_history" },
+    {
+      "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews_on_push": true,
+        "require_code_owner_review": false,
+        "require_last_push_approval": false,
+        "required_review_thread_resolution": true,
+        "allowed_merge_methods": ["squash"]
+      }
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": true,
+        "required_status_checks": [
+          { "context": "Lint, types, unit tests, audit" },
+          { "context": "Integration tests" },
+          { "context": "Docker image" }
+        ]
+      }
+    }
+  ]
+}
+EOF
+```
+
+`strict` asks the branch to be up to date with `main` before merging, so what was checked is what lands.
+
+### Ruleset on release tags
+
+A `v*` tag, once pushed, is what production ran: it is never moved or deleted.
+
+```bash
+gh api -X POST repos/novaej/comprobify-erp/rulesets --input - <<'EOF'
+{
+  "name": "release tags",
+  "target": "tag",
+  "enforcement": "active",
+  "conditions": { "ref_name": { "include": ["refs/tags/v*"], "exclude": [] } },
+  "bypass_actors": [],
+  "rules": [{ "type": "deletion" }, { "type": "update" }, { "type": "non_fast_forward" }]
+}
+EOF
+```
+
+### Environments
+
+Required reviewers on `staging-infra`, `production-infra` and `production`, none on `staging-plan` and `production-plan` (they hold read-only tokens), with deployment branches `main` on `staging` and tags `v*` on `production` (`docs/deployment.md`, step 6). `staging` deploys every merge without asking.
+
+### Check them
+
+```bash
+gh api repos/novaej/comprobify-erp/rulesets --jq '.[] | "\(.name): \(.enforcement)"'
+gh api repos/novaej/comprobify-erp --jq '{squash: .allow_squash_merge, merge: .allow_merge_commit, rebase: .allow_rebase_merge, delete_branch: .delete_branch_on_merge}'
+```
