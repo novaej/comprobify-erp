@@ -161,6 +161,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Changed
 
+- A pull request that changes only docs (`docs/`, `apps/docs/`, `*.md`) skips CI's three checks; any other file runs them all, and `main` always runs everything (ADR-051).
 - CI's job summaries name their suite: **Unit tests · config**, **· db**, **· web**, **· core** and **Integration tests**, instead of four untitled "Vitest Test Report" blocks.
 - One workflow per event (ADR-051): a merge to `main` runs **Staging** (CI, then Terraform if the infrastructure changed and it is approved, then the deploy), and a published Release runs **Production**, whether staging is up or not; `STAGING_INFRA_ENABLED` switches staging's infrastructure and deploys together. The chained Deploy staging and Release to production workflows are gone, and CI on `main` runs inside Staging. Terraform plans without approval in a `<env>-plan` Environment with read-only tokens; only the apply, of exactly that plan, waits for the `<env>-infra` reviewer.
 - The deployed database connections verify the cluster's certificate against its CA (`DATABASE_CA_CERT`, `sslmode=verify-full`), which node-postgres requires of `sslmode=require` too (ADR-048).

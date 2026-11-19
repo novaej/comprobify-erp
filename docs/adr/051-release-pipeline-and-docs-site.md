@@ -32,7 +32,7 @@ No approval is required: the owner works alone and GitHub doesn't let an author 
 
 | Event | Workflow | What it does |
 |---|---|---|
-| Pull request | `ci.yml`, and `terraform.yml` when `infra/terraform` changed | Checks; a plan for each environment that is up, read by its reviewer |
+| Pull request | `ci.yml`, and `terraform.yml` when `infra/terraform` changed | Checks, skipped when the PR changes only docs (`docs/`, `apps/docs/`, `*.md`); a plan for each environment that is up |
 | Merge to `main` | `staging.yml` | CI (calling `ci.yml`, with E2E), then, while staging is up, Terraform if the merge changed `infra/terraform` (approved), then the deploy |
 | Published Release | `production.yml` | Refuses a tag not `vX.Y.Z`; Terraform if `infra/terraform` changed since the previous release (approved); the deploy (approved) |
 | Manual | `terraform.yml`, `staging.yml`, `production.yml`, `docs.yml` | Bring an environment up or down, redeploy staging, roll back or hotfix production from a tag, republish the docs |

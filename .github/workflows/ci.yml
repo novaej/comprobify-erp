@@ -32,8 +32,37 @@ env:
   SRI_MOCK_MODE: 'true'
 
 jobs:
+  # A pull request that only touches docs (docs/, apps/docs/, *.md) skips the three checks below;
+  # skipped counts as passed for a required check. Any other file runs everything, and main always
+  # runs everything (ADR-051).
+  changes:
+    name: What changed
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "${{ github.event_name }}" != pull_request ]; then
+            echo code=true >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          other=$(git diff --name-only "$BASE...HEAD" | grep -Ev '^(docs/|apps/docs/)|\.md$' || true)
+          if [ -z "$other" ]; then
+            echo 'Docs only: the checks are skipped.'
+            echo code=false >> "$GITHUB_OUTPUT"
+          else
+            echo code=true >> "$GITHUB_OUTPUT"
+          fi
+
   checks:
     name: Lint, types, unit tests, audit
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -54,6 +83,8 @@ jobs:
 
   integration:
     name: Integration tests
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -84,6 +115,8 @@ jobs:
 
   image:
     name: Docker image
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

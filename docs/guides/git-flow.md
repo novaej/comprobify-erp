@@ -13,7 +13,7 @@ feat/xyz ──PR──▶ main ──▶ Staging workflow ──▶ (staging, w
 1. **Branch from `main`.** Name it by the commit type: `feat/`, `fix/`, `docs/`, `refactor/`, `test/`, `chore/` or `ci/`, then a few words, such as `feat/branch-selector`.
 2. **Commit** with `type: description` titles. Requirement ids (`FR-…`, `NFR-…`, `ADR-…`) go in the body (CLAUDE.md, working agreements).
 3. **Open a pull request into `main`.** Its title follows the same `type: description` form. It becomes the squash commit's title, so it's what `main`'s history shows. The body follows the template (`.github/pull_request_template.md`): why, what changes, how it was checked, screens for UI, the checklist of this repo's rules, anything to do on deploy, and how to roll back. Leave out what doesn't apply.
-   - CI runs: lint, types, unit tests and audit, integration tests, and the Docker image. All three are required.
+   - CI runs: lint, types, unit tests and audit, integration tests, and the Docker image. All three are required. A PR that only changes docs (`docs/`, `apps/docs/`, `*.md`) skips them, and skipped counts as passed; any other file runs all three.
    - A change under `infra/terraform` also gets a Terraform plan for each environment that is up, with no approval needed: read it before merging.
 4. **Squash-merge** once CI is green. The branch is deleted on merge.
 5. **The merge runs the Staging workflow**, once:
