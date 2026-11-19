@@ -25,12 +25,12 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 Steps in order; the gate is in PRD section 15.
 
-- [ ] Owner: the `staging-plan` and `production-plan` Environments with read-only tokens, and `INFRA_SSH_PUBLIC_KEY` moved there from `-infra` (`docs/deployment.md`, step 4); the GitHub settings in `docs/guides/git-flow.md` (squash only, the release-tag ruleset; `main`'s is set), and the docs site's `DOCS_CLOUDFLARE_API_TOKEN` and `DOCS_CLOUDFLARE_ACCOUNT_ID` secrets, then run the Docs workflow once (ADR-051).
+- [ ] Owner, GitHub settings (`docs/guides/git-flow.md`): squash merges only with branches deleted after merge (merge commits and rebase are still on), and the release-tag ruleset (only `main`'s exists). `staging-plan` holds the full tokens: swap them for read-only ones (`docs/deployment.md`, step 4); `production-plan` gets read-only ones from the start.
 - [ ] Hardening backlog (below): the code-only items, then the rest on staging.
 - [ ] Security review, written up with each finding and its fix.
 - [ ] Load test on staging: NFR-PERF-1, then the 10,000-item batch (NFR-PERF-3) and the bulk caps; `pnpm bench:signing` on the droplet into ADR-013.
 - [ ] Backups and the restore drill on staging, as a runbook (email, webhooks and payments off in the restored copy, mistake 13).
-- [ ] Data migration: `pnpm import:legacy` (ADR-049) from the final dumps into staging, dry run then `--commit`, its reconciliation clean, then checked in the app (`docs/guides/legacy-import.md`). Again on production before cutover.
+- [ ] Data migration on production: `pnpm import:legacy` (ADR-049) from the final dumps, dry run then `--commit`, its reconciliation clean, then checked in the app (`docs/guides/legacy-import.md`), before the first release. Staging's import is done and checked; keep the dumps, the old `ENCRYPTION_KEY` and the `legacy_*_check` databases until then.
 - [ ] Runbooks and the user guide.
 - [ ] Owner: the production cluster, `production-infra` and `production` Environments, `PRODUCTION_INFRA_ENABLED=true`, then the cutover (`docs/deployment.md`, "Cutover"); delete the staging cluster.
 
