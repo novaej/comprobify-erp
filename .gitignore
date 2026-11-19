@@ -26,5 +26,5 @@ next-env.d.ts
 *.tfstate.*
 
 # The docs site build (apps/docs)
-.vitepress/dist/
-.vitepress/cache/
+apps/docs/.vitepress/dist/
+apps/docs/.vitepress/cache/
