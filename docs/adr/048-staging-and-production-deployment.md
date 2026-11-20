@@ -30,7 +30,7 @@ The owner's choices: the ERP gets its own droplet per environment. Each environm
 **The pipeline** (`.github/workflows`):
 
 - `deploy.yml` (reusable) builds and pushes the image to GHCR, copies the stack, and writes `.env`. It runs `migrate`, and a failure stops there with the old containers still serving. It then starts web, worker and Caddy, reloads Caddy, and waits up to two minutes for `/health`.
-- The workflows that call it, and the release flow around them, are ADR-051: `staging.yml` on a merge to `main`, `production.yml` on a published Release, and `infrastructure.yml` for pull request plans and manual runs, all running Terraform through `infrastructure-job.yml`.
+- The workflows that call it, and the release flow around them, are ADR-051: `main.yml` on a merge to `main`, `deploy-staging.yml` by hand, `production.yml` on a published Release, and `infrastructure.yml` for pull request plans and manual runs, all running Terraform through `infrastructure-job.yml`.
 
 **Two hosts, one app.** With `LANDING_URL` set apart from `APP_URL`, the request proxy sends the public pages (`/`, `/es`, `/en` and their pricing and support pages) to the landing host and everything else to the app host, with a 308 that keeps the path and query (`apps/web/src/lib/hosts.ts`). Locally, and with `LANDING_URL` unset, one host serves both. Emails keep linking to `APP_URL`.
 

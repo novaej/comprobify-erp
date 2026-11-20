@@ -54,7 +54,6 @@ Hardening deferred by an earlier milestone. Add an item whenever a milestone put
 - [ ] Automated dependency updates (Renovate or Dependabot).
 - [ ] Revisit a separate role for system context: `app.rls_system` is a setting, not a privilege (ADR-004).
 - [ ] pg-boss index rebuilds: automatic `REINDEX` is off, so bloat reports need a manual owner task (ADR-005).
-- [ ] Web shutdown: stop pg-boss and close the pool on `SIGTERM`, as the worker does.
 - [ ] Refuse a TOTP code that was already used in its 30-second window. Better Auth accepts it twice; the integration tests show it (NIST SP 800-63B §5.1.4.2).
 - [ ] A documented, tested rotation procedure for `CERT_ENCRYPTION_KEY` (PRD 9.3). Stored keys carry a `v1:` prefix for it.
 

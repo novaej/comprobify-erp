@@ -5,10 +5,22 @@ How a change travels from a branch to production, and the GitHub settings that h
 ## The path of a change
 
 ```
-feat/xyz ──PR──▶ main ──▶ Staging workflow ──▶ (staging, while it's up)
+feat/xyz ──PR──▶ main ──▶ Main (E2E, staging's Terraform)
                   │
-                  └─ tag vX.Y.Z ──▶ GitHub Release ──▶ Production workflow ──▶ production
+                  ├─ you run "Deploy to staging" ──▶ staging, while it's up
+                  │
+                  └─ tag vX.Y.Z ──▶ GitHub Release ──▶ Release to production ──▶ production
 ```
+
+| Workflow (Actions) | Started by | Does |
+|---|---|---|
+| **CI** | a pull request | lint, types, unit tests and audit, integration tests, the image; the docs site's build when `apps/docs/` changed |
+| **Main** | a merge to `main`, unless it changes only docs | E2E; while staging is up, Terraform when `infra/terraform` changed (approved) |
+| **Deploy to staging** | you, by hand | deploys `main`'s newest commit whose Main run passed |
+| **Release to production** | publishing a Release | Terraform when `infra/terraform` changed since the last release (approved), then the deploy (approved) |
+| **Infrastructure** | a pull request touching `infra/terraform`, or you | a plan; or a manual plan, apply or destroy |
+| **Docs** | a merge changing `apps/docs/` | publishes docs.comprobify.com |
+| *Deploy (shared job)*, *Infrastructure (shared job)* | never directly | the deploy and the Terraform steps the others call; their jobs appear inside those runs |
 
 1. **Branch from `main`.** Name it by the commit type: `feat/`, `fix/`, `docs/`, `refactor/`, `test/`, `chore/` or `ci/`, then a few words, such as `feat/branch-selector`.
 2. **Commit** with `type: description` titles. Requirement ids (`FR-…`, `NFR-…`, `ADR-…`) go in the body (CLAUDE.md, working agreements).
@@ -16,20 +28,20 @@ feat/xyz ──PR──▶ main ──▶ Staging workflow ──▶ (staging, w
    - CI runs: lint, types, unit tests and audit, integration tests, and the Docker image. All three are required. A PR that only changes docs (`docs/`, `apps/docs/`, `*.md`) skips them, and skipped counts as passed; any other file runs all three. A PR that touches `apps/docs/` also builds the docs site.
    - A change under `infra/terraform` also gets a Terraform plan for each environment that is up, with no approval needed: read it before merging.
 4. **Squash-merge** once CI is green. The branch is deleted on merge.
-5. **The merge runs the Staging workflow**, once:
+5. **The merge runs Main**, once, unless it changes only docs:
    - The E2E smoke test. The other checks passed on the PR, and the merge holds exactly that code, since `main`'s ruleset requires the PR to be up to date.
    - While staging is up: Terraform, if the merge changed `infra/terraform`, after its approval.
-   - The deploy.
 
-   While staging is down, only the E2E test runs.
+   It deploys nothing.
+6. **Deploy to staging when you choose:** `gh workflow run deploy-staging.yml`, or Actions → Deploy to staging → Run workflow, from `main`. It deploys `main`'s newest commit whose Main run passed, which may cover several merges. It refuses while Main is still running on the latest commit, or after it failed there.
 
 ## Releasing to production
 
 Production stays live once it is up. Staging is temporary: it's up now for the cutover rehearsal, is destroyed after the first production release, and comes back only when something needs testing outside production. Its switch, `STAGING_INFRA_ENABLED`, turns its infrastructure and its deploys on and off together. A release doesn't depend on it.
 
-1. **Test**, on staging when it's up (merges to `main` deploy there), with `docs/guides/qa-script.md` for a full pass.
+1. **Test**, on staging when it's up (run Deploy to staging first), with `docs/guides/qa-script.md` for a full pass. Release the commit staging runs, shown in its deploy's summary: production then reuses the same image.
 2. **Prepare the release** with a PR named `chore: release vX.Y.Z`. In `CHANGELOG.md`, it renames `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD` and opens a new empty `[Unreleased]` above it. Merge it.
-3. **Publish a GitHub Release** (Releases → Draft a new release). Create the tag `vX.Y.Z` on `main`, use the changelog section as the notes, and publish. This starts the Production workflow:
+3. **Publish a GitHub Release** (Releases → Draft a new release). Create the tag `vX.Y.Z` on `main`, use the changelog section as the notes, and publish. This starts the Release to production workflow:
    - It checks that production is switched on and that the tag is `vX.Y.Z`.
    - Terraform plans if `infra/terraform` changed since the previous release. If the plan changes something, its apply waits for the `production-infra` reviewer.
    - The deploy runs after the `production` reviewer approves. It runs the image staging ran for that commit, now also tagged `vX.Y.Z`; one is built only if no staging deploy reached that commit.
@@ -37,8 +49,8 @@ Production stays live once it is up. Staging is temporary: it's up now for the c
 
 ### Staging off and on
 
-- **Off**, after the first production release and whenever it's no longer needed: run the Infrastructure workflow (staging, `destroy`), then set `STAGING_INFRA_ENABLED=false`. From then on, merges to `main` only run CI. The database cluster isn't Terraform's: delete it in DigitalOcean, or keep it for the next time.
-- **On again:** create the cluster if it was deleted (`docs/deployment.md`, "Database roles on a new server"), set `STAGING_INFRA_ENABLED=true`, then run the Infrastructure workflow (staging, `apply`). Update `DROPLET_IP` with the new reserved IP and add the droplet to the cluster's trusted sources, then run the Staging workflow. Production keeps running throughout.
+- **Off**, after the first production release and whenever it's no longer needed: run the Infrastructure workflow (staging, `destroy`), then set `STAGING_INFRA_ENABLED=false`. From then on, a merge to `main` runs E2E only. The database cluster isn't Terraform's: delete it in DigitalOcean, or keep it for the next time.
+- **On again:** create the cluster if it was deleted (`docs/deployment.md`, "Database roles on a new server"), set `STAGING_INFRA_ENABLED=true`, then run the Infrastructure workflow (staging, `apply`). Update `DROPLET_IP` with the new reserved IP and add the droplet to the cluster's trusted sources, then run Deploy to staging. Production keeps running throughout.
 
 Versions follow semantic versioning: the major for a change companies must act on, the minor for features, the patch for fixes. The first production release is `v1.0.0`, at cutover.
 
@@ -56,11 +68,11 @@ git tag vX.Y.(Z+1) && git push origin vX.Y.(Z+1)
 
 Then publish a Release from that tag; it deploys like any other. Afterwards, merge the hotfix PR into `main` so the fix is in the next release.
 
-A manual run of the Production workflow must start from the tag (`--ref`): the `production` Environment accepts only `v*` tags, so a run started from `main` is refused.
+A manual run of Release to production must start from the tag (`--ref`): the `production` Environment accepts only `v*` tags, so a run started from `main` is refused.
 
 ### Rolling back
 
-Run the Production workflow from the previous tag:
+Run Release to production from the previous tag:
 
 ```bash
 gh workflow run production.yml --ref vX.Y.Z

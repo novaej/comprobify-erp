@@ -30,6 +30,9 @@ services:
     <<: *app
     expose:
       - '3000'
+    # Next.js finishes in-flight requests on SIGTERM before it exits; Docker's 10 s default would cut
+    # a long one (an accountant's ZIP) short.
+    stop_grace_period: 30s
     mem_limit: ${WEB_MEMORY:-1536m}
     # The image has no curl; node is the HTTP client. /health checks the database and the queue.
     healthcheck:
@@ -49,6 +52,9 @@ services:
     <<: *app
     working_dir: /app/apps/worker
     command: ['node', '--import', 'tsx', 'src/index.ts']
+    # The worker lets running jobs finish for up to 30 s on SIGTERM (pg-boss stop), then closes
+    # the pool; Docker's 10 s default would kill a job halfway.
+    stop_grace_period: 40s
     mem_limit: ${WORKER_MEMORY:-768m}
     # Signing and bulk runs must leave the web responsive (PRD 9.2).
     cpus: ${WORKER_CPUS:-1}
