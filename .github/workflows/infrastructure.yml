@@ -1,7 +1,7 @@
 # ADR-048, ADR-051: Terraform outside a merge or a release. A pull request touching infra/terraform plans each
 # environment that is up; a manual run plans, applies or destroys one, which is how an environment
 # is brought up and how staging is torn down after a rehearsal. Merges to main apply through
-# staging.yml, releases through production.yml. Each environment runs only while its repository
+# main.yml, releases through production.yml. Each environment runs only while its repository
 # variable is true (STAGING_INFRA_ENABLED, PRODUCTION_INFRA_ENABLED).
 name: Infrastructure
 # What a run does, in the list: a pull request's plan, or a manual action on one environment.

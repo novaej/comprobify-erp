@@ -1,6 +1,6 @@
 # ADR-048, ADR-051: releases a commit's image on an environment's droplet: migrate first (a failure
 # stops here, the running version stays), then web, worker and Caddy, then waits for /health.
-# Called by staging.yml and production.yml.
+# Called by deploy-staging.yml and production.yml.
 #
 # One image per commit, built once: ghcr.io/<repo>:<commit>. Staging builds it; a release of that
 # commit reuses the same image, tags it vX.Y.Z, and runs it by digest, so production runs exactly

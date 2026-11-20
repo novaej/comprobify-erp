@@ -37,6 +37,9 @@ services:
       migrate:
         condition: service_completed_successfully
     restart: unless-stopped
+    # Next.js finishes in-flight requests on SIGTERM before it exits; Docker's 10 s default would cut
+    # a long one (an accountant's ZIP) short.
+    stop_grace_period: 30s
     mem_limit: 768m
     # The image has no curl; node is the HTTP client. /health checks the database and queue.
     healthcheck:
@@ -68,6 +71,9 @@ services:
       migrate:
         condition: service_completed_successfully
     restart: unless-stopped
+    # The worker lets running jobs finish for up to 30 s on SIGTERM (pg-boss stop), then closes
+    # the pool; Docker's 10 s default would kill a job halfway.
+    stop_grace_period: 40s
     mem_limit: 384m
     cpus: 0.5
 

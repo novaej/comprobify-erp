@@ -1,17 +1,18 @@
-# ADR-048: what a merge to main does, in one run. CI first; then, while staging is up
-# (STAGING_INFRA_ENABLED), Terraform when the merge changed infra/terraform, once its reviewer
-# approves; then the deploy. Nothing waits on another workflow, so one merge is one run.
-# A manual run redeploys main as it is, after CI, without Terraform.
-name: Staging
+# ADR-051: what a merge to main does, in one run. The E2E smoke test (the pull request's other checks
+# already passed on the same code), and, while staging is up (STAGING_INFRA_ENABLED), Terraform
+# when the merge changed infra/terraform, once its reviewer approves. It deploys nothing: staging is
+# deployed by hand (deploy-staging.yml), production by a release (production.yml). A merge that
+# changes only docs starts no run.
+name: Main
 
 on:
   push:
     branches: [main]
-  workflow_dispatch:
+    paths-ignore: ['docs/**', 'apps/docs/**', '**/*.md']
 
-# One merge at a time; a newer one waits rather than cancelling a deploy halfway.
+# One merge at a time; a newer one waits rather than cancelling an apply halfway.
 concurrency:
-  group: staging
+  group: main
   cancel-in-progress: false
 
 permissions:
@@ -23,7 +24,7 @@ jobs:
 
   # Did this push change the infrastructure? Compared with what main was before it.
   changes:
-    if: vars.STAGING_INFRA_ENABLED == 'true' && github.event_name == 'push'
+    if: vars.STAGING_INFRA_ENABLED == 'true'
     runs-on: ubuntu-latest
     outputs:
       infra: ${{ steps.diff.outputs.infra }}
@@ -52,20 +53,3 @@ jobs:
       environment: staging
       action: apply
     secrets: inherit
-
-  deploy:
-    needs: [ci, changes, terraform]
-    # Runs when CI passed and Terraform applied or had nothing to do.
-    if: >-
-      always() && vars.STAGING_INFRA_ENABLED == 'true' &&
-      needs.ci.result == 'success' &&
-      (needs.terraform.result == 'success' || needs.terraform.result == 'skipped') &&
-      (needs.changes.result == 'success' || needs.changes.result == 'skipped')
-    uses: ./.github/workflows/deploy.yml
-    with:
-      environment: staging
-      ref: ${{ github.sha }}
-    secrets: inherit
-    permissions:
-      contents: read
-      packages: write

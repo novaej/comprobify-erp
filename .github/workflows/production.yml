@@ -3,7 +3,7 @@
 # production-infra reviewer approves; the deploy waits for the production reviewer. A manual run,
 # for a rollback or a hotfix, is started from the tag itself (`gh workflow run production.yml --ref
 # vX.Y.Z`), since the production Environment accepts only v* tags.
-name: Production
+name: Release to production
 
 on:
   release:

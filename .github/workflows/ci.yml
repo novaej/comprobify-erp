@@ -2,7 +2,7 @@ name: CI
 
 # PRD section 12, ADR-051. A pull request: lint, types, unit tests and audit, integration tests and
 # the image build, skipped when it changes only docs; the docs site's build when it touches
-# apps/docs. On main, as the first step of staging.yml: the E2E smoke test only, since the main
+# apps/docs. On main, as the first step of main.yml: the E2E smoke test only, since the main
 # ruleset merges a pull request only up to date with main, so the merge holds exactly the code its
 # checks passed. A pull request's newer push cancels its older run; main's runs finish.
 on:
