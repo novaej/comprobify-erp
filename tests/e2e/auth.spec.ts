@@ -2039,9 +2039,28 @@ test.describe.serial('account lifecycle (FR-ONB-1 to FR-ONB-7, FR-USR-2)', () =>
     ).toHaveCount(10);
     await look(page, 'two-factor-setup');
 
-    // What an authenticator app does with the key.
+    // What an authenticator app does with the key, never giving the same code twice: a used code
+    // is refused (NIST SP 800-63B §5.1.4.2). The server accepts the previous, current and next
+    // 30-second step's code, so each is used once, the previous only with 5 s to spare. When all
+    // are spent, the next step is waited for, and the wait is added to the test's time.
     const key = (await page.locator('code').innerText()).trim();
-    totp = () => createOTP(new TextDecoder().decode(base32.decode(key))).totp();
+    const otp = createOTP(new TextDecoder().decode(base32.decode(key)));
+    let lastStep = -1;
+    totp = async () => {
+      for (;;) {
+        const now = Date.now();
+        const step = Math.floor(now / 30_000);
+        const previousLeft = (step + 1) * 30_000 - now;
+        const first = previousLeft > 5_000 ? step - 1 : step;
+        const next = Math.max(lastStep + 1, first);
+        if (next <= step + 1) {
+          lastStep = next;
+          return otp.hotp(next);
+        }
+        test.info().setTimeout(test.info().timeout + previousLeft + 1_000);
+        await new Promise((resolve) => setTimeout(resolve, previousLeft + 500));
+      }
+    };
     await page.getByLabel('Código de 6 dígitos de tu app').fill(await totp());
     await page.getByRole('button', { name: 'Confirmar y activar' }).click();
     await expect(page.getByText('La verificación en dos pasos está activada.')).toBeVisible();

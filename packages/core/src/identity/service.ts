@@ -7,6 +7,7 @@ import type { Auth } from './auth';
 import type { RateLimiter } from './rate-limit';
 import { DEFAULT_IDLE_TIMEOUT_MINUTES, isIdle } from './session-activity';
 import { forgetTrustedDevices } from './trusted-devices';
+import { claimTotpCode } from './totp-replay';
 
 const email = z
   .email()
@@ -253,8 +254,19 @@ export function createIdentity({ auth, db, rateLimiter, clock, idleMinutesFor }:
           ? auth.api.verifyBackupCode({ body: { code, trustDevice }, headers: meta.headers })
           : auth.api.verifyTOTP({ body: { code, trustDevice }, headers: meta.headers }),
       );
-      // Asked for anyway by the super admin: the device is forgotten at once.
       const userId = (result as { user?: { id?: unknown } }).user?.id;
+      // NIST SP 800-63B §5.1.4.2: Better Auth has just accepted the code and opened a session; a
+      // code already used in its window takes both back, with any device it remembered.
+      if (!raw.backup && typeof userId === 'string') {
+        if (!(await claimTotpCode(db, userId, code, clock.now()))) {
+          const token = (result as { token?: unknown }).token;
+          if (typeof token === 'string')
+            await db.delete(schema.sessions).where(eq(schema.sessions.token, token));
+          if (trustDevice) await forgetTrustedDevices(db, userId);
+          throw new DomainError('CODE_ALREADY_USED', 'This code was already used');
+        }
+      }
+      // Asked for anyway by the super admin: the device is forgotten at once.
       if (trustDevice && typeof userId === 'string') {
         const [account] = await db
           .select({ isSuperAdmin: schema.users.isSuperAdmin })
@@ -281,7 +293,12 @@ export function createIdentity({ auth, db, rateLimiter, clock, idleMinutesFor }:
 
     async confirmTwoFactorSetup(raw: { code: string }, meta: RequestMeta): Promise<void> {
       const code = z.string().trim().length(6).parse(raw.code);
-      await mapAuthErrors(() => auth.api.verifyTOTP({ body: { code }, headers: meta.headers }));
+      const result = await mapAuthErrors(() =>
+        auth.api.verifyTOTP({ body: { code }, headers: meta.headers }),
+      );
+      // The code used to turn it on can't then sign in a second time.
+      const userId = (result as { user?: { id?: unknown } }).user?.id;
+      if (typeof userId === 'string') await claimTotpCode(db, userId, code, clock.now());
     },
 
     async disableTwoFactor(raw: { password: string }, meta: RequestMeta): Promise<void> {
