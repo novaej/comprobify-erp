@@ -27,7 +27,7 @@
     "@comprobify/db": "workspace:*",
     "@xmldom/xmldom": "0.8.15",
     "bcryptjs": "3.0.3",
-    "better-auth": "1.7.15",
+    "better-auth": "1.7.19",
     "bwip-js": "4.11.4",
     "decimal.js": "10.6.0",
     "node-forge": "1.4.2",
