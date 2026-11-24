@@ -23,17 +23,26 @@ COPY packages/db/package.json packages/db/
 COPY packages/ui/package.json packages/ui/
 COPY tests/integration/package.json tests/integration/
 
+# pnpm's store and metadata cache live in BuildKit cache mounts, outside every layer: they were
+# 760 MB and 430 MB of the image, never read after install, and the mounts keep rebuilds fast.
 FROM manifests AS build
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+  --mount=type=cache,id=pnpm-cache,target=/root/.cache/pnpm \
+  pnpm install --frozen-lockfile
 COPY . .
-RUN pnpm --filter @comprobify/web build
+# Next's build cache speeds the next build, never `next start`.
+RUN pnpm --filter @comprobify/web build && rm -rf apps/web/.next/cache
 
 FROM manifests AS runtime
 ENV NODE_ENV=production
-RUN pnpm install --frozen-lockfile --prod
+# Only what web and worker run, with their workspace packages: not the docs site's wrangler or the
+# test packages.
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+  --mount=type=cache,id=pnpm-cache,target=/root/.cache/pnpm \
+  pnpm install --frozen-lockfile --prod --filter '@comprobify/web...' --filter '@comprobify/worker...'
 COPY . .
-COPY --from=build /app/apps/web/.next apps/web/.next
-RUN chown -R node:node apps/web/.next
+# Owned as copied: a chown in its own step stores the whole build a second time.
+COPY --from=build --chown=node:node /app/apps/web/.next apps/web/.next
 USER node
 EXPOSE 3000
 WORKDIR /app/apps/web

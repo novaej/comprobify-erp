@@ -16,7 +16,7 @@ The current product is two systems with two databases, and much of its machinery
 
 **Internal packages ship TypeScript source.** They have no build step of their own. `apps/web` compiles them through `transpilePackages`; `apps/worker` is bundled with esbuild into one file. Types resolve through workspace `exports`, so a change in core needs no rebuild.
 
-**One Docker image, two roles plus a one-shot step.** The same image runs `web`, `worker` and `migrate`, selected by command. Next.js uses `output: 'standalone'`. The base image is `node:24-slim` pinned by digest, with `libxml2-utils` installed now because SRI validation needs `xmllint` from Milestone 3.
+**One Docker image, two roles plus a one-shot step.** The same image runs `web`, `worker` and `migrate`, selected by command. It carries the full production `node_modules`, not Next.js's `standalone` output: pino loads its transports by name at runtime, which file tracing can't see, and the worker runs TypeScript through tsx. Only web's and worker's dependencies are installed, and pnpm's store and caches stay out of it (1.2 GB). The base image is `node:24-slim` pinned by digest, with `libxml2-utils` installed now because SRI validation needs `xmllint` from Milestone 3.
 
 **Module boundaries are checked by lint**, not by convention alone: `packages/core` can't import `next`, `react` or `apps/*`, can't read `process.env`, and modules can import each other only through `index.ts` (NFR-ARCH-4, NFR-ARCH-5).
 

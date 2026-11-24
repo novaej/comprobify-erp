@@ -15,3 +15,7 @@ playwright-report
 test-results
 # The docs site deploys to Cloudflare Pages on its own (ADR-051).
 apps/docs
+# Deploy and local tooling, never read by the app: Terraform's providers alone are 170 MB.
+infra
+**/.terraform
+tests/e2e/test-results

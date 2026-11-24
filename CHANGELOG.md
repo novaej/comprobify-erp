@@ -163,6 +163,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Changed
 
+- The image is half the size, 1.2 GB from 2.4: pnpm's store and metadata cache stay in BuildKit cache mounts, not the image; Next's build cache is dropped; the build is owned as copied instead of stored twice by a `chown`; only web's and worker's dependencies are installed; `infra/` stays out of the build context; and Sentry's Cloudflare integration no longer links wrangler, an optional peer that put Cloudflare's local runtime into the image (`pnpm-workspace.yaml` overrides).
 - A two-step code is accepted once: typing one already used, while it's still in its window, says "Ese código ya se usó" and opens nothing, and the code used to turn the second step on can't sign in too (NIST SP 800-63B §5.1.4.2, FR-USR-3, ADR-009).
 - Staging is deployed by hand: a merge to `main` runs **Main** (E2E, and staging's Terraform when infra changed) and deploys nothing, and **Deploy to staging** deploys `main`'s newest commit whose Main run passed. A merge that changes only docs starts no run. The production workflow is **Release to production** (ADR-051).
 - Web and worker get 30 and 40 seconds to stop (`stop_grace_period`), in the deploy and the local stack. Docker's 10-second default could cut a long request, or kill a job the worker was letting finish.
