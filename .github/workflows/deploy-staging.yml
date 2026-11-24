@@ -8,9 +8,8 @@ name: Deploy to staging
 on:
   workflow_dispatch:
 
-concurrency:
-  group: deploy-staging
-  cancel-in-progress: false
+# No lock here: the deploy it calls takes deploy-<environment> itself, and a lock of the same name
+# held by this run would leave that job waiting on its own parent, which GitHub ends instead.
 
 permissions:
   contents: read
