@@ -1,0 +1,104 @@
+# Dependency updates (hardening backlog). Weekly, Monday morning in Ecuador, so one week brings a
+# few pull requests, not dozens. Each goes through CI like any other and is squash-merged by the
+# owner. Security updates arrive as soon as GitHub knows of them, whatever this schedule says.
+#
+# - cooldown: a release is proposed only once it has been out 14 days, the repo's rule for pinned
+#   versions, which keeps a hijacked release published today out of the lockfile.
+# - groups: minor and patch updates together; a major version always on its own, since it can
+#   break. The libraries the core rests on (the framework, auth, the database layer, the queue,
+#   the signer) always get their own pull request.
+# - Titles follow the repo's `type: description` rule: chore for dependencies, ci for Actions.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '08:00'
+      timezone: America/Guayaquil
+    cooldown:
+      default-days: 14
+    commit-message:
+      prefix: chore
+    groups:
+      routine:
+        patterns: ['*']
+        exclude-patterns:
+          - next
+          - react
+          - react-dom
+          - better-auth
+          - '@better-auth/*'
+          - drizzle-orm
+          - drizzle-kit
+          - pg
+          - pg-boss
+          - node-forge
+          - '@xmldom/xmldom'
+        update-types: [minor, patch]
+
+  # Pinned to commit SHAs with a `# vX.Y.Z` comment; Dependabot moves both.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '08:00'
+      timezone: America/Guayaquil
+    cooldown:
+      default-days: 14
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ['*']
+        update-types: [minor, patch]
+
+  # The image's base, pinned by digest (Dockerfile).
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '08:00'
+      timezone: America/Guayaquil
+    cooldown:
+      default-days: 14
+    commit-message:
+      prefix: chore
+
+  # Caddy, pinned by digest, in the deploy stack and the local one.
+  - package-ecosystem: docker-compose
+    directories: [/infra, /infra/deploy]
+    schedule:
+      interval: weekly
+      day: monday
+      time: '08:00'
+      timezone: America/Guayaquil
+    cooldown:
+      default-days: 14
+    commit-message:
+      prefix: chore
+    groups:
+      compose:
+        patterns: ['*']
+
+  # Terraform providers. Dependabot's pull requests get no secrets, so their Infrastructure plan
+  # fails; the owner runs a plan (Actions → Infrastructure) before merging one.
+  - package-ecosystem: terraform
+    directories: [/infra/terraform/environments/staging, /infra/terraform/environments/production]
+    schedule:
+      interval: weekly
+      day: monday
+      time: '08:00'
+      timezone: America/Guayaquil
+    cooldown:
+      default-days: 14
+    commit-message:
+      prefix: chore
+    groups:
+      providers:
+        patterns: ['*']
+        update-types: [minor, patch]

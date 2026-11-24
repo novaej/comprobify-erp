@@ -35,6 +35,14 @@ feat/xyz ──PR──▶ main ──▶ Main (E2E, staging's Terraform)
    It deploys nothing.
 6. **Deploy to staging when you choose:** `gh workflow run deploy-staging.yml`, or Actions → Deploy to staging → Run workflow, from `main`. It deploys `main`'s newest commit whose Main run passed, which may cover several merges. It refuses while Main is still running on the latest commit, or after it failed there.
 
+## Dependency updates
+
+Dependabot (`.github/dependabot.yml`) opens pull requests every Monday morning for pnpm packages, GitHub Actions, the image's base, Caddy and the Terraform providers. A release is proposed only once it is 14 days old.
+- Minor and patch updates come grouped. A major version, or any update to the framework, auth, the database layer, the queue or the signer, comes on its own.
+- They pass CI like any other pull request. Read the changelog of anything that comes alone, then squash-merge.
+- A provider update's Infrastructure plan fails, because Dependabot's runs get no secrets. Run a plan by hand (Actions → Infrastructure) before merging it.
+- Security updates come whenever GitHub learns of an advisory, outside the schedule, once **Dependabot security updates** is on (Settings → Code security).
+
 ## Releasing to production
 
 Production stays live once it is up. Staging is temporary: it's up now for the cutover rehearsal, is destroyed after the first production release, and comes back only when something needs testing outside production. Its switch, `STAGING_INFRA_ENABLED`, turns its infrastructure and its deploys on and off together. A release doesn't depend on it.
@@ -160,6 +168,18 @@ EOF
 ### Environments
 
 Required reviewers on `staging-infra`, `production-infra` and `production`, none on `staging-plan` and `production-plan` (they hold read-only tokens), with deployment branches `main` on `staging` and tags `v*` on `production` (`docs/deployment.md`, step 6). `staging` deploys every merge without asking.
+
+### Code security
+
+Dependabot alerts and security updates, and secret scanning with push protection, which refuses a push holding a token or key:
+
+```bash
+gh api -X PUT repos/novaej/comprobify-erp/vulnerability-alerts
+gh api -X PUT repos/novaej/comprobify-erp/automated-security-fixes
+gh api -X PATCH repos/novaej/comprobify-erp \
+  -f 'security_and_analysis[secret_scanning][status]=enabled' \
+  -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled'
+```
 
 ### Check them
 
