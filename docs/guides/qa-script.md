@@ -810,6 +810,7 @@ And for each: open a document or an order, so the read side is seen too.
 | 4 | Owner: sign out, sign in, and at the code tick **Recordar este dispositivo por 30 días** | In. Sign out and in again: no code asked, only the password. In a private window the code is still asked |
 | 5 | **Mi cuenta** → **Cerrar sesión en todos los dispositivos**, then sign in again | The code is asked again |
 | 6 | Operator (super admin): sign in | No "Recordar este dispositivo" box; the code every time |
+| 6b | Owner: sign out and in with a code, then at once sign out and in again typing **the same code** | "Ese código ya se usó. Espera el siguiente código de tu aplicación." The next code from the app works |
 | 7 | Owner: **Empresa** → **Sesiones** → 5 minutes. Leave the tab untouched for 6 minutes, then click | Back to the sign-in page: "Tu sesión se cerró por inactividad." Set it back to 30 minutes |
 
 ---

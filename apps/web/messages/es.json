@@ -75,6 +75,7 @@
     "INVALID_INPUT": "Revisa los datos ingresados.",
     "UNKNOWN": "Ocurrió un error inesperado. Inténtalo de nuevo.",
     "INVALID_CODE": "Ese código no es válido.",
+    "CODE_ALREADY_USED": "Ese código ya se usó. Espera el siguiente código de tu aplicación.",
     "TWO_FACTOR_LOCKED": "Demasiados códigos incorrectos. Espera 15 minutos y vuelve a iniciar sesión.",
     "TWO_FACTOR_EXPIRED": "El tiempo para ingresar el código terminó. Vuelve a iniciar sesión."
   },

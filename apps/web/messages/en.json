@@ -75,6 +75,7 @@
     "INVALID_INPUT": "Check the details you entered.",
     "UNKNOWN": "An unexpected error occurred. Please try again.",
     "INVALID_CODE": "That code isn't valid.",
+    "CODE_ALREADY_USED": "That code was already used. Wait for the next one in your app.",
     "TWO_FACTOR_LOCKED": "Too many wrong codes. Wait 15 minutes and sign in again.",
     "TWO_FACTOR_EXPIRED": "The time to enter the code ran out. Sign in again."
   },

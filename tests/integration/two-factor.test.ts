@@ -33,10 +33,14 @@ describe('two-factor sign-in', () => {
       .filter(Boolean)
       .join('; ');
   const meta = (cookie: string) => ({ ip: null, headers: new Headers({ cookie }) });
-  const codeFor = (totpUri: string) =>
+  const otpOf = (totpUri: string) =>
     createOTP(
       new TextDecoder().decode(base32.decode(new URL(totpUri).searchParams.get('secret')!)),
-    ).totp();
+    );
+  const codeFor = (totpUri: string) => otpOf(totpUri).totp();
+  // The next 30-second step's code, still accepted now: a code not yet used, unlike the one that
+  // turned the second step on.
+  const nextCodeFor = (totpUri: string) => otpOf(totpUri).hotp(Math.floor(Date.now() / 30_000) + 1);
 
   // The first step of sign-in leaves only the short-lived two-factor cookie.
   const firstStep = async (email: string) => {
@@ -54,17 +58,15 @@ describe('two-factor sign-in', () => {
       { password },
       meta(cookieOf(signedIn.headers)),
     );
-    await identity.confirmTwoFactorSetup(
-      { code: await codeFor(setup.totpUri) },
-      meta(cookieOf(signedIn.headers)),
-    );
+    const setupCode = await codeFor(setup.totpUri);
+    await identity.confirmTwoFactorSetup({ code: setupCode }, meta(cookieOf(signedIn.headers)));
     const { cookie } = await firstStep(email);
     const verified = await auth.api.verifyTOTP({
       body: { code: await codeFor(setup.totpUri) },
       headers: new Headers({ cookie }),
       returnHeaders: true,
     });
-    return { id, email, session: cookieOf(verified.headers), setup };
+    return { id, email, session: cookieOf(verified.headers), setup, setupCode };
   };
 
   beforeAll(() => {
@@ -122,9 +124,43 @@ describe('two-factor sign-in', () => {
       code: 'INVALID_CODE',
     });
     await identity.verifyTwoFactor(
-      { code: await codeFor(setup.totpUri), backup: false },
+      { code: await nextCodeFor(setup.totpUri), backup: false },
       meta(cookie),
     );
+  });
+
+  // NIST SP 800-63B §5.1.4.2: a code is accepted once, even while it is still in its window.
+  it('refuses a code already used, and keeps no session or device from it', async () => {
+    const { id, email, setup, setupCode } = await userWithTwoFactor();
+    const sessionsOf = async () =>
+      (
+        await db.identity
+          .select({ id: schema.sessions.id })
+          .from(schema.sessions)
+          .where(eq(schema.sessions.userId, id))
+      ).length;
+    const code = await nextCodeFor(setup.totpUri);
+    await identity.verifyTwoFactor({ code, backup: false }, meta((await firstStep(email)).cookie));
+    const before = await sessionsOf();
+    await expect(
+      identity.verifyTwoFactor(
+        { code, backup: false, rememberDevice: true },
+        meta((await firstStep(email)).cookie),
+      ),
+    ).rejects.toMatchObject({ code: 'CODE_ALREADY_USED' });
+    expect(await sessionsOf()).toBe(before);
+    const devices = await db.identity
+      .select({ id: schema.verifications.id })
+      .from(schema.verifications)
+      .where(eq(schema.verifications.value, id));
+    expect(devices).toEqual([]);
+    // The code that turned the second step on is spent too.
+    await expect(
+      identity.verifyTwoFactor(
+        { code: setupCode, backup: false },
+        meta((await firstStep(email)).cookie),
+      ),
+    ).rejects.toMatchObject({ code: 'CODE_ALREADY_USED' });
   });
 
   // ADR-045: a remembered device skips the code, until it is forgotten.

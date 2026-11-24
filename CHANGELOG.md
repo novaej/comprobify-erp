@@ -161,6 +161,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Changed
 
+- A two-step code is accepted once: typing one already used, while it's still in its window, says "Ese código ya se usó" and opens nothing, and the code used to turn the second step on can't sign in too (NIST SP 800-63B §5.1.4.2, FR-USR-3, ADR-009).
 - Staging is deployed by hand: a merge to `main` runs **Main** (E2E, and staging's Terraform when infra changed) and deploys nothing, and **Deploy to staging** deploys `main`'s newest commit whose Main run passed. A merge that changes only docs starts no run. The production workflow is **Release to production** (ADR-051).
 - Web and worker get 30 and 40 seconds to stop (`stop_grace_period`), in the deploy and the local stack. Docker's 10-second default could cut a long request, or kill a job the worker was letting finish.
 - One image per commit: the deploy builds `ghcr.io/<repo>:<commit>` only if it doesn't exist, and a release reuses staging's image, tags it `vX.Y.Z` and runs it by digest, so production runs what staging ran (ADR-051).
