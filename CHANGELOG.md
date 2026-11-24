@@ -192,6 +192,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Fixed
 
+- node-forge 1.4.3, the signer's RSA library: it read keys of more than two primes as two-prime ones, and their signatures leaked a factor of the modulus (GHSA-w73w-hhm4-q25p, low; SRI certificates are two-prime).
 - The Docs workflow publishes with the docs package's own pinned wrangler; wrangler-action's install failed in the pnpm workspace (ADR-051).
 - A manual re-issue's timeline entry says it was manual; it always said "next day".
 - The email editor: **Usar como borrador** now shows the restored text at once, the button is gone from the draft and the version in use (where it did nothing), and the draft badge and a note say it is unpublished and what publishing does.
