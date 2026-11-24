@@ -111,7 +111,7 @@ async function start(): Promise<Runtime> {
   });
 
   logger.info('Web started', { event: 'web.started' });
-  const keyCipher = createKeyCipher(env.CERT_ENCRYPTION_KEY);
+  const keyCipher = createKeyCipher(env.CERT_ENCRYPTION_KEY, env.CERT_ENCRYPTION_KEY_PREVIOUS);
   return {
     env,
     logger,

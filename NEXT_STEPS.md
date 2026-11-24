@@ -54,7 +54,6 @@ Hardening deferred by an earlier milestone. Add an item whenever a milestone put
 - [ ] Automated dependency updates (Renovate or Dependabot).
 - [ ] Revisit a separate role for system context: `app.rls_system` is a setting, not a privilege (ADR-004).
 - [ ] pg-boss index rebuilds: automatic `REINDEX` is off, so bloat reports need a manual owner task (ADR-005).
-- [ ] A documented, tested rotation procedure for `CERT_ENCRYPTION_KEY` (PRD 9.3). Stored keys carry a `v1:` prefix for it.
 
 ## Before the old repositories are deleted
 

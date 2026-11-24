@@ -80,7 +80,7 @@ await registerHandlers(jobs, {
   identityDb: db.identity,
   db,
   sri,
-  keyCipher: createKeyCipher(env.CERT_ENCRYPTION_KEY),
+  keyCipher: createKeyCipher(env.CERT_ENCRYPTION_KEY, env.CERT_ENCRYPTION_KEY_PREVIOUS),
   clock: systemClock,
   issue: {
     appEnv: env.APP_ENV,

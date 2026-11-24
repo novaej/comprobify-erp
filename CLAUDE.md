@@ -54,6 +54,7 @@ pnpm super-admin <email>      # give an existing account the platform area (--re
 pnpm bench:signing            # what building, XSD-checking and signing an invoice costs (ADR-013)
 pnpm run-job <queue>          # run a scheduled job now, locally or on staging (the QA script uses it)
 pnpm --filter @comprobify/docs dev  # the docs site (docs.comprobify.com), ADR-051
+pnpm rotate:cert-key [--commit]  # re-encrypt the stored certificate keys under CERT_ENCRYPTION_KEY, reading CERT_ENCRYPTION_KEY_PREVIOUS (ADR-052, docs/guides/certificate-key-rotation.md)
 pnpm import:legacy --ruc <ruc> --super-admin <email>  # bring a company from the previous system's restored dumps; a dry run unless --commit (ADR-049, docs/guides/legacy-import.md)
 ```
 
@@ -212,7 +213,7 @@ Read PRD sections 5.8 and 6 before touching documents. `docs/domain/sri.md` expa
 | `packages/core/src/tenancy/settings.ts` | Tax data, branches, issue points, their document types (mirrored in the twin), and the sequentials of the company in use, forward only (ADR-039) |
 | `packages/core/src/tenancy/twin-reset.ts` | Twin reset: `resetTwin` empties the test copy through `app_reset_twin` and copies the company's master data back (ADR-043) |
 | `packages/core/src/tenancy/members.ts` | Invitations, role changes, removal, issue-point restrictions, the ownership transfer (ADR-044), all mirrored in the twin |
-| `packages/core/src/certificates/` | P12 parsing, the RUC match, key encryption |
+| `packages/core/src/certificates/` | P12 parsing, the RUC match, key encryption with key ids and a previous key for rotation (`key-cipher.ts`, ADR-052; the re-encryption is `tenancy/certificate-keys.ts`) |
 | `packages/core/src/testing/` | Test helpers, such as generated P12 files (`@comprobify/core/testing`) |
 | `packages/core/src/email/` | Email templates (`templates.ts`, the layout), the copy and its placeholders (`copy.ts`, `DEFAULT_COPY`), the published versions read by the worker (`store.ts`: `loadCopy`, `syncEmailTemplates`), Mailgun and the local log provider; provider builders are used only in `apps/worker/src/index.ts` (lint-enforced), so every email goes through one wrapped path (ADR-037) |
 | `packages/core/src/platform/email-templates.ts`, `apps/web/src/app/[locale]/(admin)/admin/emails/` | The super admin's email editor: drafts, preview, test to oneself, publish, history (FR-NOT-3, FR-ADM-4) |
