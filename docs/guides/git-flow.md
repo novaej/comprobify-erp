@@ -42,7 +42,8 @@ Dependabot (`.github/dependabot.yml`) opens pull requests every Monday morning f
 - They pass CI like any other pull request. Read the changelog of anything that comes alone, then squash-merge.
 - Security updates come whenever GitHub learns of an advisory, outside the schedule, once **Dependabot security updates** is on (Settings → Code security).
 
-Two updates are by hand, a few times a year, in a pull request like any other:
+Three updates are by hand, in a pull request like any other:
+- **Node's major version**, to the next LTS line only, when it comes: the Dockerfile's base, `.nvmrc`, `engines` in `package.json` and `@types/node` together. Dependabot keeps the digest current within the line and never proposes a major.
 - **Terraform providers.** Dependabot can't update them: that runs `terraform init` against the state bucket, and its runs get no secrets. In each environment, update the lock files; `-backend=false` skips the state bucket, so no key is needed. Then read the pull request's plan:
   ```bash
   cd infra/terraform/environments/staging   # then production

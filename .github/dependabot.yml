@@ -25,6 +25,14 @@ updates:
       default-days: 14
     commit-message:
       prefix: chore
+    # Node's major moves by hand, with .nvmrc, engines and the image (an LTS line only).
+    ignore:
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+      # A 0.x library: a minor version may break, and this one parses SRI's XML for the RIDE and
+      # the import. Patches only; the next line is moved deliberately.
+      - dependency-name: '@xmldom/xmldom'
+        update-types: ['version-update:semver-minor']
     groups:
       routine:
         patterns: ['*']
@@ -71,3 +79,7 @@ updates:
       default-days: 14
     commit-message:
       prefix: chore
+    # Its digest within Node 24; the next LTS line moves by hand, with .nvmrc and engines.
+    ignore:
+      - dependency-name: node
+        update-types: ['version-update:semver-major']
