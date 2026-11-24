@@ -30,7 +30,7 @@
     "better-auth": "1.7.15",
     "bwip-js": "4.11.4",
     "decimal.js": "10.6.0",
-    "node-forge": "1.4.2",
+    "node-forge": "1.4.3",
     "pdfkit": "0.20.2",
     "pg-boss": "12.38.0",
     "zod": "4.6.7"
