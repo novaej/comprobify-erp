@@ -18,7 +18,7 @@
     "@comprobify/ui": "workspace:*",
     "@logtail/pino": "0.6.1",
     "@sentry/nextjs": "11.11.0",
-    "better-auth": "1.7.15",
+    "better-auth": "1.7.19",
     "lucide-react": "1.70.0",
     "markdown-it": "15.0.3",
     "next": "16.4.6",
