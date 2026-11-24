@@ -4,7 +4,7 @@
 # runs TypeScript through tsx.
 # Pinned by digest: a tag can change upstream with nothing in our diff. Bump with
 # `docker buildx imagetools inspect node:24-slim`.
-FROM node:24-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c AS base
+FROM node:25-slim@sha256:81db02c4b671288a03915da9534dbd54f96d0e7c24d80ccc54f5b36b2e684370 AS base
 # xmllint validates SRI XML against the XSD from Milestone 3.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends libxml2-utils \
