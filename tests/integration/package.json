@@ -14,7 +14,7 @@
     "@comprobify/config": "workspace:*",
     "@comprobify/core": "workspace:*",
     "@comprobify/db": "workspace:*",
-    "@types/node": "24.19.2",
+    "@types/node": "26.6.6",
     "@types/pg": "8.23.1",
     "bcryptjs": "3.0.3",
     "better-auth": "1.7.15",

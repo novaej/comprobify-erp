@@ -15,7 +15,7 @@
     "@comprobify/core": "workspace:*",
     "@comprobify/db": "workspace:*",
     "@playwright/test": "1.65.0",
-    "@types/node": "24.19.2",
+    "@types/node": "26.6.6",
     "@types/pg": "8.23.1",
     "pg": "8.23.1",
     "typescript": "6.0.3"
