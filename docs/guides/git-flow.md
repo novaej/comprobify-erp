@@ -37,11 +37,19 @@ feat/xyz ──PR──▶ main ──▶ Main (E2E, staging's Terraform)
 
 ## Dependency updates
 
-Dependabot (`.github/dependabot.yml`) opens pull requests every Monday morning for pnpm packages, GitHub Actions, the image's base, Caddy and the Terraform providers. A release is proposed only once it is 14 days old.
+Dependabot (`.github/dependabot.yml`) opens pull requests every Monday morning for pnpm packages, GitHub Actions and the image's base. A release is proposed only once it is 14 days old.
 - Minor and patch updates come grouped. A major version, or any update to the framework, auth, the database layer, the queue or the signer, comes on its own.
 - They pass CI like any other pull request. Read the changelog of anything that comes alone, then squash-merge.
-- A provider update's Infrastructure plan fails, because Dependabot's runs get no secrets. Run a plan by hand (Actions → Infrastructure) before merging it.
 - Security updates come whenever GitHub learns of an advisory, outside the schedule, once **Dependabot security updates** is on (Settings → Code security).
+
+Two updates are by hand, a few times a year, in a pull request like any other:
+- **Terraform providers.** Dependabot can't update them: that runs `terraform init` against the state bucket, and its runs get no secrets. In each environment, update the lock files; `-backend=false` skips the state bucket, so no key is needed. Then read the pull request's plan:
+  ```bash
+  cd infra/terraform/environments/staging   # then production
+  terraform init -backend=false -upgrade
+  terraform providers lock -platform=linux_amd64 -platform=darwin_arm64
+  ```
+- **Caddy**, pinned by digest in `infra/compose.yaml` and `infra/deploy/compose.yaml`: `docker buildx imagetools inspect caddy:2-alpine` gives the current digest; put it in both files.
 
 ## Releasing to production
 
