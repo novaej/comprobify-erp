@@ -16,6 +16,12 @@ allowBuilds:
 # to it is build or file-watching tooling (Sentry's bundler plugin, next-intl's watcher, eslint,
 # shadcn) matching patterns we wrote, never input from a request. Remove this when a fixed
 # picomatch ships (see NEXT_STEPS.md).
+# wrangler is only an optional peer of @sentry/cloudflare (its Vite plugin, for Cloudflare Workers),
+# which @sentry/nextjs brings. pnpm linked the docs site's wrangler to it, putting Cloudflare's local
+# runtime (about 200 MB) into the image. The server never runs it.
+overrides:
+  '@sentry/cloudflare>wrangler': '-'
+
 auditConfig:
   ignoreGhsas:
     - GHSA-fc5q-39xc-vjpf
