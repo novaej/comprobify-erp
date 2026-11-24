@@ -94,6 +94,16 @@ describe('env loading', () => {
     expect(failure(() => loadMigrateEnv(worker))).toContain('MIGRATION_DATABASE_URL');
   });
 
+  it('reads a previous certificate key only in its format (ADR-052)', () => {
+    expect(
+      loadWorkerEnv({ ...worker, CERT_ENCRYPTION_KEY_PREVIOUS: 'cd'.repeat(32) })
+        .CERT_ENCRYPTION_KEY_PREVIOUS,
+    ).toBe('cd'.repeat(32));
+    expect(
+      failure(() => loadWorkerEnv({ ...worker, CERT_ENCRYPTION_KEY_PREVIOUS: 'short' })),
+    ).toContain('CERT_ENCRYPTION_KEY_PREVIOUS');
+  });
+
   it('asks the legacy import for both old databases and the old key (ADR-049)', () => {
     const legacy = {
       APP_ENV: 'local',

@@ -183,6 +183,8 @@ export const webEnvSchema = z
     // Signs session cookies and tokens. Rotating it signs everyone out.
     AUTH_SECRET: z.string().min(32),
     CERT_ENCRYPTION_KEY: certificateKey,
+    // During a key rotation only: the key being replaced, still read, never written (ADR-052).
+    CERT_ENCRYPTION_KEY_PREVIOUS: certificateKey.optional(),
     // Off until the owner approves the legal texts (docs/legal/review-notes.md).
     AGREEMENTS_ENABLED: flag.default(false),
     // The operator named in the legal texts; required once agreements are on.
@@ -228,6 +230,8 @@ export const workerEnvSchema = z
     // Billing emails link back to the app (ADR-032).
     APP_URL: z.url(),
     CERT_ENCRYPTION_KEY: certificateKey,
+    // During a key rotation only: the key being replaced, still read, never written (ADR-052).
+    CERT_ENCRYPTION_KEY_PREVIOUS: certificateKey.optional(),
     OPERATOR_RUC: operatorRuc,
     CONSUMER_FINAL_MAX_AMOUNT: consumerFinalMaxAmount,
     ...payphoneShape,
@@ -256,6 +260,14 @@ export const legacyImportEnvSchema = z.object({
   LEGACY_ENCRYPTION_KEY: certificateKey,
 });
 
+// ADR-052: re-encrypting the stored certificate keys under the current key, from the worker's image.
+export const certKeyRotationEnvSchema = z.object({
+  ...sharedShape,
+  DATABASE_URL: postgresUrl,
+  CERT_ENCRYPTION_KEY: certificateKey,
+  CERT_ENCRYPTION_KEY_PREVIOUS: certificateKey.optional(),
+});
+
 // Tests truncate and probe freely, so they can only run on a *_test database.
 const testDatabaseUrl = postgresUrl.refine((url) => new URL(url).pathname.endsWith('_test'), {
   message: 'database name must end in _test',
@@ -280,6 +292,7 @@ export const e2eEnvSchema = z.object({
 export type WebEnv = z.output<typeof webEnvSchema>;
 export type WorkerEnv = z.output<typeof workerEnvSchema>;
 export type MigrateEnv = z.output<typeof migrateEnvSchema>;
+export type CertKeyRotationEnv = z.output<typeof certKeyRotationEnvSchema>;
 export type LegacyImportEnv = z.output<typeof legacyImportEnvSchema>;
 export type TestEnv = z.output<typeof testEnvSchema>;
 export type E2eEnv = z.output<typeof e2eEnvSchema>;
@@ -328,6 +341,9 @@ export const loadWorkerEnv = (source: Source = process.env): WorkerEnv =>
 
 export const loadMigrateEnv = (source: Source = process.env): MigrateEnv =>
   parseEnv(migrateEnvSchema, source);
+
+export const loadCertKeyRotationEnv = (source: Source = process.env): CertKeyRotationEnv =>
+  parseEnv(certKeyRotationEnvSchema, source);
 
 export const loadLegacyImportEnv = (source: Source = process.env): LegacyImportEnv =>
   parseEnv(legacyImportEnvSchema, source);

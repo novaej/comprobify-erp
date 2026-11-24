@@ -72,3 +72,4 @@ Status is `Proposed`, `Accepted`, `Deprecated` or `Superseded by ADR-XXX`. Accep
 | [049](049-importing-from-the-previous-system.md) | Importing from the previous system | Accepted |
 | [050](050-names-without-erp.md) | Names without "erp" | Accepted |
 | [051](051-release-pipeline-and-docs-site.md) | The release pipeline and the docs site | Accepted |
+| [052](052-certificate-key-rotation.md) | Rotating the certificate key | Accepted |

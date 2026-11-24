@@ -24,6 +24,7 @@
     "super-admin": "pnpm --filter @comprobify/worker super-admin",
     "run-job": "pnpm --filter @comprobify/worker run-job",
     "import:legacy": "pnpm --filter @comprobify/worker import:legacy",
+    "rotate:cert-key": "pnpm --filter @comprobify/worker rotate:cert-key",
     "test": "turbo run test",
     "test-certificate": "pnpm --filter @comprobify/worker test-certificate",
     "test:e2e": "pnpm --filter @comprobify/e2e-tests test:e2e",

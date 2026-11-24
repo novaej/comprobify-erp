@@ -1,3 +1,4 @@
+import { createCipheriv, randomBytes } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { createTestP12, testRuc } from '../testing';
 import { certificateMatchesRuc, createKeyCipher, parseP12 } from '.';
@@ -71,7 +72,8 @@ describe('key cipher', () => {
   it('round-trips, with a fresh IV every time', () => {
     const cipher = createKeyCipher(key);
     const first = cipher.encrypt('private key');
-    expect(first).toMatch(/^v1:/);
+    expect(first).toMatch(/^v2:[0-9a-f]{8}:/);
+    expect(cipher.keyIdOf(first)).toBe(cipher.currentKeyId);
     expect(cipher.encrypt('private key')).not.toBe(first);
     expect(cipher.decrypt(first)).toBe('private key');
   });
@@ -85,5 +87,48 @@ describe('key cipher', () => {
 
   it('refuses a key that is not 64 hex characters', () => {
     expect(() => createKeyCipher('short')).toThrow(/64 hex/);
+  });
+
+  // ADR-052: rotating the key.
+  const older = 'c'.repeat(64);
+  // What the cipher wrote before key ids: 'v1:<iv>:<tag>:<body>'.
+  const v1 = (keyHex: string, plaintext: string) => {
+    const iv = randomBytes(12);
+    const cipher = createCipheriv('aes-256-gcm', Buffer.from(keyHex, 'hex'), iv);
+    const body = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+    return [
+      'v1',
+      iv.toString('hex'),
+      cipher.getAuthTag().toString('hex'),
+      body.toString('hex'),
+    ].join(':');
+  };
+
+  it('reads with the current or the previous key, and writes with the current one', () => {
+    const before = createKeyCipher(older).encrypt('private key');
+    const rotating = createKeyCipher(key, older);
+    expect(rotating.decrypt(before)).toBe('private key');
+    expect(rotating.isCurrent(before)).toBe(false);
+    const after = rotating.encrypt('private key');
+    expect(rotating.isCurrent(after)).toBe(true);
+    // Once the previous key is gone, what it wrote names it.
+    expect(() => createKeyCipher(key).decrypt(before)).toThrow(
+      `Encrypted with key ${createKeyCipher(older).currentKeyId}`,
+    );
+    expect(createKeyCipher(key).decrypt(after)).toBe('private key');
+  });
+
+  it('reads values from before key ids with either key', () => {
+    const old = v1(older, 'private key');
+    const rotating = createKeyCipher(key, older);
+    expect(rotating.decrypt(old)).toBe('private key');
+    expect(rotating.isCurrent(old)).toBe(false);
+    expect(rotating.keyIdOf(old)).toBeNull();
+    expect(createKeyCipher(older).decrypt(old)).toBe('private key');
+    expect(() => createKeyCipher(key).decrypt(old)).toThrow('No configured key');
+  });
+
+  it('refuses the same key as current and previous', () => {
+    expect(() => createKeyCipher(key, key)).toThrow(/same/);
   });
 });
