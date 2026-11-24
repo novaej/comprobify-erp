@@ -25,7 +25,7 @@ Open work only: nothing finished stays here. Remove a step in the change that fi
 
 Steps in order; the gate is in PRD section 15.
 
-- [ ] Owner, GitHub settings (`docs/guides/git-flow.md`): squash merges only with branches deleted after merge (merge commits and rebase are still on), and the release-tag ruleset (only `main`'s exists). `staging-plan` holds the full tokens: swap them for read-only ones (`docs/deployment.md`, step 4); `production-plan` gets read-only ones from the start.
+- [ ] Owner, GitHub settings (`docs/guides/git-flow.md`): **Dependabot alerts** and **security updates**, **secret scanning** and **push protection** on (Settings → Code security, the commands in `docs/guides/git-flow.md`); squash merges only with branches deleted after merge (merge commits and rebase are still on), and the release-tag ruleset (only `main`'s exists). `staging-plan` holds the full tokens: swap them for read-only ones (`docs/deployment.md`, step 4); `production-plan` gets read-only ones from the start.
 - [ ] Hardening backlog (below): the code-only items, then the rest on staging.
 - [ ] Security review, written up with each finding and its fix.
 - [ ] Load test on staging: NFR-PERF-1, then the 10,000-item batch (NFR-PERF-3) and the bulk caps; `pnpm bench:signing` on the droplet into ADR-013.
@@ -51,7 +51,6 @@ Hardening deferred by an earlier milestone. Add an item whenever a milestone put
 - [ ] Slimmer Docker image: 1.45 GB with the full `node_modules` (`Dockerfile`).
 - [ ] Browser-side Sentry, with the DSN from the server at runtime (ADR-008).
 - [ ] Moderate audit findings in Sentry's dependencies (`glob`, `minimatch`). Recheck on each Sentry upgrade.
-- [ ] Automated dependency updates (Renovate or Dependabot).
 - [ ] Revisit a separate role for system context: `app.rls_system` is a setting, not a privilege (ADR-004).
 - [ ] pg-boss index rebuilds: automatic `REINDEX` is off, so bloat reports need a manual owner task (ADR-005).
 
