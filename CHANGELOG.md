@@ -7,7 +7,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 ### Added
 
 - `CERT_ENCRYPTION_KEY` can be rotated without a pause in signing: stored keys name the key that wrote them (`v2:<key id>:…`), `CERT_ENCRYPTION_KEY_PREVIOUS` is read during a rotation, and `rotate-cert-key` re-encrypts every stored key under the current one, a dry run unless `--commit`, all or none (PRD 9.3, ADR-052, `docs/guides/certificate-key-rotation.md`).
-- Dependabot: weekly updates for pnpm packages, GitHub Actions, the image's base, Caddy and the Terraform providers, each release 14 days old at least; minor and patch grouped, majors and the core libraries on their own (`docs/guides/git-flow.md`).
+- Dependabot: weekly updates for pnpm packages, GitHub Actions and the image's base, each release 14 days old at least; minor and patch grouped, majors and the core libraries on their own. The Terraform providers and Caddy are updated by hand (`docs/guides/git-flow.md`).
 - **docs.comprobify.com** again: a placeholder VitePress site (`apps/docs`, Spanish and English) until the public API brings its reference, published to Cloudflare Pages by `docs.yml`, and linked from the public header, footer and mobile menu as **Documentación** (ADR-051).
 - A pull request template (`.github/pull_request_template.md`): why, what changes, how it was checked, screens, this repo's rules as a checklist, deploying and rollback.
 - `docs/guides/git-flow.md`: branches, pull requests, releases, hotfixes and rollbacks, with the rulesets that protect `main` and the release tags (ADR-051).
