@@ -25,8 +25,9 @@ const logger = createLogger({
   betterstackSourceToken: env.BETTERSTACK_SOURCE_TOKEN,
 });
 
+// Errors only: tracing spans would carry SQL and job data (ADR-008).
 if (env.SENTRY_DSN) {
-  Sentry.init({ dsn: env.SENTRY_DSN, environment: env.APP_ENV, tracesSampleRate: 0.2 });
+  Sentry.init({ dsn: env.SENTRY_DSN, environment: env.APP_ENV });
 }
 
 const db = createDatabase({ connectionString: env.DATABASE_URL, logger });
