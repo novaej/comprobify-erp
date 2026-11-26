@@ -24,7 +24,9 @@ Two old incidents shape this: an empty env var parsed as `NaN` (Appendix B lesso
 
 **Health.** `GET /health` checks a database query and the queue, and returns 503 on failure. It reveals no details. Deploys wait for it (PRD 9.4). It was planned to run in system context with a fixed reason, but its query touches no table, so it uses `db.ping()` with no context. That also keeps a system-context log line out of every probe.
 
-**Sentry in Milestone 0 is server-side only:** the web server, through `onRequestError` with the request id as a tag, and the worker, through job failures. Browser Sentry needs its DSN at build time, which conflicts with one image for every environment. It's deferred until there are screens worth monitoring, and will take the DSN from the server at runtime.
+**Sentry reports errors from three places:** the web server, through `onRequestError` with the request id as a tag; the worker, through job failures; and the browser, through `instrumentation-client.ts` and the error boundaries. The image is built once for every environment, so the browser can't have its DSN at build time: it reads it from `GET /api/client-config` when the page loads, and starts nothing when there is none. A DSN is public by design; it only lets one send events. An error thrown before that answer arrives isn't reported, which is accepted.
+
+**Errors only, scrubbed.** Both web sides share `sentryOptions` (`apps/web/src/lib/sentry.ts`): `sendDefaultPii` off, and `beforeSend` and `beforeBreadcrumb` keep a URL to its path and drop cookies, headers, the query and the body, because links carry tokens (Appendix B lessons 5 and 6). Tracing is off on the web and the worker: in Milestone 10 a check against a fake Sentry found that the server's spans carry each request's headers, cookie and referer, query included, and `beforeSend` never sees spans. Session replay is never on. Turning either on needs its own scrubbing and a change to this ADR.
 
 ## Consequences
 
@@ -35,6 +37,7 @@ Two old incidents shape this: an empty env var parsed as `NaN` (Appendix B lesso
 
 ### Negative
 - Adding a log field means changing the allow-list.
+- No performance tracing in Sentry; slow requests and jobs are found from the logs.
 - pino needs `serverExternalPackages` in Next.js, and transports need testing in the standalone output. Checked in Milestone 0: inside a Next build, pino resolves transports from `apps/web`, so `pino-pretty` and `@logtail/pino` are listed there as well as in `packages/config`.
 - Each new variable touches the schema, `.env.example` and `docs/deployment.md`.
 

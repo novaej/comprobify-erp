@@ -27,7 +27,7 @@ Steps in order; the gate is in PRD section 15.
 
 - [ ] Owner, GitHub settings (`docs/guides/git-flow.md`): **Dependabot alerts** and **security updates**, **secret scanning** and **push protection** on (Settings → Code security, the commands in `docs/guides/git-flow.md`); squash merges only with branches deleted after merge (merge commits and rebase are still on), and the release-tag ruleset (only `main`'s exists). `staging-plan` holds the full tokens: swap them for read-only ones (`docs/deployment.md`, step 4); `production-plan` gets read-only ones from the start.
 - [ ] Hardening backlog (below): the code-only items, then the rest on staging.
-- [ ] Security review, written up with each finding and its fix.
+- [ ] Security review, written up with each finding and its fix, rechecking the accepted audit findings (`docs/guides/git-flow.md`).
 - [ ] Load test on staging: NFR-PERF-1, then the 10,000-item batch (NFR-PERF-3) and the bulk caps; `pnpm bench:signing` on the droplet into ADR-013.
 - [ ] Backups and the restore drill on staging, as a runbook (email, webhooks and payments off in the restored copy, mistake 13).
 - [ ] Data migration on production: `pnpm import:legacy` (ADR-049) from the final dumps, dry run then `--commit`, its reconciliation clean, then checked in the app (`docs/guides/legacy-import.md`), before the first release. Staging's import is done and checked; keep the dumps, the old `ENCRYPTION_KEY` and the `legacy_*_check` databases until then.
@@ -48,8 +48,6 @@ Steps in order; the gate is in PRD section 15.
 
 Hardening deferred by an earlier milestone. Add an item whenever a milestone puts one off, with where it's recorded. Milestone 10 works through the list, and its gate needs it empty or each remaining item accepted by the owner.
 
-- [ ] Browser-side Sentry, with the DSN from the server at runtime (ADR-008).
-- [ ] Moderate audit findings in Sentry's dependencies (`glob`, `minimatch`). Recheck on each Sentry upgrade.
 - [ ] Revisit a separate role for system context: `app.rls_system` is a setting, not a privilege (ADR-004).
 - [ ] pg-boss index rebuilds: automatic `REINDEX` is off, so bloat reports need a manual owner task (ADR-005).
 

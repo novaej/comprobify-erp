@@ -52,6 +52,16 @@ Three updates are by hand, in a pull request like any other:
   ```
 - **Caddy**, pinned by digest in `infra/compose.yaml` and `infra/deploy/compose.yaml`: `docker buildx imagetools inspect caddy:2-alpine` gives the current digest; put it in both files.
 
+### Audit findings
+
+CI fails on a high or critical finding in a production dependency (`pnpm audit --prod --audit-level high`). Anything below that is read, and either fixed or accepted here with its reason. Recheck each one when the package that brings it updates, and in each security review. Accepted (Milestone 10):
+
+| Finding | Comes through | Why it's accepted |
+|---|---|---|
+| esbuild ≤0.24, any site can read its dev server (moderate) | better-auth → drizzle-kit → `@esbuild-kit` | The flaw is in esbuild's dev server, which nothing here starts. `@esbuild-kit` is abandoned, so overriding its esbuild could break `db:generate` |
+| vite ≤6.4.3, several dev-server file and editor flaws (1 high, 7 moderate) | vitepress, the docs site | Dev only, on a developer's machine; the published site is static files. vitepress 1.6 is built for vite 5 |
+| minimatch (low) | eslint | Dev tool |
+
 ## Releasing to production
 
 Production stays live once it is up. Staging is temporary: it's up now for the cutover rehearsal, is destroyed after the first production release, and comes back only when something needs testing outside production. Its switch, `STAGING_INFRA_ENABLED`, turns its infrastructure and its deploys on and off together. A release doesn't depend on it.

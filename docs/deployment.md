@@ -135,7 +135,7 @@ The area also requires two-step verification, so set it up on that account befor
 | `LOG_LEVEL` | all | Default `info` |
 | `LOG_FORMAT` | all | `json` (default) or `pretty`. The image only supports `json`. |
 | `BETTERSTACK_SOURCE_TOKEN` | all | Optional. Ships logs to Betterstack. |
-| `SENTRY_DSN` | all | Optional. Server-side errors only (ADR-008). |
+| `SENTRY_DSN` | all | Optional. Errors from the web server, the browser and the worker; no tracing. The browser reads it at runtime (ADR-008). |
 | `DATABASE_URL` | web, worker | `comprobify_app` |
 | `MIGRATION_DATABASE_URL` | migrate | `comprobify_owner` |
 | `APP_URL` | web, worker | Public URL. Email links point here, the worker's billing emails too. |

@@ -6,6 +6,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Added
 
+- Sentry in the browser: errors on any screen are reported, with the DSN read from the server when the page loads, so one image still serves every environment (ADR-008).
 - `CERT_ENCRYPTION_KEY` can be rotated without a pause in signing: stored keys name the key that wrote them (`v2:<key id>:…`), `CERT_ENCRYPTION_KEY_PREVIOUS` is read during a rotation, and `rotate-cert-key` re-encrypts every stored key under the current one, a dry run unless `--commit`, all or none (PRD 9.3, ADR-052, `docs/guides/certificate-key-rotation.md`).
 - Dependabot: weekly updates for pnpm packages, GitHub Actions and the image's base, each release 14 days old at least; minor and patch grouped, majors and the core libraries on their own. The Terraform providers and Caddy are updated by hand (`docs/guides/git-flow.md`).
 - **docs.comprobify.com** again: a placeholder VitePress site (`apps/docs`, Spanish and English) until the public API brings its reference, published to Cloudflare Pages by `docs.yml`, and linked from the public header, footer and mobile menu as **Documentación** (ADR-051).
@@ -163,6 +164,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Changed
 
+- Sentry reports errors only, on the web and the worker, with URLs kept to their path and no cookies, headers, query or body. Tracing is off: its spans carried each request's headers, cookie and referer (ADR-008).
 - The image is half the size, 1.2 GB from 2.4: pnpm's store and metadata cache stay in BuildKit cache mounts, not the image; Next's build cache is dropped; the build is owned as copied instead of stored twice by a `chown`; only web's and worker's dependencies are installed; `infra/` stays out of the build context; and Sentry's Cloudflare integration no longer links wrangler, an optional peer that put Cloudflare's local runtime into the image (`pnpm-workspace.yaml` overrides).
 - A two-step code is accepted once: typing one already used, while it's still in its window, says "Ese código ya se usó" and opens nothing, and the code used to turn the second step on can't sign in too (NIST SP 800-63B §5.1.4.2, FR-USR-3, ADR-009).
 - Staging is deployed by hand: a merge to `main` runs **Main** (E2E, and staging's Terraform when infra changed) and deploys nothing, and **Deploy to staging** deploys `main`'s newest commit whose Main run passed. A merge that changes only docs starts no run. The production workflow is **Release to production** (ADR-051).
