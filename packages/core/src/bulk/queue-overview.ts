@@ -25,9 +25,6 @@ export type QueueOverview = {
   companies: QueueCompany[];
 };
 
-// Our own constants, never input.
-const FINAL = FINAL_DOCUMENT_STATUSES.map((status) => `'${status}'`).join(', ');
-
 export async function bulkQueueOverview(
   actor: PlatformActor,
   db: Database,
@@ -41,7 +38,7 @@ export async function bulkQueueOverview(
                 (t.twin_of IS NOT NULL) AS "isTwin", count(DISTINCT b.id)::int AS batches,
                 count(*) FILTER (WHERE i.status = 'QUEUED' AND i.dispatched_at IS NULL)::int AS waiting,
                 count(*) FILTER (WHERE (i.status IN ('QUEUED', 'CREATING') AND i.dispatched_at IS NOT NULL)
-                  OR (i.status = 'CREATED' AND d.status NOT IN (${FINAL})))::int AS "inFlight",
+                  OR (i.status = 'CREATED' AND d.status <> ALL($1::text[])))::int AS "inFlight",
                 count(*) FILTER (WHERE i.status = 'FAILED')::int AS failed,
                 min(i.created_at) FILTER (WHERE i.status = 'QUEUED' AND i.dispatched_at IS NULL)
                   AS "oldestWaiting"
@@ -52,6 +49,7 @@ export async function bulkQueueOverview(
          WHERE b.status = 'PROCESSING'
          GROUP BY i.tenant_id, t.trade_name, t.legal_name, t.twin_of
          ORDER BY "oldestWaiting" NULLS LAST, name`,
+        [FINAL_DOCUMENT_STATUSES],
       );
       return rows;
     },

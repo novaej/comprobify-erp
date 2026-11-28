@@ -59,9 +59,6 @@ export function allocateSlots(shares: Share[], limits: BulkLimits): Map<string, 
   return given;
 }
 
-// Our own constants, never input.
-const FINAL = FINAL_DOCUMENT_STATUSES.map((status) => `'${status}'`).join(', ');
-
 export async function feedBatches(
   deps: FeedDeps,
   limits: BulkLimits = BULK_LIMITS,
@@ -71,7 +68,7 @@ export async function feedBatches(
   const { db, jobs, clock, logger } = deps;
   const now = clock.now();
   const stalled = new Date(now.getTime() - limits.stallMinutes * 60_000);
-  const scope = onlyTenants ? 'AND i.tenant_id = ANY($1::uuid[])' : 'AND $1::uuid[] IS NULL';
+  // $1 in each query below: null for every company, or only these.
   const scopeArg = [onlyTenants];
 
   const result = await db.withSystem(
@@ -94,7 +91,7 @@ export async function feedBatches(
         `SELECT i.id, i.tenant_id AS "tenantId" FROM bulk_batch_items i
          JOIN bulk_batches b ON b.tenant_id = i.tenant_id AND b.id = i.batch_id
          WHERE b.status = 'PROCESSING' AND i.status IN ('QUEUED', 'CREATING')
-           AND i.dispatched_at < $2 ${scope}
+           AND i.dispatched_at < $2 AND ($1::uuid[] IS NULL OR i.tenant_id = ANY($1::uuid[]))
          FOR UPDATE OF i SKIP LOCKED`,
         [...scopeArg, stalled],
       );
@@ -104,16 +101,18 @@ export async function feedBatches(
         `SELECT i.tenant_id AS "tenantId", count(*)::int AS n FROM bulk_batch_items i
          JOIN bulk_batches b ON b.tenant_id = i.tenant_id AND b.id = i.batch_id
          LEFT JOIN documents d ON d.tenant_id = i.tenant_id AND d.id = i.document_id
-         WHERE b.status = 'PROCESSING' ${scope} AND (
+         WHERE b.status = 'PROCESSING'
+           AND ($1::uuid[] IS NULL OR i.tenant_id = ANY($1::uuid[])) AND (
            (i.status IN ('QUEUED', 'CREATING') AND i.dispatched_at IS NOT NULL)
-           OR (i.status = 'CREATED' AND d.status NOT IN (${FINAL})))
+           OR (i.status = 'CREATED' AND d.status <> ALL($2::text[])))
          GROUP BY 1`,
-        scopeArg,
+        [...scopeArg, FINAL_DOCUMENT_STATUSES],
       );
       const waiting = await tx.executeSql<{ tenantId: string; n: number }>(
         `SELECT i.tenant_id AS "tenantId", count(*)::int AS n FROM bulk_batch_items i
          JOIN bulk_batches b ON b.tenant_id = i.tenant_id AND b.id = i.batch_id
-         WHERE b.status = 'PROCESSING' AND i.status = 'QUEUED' AND i.dispatched_at IS NULL ${scope}
+         WHERE b.status = 'PROCESSING' AND i.status = 'QUEUED' AND i.dispatched_at IS NULL
+           AND ($1::uuid[] IS NULL OR i.tenant_id = ANY($1::uuid[]))
          GROUP BY 1`,
         scopeArg,
       );

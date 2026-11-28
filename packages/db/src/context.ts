@@ -53,6 +53,7 @@ async function inTransaction<T>(
     await setContext(client);
     const result = await fn({
       db: drizzle({ client, schema }),
+      // eslint-disable-next-line no-restricted-syntax -- the wrapper itself; its callers are checked
       executeSql: (text, values) => client.query(text, values),
     });
     await client.query('COMMIT');
@@ -134,19 +135,25 @@ export async function inOneTransaction<T>(
     );
   const handle: Tx = {
     db: drizzle({ client, schema }),
+    // eslint-disable-next-line no-restricted-syntax -- the wrapper itself; its callers are checked
     executeSql: (text, values) => client.query(text, values),
   };
   const scoped = async <R>(settings: Settings, run: (tx: Tx) => Promise<R>): Promise<R> => {
+    // Postgres takes no parameter for a savepoint's name, so it's built here, from a counter
+    // only, so the lint rule against SQL built from values is off for these three lines (ADR-004).
     const name = `ctx_${++savepoints}`;
     const outer = current;
+    // eslint-disable-next-line no-restricted-syntax -- a counter, not a value
     await client.query(`SAVEPOINT ${name}`);
     current = settings;
     await apply(settings);
     try {
       const result = await run(handle);
+      // eslint-disable-next-line no-restricted-syntax -- a counter, not a value
       await client.query(`RELEASE SAVEPOINT ${name}`);
       return result;
     } catch (error) {
+      // eslint-disable-next-line no-restricted-syntax -- a counter, not a value
       await client.query(`ROLLBACK TO SAVEPOINT ${name}`);
       throw error;
     } finally {
@@ -180,7 +187,8 @@ export async function inOneTransaction<T>(
   try {
     await client.query('BEGIN');
     const result = await fn(db);
-    await client.query(options.commit ? 'COMMIT' : 'ROLLBACK');
+    if (options.commit) await client.query('COMMIT');
+    else await client.query('ROLLBACK');
     return result;
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined);

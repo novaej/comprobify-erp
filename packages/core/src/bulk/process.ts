@@ -135,8 +135,6 @@ export async function processItem(
 export async function completeBatches(
   deps: Pick<BulkDeps, 'db' | 'jobs' | 'clock' | 'logger'>,
 ): Promise<number> {
-  // Our own constants, never input.
-  const final = FINAL_DOCUMENT_STATUSES.map((status) => `'${status}'`).join(', ');
   const completed = await deps.db.withSystem(
     'mark bulk batches whose invoices have all been answered',
     async (tx) => {
@@ -147,9 +145,9 @@ export async function completeBatches(
            LEFT JOIN documents d ON d.tenant_id = i.tenant_id AND d.id = i.document_id
            WHERE i.batch_id = b.id AND (
              i.status IN ('QUEUED', 'CREATING')
-             OR (i.status = 'CREATED' AND d.status NOT IN (${final}))))
+             OR (i.status = 'CREATED' AND d.status <> ALL($2::text[]))))
          RETURNING b.id, b.tenant_id AS "tenantId", b.total_items AS total`,
-        [deps.clock.now()],
+        [deps.clock.now(), FINAL_DOCUMENT_STATUSES],
       );
       // FR-BULK-3: told in the same transaction that closes the batch.
       for (const batch of rows)

@@ -41,6 +41,10 @@ Context is passed explicitly, not through `AsyncLocalStorage`, which the previou
 
 **Issue-point restrictions stay in core** as query filters (NFR-SEC-3). RLS covers tenant isolation only.
 
+**No SQL text built from values (Milestone 10).** `app.rls_system` is a setting, so SQL injection would be the way past it. Lint forbids `sql.raw` everywhere but the schema's generated CHECKs (`packages/db/src/schema/`), and requires what `client.query` or `executeSql` runs to be one literal written in place, with no `${…}`: a variable or a `+` would hide what went into it. Values go in as parameters, lists as arrays (`<> ALL($1::text[])`). The exemptions are commented in `packages/db/src/context.ts`: the `executeSql` wrappers themselves, and a savepoint's name in `inOneTransaction`, built from a counter, since Postgres takes no parameter there.
+
+**No separate role for system context (Milestone 10).** Both processes use system context in ordinary work, not only the super admin area: billing, onboarding, notifications and bulk invoicing, 98 calls. Each process would hold both credentials, so a compromised process or a leaked `RUNTIME_ENV` gets both and the role adds nothing. What it would stop is injected SQL switching context, which the rule above already closes. It would cost a second pool in each process against the managed database's connection limit, a database user per environment, and every system call moved to it. Revisit if a process ever runs only tenant work, or if SQL text built at runtime becomes necessary.
+
 **The catalog test (NFR-SEC-5)** runs as the app role and fails when any table outside `pg_catalog`, `information_schema`, `pgboss` and `drizzle` has a `tenant_id` column but lacks forced RLS or the standard policy, with no allow-list.
 
 Milestone 0 has no tenant tables, because `tenants` belongs to Milestone 1. To keep the gate from passing vacuously, the integration test creates its own probe tables through the owner role: one protected table proves isolation, the raised error and system access; one unprotected table proves the catalog check reports it.
@@ -60,5 +64,5 @@ Milestone 0 has no tenant tables, because `tenants` belongs to Milestone 1. To k
 ## Alternatives considered
 
 - **`AsyncLocalStorage` context**: the old API's approach, justified there by 170 existing queries. There are none here.
-- **A separate `BYPASSRLS` role for system paths**: a real privilege boundary, but NFR-SEC-4 forbids `BYPASSRLS` on the app role and a third role needs a second pool. Worth revisiting after the security review in Milestone 10.
+- **A separate `BYPASSRLS` role for system paths**: a real privilege boundary only for a process that holds one credential, and both hold both here. Decided against in Milestone 10, above.
 - **A committed `rls_probe` table**: simpler test setup, but leaves a fake table in production schemas.

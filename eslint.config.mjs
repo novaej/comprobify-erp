@@ -29,6 +29,9 @@ const PROVIDER_BUILDERS = [
 ];
 const PROVIDER_MESSAGE =
   'Only the worker builds the email provider; everything else enqueues email.send (ADR-037).';
+// The calls that take SQL as plain text: pg's client.query and the transaction's executeSql.
+const RAW_SQL_CALL =
+  ':matches(CallExpression[callee.property.name=/^(query|executeSql)$/], CallExpression[callee.name="executeSql"])';
 
 export default tseslint.config(
   {
@@ -68,6 +71,31 @@ export default tseslint.config(
       'no-restricted-properties': [
         'error',
         { object: 'process', property: 'env', message: 'Read env in packages/config (ADR-008).' },
+      ],
+    },
+  },
+  {
+    // Rule 13, ADR-004: SQL text is never built from values, so injection can't reach the
+    // app.rls_system switch. Values go in as parameters; the schema's CHECKs are built from
+    // our own constants.
+    files: ['apps/**/*.{ts,tsx}', 'packages/**/*.{ts,tsx}'],
+    ignores: ['packages/db/src/schema/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "MemberExpression[object.name='sql'][property.name='raw']",
+          message: 'No sql.raw: pass values as sql`…${value}` parameters (rule 13, ADR-004).',
+        },
+        {
+          selector: `${RAW_SQL_CALL} > TemplateLiteral:first-child[expressions.length>0]`,
+          message: 'SQL text with ${…} in it: pass values as $1, $2 parameters (rule 13, ADR-004).',
+        },
+        {
+          selector: `${RAW_SQL_CALL} > :first-child:not(Literal, TemplateLiteral)`,
+          message:
+            'Write the SQL in place, as one literal, so lint can see it holds no values (rule 13, ADR-004).',
+        },
       ],
     },
   },
