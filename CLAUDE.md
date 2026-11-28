@@ -92,7 +92,7 @@ Both processes run from one Docker image. Postgres holds data, sessions and the 
 10. **Enqueue jobs in the same transaction as the business write**, through the transaction handle. Never send from the pooled connection after commit. The one exception is Better Auth's emails, whose write isn't ours (ADR-009).
 11. **Job handlers are idempotent** (NFR-JOB-1): re-fetch by id, check state, then act. Schedules are declared in code with an explicit time zone (NFR-JOB-2).
 12. **No hard deletes.** Use status or `active`. The app role has no `DELETE` grant on application tables. Twin reset is the one exception, through the `app_reset_twin` function only (PRD glossary, ADR-043).
-13. **Never interpolate SQL.** Use Drizzle or `sql` parameters.
+13. **Never interpolate SQL.** Use Drizzle or `sql` parameters; lists go in as arrays. Lint refuses `sql.raw`, and raw SQL text that isn't one literal written in place (ADR-004).
 14. **Never use floats for money or quantities.** `numeric` in the database, a decimal library in the domain.
 15. **All date decisions use Ecuador time** (UTC-5, no DST) through one helper module. Servers run UTC.
 16. **Migrations are forward-only**, set `lock_timeout`, and never get edited once merged.

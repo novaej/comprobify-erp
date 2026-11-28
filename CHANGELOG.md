@@ -164,6 +164,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ### Changed
 
+- Lint refuses SQL text built from values: `sql.raw` outside the schema's generated CHECKs, and anything but one literal written in place, with no `${…}`, as what `client.query` or `executeSql` runs. The bulk queries that spliced in the final document statuses take them as a parameter. No separate role for system context, with the reasons in ADR-004.
 - Sentry reports errors only, on the web and the worker, with URLs kept to their path and no cookies, headers, query or body. Tracing is off: its spans carried each request's headers, cookie and referer (ADR-008).
 - The image is half the size, 1.2 GB from 2.4: pnpm's store and metadata cache stay in BuildKit cache mounts, not the image; Next's build cache is dropped; the build is owned as copied instead of stored twice by a `chown`; only web's and worker's dependencies are installed; `infra/` stays out of the build context; and Sentry's Cloudflare integration no longer links wrangler, an optional peer that put Cloudflare's local runtime into the image (`pnpm-workspace.yaml` overrides).
 - A two-step code is accepted once: typing one already used, while it's still in its window, says "Ese código ya se usó" and opens nothing, and the code used to turn the second step on can't sign in too (NIST SP 800-63B §5.1.4.2, FR-USR-3, ADR-009).
